@@ -14,23 +14,96 @@ import sys
 
 
 def main():
+    resub()
+    print('donzo')
+
+
+def local_test():
+    script_list = get_script_list('/home/dylan/Research/Tree_Maker_Logs/script/3GeV/')
+    out_list = get_out_list('/home/dylan/Research/Tree_Maker_Logs/script/3GeV/')
+    failed_jobs = get_failed_jobs(script_list, out_list)
+    failed_jobs = get_failed_jobs(script_list, out_list)
+    resub_flag = ask_to_resub(failed_jobs)
+    if resub_flag:
+        resub_jobs('/home/dylan/Research/Tree_Maker_Logs/script/3GeV/', failed_jobs)
+
+
+def resub():
     energy = sys.argv[1]
     script_path = '/gpfs01/star/pwg/dneff/scratch/trees/script/' + str(energy) + 'GeV/'
     output_path = '/gpfs01/star/pwg/dneff/scratch/trees/output/' + str(energy) + 'GeV/'
     err_path = '/gpfs01/star/pwg/dneff/scratch/trees/log/' + str(energy) + 'GeV/'
-    get_break_list(err_path)
+    break_list = get_break_list(err_path)
     script_list = get_script_list(script_path)
     out_list = get_out_list(output_path)
-
-    print('donzo')
+    failed_jobs = get_failed_jobs(script_list, out_list)
+    resub_flag = ask_to_resub(failed_jobs)
+    if resub_flag:
+        resub_jobs(script_path, failed_jobs)
 
 
 def get_script_list(path):
-    pass
+    """
+    Get .csh files in directory and return the jobid plus job number.
+    Tested, seems to work.
+    """
+    script_list = []
+    for fpath in os.listdir(path):
+        if '.csh' in fpath:
+            script_list.append(fpath[5:-4])
+
+    return script_list
 
 
 def get_out_list(path):
-    pass
+    """
+        Get .csh files in directory and return the jobid plus job number.
+        Tested, seems to work.
+        """
+    out_list = []
+    for fpath in os.listdir(path):
+        if '.root' in fpath:
+            out_list.append(fpath[5:-5])
+
+    return out_list
+
+
+def get_failed_jobs(script_list, out_list):
+    """
+    Compare script job submission files to output root files to determine which jobs have failed.
+    Tested, seems to work.
+    """
+    failed_jobs = []
+    for job in script_list:
+        if job not in out_list:
+            failed_jobs.append(job)
+
+    return failed_jobs
+
+
+def ask_to_resub(incomplete_jobs):
+    """
+    Display failed jobs and ask user if they should be resubmitted.
+    Tested, seems to work.
+    """
+    print('Failed jobs:')
+    for job in incomplete_jobs:
+        print(job)
+    res = input('\nResubmit failed jobs listed above? Enter "yes" to resubmit and anything else to quit: ')
+    if res.strip().lower() == 'yes':
+        return True
+    else:
+        return False
+
+
+def resub_jobs(script_path, failed_jobs):
+    """
+    Split condor files and resubmit individual failed jobs.
+    """
+    split_condor(script_path)
+    for job in failed_jobs:
+        command = 'condor_submit ' + script_path + 'sched' + job + '.condor'
+        print(command)
 
 
 def get_break_list(path):
@@ -50,6 +123,37 @@ def get_break_list(path):
     print(f'Files: {files}  |  Breaks: {breaks}  |  Percentage Broken: {float(breaks) / files * 100}%')
 
     return break_list
+
+
+def split_condor(path):
+    """
+    Split any condor files in directory into individual files.
+    Tested, seems to work.
+    """
+    content_lines = 15
+    sep_lines = 1
+    for fpath in os.listdir(path):
+        if '.condor' in fpath:
+            with open(path+fpath, 'r') as file:
+                try:
+                    sched_id, job_num_low, job_num_high = fpath.split('_')
+                except ValueError:
+                    print(f'Couldn\'t parse filename: {path}{fpath}')
+                    continue
+                job_num_high = int(job_num_high.split('.')[0])
+                job_num_low = int(job_num_low)
+                job_num = job_num_high
+                lines = file.readlines()
+                while job_num >= job_num_low:
+                    with open(path+sched_id+'_'+str(job_num)+'.condor', 'w') as new_file:
+                        line_low = (job_num_high - job_num) * (content_lines + sep_lines)
+                        line_high = (job_num_high - job_num + 1) * (content_lines + sep_lines)
+                        # print(path+sched_id+'_'+str(job_num)+'.condor')
+                        # print()
+                        # print(lines[line_low:line_high])
+                        # print()
+                        new_file.writelines(lines[line_low:line_high])
+                        job_num -= 1
 
 
 if __name__ == '__main__':
