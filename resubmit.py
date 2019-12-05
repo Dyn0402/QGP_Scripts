@@ -138,7 +138,6 @@ def split_condor(path):
                 try:
                     sched_id, job_num_low, job_num_high = fpath.split('_')
                 except ValueError:
-                    print(f'Couldn\'t parse filename: {path}{fpath}')
                     continue
                 job_num_high = int(job_num_high.split('.')[0])
                 job_num_low = int(job_num_low)
