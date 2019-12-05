@@ -29,7 +29,11 @@ def local_test():
 
 
 def resub():
-    energy = sys.argv[1]
+    try:
+        energy = sys.argv[1]
+    except IndexError:
+        print('Need to input energy as command line argument!')
+        return
     script_path = '/gpfs01/star/pwg/dneff/scratch/trees/script/' + str(energy) + 'GeV/'
     output_path = '/gpfs01/star/pwg/dneff/scratch/trees/output/' + str(energy) + 'GeV/'
     err_path = '/gpfs01/star/pwg/dneff/scratch/trees/log/' + str(energy) + 'GeV/'
@@ -86,6 +90,9 @@ def ask_to_resub(incomplete_jobs):
     Display failed jobs and ask user if they should be resubmitted.
     Tested, seems to work.
     """
+    if len(incomplete_jobs) <= 0:
+        print('All jobs completed!')
+        return False
     print(f'\n{len(incomplete_jobs)} failed jobs:')
     for job in incomplete_jobs:
         print(job)
