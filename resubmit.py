@@ -41,7 +41,7 @@ def resub():
     script_list = get_script_list(script_path)
     out_list = get_out_list(output_path)
     failed_jobs = get_failed_jobs(script_list, out_list)
-    resub_flag = ask_to_resub(failed_jobs)
+    resub_flag = ask_to_resub(failed_jobs, energy)
     if resub_flag:
         resub_jobs(script_path, failed_jobs)
 
@@ -85,13 +85,13 @@ def get_failed_jobs(script_list, out_list):
     return failed_jobs
 
 
-def ask_to_resub(incomplete_jobs):
+def ask_to_resub(incomplete_jobs, energy):
     """
     Display failed jobs and ask user if they should be resubmitted.
     Tested, seems to work.
     """
     if len(incomplete_jobs) <= 0:
-        print('All jobs completed!')
+        print(f'\nAll jobs for {energy}GeV completed!\n')
         return False
     print(f'\n{len(incomplete_jobs)} failed jobs:')
     for job in incomplete_jobs:
