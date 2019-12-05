@@ -86,7 +86,7 @@ def ask_to_resub(incomplete_jobs):
     Display failed jobs and ask user if they should be resubmitted.
     Tested, seems to work.
     """
-    print('Failed jobs:')
+    print(f'\n{len(incomplete_jobs)} failed jobs:')
     for job in incomplete_jobs:
         print(job)
     res = input('\nResubmit failed jobs listed above? Enter "yes" to resubmit and anything else to quit: ')
