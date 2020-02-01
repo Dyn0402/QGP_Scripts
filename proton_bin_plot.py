@@ -18,11 +18,11 @@ def main():
     path = '/home/dylan/Research/Data/Single_Ratio0/7GeV/ratios_divisions_3_centrality_8_local.txt'
     divs = 3
     data = read_azbin_data(path)
-    plot_azbin_data(data, range(0, 40), range(0, 20), divs)
-    plot_azbin_data_trans(data, range(0, 40), range(0, 20), divs)
-    ratio_transform(data, divs)
-    diff_transform(data, divs)
-    plot_binomial(data, 25, divs)
+    # plot_azbin_data(data, range(0, 40), range(0, 20), divs)
+    # plot_azbin_data_trans(data, range(0, 40), range(0, 20), divs)
+    # ratio_transform(data, divs)
+    # diff_transform(data, divs)
+    plot_binomial(data, 13, divs)
     print('donzo')
 
 
@@ -44,9 +44,17 @@ def read_azbin_data(path):
 def plot_binomial(data, protons, divs):
     y = np.asarray([ele[protons] for ele in data])
     x = range(len(y))
-    plt.bar(x, y, align='center', zorder=0, label="Data")
-    plt.scatter(x, sum(y)*binom.pmf(x, protons, 1/divs), color='red', label="Binomial")
-    plt.legend()
+    y_binom = sum(y)*binom.pmf(x, protons, 1/divs)
+    y_err = np.sqrt(y)
+    fig1, ax1 = plt.subplots()
+    fig2, ax2 = plt.subplots()
+    ax1.bar(x, y, align='center', zorder=0, label="Data")
+    ax1.scatter(x, y_binom, color='red', label="Binomial")
+    ax1.legend()
+    y_diff = y - y_binom
+    ax2.axhline(0, color='red', ls='--')
+    ax2.errorbar(x, y_diff, yerr=y_err, fmt='bo')
+    print(f'Binomial Difference Sum: {sum(y_diff)}')
     plt.show()
 
 
@@ -58,12 +66,13 @@ def plot_azbin_data(data, x_range, y_range, divs, x_label='Number of Protons in 
     plt.pcolormesh(x, y, data, norm=colors.LogNorm(vmin=data.min(), vmax=data.max()))
     y2 = 1.0/divs * np.asarray(x_range)
     y3 = 1.0 * np.asarray(x_range)
-    plt.plot(x_range, y2, color='red')
-    plt.plot(x_range, y3, color='blue')
+    plt.plot(x_range, y2, color='red', label='mean')
+    plt.plot(x_range, y3, color='blue', label='max')
     plt.colorbar()
     plt.xlabel(x_label)
     plt.ylabel(y_label)
     plt.ylim([0, 20])
+    plt.legend()
     plt.show()
 
 
@@ -76,11 +85,14 @@ def plot_azbin_data_trans(data, x_range, y_range, divs, x_label='Number of Proto
     plt.pcolormesh(y, x, data, norm=colors.LogNorm(vmin=data.min(), vmax=data.max()))
     y2 = float(divs) * np.asarray(y_range)
     y3 = 1.0 * np.asarray(y_range)
-    plt.plot(y_range, y2, color='red')
-    plt.plot(y_range, y3, color='blue')
+    plt.plot(y_range, y2, color='red', label='mean')
+    plt.plot(y_range, y3, color='blue', label='max')
     plt.colorbar()
     plt.xlabel(x_label)
     plt.ylabel(y_label)
+    plt.ylim([0, 40])
+    plt.title('Protons in Event vs Protons in Bin')
+    plt.legend()
     plt.show()
 
 
@@ -94,6 +106,7 @@ def plot_ratio_data(data, x_range, y_range, divs, x_label='Number of Protons in 
     plt.colorbar()
     plt.xlabel(x_label)
     plt.ylabel(y_label)
+    plt.title('Protons in Event vs Ratios')
     plt.show()
 
 
@@ -111,6 +124,7 @@ def plot_diff_data(data, x_range, y_range, divs, x_label='Number of Protons in B
     plt.xlabel(x_label)
     plt.ylabel(y_label)
     plt.ylim([0, 40])
+    plt.title('Protons in Event vs Differences')
     plt.show()
 
 
