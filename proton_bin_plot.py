@@ -28,7 +28,7 @@ def main():
     # ratio_transform(data, divs)
     # diff_transform(data, divs)
     # plot_binomial(data, 20, divs)
-    plot_data_mixed(data, data_mix, 25, divs)
+    plot_data_mixed(data, data_mix, 35, divs)
     print('donzo')
 
 
@@ -151,6 +151,18 @@ def plot_data_mixed(data, data_mixed, protons, divs):
     ax4.set_xlabel('Number of Protons in Bin')
     ax4.set_ylabel('Data/Mixed Events Divided by Binomial')
     ax4.legend()
+
+    fig5, ax5 = plt.subplots()
+    y_diff_raw = y_norm - y_binom
+    y_diff_mix = y_mixed_norm - y_binom
+    ax5.axhline(0, color='red', ls='--')
+    ax5.errorbar(x, y_diff_raw, yerr=y_norm_err, fmt='bo', label='Raw - Binomial')
+    ax5.errorbar(x, y_diff_mix, yerr=y_mixed_norm_err, fmt='go', label='Mix - Binomial')
+    ax5.set_xticks(range(0, len(y), 2))
+    ax5.set_title(f'Protons in {divs} Division Bin Minus Binomial for {protons} Proton Events')
+    ax5.set_xlabel('Number of Protons in Bin')
+    ax5.set_ylabel('Data Events Minus Mixed')
+    ax5.legend()
 
     plt.show()
 
