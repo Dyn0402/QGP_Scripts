@@ -17,21 +17,27 @@ from fractions import Fraction
 
 
 def main():
-    path = '/home/dylan/Research/Data/Single_Ratio0/7GeV/ratios_divisions_3_centrality_8_local.txt'
     divs = 3
+    cent = 8
+    path = f'/home/dylan/Research/Data/Single_Ratio0/7GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
+    path_mix = f'/home/dylan/Research/Data_Mix/Single_Ratio0/7GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
     data = read_azbin_data(path)
+    data_mix = read_azbin_data(path_mix)
     # plot_azbin_data(data, range(0, 40), range(0, 20), divs)
     # plot_azbin_data_trans(data, range(0, 40), range(0, 20), divs)
     # ratio_transform(data, divs)
     # diff_transform(data, divs)
-    plot_binomial(data, 13, divs)
+    # plot_binomial(data, 20, divs)
+    plot_data_mixed(data, data_mix, 25, divs)
     print('donzo')
 
 
 def read_azbin_data(path):
-    azbin_data = np.zeros((20, 40))
+    azbin_data = np.array([])
     with open(path, 'r') as file:
         lines = file.readlines()
+        max_protons = int(lines[-1].split('\t')[0])+1
+        azbin_data = np.zeros((max_protons, max_protons))
         for line in lines:
             line = line.strip().split('\t')
             total_protons = int(line[0])
@@ -52,19 +58,100 @@ def plot_binomial(data, protons, divs):
     fig2, ax2 = plt.subplots()
     ax1.bar(x, y, align='center', zorder=0, label=f'{protons} Proton Events')
     ax1.scatter(x, y_binom, color='red', label='Binomial Distribution')
-    ax1.set_xticks(range(0, 20, 2))
-    ax1.set_title(f'Protons in 3 Division Bin vs Binomial for {protons} Proton Events')
+    ax1.set_xticks(range(0, len(y), 2))
+    ax1.set_title(f'Protons in {divs} Division Bin vs Binomial for {protons} Proton Events')
     ax1.set_xlabel('Number of Protons in Bin')
     ax1.set_ylabel('Events')
     ax1.legend()
     y_diff = y - y_binom
     ax2.axhline(0, color='red', ls='--')
     ax2.errorbar(x, y_diff, yerr=y_err, fmt='bo')
-    ax2.set_xticks(range(0, 20, 2))
-    ax2.set_title(f'Protons in 3 Division Bin Minus Binomial for {protons} Proton Events')
+    ax2.set_xticks(range(0, len(y), 2))
+    ax2.set_title(f'Protons in {divs} Division Bin Minus Binomial for {protons} Proton Events')
     ax2.set_xlabel('Number of Protons in Bin')
     ax2.set_ylabel('Data Events Minus Binomial')
     print(f'Binomial Difference Sum: {sum(y_diff)}')
+    plt.show()
+
+
+def plot_data_mixed(data, data_mixed, protons, divs):
+    y = np.asarray([ele[protons] for ele in data])
+    y_norm = y / sum(y)
+    y_norm_err = np.sqrt(y) / sum(y)
+    y_mixed = np.asarray([ele[protons] for ele in data_mixed])
+    y_mixed_norm = y_mixed / sum(y_mixed)
+    y_mixed_norm_err = np.sqrt(y_mixed) / sum(y_mixed)
+    x = range(len(y))
+    y_binom = binom.pmf(x, protons, 1/divs)
+
+    fig1, ax1 = plt.subplots()
+    ax1.errorbar(x, y_norm, yerr=y_norm_err, fmt='ob', zorder=2, label=f'{protons} Proton Events')
+    ax1.errorbar(x, y_mixed_norm, yerr=y_mixed_norm_err, fmt='og', zorder=1, label=f'{protons} Proton Mixed Events')
+    ax1.scatter(x, y_binom, color='red', zorder=0, label='Binomial Distribution')
+    ax1.set_xticks(range(0, len(y), 2))
+    ax1.set_title(f'Protons in {divs} Division Bin vs Binomial for {protons} Proton Events')
+    ax1.set_xlabel('Number of Protons in Bin')
+    ax1.set_ylabel('Events')
+    ax1.legend()
+
+    fig2, ax2 = plt.subplots()
+    y_diff = y_norm - y_mixed_norm
+    diff_err = np.sqrt(y_norm_err**2 + y_mixed_norm_err**2)
+    ax2.axhline(0, color='red', ls='--')
+    ax2.errorbar(x, y_diff, yerr=diff_err, fmt='bo')
+    ax2.set_xticks(range(0, len(y), 2))
+    ax2.set_title(f'Protons in {divs} Division Bin Minus Mixed for {protons} Proton Events')
+    ax2.set_xlabel('Number of Protons in Bin')
+    ax2.set_ylabel('Data Events Minus Mixed')
+
+    fig3, ax3 = plt.subplots()
+    x_div = []
+    y_div = []
+    y_bin_div = []
+    bin_div_err = []
+    div_err = []
+    for i in range(len(y_norm)):
+        if y_mixed_norm[i] != 0 and y_norm[i] != 0:
+            x_div.append(x[i])
+            y_div.append(y_norm[i] / y_mixed_norm[i])
+            y_bin_div.append(y_norm[i] / y_binom[i])
+            div_err.append(abs(y_div[-1]) * np.sqrt((y_norm_err[i] / y_norm[i])**2 +
+                                                    (y_mixed_norm_err[i] / y_mixed_norm[i])**2))
+            bin_div_err.append(y_norm_err[i] / y_binom[i])
+    ax3.axhline(1, color='red', ls='--')
+    ax3.errorbar(x_div, y_div, yerr=div_err, zorder=1, fmt='bo', label='Data Divided by Mixed')
+    ax3.errorbar(x_div, y_bin_div, yerr=bin_div_err, zorder=0, fmt='ro', label='Data Divided by Binomial')
+    ax3.set_xticks(range(0, max(x_div), 2))
+    ax3.set_title(f'Protons in {divs} Division Bin Divided by Mixed for {protons} Proton Events')
+    ax3.set_xlabel('Number of Protons in Bin')
+    ax3.set_ylabel('Data Events Divided by Mixed')
+    ax3.legend()
+
+    fig4, ax4 = plt.subplots()
+    x_data_div = []
+    x_mix_div = []
+    y_data_bin_div = []
+    y_mix_bin_div = []
+    data_bin_div_err = []
+    mix_bin_div_err = []
+    for i in range(len(y_norm)):
+        if y_norm[i] != 0:
+            x_data_div.append(x[i])
+            y_data_bin_div.append(y_norm[i] / y_binom[i])
+            data_bin_div_err.append(y_norm_err[i] / y_binom[i])
+        if y_mixed_norm[i] != 0:
+            x_mix_div.append(x[i])
+            y_mix_bin_div.append(y_mixed_norm[i] / y_binom[i])
+            mix_bin_div_err.append(y_mixed_norm_err[i] / y_binom[i])
+    ax4.axhline(1, color='red', ls='--')
+    ax4.errorbar(x_data_div, y_data_bin_div, yerr=data_bin_div_err, zorder=1, fmt='bo', label='Data Divided by Binomial')
+    ax4.errorbar(x_mix_div, y_mix_bin_div, yerr=mix_bin_div_err, zorder=0, fmt='go', label='Mixed Divided by Binomial')
+    ax4.set_xticks(range(0, max([max(x_data_div),max(x_mix_div)]), 2))
+    ax4.set_title(f'Protons in {divs} Division Bin Divided by Binomial for {protons} Proton Events')
+    ax4.set_xlabel('Number of Protons in Bin')
+    ax4.set_ylabel('Data/Mixed Events Divided by Binomial')
+    ax4.legend()
+
     plt.show()
 
 
