@@ -14,6 +14,7 @@ import matplotlib.colors as colors
 import seaborn as sns
 from scipy.stats import binom
 from fractions import Fraction
+from scipy.optimize import curve_fit
 
 
 def main():
@@ -28,7 +29,7 @@ def main():
     # ratio_transform(data, divs)
     # diff_transform(data, divs)
     # plot_binomial(data, 20, divs)
-    plot_data_mixed(data, data_mix, 35, divs)
+    plot_data_mixed(data, data_mix, 25, divs)
     print('donzo')
 
 
@@ -88,6 +89,7 @@ def plot_data_mixed(data, data_mixed, protons, divs):
     ax1.errorbar(x, y_norm, yerr=y_norm_err, fmt='ob', zorder=2, label=f'{protons} Proton Events')
     ax1.errorbar(x, y_mixed_norm, yerr=y_mixed_norm_err, fmt='og', zorder=1, label=f'{protons} Proton Mixed Events')
     ax1.scatter(x, y_binom, color='red', zorder=0, label='Binomial Distribution')
+    ax1.axvline(float(protons) / divs, color='red', ls='--', label='Mean')
     ax1.set_xticks(range(0, len(y), 2))
     ax1.set_title(f'Protons in {divs} Division Bin vs Binomial for {protons} Proton Events')
     ax1.set_xlabel('Number of Protons in Bin')
@@ -98,6 +100,7 @@ def plot_data_mixed(data, data_mixed, protons, divs):
     y_diff = y_norm - y_mixed_norm
     diff_err = np.sqrt(y_norm_err**2 + y_mixed_norm_err**2)
     ax2.axhline(0, color='red', ls='--')
+    ax2.axvline(float(protons) / divs, color='red', ls='--', label='Mean')
     ax2.errorbar(x, y_diff, yerr=diff_err, fmt='bo')
     ax2.set_xticks(range(0, len(y), 2))
     ax2.set_title(f'Protons in {divs} Division Bin Minus Mixed for {protons} Proton Events')
@@ -119,6 +122,7 @@ def plot_data_mixed(data, data_mixed, protons, divs):
                                                     (y_mixed_norm_err[i] / y_mixed_norm[i])**2))
             bin_div_err.append(y_norm_err[i] / y_binom[i])
     ax3.axhline(1, color='red', ls='--')
+    ax3.axvline(float(protons) / divs, color='red', ls='--', label='Mean')
     ax3.errorbar(x_div, y_div, yerr=div_err, zorder=1, fmt='bo', label='Data Divided by Mixed')
     ax3.errorbar(x_div, y_bin_div, yerr=bin_div_err, zorder=0, fmt='ro', label='Data Divided by Binomial')
     ax3.set_xticks(range(0, max(x_div), 2))
@@ -144,6 +148,7 @@ def plot_data_mixed(data, data_mixed, protons, divs):
             y_mix_bin_div.append(y_mixed_norm[i] / y_binom[i])
             mix_bin_div_err.append(y_mixed_norm_err[i] / y_binom[i])
     ax4.axhline(1, color='red', ls='--')
+    ax4.axvline(float(protons) / divs, color='red', ls='--', label='Mean')
     ax4.errorbar(x_data_div, y_data_bin_div, yerr=data_bin_div_err, zorder=1, fmt='bo', label='Data Divided by Binomial')
     ax4.errorbar(x_mix_div, y_mix_bin_div, yerr=mix_bin_div_err, zorder=0, fmt='go', label='Mixed Divided by Binomial')
     ax4.set_xticks(range(0, max([max(x_data_div),max(x_mix_div)]), 2))
@@ -156,6 +161,7 @@ def plot_data_mixed(data, data_mixed, protons, divs):
     y_diff_raw = y_norm - y_binom
     y_diff_mix = y_mixed_norm - y_binom
     ax5.axhline(0, color='red', ls='--')
+    ax5.axvline(float(protons) / divs, color='red', ls='--', label='Mean')
     ax5.errorbar(x, y_diff_raw, yerr=y_norm_err, fmt='bo', label='Raw - Binomial')
     ax5.errorbar(x, y_diff_mix, yerr=y_mixed_norm_err, fmt='go', label='Mix - Binomial')
     ax5.set_xticks(range(0, len(y), 2))
