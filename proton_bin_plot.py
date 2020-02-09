@@ -172,6 +172,7 @@ def plot_data_mixed(data, data_mixed, protons, divs, proton_array=[]):
 
     fig6, axes1 = plt.subplots(4, 4, sharex='all', sharey='all', gridspec_kw={'hspace': 0, 'wspace': 0})
     fig7, axes2 = plt.subplots(4, 4, sharex='all', sharey='all', gridspec_kw={'hspace': 0, 'wspace': 0})
+    fig7.suptitle('Data (blue) and Mix (green) Minus Binomial for 10-26 Total Protons')
     for index, proton in enumerate(proton_array):
         yi = np.asarray([ele[proton] for ele in data])
         y_normi = yi / sum(yi)
@@ -207,6 +208,25 @@ def plot_data_mixed(data, data_mixed, protons, divs, proton_array=[]):
         # axes[int(index / 4), int(index % 4)].legend()
     axes1[0, 0].legend()
     axes2[0, 0].legend()
+
+    # fig8, ax8 = plt.subplots()
+    # x_raw = []
+    # raw_sd = []
+    # x_mix = []
+    # mix_sd = []
+    # for total_protons in enumerate(data):
+    #     x_raw.append(total_protons)
+    #     raw_sd.append(hist_sd(range(len(data)), y))
+    # mix_sd = hist_sd(x, y_mixed)
+    # ax5.axhline(0, color='red', ls='--')
+    # ax5.axvline(float(protons) / divs, color='red', ls='--', label='Mean')
+    # ax5.errorbar(x, y_diff_raw, yerr=y_norm_err, fmt='bo', label='Raw - Binomial')
+    # ax5.errorbar(x, y_diff_mix, yerr=y_mixed_norm_err, fmt='go', label='Mix - Binomial')
+    # ax5.set_xticks(range(0, len(y), 2))
+    # ax5.set_title(f'Protons in {divs} Division Bin Minus Binomial for {protons} Proton Events')
+    # ax5.set_xlabel('Number of Protons in Bin')
+    # ax5.set_ylabel('Data Events Minus Mixed')
+    # ax5.legend()
 
     plt.show()
 
@@ -368,6 +388,17 @@ def diff_transform(data, divs):
                    divs, x_label='Difference')
     plot_diff_dist(diff_dist, np.linspace(-40.0 / divs, 40.0 - 40.0 / divs, x_bins), divs)
     plot_diff_kde(diff_values)
+
+
+def hist_sd(x, y):
+    mean = hist_mean(x, y)
+    variance = sum((np.asarray(x) - mean) * np.asarray(y)) / (sum(y) - 1)
+    return variance**0.5
+
+
+def hist_mean(x, y):
+    mean = sum(np.asarray(x) * np.asarray(y)) / sum(y)
+    return mean
 
 
 if __name__ == '__main__':

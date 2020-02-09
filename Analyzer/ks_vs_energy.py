@@ -23,6 +23,7 @@ def main():
                     '_local.txt']}
     colors = {7: 'red', 11: 'blue', 19: 'green', 27: 'cyan', 39: 'magenta', 62: 'black'}
     cdf_plot = {'energy': 7, 'division': 3, 'centrality': 8, 'total protons': 35}
+    sd_plot = {'energy': 7, 'division': 3, 'centrality': 8}
 
     data = {'raw': {}, 'mix': {}}
     for source in data.keys():
@@ -39,6 +40,8 @@ def main():
     plot_data_ks2_test = {}
     plot_data_raw = {}
     plot_data_mix = {}
+    sd_data_raw = {}
+    sd_data_mix = {}
     # plot_data_cdf = {}
     for energy in energies:
         print(f'Working on {energy}GeV')
@@ -46,6 +49,8 @@ def main():
         plot_data_ks2_test[energy] = [[], []]
         plot_data_raw[energy] = [[], []]
         plot_data_mix[energy] = [[], []]
+        sd_data_raw[energy] = [[], []]
+        sd_data_mix[energy] = [[], []]
         for division in divisions:
             for centrality in centralities:
                 raw = data['raw'][energy][division][centrality]
@@ -60,6 +65,16 @@ def main():
                         plot_data_mix[energy][0].append(total_protons)
                         plot_data_mix[energy][1].append(ks2_test(mix.data[total_protons], stats.binom.pmf(
                             range(0, total_protons+1), total_protons, 1.0/mix.div)))
+                        sd_data_raw[energy][0].append(total_protons)
+                        sd_data_raw[energy][1].append(hist_sd(range(len(raw.data[total_protons])), raw.data[total_protons]))
+                        sd_data_mix[energy][0].append(total_protons)
+                        sd_data_mix[energy][1].append(
+                            hist_sd(range(len(mix.data[total_protons])), mix.data[total_protons]))
+                        if sd_data_raw[energy][1][-1] is None or sd_data_mix[energy][1][-1] is None:
+                            sd_data_raw[energy][0].pop()
+                            sd_data_raw[energy][1].pop()
+                            sd_data_mix[energy][0].pop()
+                            sd_data_mix[energy][1].pop()
                         # if energy == cdf_plot['energy'] and total_protons == cdf_plot['total protons'] and \
                         #         division == cdf_plot['division'] and centrality == cdf_plot['centrality']:
                         #     plot_data_cdf['raw']
@@ -93,6 +108,8 @@ def main():
     fig2, ax2 = plt.subplots()
     fig3, ax3 = plt.subplots()
     fig4, ax4 = plt.subplots()
+    fig5, ax5 = plt.subplots()
+    fig6, ax6 = plt.subplots()
 
     for energy in energies:
         # ax1.plot(plot_data_ks2[energy][0], plot_data_ks2[energy][1], color=colors[energy], label=f'{energy}GeV')
@@ -124,6 +141,35 @@ def main():
     ax4.set_xlabel('Total Protons in Event')
     ax4.set_ylabel('KS Statistic')
 
+    raw_x = sd_data_raw[sd_plot['energy']][0]
+    raw_y = sd_data_raw[sd_plot['energy']][1]
+    mix_x = sd_data_mix[sd_plot['energy']][0]
+    mix_y = sd_data_mix[sd_plot['energy']][1]
+    p = 1.0 / float(sd_plot['division'])
+    y = (np.asarray(mix_x) * p * (1 - p)) ** 0.5
+
+    fig5.set_size_inches(5.5, 7)
+    ax5.scatter(raw_x, raw_y, zorder=2, color='blue', label='Raw SD')
+    ax5.scatter(mix_x, mix_y, zorder=1, color='green', label='Mix SD')
+    ax5.plot(mix_x, y, color='red', zorder=0, label='Binomal SD')
+    ax5.set_xlabel('Total Protons')
+    ax5.set_ylabel('Standard Deviation of Slice')
+    ax5.set_title(f'Standard Deviation of Total Proton Slices for {sd_plot["energy"]}GeV')
+    ax5.legend()
+
+    fig6.set_size_inches(5.5, 7)
+    raw_ratio = raw_y / y
+    mix_ratio = mix_y / y
+    ax6.scatter(raw_x, raw_ratio, zorder=2, color='blue', label='Raw SD / Binomial SD')
+    ax6.scatter(mix_x, mix_ratio, zorder=1, color='green', label='Mix SD / Binomial SD')
+    ax6.axhline(1, zorder=0, color='red', ls='--')
+    # ax6.axhline(np.average(raw_ratio), zorder=0, color='blue', ls='--', label='Raw Avg')
+    # ax6.axhline(np.average(mix_ratio), zorder=0, color='green', ls='--', label='Mix Avg')
+    ax6.set_xlabel('Total Protons')
+    ax6.set_ylabel('Standard Deviation of Slice Divided by Binomial')
+    ax6.set_title(f'SD Divided by Binomial of Total Proton Slices for {sd_plot["energy"]}GeV')
+    ax6.legend()
+
     plt.show()
 
     print('donzo')
@@ -148,6 +194,22 @@ def get_cdf(y):
         cdf.append(i / norm + cdf[-1])
 
     return cdf[1:]
+
+
+def hist_sd(x, y):
+    mean = hist_mean(x, y)
+    y_sum = sum(y)
+    if y_sum == 1:
+        print('Only one event what is this amateur hour')
+        return None
+    else:
+        variance = sum((np.asarray(x) - mean)**2 * np.asarray(y)) / (sum(y) - 1)
+        return variance**0.5
+
+
+def hist_mean(x, y):
+    mean = sum(np.asarray(x) * np.asarray(y)) / sum(y)
+    return mean
 
 
 if __name__ == '__main__':
