@@ -29,7 +29,7 @@ def main():
     # ratio_transform(data, divs)
     # diff_transform(data, divs)
     # plot_binomial(data, 20, divs)
-    plot_data_mixed(data, data_mix, 25, divs)
+    plot_data_mixed(data, data_mix, 25, divs, range(10, 26))
     print('donzo')
 
 
@@ -75,7 +75,7 @@ def plot_binomial(data, protons, divs):
     plt.show()
 
 
-def plot_data_mixed(data, data_mixed, protons, divs):
+def plot_data_mixed(data, data_mixed, protons, divs, proton_array=[]):
     y = np.asarray([ele[protons] for ele in data])
     y_norm = y / sum(y)
     y_norm_err = np.sqrt(y) / sum(y)
@@ -169,6 +169,44 @@ def plot_data_mixed(data, data_mixed, protons, divs):
     ax5.set_xlabel('Number of Protons in Bin')
     ax5.set_ylabel('Data Events Minus Mixed')
     ax5.legend()
+
+    fig6, axes1 = plt.subplots(4, 4, sharex='all', sharey='all', gridspec_kw={'hspace': 0, 'wspace': 0})
+    fig7, axes2 = plt.subplots(4, 4, sharex='all', sharey='all', gridspec_kw={'hspace': 0, 'wspace': 0})
+    for index, proton in enumerate(proton_array):
+        yi = np.asarray([ele[proton] for ele in data])
+        y_normi = yi / sum(yi)
+        y_norm_erri = np.sqrt(yi) / sum(yi)
+        y_mixedi = np.asarray([ele[proton] for ele in data_mixed])
+        y_mixed_normi = y_mixedi / sum(y_mixedi)
+        y_mixed_norm_erri = np.sqrt(y_mixedi) / sum(y_mixedi)
+        xi = range(len(yi))
+        y_binomi = binom.pmf(xi, proton, 1 / divs)
+        axes1[int(index / 4), int(index % 4)].errorbar(xi, y_normi, yerr=y_norm_erri, fmt='ob', zorder=2,
+                                                       label=f'{proton} Proton Events')
+        axes1[int(index / 4), int(index % 4)].errorbar(xi, y_mixed_normi, yerr=y_mixed_norm_erri, fmt='og', zorder=1,
+                                                       label=f'{proton} Proton Mixed Events')
+        axes1[int(index / 4), int(index % 4)].scatter(xi, y_binomi, color='red', zorder=0,
+                                                      label='Binomial Distribution')
+        axes1[int(index / 4), int(index % 4)].axvline(float(proton) / divs, color='red', ls='--', label='Mean')
+        axes1[int(index / 4), int(index % 4)].set_xticks(range(0, len(yi), 4))
+        axes1[int(index / 4), int(index % 4)].set_xlim(0, 22)
+
+        y_diffi = y_normi - y_binomi
+        y_diff_mixi = y_mixed_normi - y_binomi
+        axes2[int(index / 4), int(index % 4)].errorbar(xi, y_diffi, yerr=y_norm_erri, fmt='ob', zorder=2,
+                                                       label=f'{proton} Proton Events')
+        axes2[int(index / 4), int(index % 4)].errorbar(xi, y_diff_mixi, yerr=y_mixed_norm_erri, fmt='og', zorder=1,
+                                                       label=f'{proton} Proton Mixed Events')
+        axes2[int(index / 4), int(index % 4)].axvline(float(proton) / divs, color='red', ls='--', label='Mean')
+        axes2[int(index / 4), int(index % 4)].axhline(0, color='red', ls='--')
+        axes2[int(index / 4), int(index % 4)].set_xticks(range(0, len(yi), 4))
+        axes2[int(index / 4), int(index % 4)].set_xlim(-1, 17)
+        # axes[int(index / 4), int(index % 4)].set_title(f'{proton} Total Protons')
+        # axes[int(index / 4), int(index % 4)].set_xlabel('Number of Protons in Bin')
+        # axes[int(index / 4), int(index % 4)].set_ylabel('Events')
+        # axes[int(index / 4), int(index % 4)].legend()
+    axes1[0, 0].legend()
+    axes2[0, 0].legend()
 
     plt.show()
 
