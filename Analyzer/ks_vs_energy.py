@@ -104,42 +104,42 @@ def main():
     mix_cdf = get_cdf(data['mix'][cdf_plot['energy']][cdf_plot['division']][cdf_plot['centrality']]
                       .data[cdf_plot['total protons']])
 
-    fig1, ax1 = plt.subplots()
-    fig2, ax2 = plt.subplots()
-    fig3, ax3 = plt.subplots()
-    fig4, ax4 = plt.subplots()
+    # fig1, ax1 = plt.subplots()
+    # fig2, ax2 = plt.subplots()
+    # fig3, ax3 = plt.subplots()
+    # fig4, ax4 = plt.subplots()
     fig5, ax5 = plt.subplots()
     fig6, ax6 = plt.subplots()
 
-    for energy in energies:
-        # ax1.plot(plot_data_ks2[energy][0], plot_data_ks2[energy][1], color=colors[energy], label=f'{energy}GeV')
-        ax2.plot(plot_data_raw[energy][0], plot_data_raw[energy][1], color=colors[energy], label=f'{energy}GeV')
-        ax3.plot(plot_data_mix[energy][0], plot_data_mix[energy][1], color=colors[energy], label=f'{energy}GeV')
-        ax4.plot(plot_data_ks2_test[energy][0], plot_data_ks2_test[energy][1], color=colors[energy],
-                 label=f'{energy}GeV')
-
-    ax1.scatter(range(0, len(raw_cdf)), raw_cdf, label='Raw CDF')
-    ax1.scatter(range(0, len(mix_cdf)), mix_cdf, label='Mix CDF')
-    ax1.legend()
-    ax1.set_title(f'{cdf_plot["energy"]}GeV, {cdf_plot["division"]} div, {cdf_plot["centrality"]} cent,'
-                  f' {cdf_plot["total protons"]} protons, CDF Comparison')
-    ax1.set_xlabel('Protons in Bin')
-    ax1.set_ylabel('Integrated Probability')
-
-    ax2.legend()
-    ax2.set_title('KS Statistics for Data to Binomial | 3 Divisions Most Central')
-    ax2.set_xlabel('Total Protons in Event')
-    ax2.set_ylabel('KS Statistic')
-
-    ax3.legend()
-    ax3.set_title('KS Statistics for Mixed to Binomial | 3 Divisions Most Central')
-    ax3.set_xlabel('Total Protons in Event')
-    ax3.set_ylabel('KS Statistic')
-
-    ax4.legend()
-    ax4.set_title('Test Two Sample KS Statistics for Data to Mixed | 3 Divisions Most Central')
-    ax4.set_xlabel('Total Protons in Event')
-    ax4.set_ylabel('KS Statistic')
+    # for energy in energies:
+    #     # ax1.plot(plot_data_ks2[energy][0], plot_data_ks2[energy][1], color=colors[energy], label=f'{energy}GeV')
+    #     ax2.plot(plot_data_raw[energy][0], plot_data_raw[energy][1], color=colors[energy], label=f'{energy}GeV')
+    #     ax3.plot(plot_data_mix[energy][0], plot_data_mix[energy][1], color=colors[energy], label=f'{energy}GeV')
+    #     ax4.plot(plot_data_ks2_test[energy][0], plot_data_ks2_test[energy][1], color=colors[energy],
+    #              label=f'{energy}GeV')
+    #
+    # ax1.scatter(range(0, len(raw_cdf)), raw_cdf, label='Raw CDF')
+    # ax1.scatter(range(0, len(mix_cdf)), mix_cdf, label='Mix CDF')
+    # ax1.legend()
+    # ax1.set_title(f'{cdf_plot["energy"]}GeV, {cdf_plot["division"]} div, {cdf_plot["centrality"]} cent,'
+    #               f' {cdf_plot["total protons"]} protons, CDF Comparison')
+    # ax1.set_xlabel('Protons in Bin')
+    # ax1.set_ylabel('Integrated Probability')
+    #
+    # ax2.legend()
+    # ax2.set_title('KS Statistics for Data to Binomial | 3 Divisions Most Central')
+    # ax2.set_xlabel('Total Protons in Event')
+    # ax2.set_ylabel('KS Statistic')
+    #
+    # ax3.legend()
+    # ax3.set_title('KS Statistics for Mixed to Binomial | 3 Divisions Most Central')
+    # ax3.set_xlabel('Total Protons in Event')
+    # ax3.set_ylabel('KS Statistic')
+    #
+    # ax4.legend()
+    # ax4.set_title('Test Two Sample KS Statistics for Data to Mixed | 3 Divisions Most Central')
+    # ax4.set_xlabel('Total Protons in Event')
+    # ax4.set_ylabel('KS Statistic')
 
     raw_x = sd_data_raw[sd_plot['energy']][0]
     raw_y = sd_data_raw[sd_plot['energy']][1]

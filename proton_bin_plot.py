@@ -20,8 +20,11 @@ from scipy.optimize import curve_fit
 def main():
     divs = 3
     cent = 8
-    path = f'/home/dylan/Research/Data/Single_Ratio0/7GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
-    path_mix = f'/home/dylan/Research/Data_Mix/Single_Ratio0/7GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
+    energy = 7
+    set_name = 'Rand_Rotate'
+    set_num = 0
+    path = f'/home/dylan/Research/Data/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
+    path_mix = f'/home/dylan/Research/Data_Mix/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
     data = read_azbin_data(path)
     data_mix = read_azbin_data(path_mix)
     # plot_azbin_data(data, range(0, 40), range(0, 20), divs)
@@ -29,7 +32,7 @@ def main():
     # ratio_transform(data, divs)
     # diff_transform(data, divs)
     # plot_binomial(data, 20, divs)
-    plot_data_mixed(data, data_mix, 25, divs, range(10, 26))
+    plot_data_mixed(data, data_mix, 31, divs, range(10, 26))
     print('donzo')
 
 
@@ -96,118 +99,133 @@ def plot_data_mixed(data, data_mixed, protons, divs, proton_array=[]):
     ax1.set_ylabel('Events')
     ax1.legend()
 
-    fig2, ax2 = plt.subplots()
-    y_diff = y_norm - y_mixed_norm
-    diff_err = np.sqrt(y_norm_err**2 + y_mixed_norm_err**2)
-    ax2.axhline(0, color='red', ls='--')
-    ax2.axvline(float(protons) / divs, color='red', ls='--', label='Mean')
-    ax2.errorbar(x, y_diff, yerr=diff_err, fmt='bo')
-    ax2.set_xticks(range(0, len(y), 2))
-    ax2.set_title(f'Protons in {divs} Division Bin Minus Mixed for {protons} Proton Events')
-    ax2.set_xlabel('Number of Protons in Bin')
-    ax2.set_ylabel('Data Events Minus Mixed')
+    y_err = np.sqrt(y)
+    y_mixed_err = np.sqrt(y_mixed)
+    x = range(len(y))
+    y_binom2 = binom.pmf(x, protons, 1 / divs) * sum(y)
 
-    fig3, ax3 = plt.subplots()
-    x_div = []
-    y_div = []
-    y_bin_div = []
-    bin_div_err = []
-    div_err = []
-    for i in range(len(y_norm)):
-        if y_mixed_norm[i] != 0 and y_norm[i] != 0:
-            x_div.append(x[i])
-            y_div.append(y_norm[i] / y_mixed_norm[i])
-            y_bin_div.append(y_norm[i] / y_binom[i])
-            div_err.append(abs(y_div[-1]) * np.sqrt((y_norm_err[i] / y_norm[i])**2 +
-                                                    (y_mixed_norm_err[i] / y_mixed_norm[i])**2))
-            bin_div_err.append(y_norm_err[i] / y_binom[i])
-    ax3.axhline(1, color='red', ls='--')
-    ax3.axvline(float(protons) / divs, color='red', ls='--', label='Mean')
-    ax3.errorbar(x_div, y_div, yerr=div_err, zorder=1, fmt='bo', label='Data Divided by Mixed')
-    ax3.errorbar(x_div, y_bin_div, yerr=bin_div_err, zorder=0, fmt='ro', label='Data Divided by Binomial')
-    ax3.set_xticks(range(0, max(x_div), 2))
-    ax3.set_title(f'Protons in {divs} Division Bin Divided by Mixed for {protons} Proton Events')
-    ax3.set_xlabel('Number of Protons in Bin')
-    ax3.set_ylabel('Data Events Divided by Mixed')
-    ax3.legend()
-
-    fig4, ax4 = plt.subplots()
-    x_data_div = []
-    x_mix_div = []
-    y_data_bin_div = []
-    y_mix_bin_div = []
-    data_bin_div_err = []
-    mix_bin_div_err = []
-    for i in range(len(y_norm)):
-        if y_norm[i] != 0:
-            x_data_div.append(x[i])
-            y_data_bin_div.append(y_norm[i] / y_binom[i])
-            data_bin_div_err.append(y_norm_err[i] / y_binom[i])
-        if y_mixed_norm[i] != 0:
-            x_mix_div.append(x[i])
-            y_mix_bin_div.append(y_mixed_norm[i] / y_binom[i])
-            mix_bin_div_err.append(y_mixed_norm_err[i] / y_binom[i])
-    ax4.axhline(1, color='red', ls='--')
-    ax4.axvline(float(protons) / divs, color='red', ls='--', label='Mean')
-    ax4.errorbar(x_data_div, y_data_bin_div, yerr=data_bin_div_err, zorder=1, fmt='bo', label='Data Divided by Binomial')
-    ax4.errorbar(x_mix_div, y_mix_bin_div, yerr=mix_bin_div_err, zorder=0, fmt='go', label='Mixed Divided by Binomial')
-    ax4.set_xticks(range(0, max([max(x_data_div),max(x_mix_div)]), 2))
-    ax4.set_title(f'Protons in {divs} Division Bin Divided by Binomial for {protons} Proton Events')
-    ax4.set_xlabel('Number of Protons in Bin')
-    ax4.set_ylabel('Data/Mixed Events Divided by Binomial')
-    ax4.legend()
-
-    fig5, ax5 = plt.subplots()
-    y_diff_raw = y_norm - y_binom
-    y_diff_mix = y_mixed_norm - y_binom
-    ax5.axhline(0, color='red', ls='--')
-    ax5.axvline(float(protons) / divs, color='red', ls='--', label='Mean')
-    ax5.errorbar(x, y_diff_raw, yerr=y_norm_err, fmt='bo', label='Raw - Binomial')
-    ax5.errorbar(x, y_diff_mix, yerr=y_mixed_norm_err, fmt='go', label='Mix - Binomial')
-    ax5.set_xticks(range(0, len(y), 2))
-    ax5.set_title(f'Protons in {divs} Division Bin Minus Binomial for {protons} Proton Events')
-    ax5.set_xlabel('Number of Protons in Bin')
-    ax5.set_ylabel('Data Events Minus Mixed')
-    ax5.legend()
-
-    fig6, axes1 = plt.subplots(4, 4, sharex='all', sharey='all', gridspec_kw={'hspace': 0, 'wspace': 0})
-    fig7, axes2 = plt.subplots(4, 4, sharex='all', sharey='all', gridspec_kw={'hspace': 0, 'wspace': 0})
-    fig7.suptitle('Data (blue) and Mix (green) Minus Binomial for 10-26 Total Protons')
-    for index, proton in enumerate(proton_array):
-        yi = np.asarray([ele[proton] for ele in data])
-        y_normi = yi / sum(yi)
-        y_norm_erri = np.sqrt(yi) / sum(yi)
-        y_mixedi = np.asarray([ele[proton] for ele in data_mixed])
-        y_mixed_normi = y_mixedi / sum(y_mixedi)
-        y_mixed_norm_erri = np.sqrt(y_mixedi) / sum(y_mixedi)
-        xi = range(len(yi))
-        y_binomi = binom.pmf(xi, proton, 1 / divs)
-        axes1[int(index / 4), int(index % 4)].errorbar(xi, y_normi, yerr=y_norm_erri, fmt='ob', zorder=2,
-                                                       label=f'{proton} Proton Events')
-        axes1[int(index / 4), int(index % 4)].errorbar(xi, y_mixed_normi, yerr=y_mixed_norm_erri, fmt='og', zorder=1,
-                                                       label=f'{proton} Proton Mixed Events')
-        axes1[int(index / 4), int(index % 4)].scatter(xi, y_binomi, color='red', zorder=0,
-                                                      label='Binomial Distribution')
-        axes1[int(index / 4), int(index % 4)].axvline(float(proton) / divs, color='red', ls='--', label='Mean')
-        axes1[int(index / 4), int(index % 4)].set_xticks(range(0, len(yi), 4))
-        axes1[int(index / 4), int(index % 4)].set_xlim(0, 22)
-
-        y_diffi = y_normi - y_binomi
-        y_diff_mixi = y_mixed_normi - y_binomi
-        axes2[int(index / 4), int(index % 4)].errorbar(xi, y_diffi, yerr=y_norm_erri, fmt='ob', zorder=2,
-                                                       label=f'{proton} Proton Events')
-        axes2[int(index / 4), int(index % 4)].errorbar(xi, y_diff_mixi, yerr=y_mixed_norm_erri, fmt='og', zorder=1,
-                                                       label=f'{proton} Proton Mixed Events')
-        axes2[int(index / 4), int(index % 4)].axvline(float(proton) / divs, color='red', ls='--', label='Mean')
-        axes2[int(index / 4), int(index % 4)].axhline(0, color='red', ls='--')
-        axes2[int(index / 4), int(index % 4)].set_xticks(range(0, len(yi), 4))
-        axes2[int(index / 4), int(index % 4)].set_xlim(-1, 17)
-        # axes[int(index / 4), int(index % 4)].set_title(f'{proton} Total Protons')
-        # axes[int(index / 4), int(index % 4)].set_xlabel('Number of Protons in Bin')
-        # axes[int(index / 4), int(index % 4)].set_ylabel('Events')
-        # axes[int(index / 4), int(index % 4)].legend()
-    axes1[0, 0].legend()
-    axes2[0, 0].legend()
+    fig9, ax9 = plt.subplots()
+    ax9.errorbar(x, y, yerr=y_err, fmt='ob', zorder=2, label=f'{protons} Proton Events')
+    # ax9.errorbar(x, y_mixed_norm, yerr=y_mixed_norm_err, fmt='og', zorder=1, label=f'{protons} Proton Mixed Events')
+    ax9.scatter(x, y_binom2, color='red', zorder=0, label='Binomial Distribution')
+    ax9.axvline(float(protons) / divs, color='red', ls='--', label='Mean')
+    ax9.set_xticks(range(0, len(y), 2))
+    ax9.set_title(f'Protons in {divs} Division Bin vs Binomial for {protons} Proton Events')
+    ax9.set_xlabel('Number of Protons in Bin')
+    ax9.set_ylabel('Events')
+    ax9.legend()
+    # fig2, ax2 = plt.subplots()
+    # y_diff = y_norm - y_mixed_norm
+    # diff_err = np.sqrt(y_norm_err**2 + y_mixed_norm_err**2)
+    # ax2.axhline(0, color='red', ls='--')
+    # ax2.axvline(float(protons) / divs, color='red', ls='--', label='Mean')
+    # ax2.errorbar(x, y_diff, yerr=diff_err, fmt='bo')
+    # ax2.set_xticks(range(0, len(y), 2))
+    # ax2.set_title(f'Protons in {divs} Division Bin Minus Mixed for {protons} Proton Events')
+    # ax2.set_xlabel('Number of Protons in Bin')
+    # ax2.set_ylabel('Data Events Minus Mixed')
+    #
+    # fig3, ax3 = plt.subplots()
+    # x_div = []
+    # y_div = []
+    # y_bin_div = []
+    # bin_div_err = []
+    # div_err = []
+    # for i in range(len(y_norm)):
+    #     if y_mixed_norm[i] != 0 and y_norm[i] != 0:
+    #         x_div.append(x[i])
+    #         y_div.append(y_norm[i] / y_mixed_norm[i])
+    #         y_bin_div.append(y_norm[i] / y_binom[i])
+    #         div_err.append(abs(y_div[-1]) * np.sqrt((y_norm_err[i] / y_norm[i])**2 +
+    #                                                 (y_mixed_norm_err[i] / y_mixed_norm[i])**2))
+    #         bin_div_err.append(y_norm_err[i] / y_binom[i])
+    # ax3.axhline(1, color='red', ls='--')
+    # ax3.axvline(float(protons) / divs, color='red', ls='--', label='Mean')
+    # ax3.errorbar(x_div, y_div, yerr=div_err, zorder=1, fmt='bo', label='Data Divided by Mixed')
+    # ax3.errorbar(x_div, y_bin_div, yerr=bin_div_err, zorder=0, fmt='ro', label='Data Divided by Binomial')
+    # ax3.set_xticks(range(0, max(x_div), 2))
+    # ax3.set_title(f'Protons in {divs} Division Bin Divided by Mixed for {protons} Proton Events')
+    # ax3.set_xlabel('Number of Protons in Bin')
+    # ax3.set_ylabel('Data Events Divided by Mixed')
+    # ax3.legend()
+    #
+    # fig4, ax4 = plt.subplots()
+    # x_data_div = []
+    # x_mix_div = []
+    # y_data_bin_div = []
+    # y_mix_bin_div = []
+    # data_bin_div_err = []
+    # mix_bin_div_err = []
+    # for i in range(len(y_norm)):
+    #     if y_norm[i] != 0:
+    #         x_data_div.append(x[i])
+    #         y_data_bin_div.append(y_norm[i] / y_binom[i])
+    #         data_bin_div_err.append(y_norm_err[i] / y_binom[i])
+    #     if y_mixed_norm[i] != 0:
+    #         x_mix_div.append(x[i])
+    #         y_mix_bin_div.append(y_mixed_norm[i] / y_binom[i])
+    #         mix_bin_div_err.append(y_mixed_norm_err[i] / y_binom[i])
+    # ax4.axhline(1, color='red', ls='--')
+    # ax4.axvline(float(protons) / divs, color='red', ls='--', label='Mean')
+    # ax4.errorbar(x_data_div, y_data_bin_div, yerr=data_bin_div_err, zorder=1, fmt='bo', label='Data Divided by Binomial')
+    # ax4.errorbar(x_mix_div, y_mix_bin_div, yerr=mix_bin_div_err, zorder=0, fmt='go', label='Mixed Divided by Binomial')
+    # ax4.set_xticks(range(0, max([max(x_data_div),max(x_mix_div)]), 2))
+    # ax4.set_title(f'Protons in {divs} Division Bin Divided by Binomial for {protons} Proton Events')
+    # ax4.set_xlabel('Number of Protons in Bin')
+    # ax4.set_ylabel('Data/Mixed Events Divided by Binomial')
+    # ax4.legend()
+    #
+    # fig5, ax5 = plt.subplots()
+    # y_diff_raw = y_norm - y_binom
+    # y_diff_mix = y_mixed_norm - y_binom
+    # ax5.axhline(0, color='red', ls='--')
+    # ax5.axvline(float(protons) / divs, color='red', ls='--', label='Mean')
+    # ax5.errorbar(x, y_diff_raw, yerr=y_norm_err, fmt='bo', label='Raw - Binomial')
+    # ax5.errorbar(x, y_diff_mix, yerr=y_mixed_norm_err, fmt='go', label='Mix - Binomial')
+    # ax5.set_xticks(range(0, len(y), 2))
+    # ax5.set_title(f'Protons in {divs} Division Bin Minus Binomial for {protons} Proton Events')
+    # ax5.set_xlabel('Number of Protons in Bin')
+    # ax5.set_ylabel('Data Events Minus Mixed')
+    # ax5.legend()
+    #
+    # fig6, axes1 = plt.subplots(4, 4, sharex='all', sharey='all', gridspec_kw={'hspace': 0, 'wspace': 0})
+    # fig7, axes2 = plt.subplots(4, 4, sharex='all', sharey='all', gridspec_kw={'hspace': 0, 'wspace': 0})
+    # fig7.suptitle('Data (blue) and Mix (green) Minus Binomial for 10-26 Total Protons')
+    # for index, proton in enumerate(proton_array):
+    #     yi = np.asarray([ele[proton] for ele in data])
+    #     y_normi = yi / sum(yi)
+    #     y_norm_erri = np.sqrt(yi) / sum(yi)
+    #     y_mixedi = np.asarray([ele[proton] for ele in data_mixed])
+    #     y_mixed_normi = y_mixedi / sum(y_mixedi)
+    #     y_mixed_norm_erri = np.sqrt(y_mixedi) / sum(y_mixedi)
+    #     xi = range(len(yi))
+    #     y_binomi = binom.pmf(xi, proton, 1 / divs)
+    #     axes1[int(index / 4), int(index % 4)].errorbar(xi, y_normi, yerr=y_norm_erri, fmt='ob', zorder=2,
+    #                                                    label=f'{proton} Proton Events')
+    #     axes1[int(index / 4), int(index % 4)].errorbar(xi, y_mixed_normi, yerr=y_mixed_norm_erri, fmt='og', zorder=1,
+    #                                                    label=f'{proton} Proton Mixed Events')
+    #     axes1[int(index / 4), int(index % 4)].scatter(xi, y_binomi, color='red', zorder=0,
+    #                                                   label='Binomial Distribution')
+    #     axes1[int(index / 4), int(index % 4)].axvline(float(proton) / divs, color='red', ls='--', label='Mean')
+    #     axes1[int(index / 4), int(index % 4)].set_xticks(range(0, len(yi), 4))
+    #     axes1[int(index / 4), int(index % 4)].set_xlim(0, 22)
+    #
+    #     y_diffi = y_normi - y_binomi
+    #     y_diff_mixi = y_mixed_normi - y_binomi
+    #     axes2[int(index / 4), int(index % 4)].errorbar(xi, y_diffi, yerr=y_norm_erri, fmt='ob', zorder=2,
+    #                                                    label=f'{proton} Proton Events')
+    #     axes2[int(index / 4), int(index % 4)].errorbar(xi, y_diff_mixi, yerr=y_mixed_norm_erri, fmt='og', zorder=1,
+    #                                                    label=f'{proton} Proton Mixed Events')
+    #     axes2[int(index / 4), int(index % 4)].axvline(float(proton) / divs, color='red', ls='--', label='Mean')
+    #     axes2[int(index / 4), int(index % 4)].axhline(0, color='red', ls='--')
+    #     axes2[int(index / 4), int(index % 4)].set_xticks(range(0, len(yi), 4))
+    #     axes2[int(index / 4), int(index % 4)].set_xlim(-1, 17)
+    #     # axes[int(index / 4), int(index % 4)].set_title(f'{proton} Total Protons')
+    #     # axes[int(index / 4), int(index % 4)].set_xlabel('Number of Protons in Bin')
+    #     # axes[int(index / 4), int(index % 4)].set_ylabel('Events')
+    #     # axes[int(index / 4), int(index % 4)].legend()
+    # axes1[0, 0].legend()
+    # axes2[0, 0].legend()
 
     # fig8, ax8 = plt.subplots()
     # x_raw = []
