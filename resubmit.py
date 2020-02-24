@@ -31,12 +31,13 @@ def local_test():
 def resub():
     try:
         energy = sys.argv[1]
+        ref = sys.argv[2]
     except IndexError:
-        print('Need to input energy as command line argument!')
+        print('Need to input energy and ref as command line arguments!')
         return
-    script_path = '/gpfs01/star/pwg/dneff/scratch/trees/script/' + str(energy) + 'GeV/'
-    output_path = '/gpfs01/star/pwg/dneff/scratch/trees/output/' + str(energy) + 'GeV/'
-    err_path = '/gpfs01/star/pwg/dneff/scratch/trees/log/' + str(energy) + 'GeV/'
+    script_path = '/gpfs01/star/pwg/dneff/scratch/trees_ref' + str(ref) + '/script/' + str(energy) + 'GeV/'
+    output_path = '/gpfs01/star/pwg/dneff/scratch/trees_ref' + str(ref) + '/output/' + str(energy) + 'GeV/'
+    err_path = '/gpfs01/star/pwg/dneff/scratch/trees_ref' + str(ref) + '/log/' + str(energy) + 'GeV/'
     break_list = get_break_list(err_path)
     script_list = get_script_list(script_path)
     out_list = get_out_list(output_path)
