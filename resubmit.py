@@ -11,6 +11,7 @@ Created as QGP_Scripts/resubmit.py
 
 import os
 import sys
+import re
 
 
 def main():
@@ -62,7 +63,8 @@ def get_script_list(path):
     script_list = []
     for fpath in os.listdir(path):
         if '.csh' in fpath:
-            script_list.append(fpath[5:-4])
+            fpath = fpath.strip('.csh').strip('sched')
+            script_list.append(fpath)
 
     return script_list
 
@@ -75,7 +77,8 @@ def get_out_list(path):
     out_list = []
     for fpath in os.listdir(path):
         if '.root' in fpath:
-            out_list.append(fpath[5:-5])
+            fpath = fpath.strip('.root').strip('auau_')
+            out_list.append(fpath)
 
     return out_list
 
@@ -121,44 +124,6 @@ def resub_jobs(script_path, failed_jobs):
         os.system(command)
 
 
-def get_break_list(path):
-    breaks = 0
-    files = 0
-    break_list = []
-    for fpath in os.listdir(path):
-        if '.err' in fpath:
-            files += 1
-            with open(path + fpath, 'r') as file:
-                lines = file.readlines()
-                for line in lines:
-                    if '*** Break *** segmentation violation' in line:
-                        breaks += 1
-                        break_list.append(fpath)
-                        break
-    print(f'Files: {files}  |  Breaks: {breaks}  |  Percentage Broken: {float(breaks) / files * 100}%')
-
-    return break_list
-
-
-def get_finished_list(path):
-    finished = 0
-    files = 0
-    finished_list = []
-    for fpath in os.listdir(path):
-        if '.out' in fpath:
-            files += 1
-            with open(path + fpath, 'r') as file:
-                lines = file.readlines()
-                for line in lines:
-                    if '.csh ) has ended, exiting normally' in line:
-                        finished += 1
-                        finished_list.append(fpath)
-                        break
-    print(f'Files: {files}  |  Breaks: {finished}  |  Percentage Broken: {float(finished) / files * 100}%')
-
-    return finished_list
-
-
 def get_err_status(path):
     files = 0
     breaks = []
@@ -169,23 +134,23 @@ def get_err_status(path):
         if '.err' in fpath:
             files += 1
             with open(path + fpath, 'r') as file:
+                job = fpath.strip('.err')
+                job = re.sub(r'err_\w+GeV', '', job)
                 lines = file.readlines()
                 alive = True
                 for line in lines:
                     if '*** Break *** segmentation violation' in line:
-                        breaks.append(fpath)
+                        breaks.append(job)
                         alive = False
                         break
-                    if ' Terminated                    ( ( setenv SUMS_EXECUTION' in line:
-                        terminated.append(fpath)
-                        alive = False
-                        break
-                    if ' Done                          ( ( setenv SUMS_EXECUTION' in line:
-                        finished.append(fpath)
-                        alive = False
-                        break
+                if alive and ' Terminated ' in line[0]:
+                    terminated.append(job)
+                    alive = False
+                if alive and ' Done ' in line:
+                    finished.append(job)
+                    alive = False
                 if alive:
-                    running.append(fpath)
+                    running.append(job)
     print(f'Files: {files}  |  Breaks: {len(breaks)}  |  Percentage Broken: {float(len(breaks)) / files * 100}%')
     print(f'Files: {files}  |  Terminated: {len(terminated)}  |  Percentage Terminated: '
           f'{float(len(terminated)) / files * 100}%')
