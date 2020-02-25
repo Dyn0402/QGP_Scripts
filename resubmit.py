@@ -44,7 +44,7 @@ def resub():
     script_list = get_script_list(script_path)
     out_list = get_out_list(output_path)
     failed_jobs = get_failed_jobs(script_list, out_list)
-    cross_check_failed(failed_jobs, status_lists.copy())
+    cross_check_failed(failed_jobs, status_lists)
     resub_flag, resub_set = ask_to_resub(status_lists['terminated']+status_lists['breaks'], failed_jobs, energy)
     if resub_flag:
         resub_jobs(script_path, resub_set)
@@ -210,14 +210,17 @@ def cross_check_failed(failed_list, status_lists):
     :param status_lists: Lists of job status based on .err files
     :return: -
     """
+    breaks = status_lists['breaks'].copy()
+    terminated = status_lists['terminated'].copy()
+    running = status_lists['running'].copy()
     fails_remaining = []
     for fail_path in failed_list:
-        if fail_path in status_lists['breaks']:
-            status_lists['breaks'].remove(fail_path)
-        elif fail_path in status_lists['terminated']:
-            status_lists['terminated'].remove(fail_path)
-        elif fail_path in status_lists['running']:
-            status_lists['running'].remove(fail_path)
+        if fail_path in breaks:
+            breaks.remove(fail_path)
+        elif fail_path in terminated:
+            terminated.remove(fail_path)
+        elif fail_path in running:
+            running.remove(fail_path)
         else:
             fails_remaining.append(fail_path)
 
@@ -225,17 +228,17 @@ def cross_check_failed(failed_list, status_lists):
         print(f'No Root file for following but err file says it is finished: ')
         for fail in fails_remaining:
             print(fail)
-    if len(status_lists['breaks']) > 0:
+    if len(breaks) > 0:
         print(f'Root file exists for following but err file says it seg faulted: ')
-        for fail in status_lists['breaks']:
+        for fail in breaks:
             print(fail)
-    if len(status_lists['terminated']) > 0:
+    if len(terminated) > 0:
         print(f'Root file exists for following but err file says it was terminated: ')
-        for fail in status_lists['terminated']:
+        for fail in terminated:
             print(fail)
-    if len(status_lists['running']) > 0:
+    if len(running) > 0:
         print(f'Root file exists for following but err file says it is still running: ')
-        for fail in status_lists['running']:
+        for fail in running:
             print(fail)
 
 
