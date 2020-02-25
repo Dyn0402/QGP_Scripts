@@ -53,7 +53,6 @@ def resub():
 def get_script_list(path):
     """
     Get .csh files in directory and return the jobid plus job number.
-    Tested, seems to work.
     """
     script_list = []
     for fpath in os.listdir(path):
@@ -66,9 +65,8 @@ def get_script_list(path):
 
 def get_out_list(path):
     """
-        Get .csh files in directory and return the jobid plus job number.
-        Tested, seems to work.
-        """
+    Get .csh files in directory and return the jobid plus job number.
+    """
     out_list = []
     for fpath in os.listdir(path):
         if '.root' in fpath:
@@ -81,7 +79,6 @@ def get_out_list(path):
 def get_failed_jobs(script_list, out_list):
     """
     Compare script job submission files to output root files to determine which jobs have failed.
-    Tested, seems to work.
     """
     failed_jobs = []
     for job in script_list:
@@ -94,7 +91,6 @@ def get_failed_jobs(script_list, out_list):
 def ask_to_resub(incomplete_jobs, missing_jobs, energy):
     """
     Display failed jobs and ask user if they should be resubmitted.
-    Tested, seems to work.
     """
     resub_set = []
     if len(incomplete_jobs) == 0 and len(missing_jobs) == 0:
@@ -121,7 +117,7 @@ def ask_to_resub(incomplete_jobs, missing_jobs, energy):
             resub_set = incomplete_jobs.copy()
             resub_set.extend([x for x in missing_jobs if x not in incomplete_jobs])
         else:
-            return False
+            resub_flag = False
 
     return resub_flag, resub_set
 
@@ -137,6 +133,11 @@ def resub_jobs(script_path, failed_jobs):
 
 
 def get_err_status(path):
+    """
+    Looks at each .err file and determines status of job based on contents. Sorts job strings into corresponding lists.
+    :param path: Path to directory containing .err files
+    :return: Lists of job names sorted corresponding to status determined of error file
+    """
     files = 0
     breaks = []
     finished = []
@@ -201,6 +202,14 @@ def get_err_status(path):
 
 
 def cross_check_failed(failed_list, status_lists):
+    """
+    Cross check job statuses determined by .err files with statuses determined by comparing .csh and .root files.
+    .csh/.root comparison only determines if the full process completes while .err files can determine more
+    (running, terminated, broken, etc)
+    :param failed_list: List of missing .root jobs with resepect to expected from .csh files
+    :param status_lists: Lists of job status based on .err files
+    :return: -
+    """
     fails_remaining = []
     for fail_path in failed_list:
         if fail_path in status_lists['breaks']:
