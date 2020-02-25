@@ -134,12 +134,7 @@ def get_err_status(path):
         if '.err' in fpath:
             files += 1
             with open(path + fpath, 'r') as file:
-                print(fpath)
-                job = fpath.strip('.err')
-                print(job)
-                job = re.sub(r'err_\d+GeV', '', job)
-                print(job)
-                input()
+                job = re.sub(r'err_\d+GeV', '', fpath).strip('.err')
                 lines = file.readlines()
                 alive = True
                 for line in lines:
