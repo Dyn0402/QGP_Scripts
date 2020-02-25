@@ -130,6 +130,7 @@ def get_err_status(path):
     finished = []
     terminated = []
     running = []
+    grep_write_err = []
     for fpath in os.listdir(path):
         if '.err' in fpath:
             files += 1
@@ -142,10 +143,15 @@ def get_err_status(path):
                         breaks.append(job)
                         alive = False
                         break
-                if alive and ' Terminated ' in lines[0]:
+                first_line = 0
+                while '/bin/grep: write error' in lines[first_line]:
+                    if first_line == 0:
+                        grep_write_err.append(job)
+                    first_line += 1
+                if alive and ' Terminated ' in lines[first_line]:
                     terminated.append(job)
                     alive = False
-                if alive and ' Done ' in lines[0]:
+                if alive and ' Done ' in lines[first_line]:
                     finished.append(job)
                     alive = False
                 if alive:
@@ -157,29 +163,25 @@ def get_err_status(path):
           f'{float(len(finished)) / files * 100}%')
     print(f'Files: {files}  |  Running: {len(running)}  |  Percentage Running: '
           f'{float(len(running)) / files * 100}%')
+    print(f'Files: {files}  |  grep write error: {len(grep_write_err)}  |  Percentage grep write error: '
+          f'{float(len(grep_write_err)) / files * 100}%')
     if len(breaks) + len(terminated) + len(finished) + len(running) != files:
         print(f'Bad accounting. {len(breaks) + len(terminated) + len(finished) + len(running)} '
               f'err files categorized out of {files}')
 
-    return {'breaks': breaks, 'terminated': terminated, 'finished': finished, 'running': running}
+    return {'breaks': breaks, 'terminated': terminated, 'finished': finished, 'running': running,
+            'grep_write_err': grep_write_err}
 
 
 def cross_check_failed(failed_list, status_lists):
     fails_remaining = []
     for fail_path in failed_list:
-        print(f'Fail_list item: {fail_path}')
         if fail_path in status_lists['breaks']:
             status_lists['breaks'].remove(fail_path)
-            print(f'Breaks list item: {fail_path}')
-            input()
         elif fail_path in status_lists['terminated']:
             status_lists['terminated'].remove(fail_path)
-            print(f'Breaks list item: {fail_path}')
-            input()
         elif fail_path in status_lists['running']:
             status_lists['running'].remove(fail_path)
-            print(f'Breaks list item: {fail_path}')
-            input()
         else:
             fails_remaining.append(fail_path)
 
