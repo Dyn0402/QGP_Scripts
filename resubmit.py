@@ -167,12 +167,19 @@ def get_err_status(path):
 def cross_check_failed(failed_list, status_lists):
     fails_remaining = []
     for fail_path in failed_list:
+        print(f'Fail_list item: {fail_path}')
         if fail_path in status_lists['breaks']:
             status_lists['breaks'].remove(fail_path)
+            print(f'Breaks list item: {fail_path}')
+            input()
         elif fail_path in status_lists['terminated']:
             status_lists['terminated'].remove(fail_path)
+            print(f'Breaks list item: {fail_path}')
+            input()
         elif fail_path in status_lists['running']:
             status_lists['running'].remove(fail_path)
+            print(f'Breaks list item: {fail_path}')
+            input()
         else:
             fails_remaining.append(fail_path)
 
