@@ -145,7 +145,7 @@ def get_err_status(path):
                 if alive and ' Terminated ' in line[0]:
                     terminated.append(job)
                     alive = False
-                if alive and ' Done ' in line:
+                if alive and ' Done ' in line[0]:
                     finished.append(job)
                     alive = False
                 if alive:
