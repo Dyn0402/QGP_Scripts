@@ -142,10 +142,10 @@ def get_err_status(path):
                         breaks.append(job)
                         alive = False
                         break
-                if alive and ' Terminated ' in line[0]:
+                if alive and ' Terminated ' in lines[0]:
                     terminated.append(job)
                     alive = False
-                if alive and ' Done ' in line[0]:
+                if alive and ' Done ' in lines[0]:
                     finished.append(job)
                     alive = False
                 if alive:
