@@ -38,10 +38,12 @@ def resub():
     script_path = '/gpfs01/star/pwg/dneff/scratch/trees_ref' + str(ref) + '/script/' + str(energy) + 'GeV/'
     output_path = '/gpfs01/star/pwg/dneff/scratch/trees_ref' + str(ref) + '/output/' + str(energy) + 'GeV/'
     err_path = '/gpfs01/star/pwg/dneff/scratch/trees_ref' + str(ref) + '/log/' + str(energy) + 'GeV/'
-    break_list = get_break_list(err_path)
+    # break_list = get_break_list(err_path)
+    status_lists = get_err_status(err_path)
     script_list = get_script_list(script_path)
     out_list = get_out_list(output_path)
     failed_jobs = get_failed_jobs(script_list, out_list)
+    cross_check_failed(failed_jobs, status_lists)
     resub_flag = ask_to_resub(failed_jobs, energy)
     if resub_flag:
         resub_jobs(script_path, failed_jobs)
@@ -131,6 +133,97 @@ def get_break_list(path):
     print(f'Files: {files}  |  Breaks: {breaks}  |  Percentage Broken: {float(breaks) / files * 100}%')
 
     return break_list
+
+
+def get_finished_list(path):
+    finished = 0
+    files = 0
+    finished_list = []
+    for fpath in os.listdir(path):
+        if '.out' in fpath:
+            files += 1
+            with open(path + fpath, 'r') as file:
+                lines = file.readlines()
+                for line in lines:
+                    if '.csh ) has ended, exiting normally' in line:
+                        finished += 1
+                        finished_list.append(fpath)
+                        break
+    print(f'Files: {files}  |  Breaks: {finished}  |  Percentage Broken: {float(finished) / files * 100}%')
+
+    return finished_list
+
+
+def get_err_status(path):
+    files = 0
+    breaks = []
+    finished = []
+    terminated = []
+    running = []
+    for fpath in os.listdir(path):
+        if '.err' in fpath:
+            files += 1
+            with open(path + fpath, 'r') as file:
+                lines = file.readlines()
+                alive = True
+                for line in lines:
+                    if '*** Break *** segmentation violation' in line:
+                        breaks.append(fpath)
+                        alive = False
+                        break
+                    if '+ Terminated' in line:
+                        terminated.append(fpath)
+                        alive = False
+                        break
+                    if '+ Done' in line:
+                        finished.append(fpath)
+                        alive = False
+                        break
+                if alive:
+                    running.append(fpath)
+    print(f'Files: {files}  |  Breaks: {len(breaks)}  |  Percentage Broken: {float(len(breaks)) / files * 100}%')
+    print(f'Files: {files}  |  Terminated: {len(terminated)}  |  Percentage Terminated: '
+          f'{float(len(terminated)) / files * 100}%')
+    print(f'Files: {files}  |  Finished: {len(finished)}  |  Percentage Finished: '
+          f'{float(len(finished)) / files * 100}%')
+    print(f'Files: {files}  |  Running: {len(running)}  |  Percentage Running: '
+          f'{float(len(running)) / files * 100}%')
+    if len(breaks) + len(terminated) + len(finished) + len(running) != files:
+        print(f'Bad accounting. {len(breaks) + len(terminated) + len(finished) + len(running)} '
+              f'err files categorized out of {files}')
+
+    return {'breaks': breaks, 'terminated': terminated, 'finished': finished, 'running': running}
+
+
+def cross_check_failed(failed_list, status_lists):
+    fails_remaining = []
+    for fail_path in failed_list:
+        if fail_path in status_lists['breaks']:
+            status_lists['breaks'].remove(fail_path)
+        elif fail_path in status_lists['terminated']:
+            status_lists['terminated'].remove(fail_path)
+        elif fail_path in status_lists['running']:
+            status_lists['running'].remove(fail_path)
+        else:
+            fails_remaining.append(fail_path)
+
+    if len(fails_remaining) > 0:
+        print(f'No Root file for following but err file says it is finished: ')
+        for fail in fails_remaining:
+            print(fail)
+    if len(status_lists['breaks']) > 0:
+        print(f'Root file exists for following but err file says it seg faulted: ')
+        for fail in status_lists['breaks']:
+            print(fail)
+    if len(status_lists['terminated']) > 0:
+        print(f'Root file exists for following but err file says it was terminated: ')
+        for fail in status_lists['terminated']:
+            print(fail)
+    if len(status_lists['running']) > 0:
+        print(f'Root file exists for following but err file says it is still running: ')
+        for fail in status_lists['running']:
+            print(fail)
+
 
 
 def split_condor(path):

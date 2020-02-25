@@ -15,11 +15,12 @@ import os
 
 
 def main():
-    energy = 39
-    expected = 3580
+    energy = 19
+    expected = 1397
     numbers = list(range(0, expected))
     prefix = ''
-    files = os.listdir(f'/home/dylan/Research/Trees/{energy}GeV/')
+    path = f'/media/dylan/SSD_Storage/Research/Trees_Ref3/{energy}GeV/'
+    files = os.listdir(path)
     for file in files:
         last_uscore = file.rfind('_')
         last_period = file.rfind('.')
