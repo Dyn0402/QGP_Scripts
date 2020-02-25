@@ -186,13 +186,13 @@ def get_err_status(path):
 
     print(f'\nFiles: {files}  |  Breaks: {len(breaks)}  |  Percentage Broken: {float(len(breaks)) / files * 100}%')
     print(f'Files: {files}  |  Terminated: {len(terminated)}  |  Percentage Terminated: '
-          f'{float(len(terminated)) / files * 100}%')
+          f'{float(len(terminated)) / files * 100:.4f}%')
     print(f'Files: {files}  |  Finished: {len(finished)}  |  Percentage Finished: '
-          f'{float(len(finished)) / files * 100}%')
+          f'{float(len(finished)) / files * 100:.4f}%')
     print(f'Files: {files}  |  Running: {len(running)}  |  Percentage Running: '
-          f'{float(len(running)) / files * 100}%')
+          f'{float(len(running)) / files * 100:.4f}%')
     print(f'Files: {files}  |  grep write error: {len(grep_write_err)}  |  Percentage grep write error: '
-          f'{float(len(grep_write_err)) / files * 100}%')
+          f'{float(len(grep_write_err)) / files * 100:.4f}%')
     if len(breaks) + len(terminated) + len(finished) + len(running) != files:
         print(f'Bad accounting. {len(breaks) + len(terminated) + len(finished) + len(running)} '
               f'err files categorized out of {files}')
