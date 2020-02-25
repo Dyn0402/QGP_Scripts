@@ -39,16 +39,15 @@ def resub():
     script_path = '/gpfs01/star/pwg/dneff/scratch/trees_ref' + str(ref) + '/script/' + str(energy) + 'GeV/'
     output_path = '/gpfs01/star/pwg/dneff/scratch/trees_ref' + str(ref) + '/output/' + str(energy) + 'GeV/'
     err_path = '/gpfs01/star/pwg/dneff/scratch/trees_ref' + str(ref) + '/log/' + str(energy) + 'GeV/'
-    # break_list = get_break_list(err_path)
     print('Reading err files for status: ')
     status_lists = get_err_status(err_path)
     script_list = get_script_list(script_path)
     out_list = get_out_list(output_path)
     failed_jobs = get_failed_jobs(script_list, out_list)
-    cross_check_failed(failed_jobs, status_lists)
-    resub_flag = ask_to_resub(failed_jobs, energy)
+    cross_check_failed(failed_jobs, status_lists.copy())
+    resub_flag, resub_set = ask_to_resub(status_lists['terminated']+status_lists['breaks'], failed_jobs, energy)
     if resub_flag:
-        resub_jobs(script_path, failed_jobs)
+        resub_jobs(script_path, resub_set)
 
 
 def get_script_list(path):
@@ -92,22 +91,39 @@ def get_failed_jobs(script_list, out_list):
     return failed_jobs
 
 
-def ask_to_resub(incomplete_jobs, energy):
+def ask_to_resub(incomplete_jobs, missing_jobs, energy):
     """
     Display failed jobs and ask user if they should be resubmitted.
     Tested, seems to work.
     """
-    if len(incomplete_jobs) <= 0:
+    resub_set = []
+    if len(incomplete_jobs) == 0 and len(missing_jobs) == 0:
         print(f'\nAll jobs for {energy}GeV completed!\n')
-        return False
-    print(f'\n{len(incomplete_jobs)} failed jobs:')
-    for job in incomplete_jobs:
-        print(job)
-    res = input('\nResubmit failed jobs listed above? Enter "yes" to resubmit and anything else to quit: ')
-    if res.strip().lower() == 'yes':
-        return True
+        resub_flag = False
     else:
-        return False
+        print(f'\n{len(missing_jobs)} missing jobs:')
+        for job in missing_jobs:
+            print(job)
+        print(f'\n{len(incomplete_jobs)} stopped jobs:')
+        for job in incomplete_jobs:
+            print(job)
+        res = input('\nResubmit stopped jobs listed above? '
+                    '\nEnter "yes" to resubmit stopped jobs only, "missing" to resubmit missing jobs only, '
+                    '"both" to resubmit both (without duplicates), and anything else to quit: ')
+        if res.strip().lower() == 'yes':
+            resub_flag = True
+            resub_set = incomplete_jobs
+        elif res.strip().lower() == 'missing':
+            resub_flag = True
+            resub_set = missing_jobs
+        elif res.strip().lower() == 'both':
+            resub_flag = True
+            resub_set = incomplete_jobs.copy()
+            resub_set.extend([x for x in missing_jobs if x not in incomplete_jobs])
+        else:
+            return False
+
+    return resub_flag, resub_set
 
 
 def resub_jobs(script_path, failed_jobs):
@@ -153,7 +169,21 @@ def get_err_status(path):
                         alive = False
                 if alive:
                     running.append(job)
-    print(f'Files: {files}  |  Breaks: {len(breaks)}  |  Percentage Broken: {float(len(breaks)) / files * 100}%')
+
+    print('\nBreak Jobs:')
+    for job in breaks:
+        print(job)
+    print('\ngrep write error Jobs:')
+    for job in grep_write_err:
+        print(job)
+    print('\nTerminated Jobs:')
+    for job in terminated:
+        print(job)
+    print('\nRunning Jobs:')
+    for job in running:
+        print(job)
+
+    print(f'\nFiles: {files}  |  Breaks: {len(breaks)}  |  Percentage Broken: {float(len(breaks)) / files * 100}%')
     print(f'Files: {files}  |  Terminated: {len(terminated)}  |  Percentage Terminated: '
           f'{float(len(terminated)) / files * 100}%')
     print(f'Files: {files}  |  Finished: {len(finished)}  |  Percentage Finished: '
