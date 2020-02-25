@@ -42,13 +42,9 @@ def resub():
     # break_list = get_break_list(err_path)
     print('Reading err files for status: ')
     status_lists = get_err_status(err_path)
-    print('Checking script files: ')
     script_list = get_script_list(script_path)
-    print('Checking output Root files: ')
     out_list = get_out_list(output_path)
-    print('Comparing Root files to script files to check for failures: ')
     failed_jobs = get_failed_jobs(script_list, out_list)
-    print('Cross checking script/Root file comparison with err file status: ')
     cross_check_failed(failed_jobs, status_lists)
     resub_flag = ask_to_resub(failed_jobs, energy)
     if resub_flag:
@@ -143,17 +139,18 @@ def get_err_status(path):
                         breaks.append(job)
                         alive = False
                         break
-                first_line = 0
-                while '/bin/grep: write error' in lines[first_line]:
-                    if first_line == 0:
-                        grep_write_err.append(job)
-                    first_line += 1
-                if alive and ' Terminated ' in lines[first_line]:
-                    terminated.append(job)
-                    alive = False
-                if alive and ' Done ' in lines[first_line]:
-                    finished.append(job)
-                    alive = False
+                if len(lines) > 0:
+                    first_line = 0
+                    while first_line < len(lines) and '/bin/grep: write error' in lines[first_line]:
+                        if first_line == 0:
+                            grep_write_err.append(job)
+                        first_line += 1
+                    if alive and ' Terminated ' in lines[first_line]:
+                        terminated.append(job)
+                        alive = False
+                    if alive and ' Done ' in lines[first_line]:
+                        finished.append(job)
+                        alive = False
                 if alive:
                     running.append(job)
     print(f'Files: {files}  |  Breaks: {len(breaks)}  |  Percentage Broken: {float(len(breaks)) / files * 100}%')
