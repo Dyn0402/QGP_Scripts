@@ -39,10 +39,15 @@ def resub():
     output_path = '/gpfs01/star/pwg/dneff/scratch/trees_ref' + str(ref) + '/output/' + str(energy) + 'GeV/'
     err_path = '/gpfs01/star/pwg/dneff/scratch/trees_ref' + str(ref) + '/log/' + str(energy) + 'GeV/'
     # break_list = get_break_list(err_path)
+    print('Reading err files for status: ')
     status_lists = get_err_status(err_path)
+    print('Checking script files: ')
     script_list = get_script_list(script_path)
+    print('Checking output Root files: ')
     out_list = get_out_list(output_path)
+    print('Comparing Root files to script files to check for failures: ')
     failed_jobs = get_failed_jobs(script_list, out_list)
+    print('Cross checking script/Root file comparison with err file status: ')
     cross_check_failed(failed_jobs, status_lists)
     resub_flag = ask_to_resub(failed_jobs, energy)
     if resub_flag:
@@ -171,11 +176,11 @@ def get_err_status(path):
                         breaks.append(fpath)
                         alive = False
                         break
-                    if '+ Terminated' in line:
+                    if ' Terminated                    ( ( setenv SUMS_EXECUTION' in line:
                         terminated.append(fpath)
                         alive = False
                         break
-                    if '+ Done' in line:
+                    if ' Done                          ( ( setenv SUMS_EXECUTION' in line:
                         finished.append(fpath)
                         alive = False
                         break
@@ -223,7 +228,6 @@ def cross_check_failed(failed_list, status_lists):
         print(f'Root file exists for following but err file says it is still running: ')
         for fail in status_lists['running']:
             print(fail)
-
 
 
 def split_condor(path):
