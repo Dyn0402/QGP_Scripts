@@ -15,11 +15,12 @@ import os
 
 
 def main():
-    energy = 19
-    expected = 1397
+    energy = 27
+    ref = 3
+    expected = 2036
     numbers = list(range(0, expected))
     prefix = ''
-    path = f'/media/dylan/SSD_Storage/Research/Trees_Ref3/{energy}GeV/'
+    path = f'/media/dylan/SSD_Storage/Research/Trees_Ref{ref}/{energy}GeV/'
     files = os.listdir(path)
     for file in files:
         last_uscore = file.rfind('_')
@@ -39,12 +40,12 @@ def main():
         print(missing_files[-1])
 
     if len(numbers) > 0:
-        res = input('\nDownload missing? Enter yes to download or anything else to quit: ')
+        res = input(f'\nDownload {len(numbers)} missing files? Enter yes to download or anything else to quit: ')
         if res.strip().lower() in ['yes', 'y']:
             for file in missing_files:
                 command = f'scp dneff@rftpexp.rhic.bnl.gov:' \
-                          f'/gpfs01/star/pwg/dneff/scratch/trees/output/{energy}GeV/{file} ' \
-                          f'/home/dylan/Research/Trees/{energy}GeV/'
+                          f'/gpfs01/star/pwg/dneff/scratch/trees_ref3/output/{energy}GeV/{file} ' \
+                          f'{path}'
                 print(command)
                 os.system(command)
 
