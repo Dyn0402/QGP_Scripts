@@ -162,12 +162,13 @@ def get_err_status(path):
                         if first_line == 0:
                             grep_write_err.append(job)
                         first_line += 1
-                    if alive and ' Terminated ' in lines[first_line]:
-                        terminated.append(job)
-                        alive = False
-                    if alive and ' Done ' in lines[first_line]:
-                        finished.append(job)
-                        alive = False
+                    if first_line < len(lines):
+                        if alive and ' Terminated ' in lines[first_line]:
+                            terminated.append(job)
+                            alive = False
+                        if alive and ' Done ' in lines[first_line]:
+                            finished.append(job)
+                            alive = False
                 if alive:
                     running.append(job)
 
