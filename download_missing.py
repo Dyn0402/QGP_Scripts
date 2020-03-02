@@ -91,9 +91,10 @@ def download_all():
     if total_missing > 0:
         res = input(f'\nDownload {total_missing} missing files? Enter yes to download or anything else to quit: ')
         if res.strip().lower() in ['yes', 'y']:
-            for res in missing_files:
-                for energy in missing_files[res]:
-                    for file in missing_files[res][energy]:
+            for ref in missing_files:
+                for energy in missing_files[ref]:
+                    path = f'/media/dylan/SSD_Storage/Research/Trees_Ref{ref}/{energy}GeV/'
+                    for file in missing_files[ref][energy]:
                         command = f'scp dneff@rftpexp.rhic.bnl.gov:' \
                                   f'/gpfs01/star/pwg/dneff/scratch/trees_ref{ref}/output/{energy}GeV/{file} ' \
                                   f'{path}'
