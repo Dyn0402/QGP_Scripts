@@ -144,6 +144,7 @@ def get_err_status(path):
     terminated = []
     running = []
     grep_write_err = []
+    broken_pipe = []
     for fpath in os.listdir(path):
         if '.err' in fpath:
             files += 1
@@ -162,6 +163,10 @@ def get_err_status(path):
                         if first_line == 0:
                             grep_write_err.append(job)
                         first_line += 1
+                    while first_line < len(lines) and 'error writing standard output (Broken pipe)' in lines[first_line]:
+                        if first_line == 0:
+                            broken_pipe.append(job)
+                        first_line += 1
                     if first_line < len(lines):
                         if alive and ' Terminated ' in lines[first_line]:
                             terminated.append(job)
@@ -174,6 +179,9 @@ def get_err_status(path):
 
     print('\nBreak Jobs:')
     for job in breaks:
+        print(job)
+    print('\nBroken Pipes:')
+    for job in broken_pipe:
         print(job)
     print('\ngrep write error Jobs:')
     for job in grep_write_err:
@@ -192,6 +200,8 @@ def get_err_status(path):
           f'{float(len(finished)) / files * 100:.4f}%')
     print(f'Files: {files}  |  Running: {len(running)}  |  Percentage Running: '
           f'{float(len(running)) / files * 100:.4f}%')
+    print(f'Files: {files}  |  grep write error: {len(broken_pipe)}  |  Percentage broken pipe: '
+          f'{float(len(broken_pipe)) / files * 100:.4f}%')
     print(f'Files: {files}  |  grep write error: {len(grep_write_err)}  |  Percentage grep write error: '
           f'{float(len(grep_write_err)) / files * 100:.4f}%')
     if len(breaks) + len(terminated) + len(finished) + len(running) != files:
@@ -199,7 +209,7 @@ def get_err_status(path):
               f'err files categorized out of {files}')
 
     return {'breaks': breaks, 'terminated': terminated, 'finished': finished, 'running': running,
-            'grep_write_err': grep_write_err}
+            'grep_write_err': grep_write_err, 'broken_pipe': broken_pipe}
 
 
 def cross_check_failed(failed_list, status_lists):
