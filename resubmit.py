@@ -106,7 +106,7 @@ def ask_to_resub(incomplete_jobs, missing_jobs, energy):
         res = input('\nResubmit stopped jobs listed above? '
                     '\nEnter "yes" to resubmit stopped jobs only, "missing" to resubmit missing jobs only, '
                     '"both" to resubmit both (without duplicates), and anything else to quit: ')
-        if res.strip().lower() == 'yes':
+        if res.strip().lower() == 'yes' or res.strip().lower() == 'y':
             resub_flag = True
             resub_set = incomplete_jobs
         elif res.strip().lower() == 'missing':
@@ -200,7 +200,7 @@ def get_err_status(path):
           f'{float(len(finished)) / files * 100:.4f}%')
     print(f'Files: {files}  |  Running: {len(running)}  |  Percentage Running: '
           f'{float(len(running)) / files * 100:.4f}%')
-    print(f'Files: {files}  |  grep write error: {len(broken_pipe)}  |  Percentage broken pipe: '
+    print(f'Files: {files}  |  broken pipe: {len(broken_pipe)}  |  Percentage broken pipe: '
           f'{float(len(broken_pipe)) / files * 100:.4f}%')
     print(f'Files: {files}  |  grep write error: {len(grep_write_err)}  |  Percentage grep write error: '
           f'{float(len(grep_write_err)) / files * 100:.4f}%')
