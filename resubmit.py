@@ -36,9 +36,9 @@ def resub():
     except IndexError:
         print('Need to input energy and ref as command line arguments!')
         return
-    script_path = '/gpfs01/star/pwg/dneff/scratch/trees_ref' + str(ref) + '/script/' + str(energy) + 'GeV/'
-    output_path = '/gpfs01/star/pwg/dneff/scratch/trees_ref' + str(ref) + '/output/' + str(energy) + 'GeV/'
-    err_path = '/gpfs01/star/pwg/dneff/scratch/trees_ref' + str(ref) + '/log/' + str(energy) + 'GeV/'
+    script_path = '/gpfs01/star/pwg/dneff/scratch/trees_old_ref' + str(ref) + '/script/' + str(energy) + 'GeV/'
+    output_path = '/gpfs01/star/pwg/dneff/scratch/trees_old_ref' + str(ref) + '/output/' + str(energy) + 'GeV/'
+    err_path = '/gpfs01/star/pwg/dneff/scratch/trees_old_ref' + str(ref) + '/log/' + str(energy) + 'GeV/'
     print('Reading err files for status: ')
     status_lists = get_err_status(err_path)
     script_list = get_script_list(script_path)
