@@ -24,6 +24,7 @@ def main():
     colors = {7: 'red', 11: 'blue', 19: 'green', 27: 'cyan', 39: 'magenta', 62: 'black'}
     cdf_plot = {'energy': 7, 'division': 3, 'centrality': 8, 'total protons': 35}
     sd_plot = {'energy': 7, 'division': 3, 'centrality': 8}
+    title_sufx = f'\n{sd_plot["energy"]}GeV, 0-5% Centrality, {sd_plot["division"]} Azimuthal Divisions'
 
     data = {'raw': {}, 'mix': {}}
     for source in data.keys():
@@ -148,16 +149,16 @@ def main():
     p = 1.0 / float(sd_plot['division'])
     y = (np.asarray(mix_x) * p * (1 - p)) ** 0.5
 
-    fig5.set_size_inches(5.5, 7)
+    # fig5.set_size_inches(7, 7)
     ax5.scatter(raw_x, raw_y, zorder=2, color='blue', label='Raw SD')
     ax5.scatter(mix_x, mix_y, zorder=1, color='green', label='Mix SD')
     ax5.plot(mix_x, y, color='red', zorder=0, label='Binomal SD')
     ax5.set_xlabel('Total Protons')
     ax5.set_ylabel('Standard Deviation of Slice')
-    ax5.set_title(f'Standard Deviation of Total Proton Slices for {sd_plot["energy"]}GeV')
+    ax5.set_title(f'Standard Deviation of Total Proton Slices for {sd_plot["energy"]}GeV'+title_sufx)
     ax5.legend()
 
-    fig6.set_size_inches(5.5, 7)
+    # fig6.set_size_inches(10, 7)
     raw_ratio = raw_y / y
     mix_ratio = mix_y / y
     ax6.scatter(raw_x, raw_ratio, zorder=2, color='blue', label='Raw SD / Binomial SD')
@@ -167,7 +168,7 @@ def main():
     # ax6.axhline(np.average(mix_ratio), zorder=0, color='green', ls='--', label='Mix Avg')
     ax6.set_xlabel('Total Protons')
     ax6.set_ylabel('Standard Deviation of Slice Divided by Binomial')
-    ax6.set_title(f'SD Divided by Binomial of Total Proton Slices for {sd_plot["energy"]}GeV')
+    ax6.set_title(f'SD Divided by Binomial of Total Proton Slices for {sd_plot["energy"]}GeV'+title_sufx)
     ax6.legend()
 
     plt.show()

@@ -21,18 +21,19 @@ def main():
     divs = 3
     cent = 8
     energy = 7
-    set_name = 'Rand_Rotate'
+    set_name = 'Single_Ratio'
     set_num = 0
-    path = f'/home/dylan/Research/Data/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
-    path_mix = f'/home/dylan/Research/Data_Mix/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
+    path = f'/home/dylan/Research/Data_Old_Ref2/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
+    path_mix = f'/home/dylan/Research/Data_Old_Ref2_Mix/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
+    title_sufx = '\n7GeV, 0-5% Centrality, 3 Azimuthal Divisions'
     data = read_azbin_data(path)
     data_mix = read_azbin_data(path_mix)
-    # plot_azbin_data(data, range(0, 40), range(0, 20), divs)
-    # plot_azbin_data_trans(data, range(0, 40), range(0, 20), divs)
-    # ratio_transform(data, divs)
-    # diff_transform(data, divs)
-    # plot_binomial(data, 20, divs)
-    plot_data_mixed(data, data_mix, 31, divs, range(10, 26))
+    # plot_azbin_data(data, [0, 40], [0, 20], divs)
+    # plot_azbin_data_trans(data, [0, 20], [0, 40], divs, title_sufx=title_sufx)
+    # ratio_transform(data, divs, title_sufx=title_sufx)
+    # diff_transform(data, divs, title_sufx=title_sufx)
+    # plot_binomial(data, 15, divs, title_sufx=title_sufx)
+    plot_data_mixed(data, data_mix, 31, divs, range(10, 26), title_sufx=title_sufx)
     print('donzo')
 
 
@@ -53,7 +54,7 @@ def read_azbin_data(path):
     return azbin_data
 
 
-def plot_binomial(data, protons, divs):
+def plot_binomial(data, protons, divs, title_sufx=''):
     y = np.asarray([ele[protons] for ele in data])
     x = range(len(y))
     y_binom = sum(y)*binom.pmf(x, protons, 1/divs)
@@ -63,22 +64,24 @@ def plot_binomial(data, protons, divs):
     ax1.bar(x, y, align='center', zorder=0, label=f'{protons} Proton Events')
     ax1.scatter(x, y_binom, color='red', label='Binomial Distribution')
     ax1.set_xticks(range(0, len(y), 2))
-    ax1.set_title(f'Protons in {divs} Division Bin vs Binomial for {protons} Proton Events')
+    ax1.set_title(f'Protons in {divs} Division Bin vs Binomial for {protons} Proton Events'+title_sufx)
     ax1.set_xlabel('Number of Protons in Bin')
     ax1.set_ylabel('Events')
+    ax1.set_xlim([-0.5, protons+0.5])
     ax1.legend()
     y_diff = y - y_binom
     ax2.axhline(0, color='red', ls='--')
     ax2.errorbar(x, y_diff, yerr=y_err, fmt='bo')
     ax2.set_xticks(range(0, len(y), 2))
-    ax2.set_title(f'Protons in {divs} Division Bin Minus Binomial for {protons} Proton Events')
+    ax2.set_title(f'Protons in {divs} Division Bin Minus Binomial for {protons} Proton Events'+title_sufx)
     ax2.set_xlabel('Number of Protons in Bin')
     ax2.set_ylabel('Data Events Minus Binomial')
+    ax2.set_xlim([-0.5, protons+0.5])
     print(f'Binomial Difference Sum: {sum(y_diff)}')
     plt.show()
 
 
-def plot_data_mixed(data, data_mixed, protons, divs, proton_array=[]):
+def plot_data_mixed(data, data_mixed, protons, divs, proton_array=[], title_sufx=''):
     y = np.asarray([ele[protons] for ele in data])
     y_norm = y / sum(y)
     y_norm_err = np.sqrt(y) / sum(y)
@@ -94,7 +97,7 @@ def plot_data_mixed(data, data_mixed, protons, divs, proton_array=[]):
     ax1.scatter(x, y_binom, color='red', zorder=0, label='Binomial Distribution')
     ax1.axvline(float(protons) / divs, color='red', ls='--', label='Mean')
     ax1.set_xticks(range(0, len(y), 2))
-    ax1.set_title(f'Protons in {divs} Division Bin vs Binomial for {protons} Proton Events')
+    ax1.set_title(f'Protons in {divs} Division Bin vs Binomial for {protons} Proton Events'+title_sufx)
     ax1.set_xlabel('Number of Protons in Bin')
     ax1.set_ylabel('Events')
     ax1.legend()
@@ -110,7 +113,7 @@ def plot_data_mixed(data, data_mixed, protons, divs, proton_array=[]):
     ax9.scatter(x, y_binom2, color='red', zorder=0, label='Binomial Distribution')
     ax9.axvline(float(protons) / divs, color='red', ls='--', label='Mean')
     ax9.set_xticks(range(0, len(y), 2))
-    ax9.set_title(f'Protons in {divs} Division Bin vs Binomial for {protons} Proton Events')
+    ax9.set_title(f'Protons in {divs} Division Bin vs Binomial for {protons} Proton Events'+title_sufx)
     ax9.set_xlabel('Number of Protons in Bin')
     ax9.set_ylabel('Events')
     ax9.legend()
@@ -249,8 +252,13 @@ def plot_data_mixed(data, data_mixed, protons, divs, proton_array=[]):
     plt.show()
 
 
-def plot_azbin_data(data, x_range, y_range, divs, x_label='Number of Protons in Bin', y_label='Number of Protons in Event'):
+def plot_azbin_data(data, x_lim, y_lim, divs, x_label='Number of Protons in Bin', y_label='Number of Protons in Event',
+                    title_sufx=''):
     # x, y = np.meshgrid(x_range, y_range)
+    # x, y = np.meshgrid(np.asarray(x_range) - float(x_range[1] - x_range[0]) / 2,
+    #                    np.asarray(y_range) - float(y_range[1] - y_range[0]) / 2)
+    x_range = range(0, len(data))
+    y_range = range(0, len(data[0]))
     x, y = np.meshgrid(np.asarray(x_range) - float(x_range[1] - x_range[0]) / 2,
                        np.asarray(y_range) - float(y_range[1] - y_range[0]) / 2)
     data = np.ma.masked_where(data <= 0, data)
@@ -262,14 +270,17 @@ def plot_azbin_data(data, x_range, y_range, divs, x_label='Number of Protons in 
     plt.colorbar()
     plt.xlabel(x_label)
     plt.ylabel(y_label)
-    plt.ylim([0, 20])
+    plt.ylim(y_lim)
+    plt.xlim(x_lim)
     plt.legend()
     plt.show()
 
 
-def plot_azbin_data_trans(data, x_range, y_range, divs, x_label='Number of Protons in Bin',
-                    y_label='Number of Protons in Event'):
+def plot_azbin_data_trans(data, x_lim, y_lim, divs, x_label='Number of Protons in Bin',
+                          y_label='Number of Protons in Event', title_sufx=''):
     # x, y = np.meshgrid(x_range, y_range)
+    x_range = range(0, len(data))
+    y_range = range(0, len(data[0]))
     x, y = np.meshgrid(np.asarray(x_range) - float(x_range[1] - x_range[0]) / 2,
                        np.asarray(y_range) - float(y_range[1] - y_range[0]) / 2)
     data = np.ma.masked_where(data <= 0, data)
@@ -281,14 +292,16 @@ def plot_azbin_data_trans(data, x_range, y_range, divs, x_label='Number of Proto
     plt.colorbar()
     plt.xlabel(x_label)
     plt.ylabel(y_label)
-    plt.ylim([0, 40])
-    plt.xticks(range(0, 20, 2))
-    plt.title('Protons in Event vs Protons in Bin')
+    plt.ylim(y_lim)
+    plt.xlim(x_lim)
+    plt.xticks(range(x_lim[0], x_lim[1], 2))
+    plt.title('Protons in Event vs Protons in Bin'+title_sufx)
     plt.legend(loc='lower right')
     plt.show()
 
 
-def plot_ratio_data(data, x_range, y_range, divs, x_label='Number of Protons in Bin', y_label='Number of Protons in Event'):
+def plot_ratio_data(data, x_range, y_range, divs, x_label='Number of Protons in Bin',
+                    y_label='Number of Protons in Event', title_sufx=''):
     # x, y = np.meshgrid(np.asarray(x_range)-float(x_range[1]-x_range[0])/2,
     #                    np.asarray(y_range)-float(y_range[1]-y_range[0])/2)
     x, y = np.meshgrid(x_range, y_range)
@@ -299,19 +312,19 @@ def plot_ratio_data(data, x_range, y_range, divs, x_label='Number of Protons in 
     plt.colorbar()
     plt.xlabel(x_label)
     plt.ylabel(y_label)
-    plt.title('Protons in Event vs Ratios')
+    plt.title('Protons in Event vs Ratios'+title_sufx)
     plt.legend(loc='upper right')
     plt.show()
 
 
-def plot_ratio_dist(y, x, divs):
+def plot_ratio_dist(y, x, divs, title_sufx=''):
     plt.bar(x, y, width=x[1]-x[0], align='edge', zorder=0)
     plt.yscale('log')
     plt.axvline(1.0/divs, color='red', label='mean')
     plt.axvline(1.05, color='blue', label='max')
     plt.xlabel('Ratio')
     plt.ylabel('Events')
-    plt.title('Ratio Distribution')
+    plt.title('Ratio Distribution'+title_sufx)
     plt.legend(loc='upper right')
     plt.show()
 
@@ -322,7 +335,8 @@ def plot_ratio_kde(data):
     plt.show()
 
 
-def plot_diff_data(data, x_range, y_range, divs, x_label='Number of Protons in Bin', y_label='Number of Protons in Event'):
+def plot_diff_data(data, x_range, y_range, divs, x_label='Number of Protons in Bin',
+                   y_label='Number of Protons in Event', title_sufx=''):
     # x, y = np.meshgrid(np.asarray(x_range)-float(x_range[1]-x_range[0])/2,
     #                    np.asarray(y_range)-float(y_range[1]-y_range[0])/2)
     x, y = np.meshgrid(x_range, y_range)
@@ -339,18 +353,18 @@ def plot_diff_data(data, x_range, y_range, divs, x_label='Number of Protons in B
     plt.ylim([0, 40])
     plt.xlim([-10, 12])
     plt.xticks(range(-10, 12, 2))
-    plt.title('Protons in Event vs Differences')
+    plt.title('Protons in Event vs Differences'+title_sufx)
     plt.legend(loc='lower left')
     plt.show()
 
 
-def plot_diff_dist(y, x, divs):
+def plot_diff_dist(y, x, divs, title_sufx=''):
     plt.bar(x, y, width=x[1]-x[0], align='edge', zorder=0)
     plt.yscale('log')
     plt.axvline(0.0, color='red', label='mean')
     plt.xlabel('Difference')
     plt.ylabel('Events')
-    plt.title('Difference Distribution')
+    plt.title('Difference Distribution'+title_sufx)
     plt.xlim([-10, 12])
     plt.xticks(range(-10, 12, 2))
     plt.legend(loc='upper right')
@@ -363,7 +377,7 @@ def plot_diff_kde(data):
     plt.show()
 
 
-def ratio_transform(data, divs):
+def ratio_transform(data, divs, title_sufx=''):
     ratio_data = np.zeros((21, 40))
     ratio_dist = np.zeros(21)
     ratio_vals = []
@@ -376,12 +390,12 @@ def ratio_transform(data, divs):
                 ratio_dist[ratio_bin] += num_events
                 # ratio_vals.extend([ratio] * int(num_events))
 
-    # plot_ratio_data(ratio_data, range(0, 40), np.linspace(0, 1.05, 22), divs, x_label='Ratio')
-    plot_ratio_dist(ratio_dist, np.linspace(0, 1, 21), divs)
+    plot_ratio_data(ratio_data, range(0, 40), np.linspace(0, 1.05, 22), divs, x_label='Ratio', title_sufx=title_sufx)
+    plot_ratio_dist(ratio_dist, np.linspace(0, 1, 21), divs, title_sufx=title_sufx)
     # plot_ratio_kde(ratio_vals)
 
 
-def diff_transform(data, divs):
+def diff_transform(data, divs, title_sufx=''):
     x_bins = 32
     diff_data = np.zeros((x_bins, 40))
     diff_dist = np.zeros(x_bins)
@@ -403,9 +417,9 @@ def diff_transform(data, divs):
                 diff_values.extend([diff] * int(num_events))
 
     plot_diff_data(diff_data, range(0, 40), np.linspace(-40.0 / divs, 40.0 - 40.0 / divs, x_bins),
-                   divs, x_label='Difference')
-    plot_diff_dist(diff_dist, np.linspace(-40.0 / divs, 40.0 - 40.0 / divs, x_bins), divs)
-    plot_diff_kde(diff_values)
+                   divs, x_label='Difference', title_sufx=title_sufx)
+    plot_diff_dist(diff_dist, np.linspace(-40.0 / divs, 40.0 - 40.0 / divs, x_bins), divs, title_sufx=title_sufx)
+    # plot_diff_kde(diff_values)
 
 
 def hist_sd(x, y):
