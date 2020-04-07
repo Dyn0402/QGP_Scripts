@@ -21,10 +21,10 @@ def main():
     divs = 3
     cent = 8
     energy = 7
-    set_name = 'Single_Ratio'
+    set_name = 'eta05'
     set_num = 0
-    path = f'/home/dylan/Research/Data_Old_Ref2/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
-    path_mix = f'/home/dylan/Research/Data_Old_Ref2_Mix/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
+    path = f'/home/dylan/Research/Data_Old_Ref3/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
+    path_mix = f'/home/dylan/Research/Data_Old_Ref3_Mix/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
     title_sufx = '\n7GeV, 0-5% Centrality, 3 Azimuthal Divisions'
     data = read_azbin_data(path)
     data_mix = read_azbin_data(path_mix)

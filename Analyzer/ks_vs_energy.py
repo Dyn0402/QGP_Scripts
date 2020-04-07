@@ -18,8 +18,8 @@ def main():
     energies = [7, 11, 19, 27, 39, 62]
     divisions = [3]
     centralities = [8]
-    path = {'raw': ['/home/dylan/Research/Data/Single_Ratio0/', 'GeV/ratios_divisions_', '_centrality_', '_local.txt'],
-            'mix': ['/home/dylan/Research/Data_Mix/Single_Ratio0/', 'GeV/ratios_divisions_', '_centrality_',
+    path = {'raw': ['/home/dylan/Research/Data_Old_Ref3/eta050/', 'GeV/ratios_divisions_', '_centrality_', '_local.txt'],
+            'mix': ['/home/dylan/Research/Data_Old_Ref3_Mix/eta050/', 'GeV/ratios_divisions_', '_centrality_',
                     '_local.txt']}
     colors = {7: 'red', 11: 'blue', 19: 'green', 27: 'cyan', 39: 'magenta', 62: 'black'}
     cdf_plot = {'energy': 7, 'division': 3, 'centrality': 8, 'total protons': 35}
