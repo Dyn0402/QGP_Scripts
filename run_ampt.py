@@ -42,7 +42,7 @@ def set_run_dir(run_id):
 def run(run_id):
     p = sp.Popen(['./ampt'], stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT)
     sleep(5)
-    p.communicate(input=str(run_id))
+    p.communicate(input=str(run_id).encode('utf-8'))
     p.wait()
     # sp.run(['./ampt', str(run_id)])
     sp.run(['root', '-b', '-q', 'makeAmptroot.C++', str(run_id)])
