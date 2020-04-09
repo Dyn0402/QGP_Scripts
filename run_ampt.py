@@ -34,6 +34,7 @@ def set_run_dir(run_id):
     subprocess.call(['mkdir', 'ana'])
     subprocess.call(['cp', '../input.ampt', 'ana/'])
     subprocess.call(['cp', '../input.ampt', '.'])
+    subprocess.call(['cp', '../ampt', '.'])
     subprocess.call(['cp', '../makeAmptroot.C', '.'])
 
 
