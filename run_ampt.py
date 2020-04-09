@@ -45,7 +45,7 @@ def run(run_id):
     # p.communicate(input=str(run_id).encode('utf-8'))
     # p.wait()
     sp.run(['./ampt'], input=str(run_id).encode('utf-8'))
-    sp.run(['root', '-b', '-q', 'makeAmptroot.C++', str(run_id)])
+    sp.run(['root', '-b', '-q', '\'makeAmptroot.C("' + str(run_id) + '")++\''])
     # sp.run(['mv', 'ana/test.root', f'../test_{run_id}.root'])
 
 
