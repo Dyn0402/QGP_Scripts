@@ -29,9 +29,14 @@ def gen_id(job_id):
     :param job_id: Condor job id input from command line
     :return: Unique id
     """
+    max_ampt_num = 2100000001  # Maximum random seed tested that works on AMPT
     now = datetime.now()
-    run_id = str(now.day).zfill(2) + str(now.hour).zfill(2) + str(now.minute).zfill(2) + str(now.second).zfill(2)
+    seconds_into_day = now.hour * 3600 + now.minute * 60 + now.second
+    run_id = str(seconds_into_day).zfill(5)
     run_id += str(job_id).split('_')[-1] + '1'
+    while int(run_id) > max_ampt_num:
+        run_id = run_id[1:]
+
     return run_id
 
 
