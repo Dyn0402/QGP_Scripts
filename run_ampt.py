@@ -6,53 +6,43 @@ Created in PyCharm
 Created as QGP_Scripts/run_ampt.py
 
 @author: Dylan Neff, dylan
+
+Run AMPT event generator and convert output to filtered root tree.
 """
 
 import subprocess as sp
 import sys
-import os
-from time import sleep
+from datetime import datetime
 
 
 def main():
     run_id = gen_id(sys.argv[1])
-    # set_run_dir(run_id)
     print(f'Run_id: {run_id}')
     run(run_id)
-    # clean_up(run_id)
     print('donzo')
 
 
 def gen_id(job_id):
-    run_id = str(job_id).split('_')[-1] + '1'
+    """
+    Generate unique id for ampt run based on date/time and job id.
+    Used as random seed for AMPT as well as output root file name.
+    :param job_id: Condor job id input from command line
+    :return: Unique id
+    """
+    now = datetime.now()
+    run_id = str(now.day).zfill(2) + str(now.hour).zfill(2) + str(now.minute).zfill(2) + str(now.second).zfill(2)
+    run_id += str(job_id).split('_')[-1] + '1'
     return run_id
 
 
-def set_run_dir(run_id):
-    sp.run(['mkdir', str(run_id)])
-    os.chdir(str(run_id))
-    # sp.run(['cd', str(run_id)])
-    sp.run(['mkdir', 'ana'])
-    sp.run(['cp', '../input.ampt', 'ana/'])
-    sp.run(['cp', '../input.ampt', '.'])
-    sp.run(['cp', '../ampt', '.'])
-    sp.run(['cp', '../makeAmptroot.C', '.'])
-
-
 def run(run_id):
-    # p = sp.Popen(['./ampt'], stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT)
-    # sleep(5)
-    # p.communicate(input=str(run_id).encode('utf-8'))
-    # p.wait()
+    """
+    Run AMPT with random seed. Once finished run makeAmptroot.C to create root file.
+    :param run_id: Unique id for run generated with date/time and job number
+    :return:
+    """
     sp.run(['./ampt'], input=str(run_id).encode('utf-8'))
     sp.run(['root', '-b', '-q', 'makeAmptroot.C("' + str(run_id) + '")++'])
-    # sp.run(['mv', 'ana/test.root', f'../test_{run_id}.root'])
-
-
-def clean_up(run_id):
-    # sp.run(['cd', '..'])
-    os.chdir('..')
-    sp.run(['rm', '-r', str(run_id)])
 
 
 if __name__ == '__main__':
