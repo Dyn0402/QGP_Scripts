@@ -27,23 +27,23 @@ def gen_id(job_id):
 
 
 def set_run_dir(run_id):
-    subprocess.call(f'mkdir {run_id}')
-    subprocess.call(f'cd {run_id}')
-    subprocess.call('mkdir ana')
-    subprocess.call('cp ../input.ampt ana/')
-    subprocess.call('cp ../input.ampt .')
-    subprocess.call('cp ../makeAmptroot.C .')
+    subprocess.call(['mkdir', str(run_id)])
+    subprocess.call(['cd', str(run_id)])
+    subprocess.call(['mkdir', 'ana'])
+    subprocess.call(['cp', '../input.ampt', 'ana/'])
+    subprocess.call(['cp', '../input.ampt', '.'])
+    subprocess.call(['cp', '../makeAmptroot.C', '.')
 
 
 def run(run_id):
     subprocess.call(['./ampt', str(run_id)])
-    subprocess.call('root -b -q makeAmptroot.C++')
-    subprocess.call(f'mv ana/test.root ../test_{run_id}.root')
+    subprocess.call(['root', '-b', '-q', 'makeAmptroot.C++'])
+    subprocess.call(['mv', 'ana/test.root', f'../test_{run_id}.root'])
 
 
 def clean_up(run_id):
-    subprocess.call('cd ..')
-    subprocess.call(f'rm -r {run_id}')
+    subprocess.call(['cd', '..'])
+    subprocess.call(['rm', '-r', str(run_id)])
 
 
 if __name__ == '__main__':
