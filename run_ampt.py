@@ -10,6 +10,7 @@ Created as QGP_Scripts/run_ampt.py
 
 import subprocess
 import sys
+import os
 
 
 def main():
@@ -28,7 +29,8 @@ def gen_id(job_id):
 
 def set_run_dir(run_id):
     subprocess.call(['mkdir', str(run_id)])
-    subprocess.call(['cd', str(run_id)])
+    os.chdir(str(run_id))
+    # subprocess.call(['cd', str(run_id)])
     subprocess.call(['mkdir', 'ana'])
     subprocess.call(['cp', '../input.ampt', 'ana/'])
     subprocess.call(['cp', '../input.ampt', '.'])
@@ -42,7 +44,8 @@ def run(run_id):
 
 
 def clean_up(run_id):
-    subprocess.call(['cd', '..'])
+    # subprocess.call(['cd', '..'])
+    os.chdir('..')
     subprocess.call(['rm', '-r', str(run_id)])
 
 
