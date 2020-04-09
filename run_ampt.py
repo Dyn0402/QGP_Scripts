@@ -8,17 +8,18 @@ Created as QGP_Scripts/run_ampt.py
 @author: Dylan Neff, dylan
 """
 
-import subprocess
+import subprocess as sp
 import sys
 import os
+from time import sleep
 
 
 def main():
     run_id = gen_id(sys.argv[1])
-    set_run_dir(run_id)
+    # set_run_dir(run_id)
     print(f'Run_id: {run_id}')
     run(run_id)
-    clean_up(run_id)
+    # clean_up(run_id)
     print('donzo')
 
 
@@ -28,26 +29,30 @@ def gen_id(job_id):
 
 
 def set_run_dir(run_id):
-    subprocess.call(['mkdir', str(run_id)])
+    sp.run(['mkdir', str(run_id)])
     os.chdir(str(run_id))
-    # subprocess.call(['cd', str(run_id)])
-    subprocess.call(['mkdir', 'ana'])
-    subprocess.call(['cp', '../input.ampt', 'ana/'])
-    subprocess.call(['cp', '../input.ampt', '.'])
-    subprocess.call(['cp', '../ampt', '.'])
-    subprocess.call(['cp', '../makeAmptroot.C', '.'])
+    # sp.run(['cd', str(run_id)])
+    sp.run(['mkdir', 'ana'])
+    sp.run(['cp', '../input.ampt', 'ana/'])
+    sp.run(['cp', '../input.ampt', '.'])
+    sp.run(['cp', '../ampt', '.'])
+    sp.run(['cp', '../makeAmptroot.C', '.'])
 
 
 def run(run_id):
-    subprocess.call(['./ampt', str(run_id)])
-    subprocess.call(['root', '-b', '-q', 'makeAmptroot.C++'])
-    subprocess.call(['mv', 'ana/test.root', f'../test_{run_id}.root'])
+    p = sp.Popen(['./ampt'], stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT)
+    sleep(5)
+    p.communicate(input=str(run_id))
+    p.wait()
+    # sp.run(['./ampt', str(run_id)])
+    sp.run(['root', '-b', '-q', 'makeAmptroot.C++', str(run_id)])
+    # sp.run(['mv', 'ana/test.root', f'../test_{run_id}.root'])
 
 
 def clean_up(run_id):
-    # subprocess.call(['cd', '..'])
+    # sp.run(['cd', '..'])
     os.chdir('..')
-    subprocess.call(['rm', '-r', str(run_id)])
+    sp.run(['rm', '-r', str(run_id)])
 
 
 if __name__ == '__main__':
