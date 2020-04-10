@@ -16,6 +16,7 @@ from datetime import datetime
 
 
 def main():
+    print(f'Python start: {str(datetime.now())}')
     run_id = gen_id(sys.argv[1])
     print(f'Run_id: {run_id}')
     run(run_id)
@@ -46,8 +47,11 @@ def run(run_id):
     :param run_id: Unique id for run generated with date/time and job number
     :return:
     """
+    print(f'AMPT start: {str(datetime.now())}')
     sp.run(['./ampt'], input=str(run_id).encode('utf-8'))
+    print(f'AMPT end ROOT start: {str(datetime.now())}')
     sp.run(['root', '-b', '-q', 'makeAmptroot.C("' + str(run_id) + '")++'])
+    print(f'ROOT end: {str(datetime.now())}')
 
 
 if __name__ == '__main__':
