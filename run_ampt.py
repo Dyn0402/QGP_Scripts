@@ -53,7 +53,7 @@ def run(run_id, times):
     times.append(f'AMPT start: {str(datetime.now())}')
     sp.run(['./ampt'], input=str(run_id).encode('utf-8'))
     times.append(f'AMPT end ROOT start: {str(datetime.now())}')
-    sp.run(['root', '-b', '-q', 'makeAmptroot.C("' + str(run_id) + '")++'])
+    sp.run(['root', '-b', '-q', 'makeAmptroot.C++("' + str(run_id) + '")'])
     times.append(f'ROOT end: {str(datetime.now())}')
 
 
