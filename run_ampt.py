@@ -16,10 +16,12 @@ from datetime import datetime
 
 
 def main():
-    print(f'Python start: {str(datetime.now())}')
+    times = [f'Python start: {str(datetime.now())}']
     run_id = gen_id(sys.argv[1])
+    run(run_id, times)
     print(f'Run_id: {run_id}')
-    run(run_id)
+    for time in times:
+        print(time)
     print('donzo')
 
 
@@ -41,17 +43,18 @@ def gen_id(job_id):
     return run_id
 
 
-def run(run_id):
+def run(run_id, times):
     """
     Run AMPT with random seed. Once finished run makeAmptroot.C to create root file.
     :param run_id: Unique id for run generated with date/time and job number
+    :param times: list of times to print out at end
     :return:
     """
-    print(f'AMPT start: {str(datetime.now())}')
+    times.append(f'AMPT start: {str(datetime.now())}')
     sp.run(['./ampt'], input=str(run_id).encode('utf-8'))
-    print(f'AMPT end ROOT start: {str(datetime.now())}')
+    times.append(f'AMPT end ROOT start: {str(datetime.now())}')
     sp.run(['root', '-b', '-q', 'makeAmptroot.C("' + str(run_id) + '")++'])
-    print(f'ROOT end: {str(datetime.now())}')
+    times.append(f'ROOT end: {str(datetime.now())}')
 
 
 if __name__ == '__main__':
