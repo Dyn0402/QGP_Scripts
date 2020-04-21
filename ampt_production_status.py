@@ -38,7 +38,8 @@ def main():
 
 
 def get_events(path):
-    root_path = '/home/dylan/git/Research/Ampt_Runner/Root_Macros/get_tree_events.cpp'
+    # root_path = '/home/dylan/git/Research/Ampt_Runner/Root_Macros/get_tree_events.cpp'
+    root_path = '/star/u/dneff/git/Ampt_Runner/Root_Macros/get_tree_events.cpp'
     command = f'{root_path}("{path}")'
     res = sp.check_output(['root', '-q', '-b', command]).decode('utf-8')
     events = -1
