@@ -25,17 +25,18 @@ def main():
         path = f'{trees_path}{energy}GeV/'
         files = os.listdir(path)
         print(f'Reading ~{len(files)} {energy}GeV trees...')
-        for file in files:
-            if '.root' in file:
-                print(f'  Opening {path+file}')
-                events.append(get_events(path+file))
-                times.append(datetime.fromtimestamp(os.path.getmtime(path+file)))
-        events, times = zip(*sorted(zip(times, events)))
-        event_time_data.update({energy: [list(times), list(events)]})
-        event_time_data['total'][0] += times
-        event_time_data['total'][1] += events
+        print(get_all_events(path))
+        # for file in files:
+        #     if '.root' in file:
+        #         print(f'  Opening {path+file}')
+        #         events.append(get_events(path+file))
+        #         times.append(datetime.fromtimestamp(os.path.getmtime(path+file)))
+        # times, events = zip(*sorted(zip(times, events)))
+        # event_time_data.update({energy: [list(times), list(events)]})
+        # event_time_data['total'][0] += times
+        # event_time_data['total'][1] += events
 
-    plot_event_time_data(event_time_data, energies)
+    # plot_event_time_data(event_time_data, energies)
 
     # print(get_events('/media/dylan/SSD_Storage/Research/Trees_Ampt/7.root'))
     print('donzo')
@@ -45,13 +46,29 @@ def get_events(path):
     # root_path = '/home/dylan/git/Research/Ampt_Runner/Root_Macros/get_tree_events.cpp'
     root_path = '/star/u/dneff/git/Ampt_Runner/Root_Macros/get_tree_events.cpp'
     command = f'{root_path}("{path}")'
-    res = sp.check_output(['root', '-q', '-b', command]).decode('utf-8')
-    events = -1
+    res = sp.check_output(['root', '-q', '-b', command], timeout=10).decode('utf-8')
+    events = 0
     for line in res.strip().split('\n'):
         if 'Number of events in tree:' in line:
             events = int(line.strip().split(': ')[-1])
 
     return events
+
+
+def get_all_events(path):
+    # root_path = '/home/dylan/git/Research/Ampt_Runner/Root_Macros/get_tree_events.cpp'
+    root_path = '/star/u/dneff/git/Ampt_Runner/Root_Macros/get_tree_events.cpp'
+    command = f'{root_path}("{path}")'
+    res = sp.check_output(['root', '-q', '-b', command], timeout=10).decode('utf-8')
+    event_file_data = [[], []]
+    for line in res.strip().split('\n'):
+        if 'Number of events in tree:' in line:
+            events = int(line.strip().split(': ')[-1])
+            file = line.strip().split(': ')[-2]
+            event_file_data[0].append(file)
+            event_file_data[1].append(events)
+
+    return event_file_data
 
 
 def plot_event_time_data(data, energies):
