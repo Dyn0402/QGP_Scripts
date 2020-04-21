@@ -38,7 +38,7 @@ def main():
                     total_events.append(events[-1])
                     total_times.append(times[-1])
                 except KeyError:
-                    pass
+                    print(f'Not matched file: {file}')
         times, events = zip(*sorted(zip(times, events)))
         event_time_data.update({energy: [list(times), list(events)]})
 
@@ -53,7 +53,7 @@ def main():
 
 def get_events(path):
     # root_path = '/home/dylan/git/Research/Ampt_Runner/Root_Macros/get_tree_events.cpp'
-    root_path = '/star/u/dneff/git/Ampt_Runner/Root_Macros/get_tree_events.cpp'
+    root_path = '/star/u/dneff/git/Ampt_Runner/Root_Macros/get_tree_events.cpp++'
     command = f'{root_path}("{path}")'
     res = sp.check_output(['root', '-q', '-b', command]).decode('utf-8')
     event_file_data = {}
@@ -68,7 +68,7 @@ def get_events(path):
 
 
 def plot_event_time_data(data, energies):
-    formatter = DateFormatter('%a %H')
+    formatter = DateFormatter('%a %-I%p')
     loc = HourLocator(interval=12)
 
     plt.figure(1)
