@@ -17,7 +17,7 @@ from datetime import datetime
 
 def main():
     trees_path = '/gpfs01/star/pwg/dneff/scratch/ampt/output/'
-    energies = [11, 39]  # [7, 11, 19, 27, 39, 62]
+    energies = [7, 11, 19, 27, 39, 62]
     event_time_data = {}
     total_events = []
     total_times = []
@@ -53,7 +53,7 @@ def main():
 
 def get_events(path):
     # root_path = '/home/dylan/git/Research/Ampt_Runner/Root_Macros/get_tree_events.cpp'
-    root_path = '/star/u/dneff/git/Ampt_Runner/Root_Macros/get_tree_events.cpp++'
+    root_path = '/star/u/dneff/git/Ampt_Runner/Root_Macros/get_tree_events.cpp'
     command = f'{root_path}("{path}")'
     res = sp.check_output(['root', '-q', '-b', command]).decode('utf-8')
     event_file_data = {}
