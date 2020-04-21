@@ -11,21 +11,25 @@ Created as QGP_Scripts/ampt_production_status.py
 import os
 import subprocess as sp
 import matplotlib.pyplot as plt
+from matplotlib.dates import date2num
+from datetime import datetime
 
 
 def main():
     trees_path = '/gpfs01/star/pwg/dneff/scratch/ampt/output/'
-    energies = [7, 11, 19, 27, 39, 62]
+    energies = [11]  # [7, 11, 19, 27, 39, 62]
     event_time_data = {'total': [[], []]}
     for energy in energies:
         events = []
         times = []
         path = f'{trees_path}{energy}GeV/'
         files = os.listdir(path)
+        print(f'Reading ~{len(files)} {energy}GeV trees...')
         for file in files:
             if '.root' in file:
+                print(f'  Opening {path+file}')
                 events.append(get_events(path+file))
-                times.append(os.path.getmtime(path+file))
+                times.append(datetime.fromtimestamp(os.path.getmtime(path+file)))
         events, times = zip(*sorted(zip(times, events)))
         event_time_data.update({energy: [list(times), list(events)]})
         event_time_data['total'][0] += times
@@ -51,9 +55,11 @@ def get_events(path):
 
 
 def plot_event_time_data(data, energies):
+    print('Plotting total')
     data_total = data['total']
     events_total = get_cumulative(data_total[1])
-    plt.plot(data_total[0], events_total)
+    dates_total = date2num(data_total[0])
+    plt.plot(dates_total, events_total)
     plt.show()
 
 
