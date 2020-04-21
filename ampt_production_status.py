@@ -18,7 +18,9 @@ from datetime import datetime
 def main():
     trees_path = '/gpfs01/star/pwg/dneff/scratch/ampt/output/'
     energies = [11, 39]  # [7, 11, 19, 27, 39, 62]
-    event_time_data = {'total': [[], []]}
+    event_time_data = {}
+    total_events = []
+    total_times = []
     print()
     for energy in energies:
         events = []
@@ -33,16 +35,15 @@ def main():
                 try:
                     events.append(path_events_data[file])
                     times.append(datetime.fromtimestamp(os.path.getmtime(path + file)))
+                    total_events.append(events[-1])
+                    total_times.append(times[-1])
                 except KeyError:
                     pass
         times, events = zip(*sorted(zip(times, events)))
         event_time_data.update({energy: [list(times), list(events)]})
-        event_time_data['total'][0] += times
-        event_time_data['total'][1] += events
 
-    times, events = zip(*sorted(zip(event_time_data['total'][0], event_time_data['total'][1])))
-    event_time_data[0] = times
-    event_time_data[1] = events
+    total_times, total_events = zip(*sorted(zip(total_times, total_events)))
+    event_time_data.update({'total': [list(total_times), list(total_events)]})
 
     plot_event_time_data(event_time_data, energies)
 
@@ -67,7 +68,7 @@ def get_events(path):
 
 
 def plot_event_time_data(data, energies):
-    formatter = DateFormatter('%d %h')
+    formatter = DateFormatter('%a %H')
     loc = HourLocator(interval=12)
 
     plt.figure(1)
