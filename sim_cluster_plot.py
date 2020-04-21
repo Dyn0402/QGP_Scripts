@@ -14,7 +14,7 @@ import numpy as np
 
 def main():
     mu = 3.0
-    sigma = [0.02, 0.05, 0.1]
+    sigma = [0.02, 0.5]
     a = 1.0
     x = np.linspace(0, 2*np.pi, 10000)
     for sig in sigma:
