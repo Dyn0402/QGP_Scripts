@@ -66,8 +66,9 @@ def get_all_events(path):
     event_file_data = {}
     for line in res.strip().split('\n'):
         if 'Number of events in tree:' in line:
-            events = int(line.strip().split(': ')[-1])
-            file = line.strip().split(': ')[-2].split('/')[-1]
+            line = line.strip().split(': ')[-1]
+            events = int(line.split(' ')[-1])
+            file = line.split(' ')[-2].split('/')[-1]
             event_file_data.update({file: events})
 
     return event_file_data
