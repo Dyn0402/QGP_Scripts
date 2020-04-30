@@ -50,7 +50,7 @@ def main():
     total_times, total_events = zip(*sorted(zip(total_times, total_events)))
     event_time_data.update({'total': [list(total_times), list(total_events)]})
 
-    plot_event_time_data(event_time_data, energies)
+    plot_event_time_data(event_time_data, energies_found)
 
     # print(get_events('/media/dylan/SSD_Storage/Research/Trees_Ampt/7.root'))
     print('donzo')
