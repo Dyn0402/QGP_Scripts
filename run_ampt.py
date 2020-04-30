@@ -17,8 +17,12 @@ from datetime import datetime
 
 def main():
     times = [f'Python start: {str(datetime.now())}']
+    print(sys.argv)
     run_id = gen_id(sys.argv[1])
-    run(run_id, times)
+    if len(sys.argv) >= 3:
+        run(run_id, times, sys.argv[2])
+    else:
+        run(run_id, times)
     print(f'Run_id: {run_id}')
     for time in times:
         print(time)
@@ -43,17 +47,18 @@ def gen_id(job_id):
     return run_id
 
 
-def run(run_id, times):
+def run(run_id, times, tscript_suf=''):
     """
     Run AMPT with random seed. Once finished run makeAmptroot.C to create root file.
     :param run_id: Unique id for run generated with date/time and job number
     :param times: list of times to print out at end
+    :param tscript_suf: suffix on root script, either '' for STAR BES1 cuts or 'all' for no cuts
     :return:
     """
     times.append(f'AMPT start: {str(datetime.now())}')
     sp.run(['./ampt'], input=str(run_id).encode('utf-8'))
     times.append(f'AMPT end ROOT start: {str(datetime.now())}')
-    sp.run(['root', '-b', '-q', 'makeAmptroot.C++("' + str(run_id) + '")'])
+    sp.run(['root', '-b', '-q', 'makeAmptroot' + tscript_suf + '.C++("' + str(run_id) + '")'])
     times.append(f'ROOT end: {str(datetime.now())}')
 
 

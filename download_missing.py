@@ -61,11 +61,12 @@ def download_single(energy, ref):
 def download_all():
     remote_path = 'dneff@rftpexp.rhic.bnl.gov:/gpfs01/star/pwg/dneff/scratch/'
     local_path = '/media/dylan/SSD_Storage/Research/'
-    remote_tree_prefix = 'trees_old_ref'
-    local_tree_prefix = 'Trees_Old_Ref'
-    refs = [2, 3]
+    remote_tree_prefix = 'trees'
+    local_tree_prefix = 'Trees'
+    refs = ['']  # [2, 3]
     energies = [7, 11, 19, 27, 39, 62]
-    energy_files = {7: 1685, 11: 568, 19: 1397, 27: 2036, 39: 3580, 62: 3747}
+    # energy_files = {7: 1685, 11: 568, 19: 1397, 27: 2036, 39: 3580, 62: 3747}
+    energy_files = {7: 1681, 11: 564, 19: 1395, 27: 2028, 39: 3562, 62: 3729}
     missing_files = {}
     total_missing = 0
     for ref in refs:
