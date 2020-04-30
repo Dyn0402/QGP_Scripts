@@ -18,6 +18,7 @@ from datetime import datetime
 def main():
     trees_path = '/gpfs01/star/pwg/dneff/scratch/ampt/output/'
     energies = [7, 11, 19, 27, 39, 62]
+    energies_found = []
     event_time_data = {}
     total_events = []
     total_times = []
@@ -30,6 +31,7 @@ def main():
         if len(files) <= 0:
             print(f'{len(files)} {energy}GeV trees, skipping energy')
             continue
+        energies_found.append(energy)
         print(f'Reading ~{len(files)} {energy}GeV trees...')
         path_events_data = get_events(path)
         print(f'  Getting times for each {energy}GeV tree...')
