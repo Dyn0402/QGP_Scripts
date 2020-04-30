@@ -27,6 +27,9 @@ def main():
         times = []
         path = f'{trees_path}{energy}GeV/'
         files = os.listdir(path)
+        if len(files) <= 0:
+            print(f'{len(files)} {energy}GeV trees, skipping energy')
+            continue
         print(f'Reading ~{len(files)} {energy}GeV trees...')
         path_events_data = get_events(path)
         print(f'  Getting times for each {energy}GeV tree...')
