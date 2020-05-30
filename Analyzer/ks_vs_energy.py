@@ -22,7 +22,7 @@ def main():
             'mix': ['/home/dylan/Research/Data_Old_Ref3_Mix/eta050/', 'GeV/ratios_divisions_', '_centrality_',
                     '_local.txt']}
     colors = {7: 'red', 11: 'blue', 19: 'green', 27: 'cyan', 39: 'magenta', 62: 'black'}
-    cdf_plot = {'energy': 7, 'division': 3, 'centrality': 8, 'total protons': 35}
+    cdf_plot = {'energy': 7, 'division': 3, 'centrality': 8, 'total particles': 35}
     sd_plot = {'energy': 7, 'division': 3, 'centrality': 8}
     title_sufx = f'\n{sd_plot["energy"]}GeV, 0-5% Centrality, {sd_plot["division"]} Azimuthal Divisions'
 
@@ -56,54 +56,54 @@ def main():
             for centrality in centralities:
                 raw = data['raw'][energy][division][centrality]
                 mix = data['mix'][energy][division][centrality]
-                for total_protons in raw.data:
-                    if total_protons in mix.data:
-                        plot_data_ks2_test[energy][0].append(total_protons)
-                        plot_data_ks2_test[energy][1].append(ks2_test(raw.data[total_protons], mix.data[total_protons]))
-                        plot_data_raw[energy][0].append(total_protons)
-                        plot_data_raw[energy][1].append(ks2_test(raw.data[total_protons], stats.binom.pmf(
-                            range(0, total_protons+1), total_protons, 1.0/raw.div)))
-                        plot_data_mix[energy][0].append(total_protons)
-                        plot_data_mix[energy][1].append(ks2_test(mix.data[total_protons], stats.binom.pmf(
-                            range(0, total_protons+1), total_protons, 1.0/mix.div)))
-                        sd_data_raw[energy][0].append(total_protons)
-                        sd_data_raw[energy][1].append(hist_sd(range(len(raw.data[total_protons])), raw.data[total_protons]))
-                        sd_data_mix[energy][0].append(total_protons)
+                for total_particles in raw.data:
+                    if total_particles in mix.data:
+                        plot_data_ks2_test[energy][0].append(total_particles)
+                        plot_data_ks2_test[energy][1].append(ks2_test(raw.data[total_particles], mix.data[total_particles]))
+                        plot_data_raw[energy][0].append(total_particles)
+                        plot_data_raw[energy][1].append(ks2_test(raw.data[total_particles], stats.binom.pmf(
+                            range(0, total_particles+1), total_particles, 1.0/raw.div)))
+                        plot_data_mix[energy][0].append(total_particles)
+                        plot_data_mix[energy][1].append(ks2_test(mix.data[total_particles], stats.binom.pmf(
+                            range(0, total_particles+1), total_particles, 1.0/mix.div)))
+                        sd_data_raw[energy][0].append(total_particles)
+                        sd_data_raw[energy][1].append(hist_sd(range(len(raw.data[total_particles])), raw.data[total_particles]))
+                        sd_data_mix[energy][0].append(total_particles)
                         sd_data_mix[energy][1].append(
-                            hist_sd(range(len(mix.data[total_protons])), mix.data[total_protons]))
+                            hist_sd(range(len(mix.data[total_particles])), mix.data[total_particles]))
                         if sd_data_raw[energy][1][-1] is None or sd_data_mix[energy][1][-1] is None:
                             sd_data_raw[energy][0].pop()
                             sd_data_raw[energy][1].pop()
                             sd_data_mix[energy][0].pop()
                             sd_data_mix[energy][1].pop()
-                        # if energy == cdf_plot['energy'] and total_protons == cdf_plot['total protons'] and \
+                        # if energy == cdf_plot['energy'] and total_particles == cdf_plot['total particles'] and \
                         #         division == cdf_plot['division'] and centrality == cdf_plot['centrality']:
                         #     plot_data_cdf['raw']
-                        # raw_dist = [bin_protons for bin_protons, events in enumerate(raw.data[total_protons])
+                        # raw_dist = [bin_particles for bin_particles, events in enumerate(raw.data[total_particles])
                         #             for l in range(events)]
-                        # mix_dist = [bin_protons for bin_protons, events in enumerate(mix.data[total_protons])
+                        # mix_dist = [bin_particles for bin_particles, events in enumerate(mix.data[total_particles])
                         #             for l in range(events)]
                         # ks2 = stats.ks_2samp(raw_dist, mix_dist)
                         # ks_raw = stats.kstest(raw_dist, 'binom',
-                        #                       args=(total_protons, 1.0/raw.div))
+                        #                       args=(total_particles, 1.0/raw.div))
                         # ks_mix = stats.kstest(mix_dist, 'binom',
-                        #                       args=(total_protons, 1.0/mix.div))
-                        # # print(total_protons)
-                        # # plt.hist(mix_dist, bins=np.linspace(-0.5, total_protons+0.5, total_protons+2), align='mid', density=True, zorder=0)
-                        # # plt.scatter(range(0, total_protons+1), stats.binom.pmf(range(0, total_protons+1), total_protons, 1.0/mix.div),
+                        #                       args=(total_particles, 1.0/mix.div))
+                        # # print(total_particles)
+                        # # plt.hist(mix_dist, bins=np.linspace(-0.5, total_particles+0.5, total_particles+2), align='mid', density=True, zorder=0)
+                        # # plt.scatter(range(0, total_particles+1), stats.binom.pmf(range(0, total_particles+1), total_particles, 1.0/mix.div),
                         # #          zorder=1, color='red')
                         # # plt.show()
-                        # plot_data_ks2[energy][0].append(total_protons)
+                        # plot_data_ks2[energy][0].append(total_particles)
                         # plot_data_ks2[energy][1].append(ks2[0])
-                        # plot_data_raw[energy][0].append(total_protons)
+                        # plot_data_raw[energy][0].append(total_particles)
                         # plot_data_raw[energy][1].append(ks_raw[0])
-                        # plot_data_mix[energy][0].append(total_protons)
+                        # plot_data_mix[energy][0].append(total_particles)
                         # plot_data_mix[energy][1].append(ks_mix[0])
 
     raw_cdf = get_cdf(data['raw'][cdf_plot['energy']][cdf_plot['division']][cdf_plot['centrality']]
-                      .data[cdf_plot['total protons']])
+                      .data[cdf_plot['total particles']])
     mix_cdf = get_cdf(data['mix'][cdf_plot['energy']][cdf_plot['division']][cdf_plot['centrality']]
-                      .data[cdf_plot['total protons']])
+                      .data[cdf_plot['total particles']])
 
     # fig1, ax1 = plt.subplots()
     # fig2, ax2 = plt.subplots()
@@ -123,23 +123,23 @@ def main():
     # ax1.scatter(range(0, len(mix_cdf)), mix_cdf, label='Mix CDF')
     # ax1.legend()
     # ax1.set_title(f'{cdf_plot["energy"]}GeV, {cdf_plot["division"]} div, {cdf_plot["centrality"]} cent,'
-    #               f' {cdf_plot["total protons"]} protons, CDF Comparison')
-    # ax1.set_xlabel('Protons in Bin')
+    #               f' {cdf_plot["total particles"]} particles, CDF Comparison')
+    # ax1.set_xlabel('Particles in Bin')
     # ax1.set_ylabel('Integrated Probability')
     #
     # ax2.legend()
     # ax2.set_title('KS Statistics for Data to Binomial | 3 Divisions Most Central')
-    # ax2.set_xlabel('Total Protons in Event')
+    # ax2.set_xlabel('Total Particles in Event')
     # ax2.set_ylabel('KS Statistic')
     #
     # ax3.legend()
     # ax3.set_title('KS Statistics for Mixed to Binomial | 3 Divisions Most Central')
-    # ax3.set_xlabel('Total Protons in Event')
+    # ax3.set_xlabel('Total Particles in Event')
     # ax3.set_ylabel('KS Statistic')
     #
     # ax4.legend()
     # ax4.set_title('Test Two Sample KS Statistics for Data to Mixed | 3 Divisions Most Central')
-    # ax4.set_xlabel('Total Protons in Event')
+    # ax4.set_xlabel('Total Particles in Event')
     # ax4.set_ylabel('KS Statistic')
 
     raw_x = sd_data_raw[sd_plot['energy']][0]
@@ -153,9 +153,9 @@ def main():
     ax5.scatter(raw_x, raw_y, zorder=2, color='blue', label='Raw SD')
     ax5.scatter(mix_x, mix_y, zorder=1, color='green', label='Mix SD')
     ax5.plot(mix_x, y, color='red', zorder=0, label='Binomal SD')
-    ax5.set_xlabel('Total Protons')
+    ax5.set_xlabel('Total Particles')
     ax5.set_ylabel('Standard Deviation of Slice')
-    ax5.set_title(f'Standard Deviation of Total Proton Slices for {sd_plot["energy"]}GeV'+title_sufx)
+    ax5.set_title(f'Standard Deviation of Total Particle Slices for {sd_plot["energy"]}GeV'+title_sufx)
     ax5.legend()
 
     # fig6.set_size_inches(10, 7)
@@ -166,9 +166,9 @@ def main():
     ax6.axhline(1, zorder=0, color='red', ls='--')
     # ax6.axhline(np.average(raw_ratio), zorder=0, color='blue', ls='--', label='Raw Avg')
     # ax6.axhline(np.average(mix_ratio), zorder=0, color='green', ls='--', label='Mix Avg')
-    ax6.set_xlabel('Total Protons')
+    ax6.set_xlabel('Total Particles')
     ax6.set_ylabel('Standard Deviation of Slice Divided by Binomial')
-    ax6.set_title(f'SD Divided by Binomial of Total Proton Slices for {sd_plot["energy"]}GeV'+title_sufx)
+    ax6.set_title(f'SD Divided by Binomial of Total Particle Slices for {sd_plot["energy"]}GeV'+title_sufx)
     ax6.legend()
 
     plt.show()
