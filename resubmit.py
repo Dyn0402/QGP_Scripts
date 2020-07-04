@@ -128,6 +128,7 @@ def resub_jobs(script_path, failed_jobs):
     split_condor(script_path)
     for job in failed_jobs:
         command = 'condor_submit ' + script_path + 'sched' + job + '.condor'
+        print(command)
         os.system(command)
 
 
