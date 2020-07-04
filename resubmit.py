@@ -128,7 +128,7 @@ def resub_jobs(script_path, failed_jobs):
     split_condor(script_path)
     for job in failed_jobs:
         command = 'condor_submit ' + script_path + 'sched' + job + '.condor'
-        print(command)
+        # print(command)
         os.system(command)
 
 
@@ -257,8 +257,10 @@ def split_condor(path):
     """
     Split any condor files in directory into individual files.
     Tested, seems to work.
+    This method broke when condor files changed content_lines from 15 to 16.
+    Ideally make smarter in future, look for flag lines, though may make slower.
     """
-    content_lines = 15
+    content_lines = 16  # This has changed in the past and broken code. Ideally make smarter in future.
     sep_lines = 1
     for fpath in os.listdir(path):
         if '.condor' in fpath:
