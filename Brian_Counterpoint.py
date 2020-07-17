@@ -16,7 +16,9 @@ file_extension = '.txt'
 
 
 def main():
-    path = '/home/dylan/Desktop/Test/'
+    # path = '/home/dylan/Desktop/Test/'
+    path = '/gpfs01/star/pwg/brianchan/Dylan_Counterpoint/'
+    size = 10  # Gb
     make_files(path, 1)
     print('donzo')
 

@@ -12,6 +12,9 @@ Created as QGP_Scripts/net_proton_bad_run_comp.py
 
 
 def main():
+    all_yang_bad_runs = get_yang_bad_runs()
+    all_bad_ref_runs = get_ref_bad_runs()
+
     energies = [7, 11, 14, 19, 27, 39, 62]
     all_tosh_bad_runs = []
     all_note_bad_runs = []
@@ -26,8 +29,8 @@ def main():
             all_tosh_bad_runs += tosh_bad_runs
             all_note_bad_runs += note_bad_runs
 
-    all_yang_bad_runs = get_yang_bad_runs()
-    all_bad_ref_runs = get_ref_bad_runs()
+        if energy == 7 or energy == 14:
+            all_yang_bad_runs += note_bad_runs
 
     compare_all_bad_runs(all_tosh_bad_runs, all_note_bad_runs, all_yang_bad_runs, all_bad_ref_runs)
 
@@ -175,6 +178,8 @@ def compare_all_bad_runs(tosh, note, yang, ref):
     note_not_yang = [x for x in note if x not in yang]
     ref_not_yang = [x for x in ref if x not in yang]
     yang_not_ref = [x for x in yang if x not in ref]
+    tosh_not_yang = [x for x in tosh if x not in yang]
+    yang_not_tosh = [x for x in yang if x not in tosh]
 
     yang_not_note_str = ''
     for run in yang_not_note:
@@ -199,6 +204,55 @@ def compare_all_bad_runs(tosh, note, yang, ref):
         ref_not_yang_str += str(run) + ','
     print(f'\nRef bad runs that are not in Yang\'s list {len(ref_not_yang)}: ')
     print(ref_not_yang_str)
+
+    runs = get_energy_runs()
+
+    print(f'\nRuns in StRefMultCorr but not in Yang, {len(ref_not_yang)}:')
+    for run_num in sorted(ref_not_yang):
+        print(f'{run_num}: {check_run_energy(run_num, runs)}')
+
+    print(f'\nRuns in Toshihiro but not in Yang, {len(tosh_not_yang)}')
+    for run_num in sorted(tosh_not_yang):
+        print(f'{run_num}: {check_run_energy(run_num, runs)}')
+
+    print(f'\nRuns in Yang but not in Toshihiro, {len(yang_not_tosh)}')
+    for run_num in sorted(yang_not_tosh):
+        print(f'{run_num}: {check_run_energy(run_num, runs)}')
+
+
+
+def get_energy_runs():
+    path = '/home/dylan/git/Research/QGP_Fluctuations/Tree_Reader/StRefMultCorr/Param.h'
+    runs = {}
+    flag = False
+    with open(path, "r") as file:
+        lines = file.readlines()
+        for line in lines:
+            if flag:
+                line_strip = line.strip()
+                if len(line_strip) > 0:
+                    if '"' == line_strip[0]:
+                        line_strip = line_strip.split(':')
+                        year = line_strip[0].strip("\"")
+                        energy_year = f'{year}, {line_strip[1]}GeV'
+                        run_low, run_high = line_strip[2].split(',')
+                        while energy_year in runs:
+                            energy_year += '-'
+                        runs.update({energy_year: [int(run_low), int(run_high)]})
+                flag = False
+                continue
+            if '{' == line.strip():
+                flag = True
+
+    print(runs)
+    return runs
+
+
+def check_run_energy(run_num, runs):
+    for run in runs:
+        if runs[run][0] <= run_num <= runs[run][1]:
+            return run
+    return "Not Found"
 
 
 if __name__ == '__main__':

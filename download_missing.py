@@ -64,9 +64,10 @@ def download_all():
     remote_tree_prefix = 'trees'
     local_tree_prefix = 'Trees'
     refs = ['']  # [2, 3]
-    energies = [7, 11, 19, 27, 39, 62]
+    energies = [7, 11, 19, 27, 62]
     # energy_files = {7: 1685, 11: 568, 19: 1397, 27: 2036, 39: 3580, 62: 3747}
-    energy_files = {7: 1681, 11: 564, 19: 1395, 27: 2028, 39: 3562, 62: 3729}
+    # energy_files = {7: 1681, 11: 564, 19: 1395, 27: 2028, 39: 3562, 62: 3729}
+    energy_files = {7: 1676, 11: 564, 19: 1390, 27: 2007, 39: 3555, 62: 3702}
     missing_files = {}
     total_missing = 0
     for ref in refs:
@@ -112,11 +113,11 @@ def download_all():
                             files += file + ','
                         files = files[:-1] + r'\}'
                         remote = remote_path + remote_tree_prefix + f'{ref}/output/{energy}GeV/{files}'
-                        # # command = f'scp dneff@rftpexp.rhic.bnl.gov:' \
-                        # #           f'/gpfs01/star/pwg/dneff/scratch/trees_ref{ref}/output/{energy}GeV/{files} ' \
-                        # #           f'{local}'
-                        # # print(command)
-                        # # os.system(command)
+                        # command = f'scp dneff@rftpexp.rhic.bnl.gov:' \
+                        #           f'/gpfs01/star/pwg/dneff/scratch/trees_ref{ref}/output/{energy}GeV/{files} ' \
+                        #           f'{local}'
+                        # print(command)
+                        # os.system(command)
                         command = 'scp ' + remote + ' ' + local
                         print(command)
                         # subprocess.Popen(['gnome-terminal', '--', 'scp', remote, local])
