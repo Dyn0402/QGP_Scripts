@@ -58,7 +58,7 @@ def run(run_id, times, tscript_suf=''):
     times.append(f'AMPT start: {str(datetime.now())}')
     sp.run(['./ampt'], input=str(run_id).encode('utf-8'))
     times.append(f'AMPT end ROOT start: {str(datetime.now())}')
-    sp.run(['root', '-b', '-q', 'makeAmptroot' + tscript_suf + '.C++("' + str(run_id) + '")'])
+    sp.run(['/star/u/dneff/Software/root/root-6.14.06/obj/bin/root', '-b', '-q', 'makeAmptroot' + tscript_suf + '.C++("' + str(run_id) + '")'])
     times.append(f'ROOT end: {str(datetime.now())}')
 
 
