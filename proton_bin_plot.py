@@ -21,19 +21,19 @@ def main():
     divs = 3
     cent = 8
     energy = 7
-    set_name = 'eta05'
+    set_name = 'eta05_n1ratios'
     set_num = 0
-    path = f'/home/dylan/Research/Data_Old_Ref3/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
-    path_mix = f'/home/dylan/Research/Data_Old_Ref3_Mix/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
+    path = f'/home/dylan/Research/Data/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
+    path_mix = f'/home/dylan/Research/Data_Mix/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
     title_sufx = '\n7GeV, 0-5% Centrality, 3 Azimuthal Divisions'
     data = read_azbin_data(path)
     data_mix = read_azbin_data(path_mix)
     # plot_azbin_data(data, [0, 40], [0, 20], divs)
-    # plot_azbin_data_trans(data, [0, 20], [0, 40], divs, title_sufx=title_sufx)
+    plot_azbin_data_trans(data, [0, 22], [0, 45], divs, title_sufx=title_sufx)
     # plot_azbin_data_trans_proj(data, [0, 20], [0, 40], divs, title_sufx=title_sufx)
     # ratio_transform(data, divs, title_sufx=title_sufx)
     # diff_transform(data, divs, title_sufx=title_sufx)
-    pull_transform(data, data_mix, divs, title_sufx=title_sufx)
+    # pull_transform(data, data_mix, divs, title_sufx=title_sufx)
     plot_binomial(data, 25, divs, title_sufx=title_sufx)
     # plot_data_mixed(data, data_mix, 31, divs, range(10, 26), title_sufx=title_sufx)
     print('donzo')
