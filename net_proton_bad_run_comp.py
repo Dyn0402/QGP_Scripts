@@ -34,6 +34,8 @@ def main():
 
     compare_all_bad_runs(all_tosh_bad_runs, all_note_bad_runs, all_yang_bad_runs, all_bad_ref_runs)
 
+    print_yang_runs(all_yang_bad_runs)
+
     print('donzo')
 
 
@@ -220,7 +222,6 @@ def compare_all_bad_runs(tosh, note, yang, ref):
         print(f'{run_num}: {check_run_energy(run_num, runs)}')
 
 
-
 def get_energy_runs():
     path = '/home/dylan/git/Research/QGP_Fluctuations/Tree_Reader/StRefMultCorr/Param.h'
     runs = {}
@@ -253,6 +254,27 @@ def check_run_energy(run_num, runs):
         if runs[run][0] <= run_num <= runs[run][1]:
             return run
     return "Not Found"
+
+
+def print_yang_runs(yang_runs):
+    energy_run_ranges = get_energy_runs()
+    bad_run_energy = {}
+    for run in yang_runs:
+        energy = check_run_energy(run, energy_run_ranges)
+        if 'GeV' in energy:
+            energy = energy.split(', ')[-1].split('GeV')[0]
+            if energy in bad_run_energy.keys():
+                bad_run_energy[energy].append(run)
+            else:
+                bad_run_energy.update({energy: [run]})
+
+    print('Yang\'s bad runs by energy:')
+    for energy, runs in bad_run_energy.items():
+        print(f'\n\n{energy}GeV: ')
+        run_list = ''
+        for run in runs:
+            run_list += str(run) + ', '
+        print(run_list)
 
 
 if __name__ == '__main__':
