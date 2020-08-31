@@ -138,9 +138,12 @@ def download_all():
     # energy_files = {7: 1681, 11: 564, 19: 1395, 27: 2028, 39: 3562, 62: 3729}
     # energy_files = {7: 1676, 11: 564, 19: 1390, 27: 2007, 39: 3555, 62: 3702}
     # energy_files = {7: 1674, 11: 566, 15: 3366, 19: 1391, 27: 2012, 39: 3564, 62: 3705}  # 7-24-20
-    energy_files = {7: 1631, 11: 563, 15: 3302, 19: 1344, 27: 1932, 39: 3464, 62: 3566}  # 8-23-20
+    # energy_files = {7: 1631, 11: 563, 15: 3302, 19: 1344, 27: 1932, 39: 3464, 62: 3566}  # 8-23-20
+    energy_files = {7: 1669, 11: 563, 15: 3300, 19: 1375, 27: 1996, 39: 3541, 62: 3668}  # 8-30-20
     max_files_per_set = 200
-    bwlimit = 20  # bandwidth limit in MBPS or None
+    bwlimit = 5  # bandwidth limit in MBPS or None
+
+    empty = {7: True, 11: True, 15: True, 19: True, 27: True, 39: True, 62: True}
     missing_files = {}
     total_missing = 0
     for energy in energies:
@@ -150,6 +153,8 @@ def download_all():
         prefix = ''
         path = local_path + local_tree_prefix + f'/{energy}GeV'
         files = os.listdir(path)
+        if len(files) > 0:
+            empty[energy] = False
         for file in files:
             last_uscore = file.rfind('_')
             last_period = file.rfind('.')
@@ -172,18 +177,24 @@ def download_all():
 
     if total_missing > 0:
         res = input(f'\nDownload {total_missing} missing files? Enter yes to download all, energy number to download'
-                    f' single energy, energy number,num files to download specific number of files for a single energy,'
+                    f' single energy; energy number, num files to download specific number of files for a single energy;'
                     f' or anything else to quit: ')
         if res.strip().lower() in ['yes', 'y']:
             for energy in missing_files:
-                if len(missing_files[energy]) > 0:
-                    local = local_path + local_tree_prefix + f'/{energy}GeV/'
-                    for missing_set in missing_files[energy]:
-                        if len(missing_set) > 0:
-                            files = r'\{'
-                            for file in missing_set:
-                                files += file + ','
-                            start_download(files, energy, remote_path, remote_tree_prefix, local, bwlimit)
+                local = local_path + local_tree_prefix + f'/{energy}GeV/'
+                if empty[energy]:
+                    res = input(f'{energy}GeV empty, "yes" to download all in one terminal with *.root "no" to skip: ')
+                    if res.strip().lower() in ['yes', 'y']:
+                        files = r'\{*.root,'
+                        start_download(files, energy, remote_path, remote_tree_prefix, local, bwlimit)
+                else:
+                    if len(missing_files[energy]) > 0:
+                        for missing_set in missing_files[energy]:
+                            if len(missing_set) > 0:
+                                files = r'\{'
+                                for file in missing_set:
+                                    files += file + ','
+                                start_download(files, energy, remote_path, remote_tree_prefix, local, bwlimit)
         else:
             single_energy = False
             all_files = True
@@ -201,27 +212,32 @@ def download_all():
                     all_files = False
                 except ValueError:
                     pass
-            if single_energy and all_files:
-                if len(missing_files[energy]) > 0:
-                    local = local_path + local_tree_prefix + f'/{energy}GeV/'
-                    for missing_set in missing_files[energy]:
-                        if len(missing_set) > 0:
-                            files = r'\{'
-                            for file in missing_set:
-                                files += file + ','
-                            start_download(files, energy, remote_path, remote_tree_prefix, local, bwlimit)
-            elif single_energy and not all_files:
-                if len(missing_files[energy]) > 0:
-                    local = local_path + local_tree_prefix + f'/{energy}GeV/'
-                    file_count = 0
-                    for missing_set in missing_files[energy]:
-                        if len(missing_set) > 0 and file_count < num_files:
-                            files = r'\{'
-                            for file in missing_set:
-                                if file_count < num_files:
+            if single_energy:
+                local = local_path + local_tree_prefix + f'/{energy}GeV/'
+                if empty[energy]:
+                    res = input(f'{energy}GeV empty, "yes" to download all in one terminal with *.root "no" to skip: ')
+                    if res.strip().lower() in ['yes', 'y']:
+                        files = r'\{*.root,'
+                        start_download(files, energy, remote_path, remote_tree_prefix, local, bwlimit)
+                elif all_files:
+                    if len(missing_files[energy]) > 0:
+                        for missing_set in missing_files[energy]:
+                            if len(missing_set) > 0:
+                                files = r'\{'
+                                for file in missing_set:
                                     files += file + ','
-                                    file_count += 1
-                            start_download(files, energy, remote_path, remote_tree_prefix, local, bwlimit)
+                                start_download(files, energy, remote_path, remote_tree_prefix, local, bwlimit)
+                else:
+                    if len(missing_files[energy]) > 0:
+                        file_count = 0
+                        for missing_set in missing_files[energy]:
+                            if len(missing_set) > 0 and file_count < num_files:
+                                files = r'\{'
+                                for file in missing_set:
+                                    if file_count < num_files:
+                                        files += file + ','
+                                        file_count += 1
+                                start_download(files, energy, remote_path, remote_tree_prefix, local, bwlimit)
 
     else:
         print('All files downloaded!')
