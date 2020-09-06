@@ -10,237 +10,78 @@ Created as QGP_Scripts/download_missing.py
 
 
 import os
-import subprocess
-import datetime
+from subprocess import Popen, PIPE
 
 # scp -r dneff@rftpexp.rhic.bnl.gov:/gpfs01/star/pwg/dneff/scratch/trees/output/62GeV/ Trees/
 
 
 def main():
-    download_all()
-
+    download()
     print('donzo')
 
 
-def download_single(energy, ref):
-    energy_files = {7: 1685, 11: 568, 19: 1397, 27: 2036, 39: 3580, 62: 3747}
-    energy = 19
-    ref = 3
-    expected = energy_files[energy]
-    numbers = list(range(0, expected))
-    prefix = ''
-    path = f'/media/dylan/SSD_Storage/Research/Trees_Ref{ref}/{energy}GeV/'
-    files = os.listdir(path)
-    for file in files:
-        last_uscore = file.rfind('_')
-        last_period = file.rfind('.')
-        num = int(file[last_uscore + 1:last_period])
-        if num in numbers:
-            numbers.pop(next(index for index in range(len(numbers)) if numbers[index] == num))
-        pre = file[:last_uscore + 1]
-        if pre != prefix:
-            print(f'New prefix {pre}')
-            prefix = pre
-
-    print(f'\n{len(numbers)} files missing:')
-    missing_files = []
-    for num in numbers:
-        missing_files.append(f'{prefix}{num}.root')
-        print(missing_files[-1])
-
-    if len(numbers) > 0:
-        res = input(f'\nDownload {len(numbers)} missing files? Enter yes to download or anything else to quit: ')
-        if res.strip().lower() in ['yes', 'y']:
-            for file in missing_files:
-                command = f'scp dneff@rftpexp.rhic.bnl.gov:' \
-                          f'/gpfs01/star/pwg/dneff/scratch/trees_ref/output/{energy}GeV/{file} ' \
-                          f'{path}'
-                print(command)
-                os.system(command)
-
-
-def download_all_old():
-    remote_path = 'dneff@rftpexp.rhic.bnl.gov:/gpfs01/star/pwg/dneff/scratch/'
-    local_path = '/media/dylan/SSD_Storage/Research/'
-    remote_tree_prefix = 'trees'
-    local_tree_prefix = 'Trees'
-    refs = ['']  # [2, 3]
-    energies = [7, 11, 19, 27, 62]
-    # energy_files = {7: 1685, 11: 568, 19: 1397, 27: 2036, 39: 3580, 62: 3747}
-    # energy_files = {7: 1681, 11: 564, 19: 1395, 27: 2028, 39: 3562, 62: 3729}
-    energy_files = {7: 1676, 11: 564, 19: 1390, 27: 2007, 39: 3555, 62: 3702}
-    missing_files = {}
-    total_missing = 0
-    for ref in refs:
-        missing_files.update({ref: {}})
-        for energy in energies:
-            missing_files[ref].update({energy: []})
-            expected = energy_files[energy]
-            numbers = list(range(0, expected))
-            prefix = ''
-            path = local_path + local_tree_prefix + f'{ref}/{energy}GeV'
-            # path = f'/media/dylan/SSD_Storage/Research/Trees_Ref{ref}/{energy}GeV/'
-            files = os.listdir(path)
-            for file in files:
-                last_uscore = file.rfind('_')
-                last_period = file.rfind('.')
-                num = int(file[last_uscore + 1:last_period])
-                if num in numbers:
-                    numbers.pop(next(index for index in range(len(numbers)) if numbers[index] == num))
-                pre = file[:last_uscore + 1]
-                if pre != prefix:
-                    # print(f'New prefix {pre}')
-                    prefix = pre
-
-            print(f'Ref{ref} {energy}GeV \n{len(numbers)} files missing:')
-            for num in numbers:
-                missing_files[ref][energy].append(f'{prefix}{num}.root')
-                total_missing += 1
-                # print(missing_files[-1])
-
-    if total_missing > 0:
-        res = input(f'\nDownload {total_missing} missing files? Enter yes to download or anything else to quit: ')
-        if res.strip().lower() in ['yes', 'y']:
-            for ref in missing_files:
-                for energy in missing_files[ref]:
-                    if len(missing_files[ref][energy]) > 0:
-                        local = local_path + local_tree_prefix + f'{ref}/{energy}GeV/'
-                        # local = f'/media/dylan/SSD_Storage/Research/Trees_Ref{ref}/{energy}GeV/'
-                        files = r'\{'
-                        for file in missing_files[ref][energy]:
-                            # remote = remote_path + remote_tree_prefix + f'{ref}/output/{energy}GeV/{file}'
-                            # print(remote, local)
-                            # subprocess.Popen(['gnome-terminal', '--', 'scp', remote, local])
-                            files += file + ','
-                        files = files[:-1] + r'\}'
-                        remote = remote_path + remote_tree_prefix + f'{ref}/output/{energy}GeV/{files}'
-                        # command = f'scp dneff@rftpexp.rhic.bnl.gov:' \
-                        #           f'/gpfs01/star/pwg/dneff/scratch/trees_ref{ref}/output/{energy}GeV/{files} ' \
-                        #           f'{local}'
-                        # print(command)
-                        # os.system(command)
-                        command = 'scp ' + remote + ' ' + local
-                        print(command)
-                        # subprocess.Popen(['gnome-terminal', '--', 'scp', remote, local])
-                        subprocess.Popen(command, shell=True)
-
-    else:
-        print('All files downloaded!')
-
-
-def download_all():
-    remote_path = 'dneff@rftpexp.rhic.bnl.gov:/gpfs01/star/pwg/dneff/data/BES1/'
+def download():
+    remote_path = 'dneff@rftpexp.rhic.bnl.gov:/gpfs01/star/pwg/dneff/data/AMPT/'  # BES1/'
     local_path = '/media/ucla/Research/'
-    remote_tree_prefix = 'trees'
-    local_tree_prefix = 'BES1_Trees'
+    remote_tree_prefix = 'ampt_new'  # 'trees'
+    local_tree_prefix = 'AMPT_Trees'  # 'BES1_Trees'
     energies = [7, 11, 15, 19, 27, 39, 62]
-    # energy_files = {7: 1685, 11: 568, 19: 1397, 27: 2036, 39: 3580, 62: 3747}
-    # energy_files = {7: 1681, 11: 564, 19: 1395, 27: 2028, 39: 3562, 62: 3729}
-    # energy_files = {7: 1676, 11: 564, 19: 1390, 27: 2007, 39: 3555, 62: 3702}
-    # energy_files = {7: 1674, 11: 566, 15: 3366, 19: 1391, 27: 2012, 39: 3564, 62: 3705}  # 7-24-20
-    # energy_files = {7: 1631, 11: 563, 15: 3302, 19: 1344, 27: 1932, 39: 3464, 62: 3566}  # 8-23-20
-    energy_files = {7: 1669, 11: 563, 15: 3300, 19: 1375, 27: 1996, 39: 3541, 62: 3668}  # 8-30-20
-    max_files_per_set = 200
-    bwlimit = 5  # bandwidth limit in MBPS or None
+    bwlimit = 1  # bandwidth limit per energy in MBPS or None
+    size_tolerance = 0.001  # percentage tolerance between remote and local sizes, re-download if different
 
-    empty = {7: True, 11: True, 15: True, 19: True, 27: True, 39: True, 62: True}
     missing_files = {}
     total_missing = 0
     for energy in energies:
         missing_files.update({energy: []})
-        expected = energy_files[energy]
-        numbers = list(range(0, expected))
-        prefix = ''
-        path = local_path + local_tree_prefix + f'/{energy}GeV'
-        files = os.listdir(path)
-        if len(files) > 0:
-            empty[energy] = False
-        for file in files:
-            last_uscore = file.rfind('_')
-            last_period = file.rfind('.')
-            num = int(file[last_uscore + 1:last_period])
-            if num in numbers:
-                numbers.pop(next(index for index in range(len(numbers)) if numbers[index] == num))
-            pre = file[:last_uscore + 1]
-            if pre != prefix:
-                prefix = pre
-
-        print(f'{energy}GeV \n{len(numbers)} files missing:')
-        missing_files[energy].append([])
-        set_index = 0
-        for num in numbers:
-            if len(missing_files[energy][set_index]) >= max_files_per_set:
-                missing_files[energy].append([])
-                set_index += 1
-            missing_files[energy][set_index].append(f'{prefix}{num}.root')
-            total_missing += 1
+        expected_files = get_expected_list(energy, remote_path, remote_tree_prefix)
+        path = local_path + local_tree_prefix + f'/{energy}GeV/'
+        for file, file_size in expected_files.items():
+            if os.path.exists(path+file):
+                size_frac = (os.path.getsize(path+file) - file_size) / file_size
+                if abs(size_frac) > size_tolerance:
+                    missing_files[energy].append(file)
+            else:
+                missing_files[energy].append(file)
+        total_missing += len(missing_files[energy])
+        print(f'{energy}GeV missing {len(missing_files[energy])} of {len(expected_files)} files')
 
     if total_missing > 0:
         res = input(f'\nDownload {total_missing} missing files? Enter yes to download all, energy number to download'
-                    f' single energy; energy number, num files to download specific number of files for a single energy;'
-                    f' or anything else to quit: ')
+                    f' a single energy; or anything else to quit: ')
+        energy_list = []
         if res.strip().lower() in ['yes', 'y']:
-            for energy in missing_files:
-                local = local_path + local_tree_prefix + f'/{energy}GeV/'
-                if empty[energy]:
-                    res = input(f'{energy}GeV empty, "yes" to download all in one terminal with *.root "no" to skip: ')
-                    if res.strip().lower() in ['yes', 'y']:
-                        files = r'\{*.root,'
-                        start_download(files, energy, remote_path, remote_tree_prefix, local, bwlimit)
-                else:
-                    if len(missing_files[energy]) > 0:
-                        for missing_set in missing_files[energy]:
-                            if len(missing_set) > 0:
-                                files = r'\{'
-                                for file in missing_set:
-                                    files += file + ','
-                                start_download(files, energy, remote_path, remote_tree_prefix, local, bwlimit)
+            energy_list = missing_files.keys()
         else:
-            single_energy = False
-            all_files = True
-            energy = 0
-            num_files = 0
             try:
-                energy = int(res.strip().lower())
-                single_energy = energy in missing_files.keys()
+                energy_in = int(res.strip().lower())
             except ValueError:
-                try:
-                    energy, num_files = res.strip().lower().split(',')
-                    energy = int(energy)
-                    num_files = int(num_files)
-                    single_energy = energy in missing_files.keys()
-                    all_files = False
-                except ValueError:
-                    pass
-            if single_energy:
-                local = local_path + local_tree_prefix + f'/{energy}GeV/'
-                if empty[energy]:
-                    res = input(f'{energy}GeV empty, "yes" to download all in one terminal with *.root "no" to skip: ')
-                    if res.strip().lower() in ['yes', 'y']:
-                        files = r'\{*.root,'
-                        start_download(files, energy, remote_path, remote_tree_prefix, local, bwlimit)
-                elif all_files:
-                    if len(missing_files[energy]) > 0:
-                        for missing_set in missing_files[energy]:
-                            if len(missing_set) > 0:
-                                files = r'\{'
-                                for file in missing_set:
-                                    files += file + ','
-                                start_download(files, energy, remote_path, remote_tree_prefix, local, bwlimit)
-                else:
-                    if len(missing_files[energy]) > 0:
-                        file_count = 0
-                        for missing_set in missing_files[energy]:
-                            if len(missing_set) > 0 and file_count < num_files:
-                                files = r'\{'
-                                for file in missing_set:
-                                    if file_count < num_files:
-                                        files += file + ','
-                                        file_count += 1
-                                start_download(files, energy, remote_path, remote_tree_prefix, local, bwlimit)
+                pass
+            if energy_in in missing_files:
+                energy_list.append(energy_in)
+        for energy in energy_list:
+            local = local_path + local_tree_prefix + f'/{energy}GeV/'
+            if len(missing_files[energy]) > 0:
+                files = r'\{'
+                for file in missing_files[energy]:
+                    files += file + ','
+                start_download(files, energy, remote_path, remote_tree_prefix, local, bwlimit)
 
     else:
         print('All files downloaded!')
+
+
+def get_expected_list(energy, remote_path, remote_tree_prefix):
+    stdout, stderr = Popen(['ssh', f'{remote_path.split(":")[0]}', 'ls -l',
+                            f'{remote_path.split(":")[1]}{remote_tree_prefix}/output/{energy}GeV'],
+                           stdout=PIPE, stderr=PIPE).communicate()
+    files_str = stdout.decode('UTF-8').split('\n')
+    files_dict = {}
+    for file in files_str:
+        file = file.split()
+        if len(file) == 9:
+            files_dict.update({file[-1]: int(file[4])})
+
+    return files_dict
 
 
 def start_download(files, energy, remote_path, remote_tree_prefix, local, bwlimit=None):
