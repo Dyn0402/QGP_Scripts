@@ -16,7 +16,7 @@ from datetime import datetime
 
 
 def main():
-    trees_path = '/gpfs01/star/pwg/dneff/data/AMPT/ampt_new/output/'
+    trees_path = '/gpfs01/star/pwg/dneff/data/AMPT/dylan_run/output/'
     energies = [7, 11, 19, 27, 39, 62]
     energies_found = []
     event_time_data = {}
