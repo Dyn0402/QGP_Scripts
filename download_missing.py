@@ -21,13 +21,22 @@ def main():
 
 
 def download():
-    remote_path = 'dneff@rftpexp.rhic.bnl.gov:/gpfs01/star/pwg/dneff/data/AMPT/'  # BES1/'
-    local_path = '/media/ucla/Research/'
-    remote_tree_prefix = 'ampt_new'  # 'trees'
-    local_tree_prefix = 'AMPT_Trees'  # 'BES1_Trees'
+    data_set = 'AMPT_Run'
+    data_sets = {'BES1': {'remote_path_suf': 'BES1/', 'remote_tree_pref': 'trees/output',
+                          'local_tree_pref': 'BES1_Trees'},
+                 'AMPT_Run': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
+                              'local_tree_pref': 'AMPT_Trees/most_central'}}
+
     energies = [7, 11, 15, 19, 27, 39, 62]
-    bwlimit = 1  # bandwidth limit per energy in MBPS or None
+    bwlimit = 10  # bandwidth limit per energy in MBPS or None
     size_tolerance = 0.001  # percentage tolerance between remote and local sizes, re-download if different
+
+    remote_path = 'dneff@rftpexp.rhic.bnl.gov:/gpfs01/star/pwg/dneff/data/'
+    local_path = '/media/ucla/Research/'
+
+    remote_path += data_sets[data_set]['remote_path_suf']
+    remote_tree_prefix = data_sets[data_set]['remote_tree_pref']
+    local_tree_prefix = data_sets[data_set]['local_tree_pref']
 
     missing_files = {}
     total_missing = 0
@@ -35,29 +44,38 @@ def download():
         missing_files.update({energy: []})
         expected_files = get_expected_list(energy, remote_path, remote_tree_prefix)
         path = local_path + local_tree_prefix + f'/{energy}GeV/'
+        bad_size_files = 0
         for file, file_size in expected_files.items():
             if os.path.exists(path+file):
                 size_frac = (os.path.getsize(path+file) - file_size) / file_size
                 if abs(size_frac) > size_tolerance:
+                    bad_size_files += 1
                     missing_files[energy].append(file)
             else:
                 missing_files[energy].append(file)
         total_missing += len(missing_files[energy])
-        print(f'{energy}GeV missing {len(missing_files[energy])} of {len(expected_files)} files')
+        print(f'{energy}GeV missing {len(missing_files[energy])} of {len(expected_files)} files,'
+              f' {bad_size_files} of these mismatched size')
 
     if total_missing > 0:
-        res = input(f'\nDownload {total_missing} missing files? Enter yes to download all, energy number to download'
-                    f' a single energy; or anything else to quit: ')
+        res = input(f'\nDownload {total_missing} missing files? Enter yes to download all; energy number to download'
+                    f' a single energy; energy number,number of files to download only first n files for energy;'
+                    f' or anything else to quit: ')
         energy_list = []
         if res.strip().lower() in ['yes', 'y']:
             energy_list = missing_files.keys()
         else:
             try:
                 energy_in = int(res.strip().lower())
+                if energy_in in missing_files:
+                    energy_list.append(energy_in)
             except ValueError:
-                pass
-            if energy_in in missing_files:
-                energy_list.append(energy_in)
+                in_list = res.strip().lower().split(',')
+                energy_in = int(in_list[0].strip())
+                num_files = int(in_list[1].strip())
+                if energy_in in missing_files:
+                    energy_list.append(energy_in)
+                    missing_files[energy_in] = missing_files[energy_in][:num_files]
         for energy in energy_list:
             local = local_path + local_tree_prefix + f'/{energy}GeV/'
             if len(missing_files[energy]) > 0:
@@ -72,7 +90,7 @@ def download():
 
 def get_expected_list(energy, remote_path, remote_tree_prefix):
     stdout, stderr = Popen(['ssh', f'{remote_path.split(":")[0]}', 'ls -l',
-                            f'{remote_path.split(":")[1]}{remote_tree_prefix}/output/{energy}GeV'],
+                            f'{remote_path.split(":")[1]}{remote_tree_prefix}/{energy}GeV'],
                            stdout=PIPE, stderr=PIPE).communicate()
     files_str = stdout.decode('UTF-8').split('\n')
     files_dict = {}
@@ -86,7 +104,7 @@ def get_expected_list(energy, remote_path, remote_tree_prefix):
 
 def start_download(files, energy, remote_path, remote_tree_prefix, local, bwlimit=None):
     files = files[:-1] + r'\}'
-    remote = remote_path + remote_tree_prefix + f'/output/{energy}GeV/{files}'
+    remote = remote_path + remote_tree_prefix + f'/{energy}GeV/{files}'
     if bwlimit:
         command = f'rsync -r -v --bwlimit={bwlimit*1000} --progress -e ssh ' + remote + ' ' + local
     else:
