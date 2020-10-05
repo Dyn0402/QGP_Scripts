@@ -10,10 +10,19 @@ Created as QGP_Scripts/AzimuthBinData.py
 
 
 class AzimuthBinData:
-    def __init__(self, div='', path=''):
+    def __init__(self, div=0, path=''):
+        """
+
+        :param div: Azimuthal division size in degrees
+        :param path: Path to bin data text file
+        """
         self.path = path
         self.div = div
+
         self.data = {}
+        self.ratio_dist = {}
+        self.pull_dist = {}
+
         if path != '':
             self.read_data()
 
@@ -22,16 +31,48 @@ class AzimuthBinData:
             lines = file.readlines()
             for line in lines:
                 line = line.strip().split('\t')
-                total_protons = int(line[0])
-                bin_protons_string = line[1].split(' ')
-                if len(bin_protons_string) > 0:
-                    self.data[total_protons] = []
+                total_particles = int(line[0])
+                bin_particles_string = line[1].split(' ')
+                if len(bin_particles_string) > 0:
+                    self.data[total_particles] = []
                 i = 0
-                for entry in bin_protons_string:
+                for entry in bin_particles_string:
                     entry = entry.split(':')
                     while int(entry[0]) > i:
-                        self.data[total_protons].append(0)
+                        self.data[total_particles].append(0)
                         i += 1
-                    self.data[total_protons].append(int(entry[1]))
+                    self.data[total_particles].append(int(entry[1]))
                     i += 1
 
+    def ratio_trans(self):
+        for total_particles in self.data:
+            for bin_particles in range(len(self.data[total_particles])):
+                ratio = bin_particles / total_particles
+                if ratio in self.ratio_dist:
+                    self.ratio_dist[ratio] += self.data[total_particles][bin_particles]
+                else:
+                    self.ratio_dist.update({ratio: self.data[total_particles][bin_particles]})
+
+    def pull_trans(self):
+        for total_particles in self.data:
+            for bin_particles in range(len(self.data[total_particles])):
+                pull = bin_particles - total_particles * (self.div / 360)
+                if pull in self.ratio_dist:
+                    self.pull_dist[pull] += self.data[total_particles][bin_particles]
+                else:
+                    self.pull_dist.update({pull: self.data[total_particles][bin_particles]})
+
+    def get_ratio_dist(self):
+        self.ratio_trans()
+        return self.ratio_dist
+
+    def get_pull_dist(self):
+        self.pull_trans()
+        return self.pull_dist
+
+    def print_dist(self):
+        for total_particles in self.data:
+            out_line = f'{total_particles}\t'
+            for bin_particles in range(len(self.data[total_particles])):
+                out_line += f'{bin_particles}:{self.data[total_particles][bin_particles]} '
+            print(out_line)
