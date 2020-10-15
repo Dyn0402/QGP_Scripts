@@ -18,23 +18,23 @@ from scipy.optimize import curve_fit
 
 
 def main():
-    divs = 3
+    divs = 120
     cent = 8
     energy = 7
-    set_name = 'eta05_n1ratios'
+    set_name = 'eta05_n1ratios_dca3'
     set_num = 0
     path = f'/home/dylan/Research/Data/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
     path_mix = f'/home/dylan/Research/Data_Mix/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
-    title_sufx = '\n7GeV, 0-5% Centrality, 3 Azimuthal Divisions'
+    title_sufx = f'\n7GeV, 0-5% Centrality, {divs}° Bins'
     data = read_azbin_data(path)
     data_mix = read_azbin_data(path_mix)
     # plot_azbin_data(data, [0, 40], [0, 20], divs)
     plot_azbin_data_trans(data, [0, 22], [0, 45], divs, title_sufx=title_sufx)
     # plot_azbin_data_trans_proj(data, [0, 20], [0, 40], divs, title_sufx=title_sufx)
-    # ratio_transform(data, divs, title_sufx=title_sufx)
-    # diff_transform(data, divs, title_sufx=title_sufx)
-    # pull_transform(data, data_mix, divs, title_sufx=title_sufx)
-    plot_binomial(data, 25, divs, title_sufx=title_sufx)
+    # ratio_transform(data, divs, max_particles=46, title_sufx=title_sufx)
+    # diff_transform(data, divs, max_particles=46, title_sufx=title_sufx)
+    # pull_transform(data, data_mix, divs, max_particles=46, title_sufx=title_sufx)
+    plot_binomial(data, 17, divs, title_sufx=title_sufx)
     # plot_data_mixed(data, data_mix, 31, divs, range(10, 26), title_sufx=title_sufx)
     print('donzo')
 
@@ -59,13 +59,13 @@ def read_azbin_data(path):
 def plot_binomial(data, particles, divs, title_sufx=''):
     y = np.asarray([ele[particles] for ele in data])
     x = range(len(y))
-    y_binom = sum(y)*binom.pmf(x, particles, 1/divs)
+    y_binom = sum(y)*binom.pmf(x, particles, float(divs) / 360)
     y_err = np.sqrt(y)
     fig1, ax1 = plt.subplots()
     ax1.bar(x, y, align='center', zorder=0, label=f'{particles} Particle Events')
     ax1.scatter(x, y_binom, color='red', label='Binomial Distribution')
     ax1.set_xticks(range(0, len(y), 2))
-    ax1.set_title(f'Particles in {divs} Division Bin vs Binomial for {particles} Particle Events'+title_sufx)
+    ax1.set_title(f'Particles in {divs}° Bin vs Binomial for {particles} Particle Events'+title_sufx)
     ax1.set_xlabel('Number of Particles in Bin')
     ax1.set_ylabel('Events')
     ax1.set_xlim([-0.5, particles+0.5])
@@ -76,7 +76,7 @@ def plot_binomial(data, particles, divs, title_sufx=''):
     ax2.axhline(0, color='red', ls='--')
     ax2.errorbar(x, y_diff, yerr=y_err, fmt='bo')
     ax2.set_xticks(range(0, len(y), 2))
-    ax2.set_title(f'Particles in {divs} Division Bin Minus Binomial for {particles} Particle Events'+title_sufx)
+    ax2.set_title(f'Particles in {divs}° Bin Minus Binomial for {particles} Particle Events'+title_sufx)
     ax2.set_xlabel('Number of Particles in Bin')
     ax2.set_ylabel('Data Events Minus Binomial')
     ax2.set_xlim([-0.5, particles+0.5])
@@ -87,7 +87,7 @@ def plot_binomial(data, particles, divs, title_sufx=''):
     ax3.axhline(1, color='red', ls='--')
     ax3.errorbar(x, y_ratio, yerr=y_ratio_err, fmt='bo')
     ax3.set_xticks(range(0, len(y), 2))
-    ax3.set_title(f'Particles in {divs} Division Bin Divided by Binomial for {particles} Particle Events' + title_sufx)
+    ax3.set_title(f'Particles in {divs}° Bin Divided by Binomial for {particles} Particle Events' + title_sufx)
     ax3.set_xlabel('Number of Particles in Bin')
     ax3.set_ylabel('Data Events Divided by Binomial')
     ax3.set_xlim([-0.5, particles + 0.5])
@@ -302,7 +302,7 @@ def plot_azbin_data_trans(data, x_lim, y_lim, divs, x_label='Number of Particles
                        np.asarray(y_range) - float(y_range[1] - y_range[0]) / 2)
     data = np.ma.masked_where(data <= 0, data)
     plot_2d = ax_2d.pcolormesh(y, x, data, norm=colors.LogNorm(vmin=data.min(), vmax=data.max()))
-    y2 = float(divs) * np.asarray(y_range)
+    y2 = 360 / float(divs) * np.asarray(y_range)
     y3 = 1.0 * np.asarray(y_range)
     ax_2d.plot(y_range, y2, color='red', label='mean')
     ax_2d.plot(y_range, y3, color='blue', label='max')
@@ -343,7 +343,7 @@ def plot_azbin_data_trans_proj(data, x_lim, y_lim, divs, x_label='Number of Part
                        np.asarray(y_range) - float(y_range[1] - y_range[0]) / 2)
     data = np.ma.masked_where(data <= 0, data)
     plot_2d = ax_2d.pcolormesh(y, x, data, norm=colors.LogNorm(vmin=data.min(), vmax=data.max()))
-    y2 = float(divs) * np.asarray(y_range)
+    y2 = 360 / float(divs) * np.asarray(y_range)
     y3 = 1.0 * np.asarray(y_range)
     ax_2d.plot(y_range, y2, color='red', label='mean')
     ax_2d.plot(y_range, y3, color='blue', label='max')
@@ -381,7 +381,7 @@ def plot_ratio_data(data, x_range, y_range, divs, x_label='Number of Particles i
     x, y = np.meshgrid(x_range, y_range)
     data = np.ma.masked_where(data <= 0, data)
     plt.pcolormesh(y, x, data, norm=colors.LogNorm(vmin=data.min(), vmax=data.max()))
-    plt.axvline(1.0 / divs, color='red', label='mean')
+    plt.axvline(float(divs) / 360, color='red', label='mean')
     plt.axvline(1.05, color='blue', label='max')
     plt.colorbar()
     plt.xlabel(x_label)
@@ -394,7 +394,7 @@ def plot_ratio_data(data, x_range, y_range, divs, x_label='Number of Particles i
 def plot_ratio_dist(y, x, divs, title_sufx=''):
     plt.bar(x, y, width=x[1]-x[0], align='edge', zorder=0)
     plt.yscale('log')
-    plt.axvline(1.0/divs, color='red', label='mean')
+    plt.axvline(float(divs) / 360, color='red', label='mean')
     plt.axvline(1.05, color='blue', label='max')
     plt.xlabel('Ratio')
     plt.ylabel('Events')
@@ -409,7 +409,7 @@ def plot_ratio_kde(data):
     plt.show()
 
 
-def plot_diff_data(data, x_range, y_range, divs, x_label='Number of Particles in Bin',
+def plot_diff_data(data, x_range, y_range, divs, max_particles=40, x_label='Number of Particles in Bin',
                    y_label='Number of Particles in Event', title_sufx=''):
     # x, y = np.meshgrid(np.asarray(x_range)-float(x_range[1]-x_range[0])/2,
     #                    np.asarray(y_range)-float(y_range[1]-y_range[0])/2)
@@ -417,14 +417,15 @@ def plot_diff_data(data, x_range, y_range, divs, x_label='Number of Particles in
     data = np.ma.masked_where(data <= 0, data)
     plt.pcolormesh(y, x, data, norm=colors.LogNorm(vmin=data.min(), vmax=data.max()))
     plt.axvline(0.0, color='red', label='mean')
-    y2 = np.asarray(y_range) * (divs - 1) / divs
-    y3 = -float(divs) * np.asarray(y_range)
-    plt.plot(y_range, y2, color='blue', label='max')
-    plt.plot(y_range, y3, color='black', label='min')
+    print(divs)
+    y2 = np.asarray(y_range) * (1 - divs / 360)
+    y3 = -float(divs) / 360 * np.asarray(y_range)
+    plt.plot(y2, y_range, color='blue', label='max')
+    plt.plot(y3, y_range, color='black', label='min')
     plt.colorbar()
     plt.xlabel(x_label)
     plt.ylabel(y_label)
-    plt.ylim([0, 40])
+    plt.ylim([0, max_particles])
     plt.xlim([-10, 12])
     plt.xticks(range(-10, 12, 2))
     plt.title('Particles in Event vs Differences'+title_sufx)
@@ -432,7 +433,7 @@ def plot_diff_data(data, x_range, y_range, divs, x_label='Number of Particles in
     plt.show()
 
 
-def plot_pull_data(data, x_range, y_range, divs, x_label='Number of Particles in Bin',
+def plot_pull_data(data, x_range, y_range, divs, max_particles=40, x_label='Number of Particles in Bin',
                    y_label='Number of Particles in Event', title_sufx=''):
     # x, y = np.meshgrid(np.asarray(x_range)-float(x_range[1]-x_range[0])/2,
     #                    np.asarray(y_range)-float(y_range[1]-y_range[0])/2)
@@ -443,7 +444,7 @@ def plot_pull_data(data, x_range, y_range, divs, x_label='Number of Particles in
     plt.colorbar()
     plt.xlabel(x_label)
     plt.ylabel(y_label)
-    plt.ylim([0, 40])
+    plt.ylim([0, max_particles])
     plt.xlim([-10, 12])
     plt.xticks(range(-10, 12, 2))
     plt.title('Particles in Event vs Pull'+title_sufx)
@@ -470,8 +471,8 @@ def plot_diff_kde(data):
     plt.show()
 
 
-def ratio_transform(data, divs, title_sufx=''):
-    ratio_data = np.zeros((21, 40))
+def ratio_transform(data, divs, max_particles=40, title_sufx=''):
+    ratio_data = np.zeros((21, max_particles))
     ratio_dist = np.zeros(21)
     ratio_vals = []
     for num_in_bin, bin_data in enumerate(data):
@@ -483,16 +484,18 @@ def ratio_transform(data, divs, title_sufx=''):
                 ratio_dist[ratio_bin] += num_events
                 # ratio_vals.extend([ratio] * int(num_events))
 
-    plot_ratio_data(ratio_data, range(0, 40), np.linspace(0, 1.05, 22), divs, x_label='Ratio', title_sufx=title_sufx)
+    plot_ratio_data(ratio_data, range(0, max_particles), np.linspace(0, 1.05, 22), divs, x_label='Ratio', title_sufx=title_sufx)
     plot_ratio_dist(ratio_dist, np.linspace(0, 1, 21), divs, title_sufx=title_sufx)
     # plot_ratio_kde(ratio_vals)
 
 
-def diff_transform(data, divs, title_sufx=''):
+def diff_transform(data, divs, max_particles=40, title_sufx=''):
     x_bins = 32
-    diff_data = np.zeros((x_bins, 40))
+    diff_data = np.zeros((x_bins, max_particles))
     diff_dist = np.zeros(x_bins)
     diff_values = []
+    bin_width = divs
+    divs = int(360 / divs)  # Convert from divs in bin width to number of divisions
     for num_in_bin, bin_data in enumerate(data):
         for total_particles, num_events in enumerate(bin_data):
             if total_particles >= num_in_bin and total_particles > 0 and num_events > 0:
@@ -503,24 +506,27 @@ def diff_transform(data, divs, title_sufx=''):
                 if diff > Fraction(total_particles * (divs - 1), divs):
                     print(f'greater than max: {total_particles * (divs - 1) / divs} | nT: {total_particles} | '
                           f'np: {num_in_bin} | diff: {diff}')
-                diff_norm = Fraction((diff + Fraction(40, divs)), 40)
+                diff_norm = Fraction((diff + Fraction(max_particles, divs)), max_particles)
                 diff_bin = int(diff_norm * (x_bins - 1))
                 diff_data[diff_bin][total_particles] += num_events
                 diff_dist[diff_bin] += num_events
                 diff_values.extend([diff] * int(num_events))
 
-    plot_diff_data(diff_data, range(0, 40), np.linspace(-40.0 / divs, 40.0 - 40.0 / divs, x_bins),
-                   divs, x_label='Difference', title_sufx=title_sufx)
-    plot_diff_dist(diff_dist, np.linspace(-40.0 / divs, 40.0 - 40.0 / divs, x_bins), divs, title_sufx=title_sufx)
+
+    plot_diff_data(diff_data, range(0, max_particles), np.linspace(-float(max_particles) / divs, float(max_particles) - float(max_particles) / divs, x_bins),
+                   bin_width, x_label='Difference', title_sufx=title_sufx, max_particles=max_particles)
+    plot_diff_dist(diff_dist, np.linspace(-float(max_particles) / divs, float(max_particles) - float(max_particles) / divs, x_bins), bin_width, title_sufx=title_sufx)
     # plot_diff_kde(diff_values)
 
 
-def pull_transform(data, data_mix, divs, title_sufx=''):
+def pull_transform(data, data_mix, divs, max_particles=40, title_sufx=''):
     x_bins = 32
-    diff_mix_data = np.zeros((x_bins, 40))
+    diff_mix_data = np.zeros((x_bins, max_particles))
     diff_mix_dist = np.zeros(x_bins)
     diff_mix_values = []
 
+    bin_width = divs
+    divs = int(360 / divs)  # Convert from divs in bin width to number of divisions
     for num_in_bin, bin_data in enumerate(data_mix):
         for total_particles, num_events in enumerate(bin_data):
             diff_mix_values.append([])
@@ -532,23 +538,27 @@ def pull_transform(data, data_mix, divs, title_sufx=''):
                 if diff > Fraction(total_particles * (divs - 1), divs):
                     print(f'greater than max: {total_particles * (divs - 1) / divs} | nT: {total_particles} | '
                           f'np: {num_in_bin} | diff: {diff}')
-                diff_norm = Fraction((diff + Fraction(40, divs)), 40)
+                diff_norm = Fraction((diff + Fraction(max_particles, divs)), max_particles)
                 diff_bin = int(diff_norm * (x_bins - 1))
                 diff_mix_data[diff_bin][total_particles] += num_events
                 diff_mix_dist[diff_bin] += num_events
                 diff_mix_values[total_particles].extend([diff] * int(num_events))
 
-    diff_mix_sds = np.zeros(40)
-    for total_particles in range(len(diff_mix_sds)):
-        if len(diff_mix_values[total_particles]) > 2:
-            diff_mix_sds[total_particles] = fraction_sd(diff_mix_values[total_particles])
-        else:
-            diff_mix_sds[total_particles] = 1
-        print(f'{total_particles} total particles, mix diff slice sd: {diff_mix_sds[total_particles]}')
+    # diff_mix_sds = np.zeros(max_particles)
+    # for total_particles in range(len(diff_mix_sds)):
+    #     if len(diff_mix_values[total_particles]) > 2:
+    #         diff_mix_sds[total_particles] = fraction_sd(diff_mix_values[total_particles])
+    #     else:
+    #         diff_mix_sds[total_particles] = 1
+    #     print(f'{total_particles} total particles, mix diff slice sd: {diff_mix_sds[total_particles]}')
+    diff_binom_sds = np.zeros(max_particles)
+    for total_particles in range(len(diff_binom_sds)):
+        p = float(bin_width) / 360
+        diff_binom_sds[total_particles] = (total_particles * p * (1 - p))**0.5
 
-    diff_data = np.zeros((x_bins, 40))
+    diff_data = np.zeros((x_bins, max_particles))
     diff_dist = np.zeros(x_bins)
-    pull_data = np.zeros((x_bins, 40))
+    pull_data = np.zeros((x_bins, max_particles))
     pull_dist = np.zeros(x_bins)
     diff_values = []
     pull_values = []
@@ -563,11 +573,11 @@ def pull_transform(data, data_mix, divs, title_sufx=''):
                 if diff > Fraction(total_particles * (divs - 1), divs):
                     print(f'greater than max: {total_particles * (divs - 1) / divs} | nT: {total_particles} | '
                           f'np: {num_in_bin} | diff: {diff}')
-                diff_norm = Fraction((diff + Fraction(40, divs)), 40)
+                diff_norm = Fraction((diff + Fraction(max_particles, divs)), max_particles)
                 diff_bin = int(diff_norm * (x_bins - 1))
                 diff_data[diff_bin][total_particles] += num_events
                 diff_dist[diff_bin] += num_events
-                pull = diff / diff_mix_sds[total_particles]
+                pull = diff / diff_binom_sds[total_particles]
                 pull_norm = (pull + 20 / divs) / 20
                 pull_bin = int(pull_norm * (x_bins - 1))
                 if pull_bin == x_bins:
@@ -578,23 +588,23 @@ def pull_transform(data, data_mix, divs, title_sufx=''):
                 diff_values.extend([diff] * int(num_events))
                 pull_values[total_particles].extend([pull] * int(num_events))
 
-    for total_particles in range(len(pull_values)):
-        if len(pull_values[total_particles]) > 2:
-            sd = fraction_sd(diff_mix_values[total_particles])
-        else:
-            sd = 1
-        print(f'{total_particles} total particles, pull slice sd: {sd}')
+    # for total_particles in range(len(pull_values)):
+    #     if len(pull_values[total_particles]) > 2:
+    #         sd = fraction_sd(diff_mix_values[total_particles])
+    #     else:
+    #         sd = 1
+    #     print(f'{total_particles} total particles, pull slice sd: {sd}')
 
-    plot_diff_data(diff_mix_data, range(0, 40), np.linspace(-40.0 / divs, 40.0 - 40.0 / divs, x_bins),
-                   divs, x_label='Difference', title_sufx=title_sufx + ' Mix')
+    plot_diff_data(diff_mix_data, range(0, max_particles), np.linspace(-float(max_particles) / divs, float(max_particles) - float(max_particles) / divs, x_bins),
+                   bin_width, x_label='Difference', title_sufx=title_sufx + ' Mix', max_particles=max_particles)
 
-    plot_diff_data(diff_data, range(0, 40), np.linspace(-40.0 / divs, 40.0 - 40.0 / divs, x_bins),
-                   divs, x_label='Difference', title_sufx=title_sufx)
-    plot_diff_dist(diff_dist, np.linspace(-40.0 / divs, 40.0 - 40.0 / divs, x_bins), divs, title_sufx=title_sufx)
+    plot_diff_data(diff_data, range(0, max_particles), np.linspace(-float(max_particles) / divs, float(max_particles) - float(max_particles) / divs, x_bins),
+                   bin_width, x_label='Difference', title_sufx=title_sufx, max_particles=max_particles)
+    plot_diff_dist(diff_dist, np.linspace(-float(max_particles) / divs, float(max_particles) - float(max_particles) / divs, x_bins), bin_width, title_sufx=title_sufx)
 
-    plot_pull_data(pull_data, range(0, 40), np.linspace(-40.0 / divs, 40.0 - 40.0 / divs, x_bins),
-                   divs, x_label='Pull', title_sufx=title_sufx)
-    plot_diff_dist(pull_dist, np.linspace(-40.0 / divs, 40.0 - 40.0 / divs, x_bins), divs, title_sufx=title_sufx)
+    plot_pull_data(pull_data, range(0, max_particles), np.linspace(-float(max_particles) / divs, float(max_particles) - float(max_particles) / divs, x_bins),
+                   bin_width, x_label='Pull', title_sufx=title_sufx, max_particles=max_particles)
+    plot_diff_dist(pull_dist, np.linspace(-float(max_particles) / divs, float(max_particles) - float(max_particles) / divs, x_bins), bin_width, title_sufx=title_sufx)
     # plot_diff_kde(diff_values)
 
 
