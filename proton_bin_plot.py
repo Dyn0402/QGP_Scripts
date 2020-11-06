@@ -31,10 +31,10 @@ def main():
     # plot_azbin_data(data, [0, 40], [0, 20], divs)
     plot_azbin_data_trans(data, [0, 22], [0, 45], divs, title_sufx=title_sufx)
     # plot_azbin_data_trans_proj(data, [0, 20], [0, 40], divs, title_sufx=title_sufx)
-    # ratio_transform(data, divs, max_particles=46, title_sufx=title_sufx)
+    ratio_transform(data, divs, max_particles=46, title_sufx=title_sufx)
     # diff_transform(data, divs, max_particles=46, title_sufx=title_sufx)
     # pull_transform(data, data_mix, divs, max_particles=46, title_sufx=title_sufx)
-    plot_binomial(data, 17, divs, title_sufx=title_sufx)
+    # plot_binomial(data, 17, divs, title_sufx=title_sufx)
     # plot_data_mixed(data, data_mix, 31, divs, range(10, 26), title_sufx=title_sufx)
     print('donzo')
 
@@ -482,11 +482,11 @@ def ratio_transform(data, divs, max_particles=40, title_sufx=''):
                 ratio_bin = int(ratio * 20)
                 ratio_data[ratio_bin][total_particles] += num_events
                 ratio_dist[ratio_bin] += num_events
-                # ratio_vals.extend([ratio] * int(num_events))
+                ratio_vals.extend([ratio] * int(num_events))
 
     plot_ratio_data(ratio_data, range(0, max_particles), np.linspace(0, 1.05, 22), divs, x_label='Ratio', title_sufx=title_sufx)
     plot_ratio_dist(ratio_dist, np.linspace(0, 1, 21), divs, title_sufx=title_sufx)
-    # plot_ratio_kde(ratio_vals)
+    plot_ratio_kde(ratio_vals)
 
 
 def diff_transform(data, divs, max_particles=40, title_sufx=''):
@@ -562,6 +562,7 @@ def pull_transform(data, data_mix, divs, max_particles=40, title_sufx=''):
     pull_dist = np.zeros(x_bins)
     diff_values = []
     pull_values = []
+    pull_values_proj = []
     for num_in_bin, bin_data in enumerate(data):
         for total_particles, num_events in enumerate(bin_data):
             pull_values.append([])
@@ -587,6 +588,7 @@ def pull_transform(data, data_mix, divs, max_particles=40, title_sufx=''):
                 pull_dist[pull_bin] += num_events
                 diff_values.extend([diff] * int(num_events))
                 pull_values[total_particles].extend([pull] * int(num_events))
+                pull_values_proj.extend([pull] * int(num_events))
 
     # for total_particles in range(len(pull_values)):
     #     if len(pull_values[total_particles]) > 2:
@@ -606,6 +608,7 @@ def pull_transform(data, data_mix, divs, max_particles=40, title_sufx=''):
                    bin_width, x_label='Pull', title_sufx=title_sufx, max_particles=max_particles)
     plot_diff_dist(pull_dist, np.linspace(-float(max_particles) / divs, float(max_particles) - float(max_particles) / divs, x_bins), bin_width, title_sufx=title_sufx)
     # plot_diff_kde(diff_values)
+    plot_diff_kde(pull_values_proj)
 
 
 def fraction_sd(x):
