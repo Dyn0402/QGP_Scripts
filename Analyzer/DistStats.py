@@ -11,6 +11,7 @@ Created as QGP_Scripts/DistStats.py
 
 from Measure import Measure
 from scipy.special import binom
+import math
 
 
 class DistStats:
@@ -73,7 +74,10 @@ class DistStats:
                     binom(ni, nj) * (-1)**(ni - nj) * self.raw_moments[nj] * self.raw_moments[1]**(ni - nj)
 
         for ni in range(2, n_max+1):
-            self.m.update({ni: self.cent_moments[ni] / self.cent_moments[2]**(0.5 * ni)})
+            if self.cent_moments[2] == 0:
+                self.m.update({ni: float('nan')})
+            else:
+                self.m.update({ni: self.cent_moments[ni] / self.cent_moments[2]**(0.5 * ni)})
 
     def get_mean(self):
         """
@@ -93,7 +97,11 @@ class DistStats:
         """
         self.calc_cent_moments(1, 4)
         val = self.cent_moments[2]**0.5
-        err = ((self.m[4] - 1) * self.cent_moments[2] / (4 * self.total_counts))**0.5
+        err = (self.m[4] - 1) * self.cent_moments[2]
+        if err >= 0:
+            err = (err / (4 * self.total_counts))**0.5
+        else:
+            err = float('nan')
 
         return Measure(val, err)
 
@@ -104,9 +112,16 @@ class DistStats:
         """
         self.calc_cent_moments(1, 6)
         m = self.m
-        val = self.cent_moments[3] / self.cent_moments[2]**1.5
-        err = ((9 - 6 * m[4] + m[3]**2 * (35 + 9 * m[4]) / 4 - 3 * m[3] * m[5] + m[6])
-               / self.total_counts) ** 0.5
+        if self.cent_moments[2] == 0:
+            val = float('nan')
+            err = float('nan')
+        else:
+            val = self.cent_moments[3] / self.cent_moments[2]**1.5
+            err = 9 - 6 * m[4] + m[3]**2 * (35 + 9 * m[4]) / 4 - 3 * m[3] * m[5] + m[6]
+            if err >= 0:
+                err = (err / self.total_counts) ** 0.5
+            else:
+                err = float('nan')
 
         return Measure(val, err)
 
@@ -117,15 +132,16 @@ class DistStats:
         """
         self.calc_cent_moments(1, 8)
         m = self.m
-        val = self.cent_moments[4] / self.cent_moments[2]**2 - 3
-        # for i, rawi in self.raw_moments.items():
-        #     print(f'kurt raw{i}: {rawi}')
-        # for i, centi in self.cent_moments.items():
-        #     print(f'kurt cent{i}: {centi}')
-        # for i, mi in m.items():
-        #     print(f'kurt m{i}: {mi}')
-        err = ((-m[4]**2 + 4 * m[4]**3 + 16 * m[3]**2 * (1 + m[4]) - 8 * m[3] * m[5] - 4 * m[4] * m[6] + m[8])
-               / self.total_counts) ** 0.5
+        if self.cent_moments[2] == 0:
+            val = float('nan')
+            err = float('nan')
+        else:
+            val = self.cent_moments[4] / self.cent_moments[2]**2 - 3
+            err = -m[4]**2 + 4 * m[4]**3 + 16 * m[3]**2 * (1 + m[4]) - 8 * m[3] * m[5] - 4 * m[4] * m[6] + m[8]
+            if err >= 0:
+                err = (err / self.total_counts) ** 0.5
+            else:
+                err = float('nan')
 
         return Measure(val, err)
 
@@ -136,8 +152,16 @@ class DistStats:
         """
         self.calc_cent_moments(1, 8)
         m = self.m
-        val = self.cent_moments[4] / self.cent_moments[2] - 3 * self.cent_moments[2]
-        err = ((-9 + 6 * m[4]**2 + m[4]**3 + 8 * m[3]**2 * (5 + m[4]) - 8 * m[3] * m[5] + m[4] * (9 - 2 * m[6])
-                - 6 * m[6] + m[8]) * self.cent_moments[2]**2 / self.total_counts) ** 0.5
+        if self.cent_moments[2] == 0:
+            val = float('nan')
+            err = float('nan')
+        else:
+            val = self.cent_moments[4] / self.cent_moments[2] - 3 * self.cent_moments[2]
+            err = -9 + 6 * m[4]**2 + m[4]**3 + 8 * m[3]**2 * (5 + m[4]) - 8 * m[3] * m[5] + m[4] * (9 - 2 * m[6]) \
+                  - 6 * m[6] + m[8]
+            if err >= 0:
+                err = (err * self.cent_moments[2]**2 / self.total_counts) ** 0.5
+            else:
+                err = float('nan')
 
         return Measure(val, err)
