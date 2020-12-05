@@ -31,10 +31,10 @@ def main():
     # plot_azbin_data(data, [0, 40], [0, 20], divs)
     plot_azbin_data_trans(data, [0, 22], [0, 45], divs, title_sufx=title_sufx)
     # plot_azbin_data_trans_proj(data, [0, 20], [0, 40], divs, title_sufx=title_sufx)
-    ratio_transform(data, divs, max_particles=46, title_sufx=title_sufx)
+    # ratio_transform(data, divs, max_particles=46, title_sufx=title_sufx)
     # diff_transform(data, divs, max_particles=46, title_sufx=title_sufx)
     # pull_transform(data, data_mix, divs, max_particles=46, title_sufx=title_sufx)
-    # plot_binomial(data, 17, divs, title_sufx=title_sufx)
+    plot_binomial(data, 26, divs, title_sufx=title_sufx)
     # plot_data_mixed(data, data_mix, 31, divs, range(10, 26), title_sufx=title_sufx)
     print('donzo')
 
