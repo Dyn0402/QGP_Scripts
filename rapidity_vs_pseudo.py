@@ -14,8 +14,8 @@ import matplotlib.pyplot as plt
 
 
 def main():
-    pts = [0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0]  # GeV
-    etas = np.linspace(-1, 1, 1000)
+    pts = [0.3, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0]  # GeV
+    etas = np.linspace(-4, 4, 1000)
     m = 0.93827  # GeV, proton mass
     for pt in pts:
         rap = rapidity(etas, pt, m)
