@@ -11,11 +11,11 @@ Created as QGP_Scripts/DistStats.py
 
 from Measure import Measure
 from scipy.special import binom
-import math
+import warnings
 
 
 class DistStats:
-    def __init__(self, dist=None):
+    def __init__(self, dist=None, debug=True):
         """
         Initiate with 1D distribution
         :param dist: Distribution to calculate stats for. dist ~ dictionary{key=x_value, value=counts}
@@ -25,6 +25,8 @@ class DistStats:
         self.cent_moments = {}
         self.m = {}
         self.total_counts = None
+        if debug:
+            warnings.filterwarnings('error')
 
     def calc_total_counts(self):
         self.calc_raw_moments(1, 0)
@@ -53,7 +55,11 @@ class DistStats:
                 self.raw_moments[ni] += x**ni * counts
 
         for ni in range(n_min, n_max+1):
-            self.raw_moments[ni] /= self.total_counts
+            try:
+                self.raw_moments[ni] /= self.total_counts
+            except RuntimeWarning:
+                print(f'Warning treated as error for debug:\n'
+                      f'raw_moment {ni}: {self.raw_moments[ni]}, total_counts: {self.total_counts}')
 
     def calc_cent_moments(self, n_min=1, n_max=1):
         """
@@ -163,5 +169,28 @@ class DistStats:
                 err = (err * self.cent_moments[2]**2 / self.total_counts) ** 0.5
             else:
                 err = float('nan')
+
+        return Measure(val, err)
+
+    def get_cumulant(self, order):
+        """
+        Calculate cumulant of distribution for given order with error from delta theorem
+        !!!! DELTA THEOREM ERRORS NOT YET IMPLEMENTED !!!!!
+        :param order: Order of cumulant to calculate
+        """
+        self.calc_cent_moments(1, order)
+        # Error catching for delta theorem error calc
+        err = 1
+        # Maybe write in bell polynomials later
+        if order == 1:
+            val = self.cent_moments[1]
+        elif order == 2:
+            val = self.cent_moments[2]
+        elif order == 3:
+            val = self.cent_moments[3]
+        elif order == 4:
+            val = self.cent_moments[4] - 3 * self.cent_moments[2]**2
+        elif order == 5:
+            val = self.cent_moments[5] - 10 * self.cent_moments[2] * self.cent_moments[3]
 
         return Measure(val, err)
