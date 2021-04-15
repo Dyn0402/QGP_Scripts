@@ -33,8 +33,8 @@ def main():
     # plot_azbin_data_trans_proj(data, [0, 20], [0, 40], divs, title_sufx=title_sufx)
     # ratio_transform(data, divs, max_particles=46, title_sufx=title_sufx)
     # diff_transform(data, divs, max_particles=46, title_sufx=title_sufx)
-    # pull_transform(data, data_mix, divs, max_particles=46, title_sufx=title_sufx)
-    plot_binomial(data, 26, divs, title_sufx=title_sufx)
+    pull_transform(data, data_mix, divs, max_particles=46, title_sufx=title_sufx)
+    # plot_binomial(data, 26, divs, title_sufx=title_sufx)
     # plot_data_mixed(data, data_mix, 31, divs, range(10, 26), title_sufx=title_sufx)
     print('donzo')
 
@@ -437,6 +437,7 @@ def plot_pull_data(data, x_range, y_range, divs, max_particles=40, x_label='Numb
                    y_label='Number of Particles in Event', title_sufx=''):
     # x, y = np.meshgrid(np.asarray(x_range)-float(x_range[1]-x_range[0])/2,
     #                    np.asarray(y_range)-float(y_range[1]-y_range[0])/2)
+    print(data)
     x, y = np.meshgrid(x_range, y_range)
     data = np.ma.masked_where(data <= 0, data)
     plt.pcolormesh(y, x, data, norm=colors.LogNorm(vmin=data.min(), vmax=data.max()))
@@ -584,11 +585,11 @@ def pull_transform(data, data_mix, divs, max_particles=40, title_sufx=''):
                 if pull_bin == x_bins:
                     print('Over max')
                     pull_bin -= 1
-                pull_data[pull_bin][total_particles] += num_events
-                pull_dist[pull_bin] += num_events
+                pull_data[pull_bin][total_particles] += num_events  # This is not right
+                pull_dist[pull_bin] += num_events  # This is not right
                 diff_values.extend([diff] * int(num_events))
                 pull_values[total_particles].extend([pull] * int(num_events))
-                pull_values_proj.extend([pull] * int(num_events))
+                pull_values_proj.extend([pull] * int(num_events))  # This is right
 
     # for total_particles in range(len(pull_values)):
     #     if len(pull_values[total_particles]) > 2:
@@ -604,7 +605,7 @@ def pull_transform(data, data_mix, divs, max_particles=40, title_sufx=''):
                    bin_width, x_label='Difference', title_sufx=title_sufx, max_particles=max_particles)
     plot_diff_dist(diff_dist, np.linspace(-float(max_particles) / divs, float(max_particles) - float(max_particles) / divs, x_bins), bin_width, title_sufx=title_sufx)
 
-    plot_pull_data(pull_data, range(0, max_particles), np.linspace(-float(max_particles) / divs, float(max_particles) - float(max_particles) / divs, x_bins),
+    plot_pull_data(pull_data, range(0, max_particles), np.linspace(-float(max_particles) / divs, float(max_particles) * (1 - 1 / divs), x_bins),
                    bin_width, x_label='Pull', title_sufx=title_sufx, max_particles=max_particles)
     plot_diff_dist(pull_dist, np.linspace(-float(max_particles) / divs, float(max_particles) - float(max_particles) / divs, x_bins), bin_width, title_sufx=title_sufx)
     # plot_diff_kde(diff_values)
