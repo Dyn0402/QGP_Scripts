@@ -34,7 +34,7 @@ def main():
     # ratio_transform(data, divs, max_particles=46, title_sufx=title_sufx)
     # diff_transform(data, divs, max_particles=46, title_sufx=title_sufx)
     pull_transform(data, data_mix, divs, max_particles=46, title_sufx=title_sufx)
-    # plot_binomial(data, 26, divs, title_sufx=title_sufx)
+    plot_binomial(data, 26, divs, title_sufx=title_sufx)
     # plot_data_mixed(data, data_mix, 31, divs, range(10, 26), title_sufx=title_sufx)
     print('donzo')
 
@@ -437,7 +437,6 @@ def plot_pull_data(data, x_range, y_range, divs, max_particles=40, x_label='Numb
                    y_label='Number of Particles in Event', title_sufx=''):
     # x, y = np.meshgrid(np.asarray(x_range)-float(x_range[1]-x_range[0])/2,
     #                    np.asarray(y_range)-float(y_range[1]-y_range[0])/2)
-    print(data)
     x, y = np.meshgrid(x_range, y_range)
     data = np.ma.masked_where(data <= 0, data)
     plt.pcolormesh(y, x, data, norm=colors.LogNorm(vmin=data.min(), vmax=data.max()))

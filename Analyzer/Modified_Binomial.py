@@ -23,6 +23,8 @@ def main():
     for ki in k:
         mod_b.append(mod_binom(ki, n, p, c))
     mod_b = np.asarray(mod_b) / sum(mod_b)
+    print(f'Bin Expectation: {sum(stats.binom.pmf(k, n, p) * k)}')
+    print(f'Mod Expectation: {sum(mod_b*k)}')
     plt.plot(k, p + abs(k - n*p) * c / n)
     plt.show()
     plt.scatter(k, stats.binom.pmf(k, n, p), color='red', label='Binomial')
