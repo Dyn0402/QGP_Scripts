@@ -10,6 +10,7 @@ Created as QGP_Scripts/download_missing_win.py
 
 import os
 from subprocess import Popen, PIPE
+from time import sleep
 
 
 def main():
@@ -20,7 +21,7 @@ def main():
 def download():
     data_set = 'BES1'
     data_sets = {'BES1': {'remote_path_suf': 'BES1/', 'remote_tree_pref': 'trees/output',
-                          'local_path': 'C:/Users/Dyn04/', 'local_tree_pref': 'Desktop'},
+                          'local_path': 'C:/Users/Dylan/Research/', 'local_tree_pref': 'BES1_Trees'},
                  'AMPT_Run': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
                               'local_path': '/media/ssd/Research/', 'local_tree_pref': 'AMPT_Trees/min_bias/default'},
                  'AMPT_Run_mcent_sm': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
@@ -31,6 +32,7 @@ def download():
     energies = [7, 11, 15, 19, 27, 39, 62]
     bwlimit = 10  # bandwidth limit per energy in MBPS or None
     size_tolerance = 0.001  # percentage tolerance between remote and local sizes, re-download if different
+    file_delay = 1  # seconds to delay between file download calls
 
     remote_path = 'dneff@rftpexp.rhic.bnl.gov:/gpfs01/star/pwg/dneff/data/'
 
@@ -83,10 +85,11 @@ def download():
         for energy in energy_list:
             local = local_path + local_tree_prefix + f'/{energy}GeV/'
             if len(missing_files[energy]) > 0:
-                files = r'\{'
+                # files = r'\{'
                 for file in missing_files[energy]:
-                    files += file + ','
-                start_download(files, energy, remote_path, remote_tree_prefix, local, bwlimit)
+                    # files += file + ','
+                    start_download(file, energy, remote_path, remote_tree_prefix, local, bwlimit)
+                    sleep(1)
 
     else:
         print('All files downloaded!')
@@ -118,11 +121,11 @@ def get_expected_list(energy, remote_path, remote_tree_prefix):
 #     os.system(f'gnome-terminal -- /bin/sh -c \'echo "{info}"; {command}\'')
 
 
-def start_download(files, energy, remote_path, remote_tree_prefix, local, bwlimit=None):
-    files = files[:-1] + r'\}'
-    remote = remote_path + remote_tree_prefix + f'/{energy}GeV/{files}'
+def start_download(file, energy, remote_path, remote_tree_prefix, local, bwlimit=None):
+    # files = files[:-1] + r'\}'
+    remote = remote_path + remote_tree_prefix + f'/{energy}GeV/{file}'
     command = 'scp ' + remote + ' ' + local
-    info = f'{energy}GeV, {files.count(",") + 1} files:'
+    info = f'{energy}GeV, {file} files:'
     print(f'{info} {command}')
     os.system(f'start cmd /c {command}')
 
