@@ -15,7 +15,7 @@ from scipy.optimize import curve_fit
 
 def main():
     path = 'C:/Users/Dylan/OneDrive - UCLA IT Services/Research/UCLA/Other/Ampt_Tree_Speed_Tests/'
-    platforms = {'ubuntu': {'file': path+'ubuntu_speed.txt'}, 'windows': {'file': path+'windows_speed.txt'}}
+    platforms = {'ubuntu': {'file': path+'ubuntu_speed2.txt'}, 'windows': {'file': path+'windows_speed2.txt'}}
 
     for platform in platforms:
         platforms[platform].update({'set_times': read_times(platforms[platform]['file'])})
