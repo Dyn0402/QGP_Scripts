@@ -21,18 +21,22 @@ def main():
 
 
 def download():
-    data_set = 'BES1'
+    data_set = 'AMPT_Run_mcent_sm_slim'
     data_sets = {'BES1': {'remote_path_suf': 'BES1/', 'remote_tree_pref': 'trees/output',
                           'local_path': '/media/ucla/Research/', 'local_tree_pref': 'BES1_Trees'},
                  'AMPT_Run': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
                               'local_path': '/media/ssd/Research/', 'local_tree_pref': 'AMPT_Trees/min_bias/default'},
                  'AMPT_Run_mcent_sm': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
                               'local_path': '/media/ssd/Research/', 'local_tree_pref': 'AMPT_Trees/most_central/string_melting'},
+                 'AMPT_Run_mcent_sm_slim': {'remote_path_suf': 'AMPT/',
+                                            'remote_tree_pref': 'slim_most_central/string_melting',
+                                            'local_path': '/media/ucla/Research/',
+                                            'local_tree_pref': 'AMPT_Trees/most_central/string_melting'},
                  'AMPT_cent_def': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'most_central/default',
                                    'local_path': '/media/ssd/Research/', 'local_tree_pref': 'AMPT_Trees/most_central/default'}}
 
     energies = [7, 11, 15, 19, 27, 39, 62]
-    bwlimit = None  # bandwidth limit per energy in MBPS or None
+    bwlimit = 8  # bandwidth limit per energy in MBPS or None
     size_tolerance = 0.001  # percentage tolerance between remote and local sizes, re-download if different
 
     remote_path = 'dneff@rftpexp.rhic.bnl.gov:/gpfs01/star/pwg/dneff/data/'
