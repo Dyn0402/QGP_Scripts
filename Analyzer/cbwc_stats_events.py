@@ -20,7 +20,9 @@ def main():
     num_events = np.asarray(np.arange(0, 25, 1))
     binom_n = 20
     binom_p = 0.4
-    trials = 1000
+    trials = 10
+    # save_path = 'N:/UCLA_Microsoft/OneDrive - personalmicrosoftsoftware.ucla.edu/Research/UCLA/Presentations/1-29-21/'
+    save_path = '/home/dylan/Desktop/'
 
     trial_moments = []
     for trial in range(trials):
@@ -32,7 +34,7 @@ def main():
     # plot_mom_trials(num_events, trial_moments, binom_n, binom_p)
 
     mom_means, mom_errs = comb_trials(trial_moments)
-    plot_moments(num_events, mom_means, mom_errs, trial_moments, binom_n, binom_p)
+    plot_moments(num_events, mom_means, mom_errs, trial_moments, binom_n, binom_p, save_path)
 
     # test_list = [1, 2, 3, 4, 3, 3, 5, 3, 4, 6, 5, 3, 4, 3, 4, 1, 8]
     # hist, bin_edges = np.histogram(test_list, np.arange(-0.5, max(test_list) + 1.5, 1))
@@ -150,8 +152,7 @@ def plot_mom_trials(num_events, trial_moments, n, p):
     # plt.show()
 
 
-def plot_moments(num_events, mom_means, mom_errs, trial_moments, n, p):
-    save_path = 'N:/UCLA_Microsoft/OneDrive - personalmicrosoftsoftware.ucla.edu/Research/UCLA/Presentations/1-29-21/'
+def plot_moments(num_events, mom_means, mom_errs, trial_moments, n, p, save_path):
     q = 1 - p
     binom_sd = np.sqrt(n * p * q)
     binom_skew = (q - p) / np.sqrt(n * p * q)
@@ -182,7 +183,7 @@ def plot_moments(num_events, mom_means, mom_errs, trial_moments, n, p):
         
         fig, axs = plt.subplots(2, 1, sharex=True, figsize=(19.25, 7.2))
         fig_name = f'{mom_names[mom]}_{trials}t_{max(num_events)}e'
-        fig.canvas.set_window_title(fig_name)
+        fig.canvas.manager.set_window_title(fig_name)
 
         axs[0].plot(num_events, [mom_bionms[mom] for event in num_events], 'r--')
         axs[0].scatter(events, mom_vals, alpha=0.03, marker='_', s=55, label='Simulation Trials')
