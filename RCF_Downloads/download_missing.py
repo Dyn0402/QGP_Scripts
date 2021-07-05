@@ -21,11 +21,9 @@ def main():
 
 
 def download():
-    data_set = 'AMPT_slimcent_sm'
+    data_set = 'BES1'
     data_sets = {'BES1': {'remote_path_suf': 'BES1/', 'remote_tree_pref': 'trees/output',
                           'local_path': '/media/ucla/Research/', 'local_tree_pref': 'BES1_Trees'},
-                 'BES1.2': {'remote_path_suf': 'BES1/', 'remote_tree_pref': 'trees/output',
-                          'local_path': '/media/dylan/ucla/Research/', 'local_tree_pref': 'BES1_Trees'},
                  'AMPT_Run': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
                               'local_path': '/media/ssd/Research/', 'local_tree_pref': 'AMPT_Trees/min_bias/default'},
                  'AMPT_Run_mcent_sm': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',

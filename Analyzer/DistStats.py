@@ -70,7 +70,7 @@ class DistStats:
         """
         for ni in range(n_min, n_max+1):
             if ni not in self.raw_moments:
-                self.calc_raw_moments(n_min, n_max)
+                self.calc_raw_moments(n_min, n_max+1)
                 break
 
         for ni in range(n_min, n_max+1):
@@ -174,16 +174,17 @@ class DistStats:
 
     def get_cumulant(self, order):
         """
-        Calculate cumulant of distribution for given order with error from delta theorem
+        Calculate cumulant of distribution for given order from central moments with error from delta theorem
         !!!! DELTA THEOREM ERRORS NOT YET IMPLEMENTED !!!!!
         :param order: Order of cumulant to calculate
+        :return: Cumulant value and error as Measure object
         """
         self.calc_cent_moments(1, order)
         # Error catching for delta theorem error calc
         err = 1
         # Maybe write in bell polynomials later
         if order == 1:
-            val = self.cent_moments[1]
+            val = self.raw_moments[1]
         elif order == 2:
             val = self.cent_moments[2]
         elif order == 3:
@@ -192,5 +193,32 @@ class DistStats:
             val = self.cent_moments[4] - 3 * self.cent_moments[2]**2
         elif order == 5:
             val = self.cent_moments[5] - 10 * self.cent_moments[2] * self.cent_moments[3]
+
+        return Measure(val, err)
+
+    def get_k_stat(self, order):
+        """
+        Calculate k statistic of distribution for given order from central moments
+        !!!! ERRORS NOT YET IMPLEMENTED !!!!!
+        :param order: Order of k statistic to colculate
+        :return: K statistic value and error as Measure object
+        """
+        self.calc_raw_moments(1, order)
+        # Placeholder for actual error calculation
+        err = 1
+        # Maybe try to find analytical formula later
+        n = self.total_counts
+        if n < order:  # Will get /0 errors
+            print(f'Too few entries ({n}) for {order} order k-statistic!')
+            return Measure(float('NaN'), float('NaN'))
+        if order == 1:
+            val = self.raw_moments[1]
+        elif order == 2:
+            val = n / (n - 1) * self.cent_moments[2]
+        elif order == 3:
+            val = n**2 / ((n - 1) * (n - 2)) * self.cent_moments[3]
+        elif order == 4:
+            val = n**2 * ((n + 1) * self.cent_moments[4] - 3 * (n - 1) * self.cent_moments[2] ** 2) \
+                  / ((n - 1) * (n - 2) * (n - 3))
 
         return Measure(val, err)
