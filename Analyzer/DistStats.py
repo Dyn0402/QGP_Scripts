@@ -203,7 +203,7 @@ class DistStats:
         :param order: Order of k statistic to colculate
         :return: K statistic value and error as Measure object
         """
-        self.calc_raw_moments(1, order)
+        self.calc_cent_moments(1, order)
         # Placeholder for actual error calculation
         err = 1
         # Maybe try to find analytical formula later
