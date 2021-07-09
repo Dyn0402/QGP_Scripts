@@ -105,7 +105,8 @@ def ask_to_resub(incomplete_jobs, missing_jobs, energy):
             print(job)
         res = input('\nResubmit stopped jobs listed above? '
                     '\nEnter "yes" to resubmit stopped jobs only, "missing" to resubmit missing jobs only, '
-                    '"both" to resubmit both (without duplicates), and anything else to quit: ')
+                    '"both" to resubmit both (without duplicates), "running" to resubmit only running jobs, '
+                    'and anything else to quit: ')
         if res.strip().lower() == 'yes' or res.strip().lower() == 'y':
             resub_flag = True
             resub_set = incomplete_jobs
@@ -116,6 +117,9 @@ def ask_to_resub(incomplete_jobs, missing_jobs, energy):
             resub_flag = True
             resub_set = incomplete_jobs.copy()
             resub_set.extend([x for x in missing_jobs if x not in incomplete_jobs])
+        elif res.strip().lower() == 'running':
+            resub_flag = True
+            resub_set =
         else:
             resub_flag = False
 

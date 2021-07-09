@@ -20,18 +20,13 @@ def main():
     fig1, ax1 = plt.subplots()
     fig2, ax2 = plt.subplots()
     fig3, ax3 = plt.subplots()
-    fig4, ax4 = plt.subplots()
     for track in tracks:
         x = np.asarray(range(0, track[0]+2))
         x2 = x / x[-1]  # np.linspace(0, 1, len(x))
-        p = 1.0 / float(divs)
-        q = 1 - p
-        x3 = (x - x[-1] * p) / (track[0] * p * q)**0.5
-        x4 = x - x[-1] * p
-        ax1.plot(x, binom.pmf(x, track[0], p), color=track[1], marker='.', label=f'{track[0]} trials')
-        ax2.plot(x2, binom.pmf(x, track[0], p), color=track[1], marker='.', label=f'{track[0]} trials')
-        ax3.plot(x3, binom.pmf(x, track[0], p), color=track[1], marker='.', label=f'{track[0]} trials')
-        ax4.plot(x4, binom.pmf(x, track[0], p), color=track[1], marker='.', label=f'{track[0]} trials')
+        x3 = x - x[-1] / float(divs)
+        ax1.plot(x, binom.pmf(x, track[0], 1.0/divs), color=track[1], marker='.', label=f'{track[0]} trials')
+        ax2.plot(x2, binom.pmf(x, track[0], 1.0 / divs), color=track[1], marker='.', label=f'{track[0]} trials')
+        ax3.plot(x3, binom.pmf(x, track[0], 1.0 / divs), color=track[1], marker='.', label=f'{track[0]} trials')
 
     ax1.title.set_text('Binomial Distributions')
     ax1.set_xlabel('Number of Successes')

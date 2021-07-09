@@ -67,7 +67,7 @@ def main():
     mu_delta = mu1 - mu2
     dist = skellam(mu1, mu2)
     binning = np.arange(-0.5, mu_bar * 2 * 10 + 1.5, 1)
-    trials = 10000
+    trials = 10
     moment_pars = {'c2': {'method': get_c2, 'true': 2 * mu_bar},
                    'c3': {'method': get_c3, 'true': mu_delta},
                    'c4': {'method': get_c4, 'true': 2 * mu_bar},
