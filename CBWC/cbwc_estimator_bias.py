@@ -10,7 +10,7 @@ Created as QGP_Scripts/cbwc_estimator_bias
 
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib
+import matplotlib.gridspec as gridspec
 from scipy.stats import binom, poisson, skellam
 from Analyzer.DistStats import DistStats
 import time
@@ -71,12 +71,19 @@ def main():
     moment_pars = {'c2': {'method': get_c2, 'true': 2 * mu_bar},
                    'c3': {'method': get_c3, 'true': mu_delta},
                    'c4': {'method': get_c4, 'true': 2 * mu_bar},
+                   'c5': {'method': get_c5, 'true': mu_delta},
+                   'c6': {'method': get_c6, 'true': 2 * mu_bar},
                    'k2': {'method': get_k2, 'true': 2 * mu_bar},
                    'k3': {'method': get_k3, 'true': mu_delta},
                    'k4': {'method': get_k4, 'true': 2 * mu_bar},
+                   'k5': {'method': get_k5, 'true': mu_delta},
+                   'k6': {'method': get_k6, 'true': 2 * mu_bar},
                    'c4/c2': {'method': get_c4_div_c2, 'true': 1},
                    'k4/k2': {'method': get_k4_div_k2, 'true': 1},
+                   'c6/c2': {'method': get_c6_div_c2, 'true': 1},
+                   'k6/k2': {'method': get_k6_div_k2, 'true': 1},
                    'c4/c2 - k4/k2': {'method': get_c4_div_c2_sub_k4_div_k2, 'true': 1},
+                   'c6/c2 - k6/k2': {'method': get_c6_div_c2_sub_k6_div_k2, 'true': 1},
                    }
 
     save_path = '/home/dylan/Desktop/'
@@ -85,9 +92,9 @@ def main():
     start = time.time()
     event_means, event_errs, event_percs = simulate(dist, num_events, trials, binning, moment_pars, percentiles)
     print(f'Simulation time: {time.time() - start}s')
-    plot_moments(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
+    # plot_moments(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
     plot_moments_together(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
-    plot_cumulants(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
+    # plot_cumulants(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
     plot_cumulant_ratios(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
     plot_ratios(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
 
@@ -114,7 +121,7 @@ def simulate(dist, num_events, trials, binning, moment_pars, percentiles):
 
     # trial_stats = []
     func = partial(sim_events, dist, trials, moment_pars, binning, percentiles)
-    with Pool(16) as p:
+    with Pool(8) as p:
         trial_stats = p.map(func, num_events)
 
     print("Combining events and plotting...")
@@ -182,7 +189,7 @@ def comb_trials(trial_moments, percentiles):
 
 
 def plot_moments(num_events, event_means, event_errs, event_percs, moment_pars, percs):
-    for i in range(2, 5):
+    for i in range(2, 7):
         c, k = 'c' + str(i), 'k' + str(i)
         fig, ax = plt.subplots()
         fig.canvas.manager.set_window_title('Order ' + str(i))
@@ -208,38 +215,75 @@ def plot_moments(num_events, event_means, event_errs, event_percs, moment_pars, 
 
 
 def plot_moments_together(num_events, event_means, event_errs, event_percs, moment_pars, percs):
-    fig, axs = plt.subplots(3, 1, sharex=True)
+    fig = plt.figure(figsize=(5,1))
+    gs1 = gridspec.GridSpec(5, 1)
+    gs1.update(hspace=0.0)
+    # axs = gs1.subplots(sharex=True)
+    # # fig, axs = plt.subplots(5, 1, sharex=True)
+    # plt.subplots_adjust(hspace=0.0, wspace=0.0)
     fig.canvas.manager.set_window_title('Cumulant KStat Compare')
-    for i in range(2, 5):
+    for i in range(2, 7):
+        ax = plt.subplot(gs1[i - 2])
         c, k = 'c' + str(i), 'k' + str(i)
 
         if i == 2:
-            axs[i-2].axhline(moment_pars[k]['true'], color='r', ls='--', label='Analytical')
+            ax.axhline(moment_pars[k]['true'], color='r', ls='--', label='Analytical')
         else:
-            axs[i - 2].axhline(moment_pars[k]['true'], color='r', ls='--')
+            ax.axhline(moment_pars[k]['true'], color='r', ls='--')
 
         for j in range(int(len(percs) / 2)):
-            axs[i-2].fill_between(num_events, event_percs[c][percs[j]], event_percs[c][percs[len(percs) - 1 - j]],
+            ax.fill_between(num_events, event_percs[c][percs[j]], event_percs[c][percs[len(percs) - 1 - j]],
                             color='b', alpha=0.3)
-            axs[i-2].fill_between(num_events, event_percs[k][percs[j]], event_percs[k][percs[len(percs) - 1 - j]],
+            ax.fill_between(num_events, event_percs[k][percs[j]], event_percs[k][percs[len(percs) - 1 - j]],
                             color='g', alpha=0.3)
 
-        axs[i-2].fill_between(num_events, event_means[c] + event_errs[c], event_means[c] - event_errs[c],
+        ax.fill_between(num_events, event_means[c] + event_errs[c], event_means[c] - event_errs[c],
                         color='b', alpha=0.3)
-        axs[i-2].fill_between(num_events, event_means[k] + event_errs[k], event_means[k] - event_errs[k],
+        ax.fill_between(num_events, event_means[k] + event_errs[k], event_means[k] - event_errs[k],
                         color='g', alpha=0.3)
 
-        axs[i-2].plot(num_events, event_means[c], color='b', label=f'{c}')
-        axs[i-2].plot(num_events, event_means[k], color='g', label=f'{k}')
-        axs[i-2].legend()
-    axs[2].set_xlabel('Sample Size n')
+        ax.plot(num_events, event_means[c], color='b', label=f'{c}')
+        ax.plot(num_events, event_means[k], color='g', label=f'{k}')
+        ax.legend()
+        if i == 6:
+            ax.set_xlabel('Sample Size n')
     plt.show()
 
 
+# def plot_moments_together(num_events, event_means, event_errs, event_percs, moment_pars, percs):
+#     fig, axs = plt.subplots(5, 1, sharex=True)
+#     plt.subplots_adjust(hspace=0.0, wspace=0.0)
+#     fig.canvas.manager.set_window_title('Cumulant KStat Compare')
+#     for i in range(2, 7):
+#         c, k = 'c' + str(i), 'k' + str(i)
+#
+#         if i == 2:
+#             axs[i-2].axhline(moment_pars[k]['true'], color='r', ls='--', label='Analytical')
+#         else:
+#             axs[i - 2].axhline(moment_pars[k]['true'], color='r', ls='--')
+#
+#         for j in range(int(len(percs) / 2)):
+#             axs[i-2].fill_between(num_events, event_percs[c][percs[j]], event_percs[c][percs[len(percs) - 1 - j]],
+#                             color='b', alpha=0.3)
+#             axs[i-2].fill_between(num_events, event_percs[k][percs[j]], event_percs[k][percs[len(percs) - 1 - j]],
+#                             color='g', alpha=0.3)
+#
+#         axs[i-2].fill_between(num_events, event_means[c] + event_errs[c], event_means[c] - event_errs[c],
+#                         color='b', alpha=0.3)
+#         axs[i-2].fill_between(num_events, event_means[k] + event_errs[k], event_means[k] - event_errs[k],
+#                         color='g', alpha=0.3)
+#
+#         axs[i-2].plot(num_events, event_means[c], color='b', label=f'{c}')
+#         axs[i-2].plot(num_events, event_means[k], color='g', label=f'{k}')
+#         axs[i-2].legend()
+#     axs[2].set_xlabel('Sample Size n')
+#     plt.show()
+
+
 def plot_cumulants(num_events, event_means, event_errs, event_percs, moment_pars, percs):
-    fig, axs = plt.subplots(3, 1, sharex=True)
+    fig, axs = plt.subplots(5, 1, sharex=True, hspace=0.0)
     fig.canvas.manager.set_window_title('Cumulants')
-    for i in range(2, 5):
+    for i in range(2, 7):
         c = 'c' + str(i)
 
         axs[i - 2].axhline(moment_pars[c]['true'], color='r', ls='--', label='Analytical')
@@ -260,29 +304,50 @@ def plot_cumulants(num_events, event_means, event_errs, event_percs, moment_pars
 
 
 def plot_ratios(num_events, event_means, event_errs, event_percs, moment_pars, percs):
-    fig, ax = plt.subplots()
-    fig.canvas.manager.set_window_title('C4 / C2 with K4 / K2')
+    fig1, axs1 = plt.subplots(2, 1, sharex=True)
+    fig1.canvas.manager.set_window_title('C4 / C2 with K4 / K2')
 
-    ax.axhline(moment_pars['k4/k2']['true'], color='r', ls='--', label='Analytical')
-    ax.fill_between(num_events, event_means['c4/c2'] - event_errs['c4/c2'], event_means['c4/c2'] + event_errs['c4/c2'],
+    axs1[0].axhline(moment_pars['k4/k2']['true'], color='r', ls='--', label='Analytical')
+    axs1[0].fill_between(num_events, event_means['c4/c2'] - event_errs['c4/c2'], event_means['c4/c2'] + event_errs['c4/c2'],
                     color='b', alpha=0.3)
-    ax.fill_between(num_events, event_means['k4/k2'] - event_errs['k4/k2'], event_means['k4/k2'] + event_errs['k4/k2'],
+    axs1[0].fill_between(num_events, event_means['k4/k2'] - event_errs['k4/k2'], event_means['k4/k2'] + event_errs['k4/k2'],
                     color='g', alpha=0.3)
 
-    ax.plot(num_events, event_means['c4/c2'], color='b', label=f'C4/C2')
-    ax.plot(num_events, event_means['k4/k2'], color='g', label=f'K4/K2')
-    ax.legend()
-    ax.set_xlabel('Sample Size n')
+    axs1[0].plot(num_events, event_means['c4/c2'], color='b', label=f'C4/C2')
+    axs1[0].plot(num_events, event_means['k4/k2'], color='g', label=f'K4/K2')
+    axs1[0].legend()
 
-    fig2, ax2 = plt.subplots()
+    axs1[1].axhline(moment_pars['k6/k2']['true'], color='r', ls='--', label='Analytical')
+    axs1[1].fill_between(num_events, event_means['c6/c2'] - event_errs['c6/c2'],
+                         event_means['c6/c2'] + event_errs['c6/c2'],
+                         color='b', alpha=0.3)
+    axs1[1].fill_between(num_events, event_means['k6/k2'] - event_errs['k6/k2'],
+                         event_means['k6/k2'] + event_errs['k6/k2'],
+                         color='g', alpha=0.3)
+
+    axs1[1].plot(num_events, event_means['c6/c2'], color='b', label=f'C6/C2')
+    axs1[1].plot(num_events, event_means['k6/k2'], color='g', label=f'K6/K2')
+    axs1[1].legend()
+    axs1[1].set_xlabel('Sample Size n')
+
+    fig2, axs2 = plt.subplots(2, 1, sharex=True)
     fig2.canvas.manager.set_window_title('(C4 / C2) - (K4 / K2)')
-    ax2.axhline(0, color='black', ls='--')
-    ax2.fill_between(num_events, event_means['c4/c2 - k4/k2'] - event_errs['c4/c2 - k4/k2'],
+    axs2[0].axhline(0, color='black', ls='--')
+    axs2[0].fill_between(num_events, event_means['c4/c2 - k4/k2'] - event_errs['c4/c2 - k4/k2'],
                      event_means['c4/c2 - k4/k2'] + event_errs['c4/c2 - k4/k2'],
                      color='red', alpha=0.3)
-    ax2.plot(num_events, event_means['c4/c2 - k4/k2'], color='r', label='C4/C2 - K4/K2')
-    ax2.legend()
-    ax2.grid()
+    axs2[0].plot(num_events, event_means['c4/c2 - k4/k2'], color='r', label='C4/C2 - K4/K2')
+    axs2[0].legend()
+    axs2[0].grid()
+
+    axs2[1].axhline(0, color='black', ls='--')
+    axs2[1].fill_between(num_events, event_means['c6/c2 - k6/k2'] - event_errs['c6/c2 - k6/k2'],
+                         event_means['c6/c2 - k6/k2'] + event_errs['c6/c2 - k6/k2'],
+                         color='red', alpha=0.3)
+    axs2[1].plot(num_events, event_means['c6/c2 - k6/k2'], color='r', label='C6/C2 - K6/K2')
+    axs2[1].legend()
+    axs2[1].grid()
+    axs2[1].set_xlabel('Sample Size n')
 
     plt.show()
 
@@ -417,6 +482,14 @@ def get_c4(x):
     return x.get_cumulant(4).val
 
 
+def get_c5(x):
+    return x.get_cumulant(5).val
+
+
+def get_c6(x):
+    return x.get_cumulant(6).val
+
+
 def get_k2(x):
     return x.get_k_stat(2).val
 
@@ -429,6 +502,14 @@ def get_k4(x):
     return x.get_k_stat(4).val
 
 
+def get_k5(x):
+    return x.get_k_stat(5).val
+
+
+def get_k6(x):
+    return x.get_k_stat(6).val
+
+
 def get_c4_div_c2(x):
     return x.get_cumulant(4).val / x.get_cumulant(2).val
 
@@ -437,8 +518,20 @@ def get_k4_div_k2(x):
     return x.get_k_stat(4).val / x.get_k_stat(2).val
 
 
+def get_c6_div_c2(x):
+    return x.get_cumulant(6).val / x.get_cumulant(2).val
+
+
+def get_k6_div_k2(x):
+    return x.get_k_stat(6).val / x.get_k_stat(2).val
+
+
 def get_c4_div_c2_sub_k4_div_k2(x):
     return x.get_cumulant(4).val / x.get_cumulant(2).val - x.get_k_stat(4).val / x.get_k_stat(2).val
+
+
+def get_c6_div_c2_sub_k6_div_k2(x):
+    return x.get_cumulant(6).val / x.get_cumulant(2).val - x.get_k_stat(6).val / x.get_k_stat(2).val
 
 
 if __name__ == '__main__':
