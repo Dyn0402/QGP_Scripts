@@ -89,6 +89,20 @@ def main():
     save_path = '/home/dylan/Desktop/'
 
     # demo_plots(dist)
+    sim_trials(dist, num_events, trials, binning, percentiles, moment_pars)
+    # start = time.time()
+    # event_means, event_errs, event_percs = simulate(dist, num_events, trials, binning, moment_pars, percentiles)
+    # print(f'Simulation time: {time.time() - start}s')
+    # # plot_moments(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
+    # plot_moments_together(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
+    # # plot_cumulants(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
+    # plot_cumulant_ratios(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
+    # plot_ratios(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
+
+    print('donzo')
+
+
+def sim_trials(dist, num_events, trials, binning, percentiles, moment_pars):
     start = time.time()
     event_means, event_errs, event_percs = simulate(dist, num_events, trials, binning, moment_pars, percentiles)
     print(f'Simulation time: {time.time() - start}s')
@@ -98,7 +112,16 @@ def main():
     plot_cumulant_ratios(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
     plot_ratios(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
 
-    print('donzo')
+
+def ref_bin_dep(dist, num_events, trials, binning, percentiles, moment_pars):
+    start = time.time()
+    event_means, event_errs, event_percs = simulate(dist, num_events, trials, binning, moment_pars, percentiles)
+    print(f'Simulation time: {time.time() - start}s')
+    # plot_moments(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
+    plot_moments_together(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
+    # plot_cumulants(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
+    plot_cumulant_ratios(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
+    plot_ratios(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
 
 
 def demo_plots(dist):
