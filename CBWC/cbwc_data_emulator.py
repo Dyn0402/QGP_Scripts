@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on July 03 4:07 PM 2021
+Created on July 21 8:36 PM 2021
 Created in PyCharm
-Created as QGP_Scripts/cbwc_estimator_bias
+Created as QGP_Scripts/cbwc_data_emulator
 
 @author: Dylan Neff, dylan
 """
@@ -16,50 +16,13 @@ from Analyzer.DistStats import DistStats
 import time
 from multiprocessing import Pool
 from functools import partial
+import ROOT as r
 
 
 def main():
     plt.rcParams['figure.autolayout'] = True
-    # num_events = np.asarray(np.arange(2, 101, 1))
-    # percentiles = [5, 30, 50, 70, 95]
 
-    # n, p = 20, 0.4
-    # q = 1 - p
-    # dist = binom(n, q)
-    # binning = np.arange(-0.5, 20 + 1.5, 1)
-    # trials = 100
-    # moment_pars = {'c2': {'method': lambda x: x.get_cumulant(2), 'true': n*p*q},
-    #                'c3': {'method': lambda x: x.get_cumulant(3), 'true': n*p*q*(1-2*p)},
-    #                'c4': {'method': lambda x: x.get_cumulant(4),
-    #                       'true': n * p * q * (1 + (3 * n - 6) * p * q) - 3 * (n*p*q)**2},
-    #                'k2': {'method': lambda x: x.get_k_stat(2), 'true': n*p*q},
-    #                'k3': {'method': lambda x: x.get_k_stat(3), 'true': n*p*q*(1-2*p)},
-    #                'k4': {'method': lambda x: x.get_k_stat(4),
-    #                       'true': n * p * q * (1 + (3 * n - 6) * p * q) - 3 * (n*p*q)**2}}
-
-    # num_events = np.asarray(np.arange(10, 101, 1))
-    # percentiles = []
-    #
-    # mu = 5
-    # dist = poisson(mu)
-    # binning = np.arange(-0.5, mu * 10 + 1.5, 1)
-    # trials = 1000
-    # moment_pars = {'c2': {'method': lambda x: x.get_cumulant(2).val, 'true': mu},
-    #                'c3': {'method': lambda x: x.get_cumulant(3).val, 'true': mu},
-    #                'c4': {'method': lambda x: x.get_cumulant(4).val,
-    #                       'true': mu},
-    #                'k2': {'method': lambda x: x.get_k_stat(2).val, 'true': mu},
-    #                'k3': {'method': lambda x: x.get_k_stat(3).val, 'true': mu},
-    #                'k4': {'method': lambda x: x.get_k_stat(4).val,
-    #                       'true': mu},
-    #                'c4/c2': {'method': lambda x: x.get_cumulant(4).val / x.get_cumulant(2).val,
-    #                          'true': 1},
-    #                'k4/k2': {'method': lambda x: x.get_k_stat(4).val / x.get_k_stat(2).val,
-    #                          'true': 1}
-    #                }
-
-    # num_events = np.asarray(np.arange(10, 250, 1))
-    num_events = np.asarray(np.arange(50, 5000, 10))
+    cent_edges = [6, 9, 12, 17, 24, 32, 42, 54, 69, 86, 106, 129, 156, 188, 226, 271]
     percentiles = []
 
     mu1, mu2 = 20.9, 0.2
@@ -67,7 +30,7 @@ def main():
     mu_delta = mu1 - mu2
     dist = skellam(mu1, mu2)
     binning = np.arange(-0.5, mu_bar * 2 * 10 + 1.5, 1)
-    trials = 10000
+    trials = 100
     moment_pars = {'c2': {'method': get_c2, 'true': 2 * mu_bar},
                    'c3': {'method': get_c3, 'true': mu_delta},
                    'c4': {'method': get_c4, 'true': 2 * mu_bar},
@@ -89,7 +52,8 @@ def main():
     save_path = '/home/dylan/Desktop/'
 
     # demo_plots(dist)
-    sim_trials(dist, num_events, trials, binning, percentiles, moment_pars)
+    emulate_data(cent_edges, dist, binning, trials, moment_pars, percentiles)
+    # sim_trials(dist, num_events, trials, binning, percentiles, moment_pars)
     # start = time.time()
     # event_means, event_errs, event_percs = simulate(dist, num_events, trials, binning, moment_pars, percentiles)
     # print(f'Simulation time: {time.time() - start}s')
@@ -102,27 +66,48 @@ def main():
     print('donzo')
 
 
-def sim_trials(dist, num_events, trials, binning, percentiles, moment_pars):
+def emulate_data(cent_edges, dist, binning, trials, moment_pars, percentiles):
+    ref3, events = get_events()
+    plot_ref3_dist(ref3, events, cent_edges)
+
     start = time.time()
-    event_means, event_errs, event_percs = simulate(dist, num_events, trials, binning, moment_pars, percentiles)
+    event_means, event_errs, event_percs = simulate(dist, np.asarray(events), trials, binning, moment_pars, percentiles)
     print(f'Simulation time: {time.time() - start}s')
-    # plot_moments(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
-    plot_moments_together(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
+    # cbwc(event_means, )
+    plot_moments(ref3, event_means, event_errs, event_percs, moment_pars, percentiles)
+    # plot_moments_together(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
     # plot_cumulants(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
-    plot_cumulant_ratios(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
-    plot_ratios(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
+    # plot_cumulant_ratios(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
+    # plot_ratios(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
 
 
-def demo_plots(dist):
-    plot_pmf(dist)
-    plot_pmf_sample(dist, 100)
-    plot_pmf_sample(dist, 1000)
-    plot_c2_vs_trials(dist, 10000, 200)
-    plot_k2_vs_trials(dist, 10000, 200)
-    # plot_k2_est_vs_n()
+def plot_ref3_dist(ref3, events, cent_edges):
+    plt.plot(ref3, events)
+    for edge in cent_edges:
+        plt.axvline(edge, color='r', ls='--')
+    plt.grid()
+    plt.show()
 
 
-def simulate(dist, num_events, trials, binning, moment_pars, percentiles):
+def get_events():
+    f = r.TFile('/home/dylan/Research/Data/default/rapid05_n1ratios_dca1_nsprx1_m2r6_m2s0_nhfit20_0/7GeV/QA_7GeV.root',
+                'READ')
+    h = f.Get('pre_refn_rapid05_n1ratios_dca1_nsprx1_m2r6_m2s0_nhfit20_0_7').Clone()
+    # h.Draw()
+    ref3 = []
+    events = []
+    # h.GetXaxis().GetFirst()
+    for bini in range(270, 406):
+        # print(f'bin: {bini}, bin_center: {h.GetBinCenter(bini)}, bin_content: {h.GetBinContent(bini)}')
+        if int(h.GetBinContent(bini)) > 10:
+            ref3.append(int(h.GetBinCenter(bini)))
+            events.append(int(h.GetBinContent(bini)))
+    f.Close()
+
+    return ref3, events
+
+
+def simulate(dist, events, trials, binning, moment_pars, percentiles):
     event_means = {x: [] for x in moment_pars.keys()}
     event_errs = {x: [] for x in moment_pars.keys()}
     event_percs = {x: {y: [] for y in percentiles} for x in moment_pars.keys()}
@@ -132,9 +117,10 @@ def simulate(dist, num_events, trials, binning, moment_pars, percentiles):
     #     job_pars.append([dist, trials, event, moment_pars, binning, percentiles])
 
     # trial_stats = []
-    func = partial(sim_events, dist, trials, moment_pars, binning, percentiles)
-    with Pool(8) as p:
-        trial_stats = p.map(func, num_events)
+    # func = partial(sim_centrality, dist, trials, moment_pars, binning, percentiles)
+    # with Pool(8) as p:
+    #     trial_stats = p.map(func, num_events)
+    trial_stats = sim_centrality(dist, trials, moment_pars, binning, percentiles, events)
 
     print("Combining events and plotting...")
 
@@ -169,15 +155,22 @@ def simulate(dist, num_events, trials, binning, moment_pars, percentiles):
     return event_means, event_errs, event_percs
 
 
-def sim_events(dist, trials, moment_pars, binning, percentiles, events):
-    print(f'Events: {events}')
-    trial_moments = {x: [] for x in moment_pars.keys()}
+def sim_centrality(dist, trials, moment_pars, binning, percentiles, events):
+    print(f'Simulating Centrality')
+    trial_cbwc_moments = {x: [] for x in moment_pars.keys()}
+    event_sum = sum(events)
     for trial in range(trials):
-        hist, bin_edges = np.histogram(dist.rvs(size=events), binning)
-        hist = dict(zip((bin_edges[1:] + bin_edges[:-1]) / 2.0, hist))
-        for moment, moment_val in calc_moments(hist, moment_pars).items():
-            trial_moments[moment].append(moment_val)
-    return comb_trials(trial_moments, percentiles)
+        cbwc_moments = {x: 0 for x in moment_pars.keys()}
+        for n in events:
+            hist, bin_edges = np.histogram(dist.rvs(size=n), binning)
+            hist = dict(zip((bin_edges[1:] + bin_edges[:-1]) / 2.0, hist))
+            for moment, moment_val in calc_moments(hist, moment_pars).items():
+                cbwc_moments[moment] += moment_val * n / event_sum
+
+        for moment, cbwc_val in cbwc_moments.items():
+            trial_cbwc_moments[moment].append(cbwc_val)
+
+    return comb_trials(trial_cbwc_moments, percentiles)
 
 
 def calc_moments(hist, moment_pars):
@@ -227,7 +220,7 @@ def plot_moments(num_events, event_means, event_errs, event_percs, moment_pars, 
 
 
 def plot_moments_together(num_events, event_means, event_errs, event_percs, moment_pars, percs):
-    fig = plt.figure(figsize=(5,1))
+    fig = plt.figure(figsize=(5, 1))
     gs1 = gridspec.GridSpec(5, 1)
     gs1.update(hspace=0.0)
     # axs = gs1.subplots(sharex=True)
@@ -320,10 +313,12 @@ def plot_ratios(num_events, event_means, event_errs, event_percs, moment_pars, p
     fig1.canvas.manager.set_window_title('C4 / C2 with K4 / K2')
 
     axs1[0].axhline(moment_pars['k4/k2']['true'], color='r', ls='--', label='Analytical')
-    axs1[0].fill_between(num_events, event_means['c4/c2'] - event_errs['c4/c2'], event_means['c4/c2'] + event_errs['c4/c2'],
-                    color='b', alpha=0.3)
-    axs1[0].fill_between(num_events, event_means['k4/k2'] - event_errs['k4/k2'], event_means['k4/k2'] + event_errs['k4/k2'],
-                    color='g', alpha=0.3)
+    axs1[0].fill_between(num_events, event_means['c4/c2'] - event_errs['c4/c2'],
+                         event_means['c4/c2'] + event_errs['c4/c2'],
+                         color='b', alpha=0.3)
+    axs1[0].fill_between(num_events, event_means['k4/k2'] - event_errs['k4/k2'],
+                         event_means['k4/k2'] + event_errs['k4/k2'],
+                         color='g', alpha=0.3)
 
     axs1[0].plot(num_events, event_means['c4/c2'], color='b', label=f'C4/C2')
     axs1[0].plot(num_events, event_means['k4/k2'], color='g', label=f'K4/K2')
@@ -346,8 +341,8 @@ def plot_ratios(num_events, event_means, event_errs, event_percs, moment_pars, p
     fig2.canvas.manager.set_window_title('(C4 / C2) - (K4 / K2)')
     axs2[0].axhline(0, color='black', ls='--')
     axs2[0].fill_between(num_events, event_means['c4/c2 - k4/k2'] - event_errs['c4/c2 - k4/k2'],
-                     event_means['c4/c2 - k4/k2'] + event_errs['c4/c2 - k4/k2'],
-                     color='red', alpha=0.3)
+                         event_means['c4/c2 - k4/k2'] + event_errs['c4/c2 - k4/k2'],
+                         color='red', alpha=0.3)
     axs2[0].plot(num_events, event_means['c4/c2 - k4/k2'], color='r', label='C4/C2 - K4/K2')
     axs2[0].legend()
     axs2[0].grid()
