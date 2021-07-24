@@ -22,6 +22,8 @@ import ROOT as r
 def main():
     plt.rcParams['figure.autolayout'] = True
 
+    threads = 15
+
     cent_edges = [6, 9, 12, 17, 24, 32, 42, 54, 69, 86, 106, 129, 156, 188, 226, 271]
     percentiles = []
 
@@ -30,7 +32,7 @@ def main():
     mu_delta = mu1 - mu2
     dist = skellam(mu1, mu2)
     binning = np.arange(-0.5, mu_bar * 2 * 10 + 1.5, 1)
-    trials = 100
+    trials = 10000
     moment_pars = {'c2': {'method': get_c2, 'true': 2 * mu_bar},
                    'c3': {'method': get_c3, 'true': mu_delta},
                    'c4': {'method': get_c4, 'true': 2 * mu_bar},
@@ -51,34 +53,18 @@ def main():
 
     save_path = '/home/dylan/Desktop/'
 
-    # demo_plots(dist)
-    emulate_data(cent_edges, dist, binning, trials, moment_pars, percentiles)
-    # sim_trials(dist, num_events, trials, binning, percentiles, moment_pars)
-    # start = time.time()
-    # event_means, event_errs, event_percs = simulate(dist, num_events, trials, binning, moment_pars, percentiles)
-    # print(f'Simulation time: {time.time() - start}s')
-    # # plot_moments(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
-    # plot_moments_together(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
-    # # plot_cumulants(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
-    # plot_cumulant_ratios(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
-    # plot_ratios(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
+    emulate_data(cent_edges, dist, binning, trials, moment_pars, percentiles, threads)
 
     print('donzo')
 
 
-def emulate_data(cent_edges, dist, binning, trials, moment_pars, percentiles):
+def emulate_data(cent_edges, dist, binning, trials, moment_pars, percentiles, threads):
     ref3, events = get_events()
     plot_ref3_dist(ref3, events, cent_edges)
 
     start = time.time()
-    event_means, event_errs, event_percs = simulate(dist, np.asarray(events), trials, binning, moment_pars, percentiles)
+    simulate(dist, np.asarray(events), trials, binning, moment_pars, percentiles, threads)
     print(f'Simulation time: {time.time() - start}s')
-    # cbwc(event_means, )
-    plot_moments(ref3, event_means, event_errs, event_percs, moment_pars, percentiles)
-    # plot_moments_together(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
-    # plot_cumulants(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
-    # plot_cumulant_ratios(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
-    # plot_ratios(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
 
 
 def plot_ref3_dist(ref3, events, cent_edges):
@@ -107,70 +93,47 @@ def get_events():
     return ref3, events
 
 
-def simulate(dist, events, trials, binning, moment_pars, percentiles):
-    event_means = {x: [] for x in moment_pars.keys()}
-    event_errs = {x: [] for x in moment_pars.keys()}
-    event_percs = {x: {y: [] for y in percentiles} for x in moment_pars.keys()}
+def simulate(dist, events, trials, binning, moment_pars, percentiles, threads):
+    trial_mean, trial_err, trial_perc = sim_centrality(dist, trials, moment_pars, binning, percentiles, events, threads)
 
-    # job_pars = []
-    # for event in num_events:
-    #     job_pars.append([dist, trials, event, moment_pars, binning, percentiles])
+    print("Plotting...")
 
-    # trial_stats = []
-    # func = partial(sim_centrality, dist, trials, moment_pars, binning, percentiles)
-    # with Pool(8) as p:
-    #     trial_stats = p.map(func, num_events)
-    trial_stats = sim_centrality(dist, trials, moment_pars, binning, percentiles, events)
-
-    print("Combining events and plotting...")
-
-    for trial_mean, trial_err, trial_perc in trial_stats:
-        for moment, mean in trial_mean.items():
-            event_means[moment].append(mean)
-            event_errs[moment].append(trial_err[moment])
-            for perc, perc_val in trial_perc[moment].items():
-                event_percs[moment][perc].append(perc_val)
-
-    # for events in num_events:
-    #     print(f'Events: {events}')
-    #     trial_moments = {x: [] for x in moment_pars.keys()}
-    #     for trial in range(trials):
-    #         hist, bin_edges = np.histogram(dist.rvs(size=events), binning)
-    #         hist = dict(zip((bin_edges[1:] + bin_edges[:-1]) / 2.0, hist))
-    #         for moment, moment_val in calc_moments(hist, moment_pars).items():
-    #             trial_moments[moment].append(moment_val)
-    #     trial_mean, trial_err, trial_perc = comb_trials(trial_moments, percentiles)
-    #     for moment, mean in trial_mean.items():
-    #         event_means[moment].append(mean)
-    #         event_errs[moment].append(trial_err[moment])
-    #         for perc, perc_val in trial_perc[moment].items():
-    #             event_percs[moment][perc].append(perc_val)
-
-    for moment, means in event_means.items():
-        event_means[moment] = np.asarray(means)
-        event_errs[moment] = np.asarray(event_errs[moment])
-        for perc, perc_val in event_percs[moment].items():
-            event_percs[moment][perc] = np.asarray(perc_val)
-
-    return event_means, event_errs, event_percs
+    for i in range(2, 7):
+        fig, ax = plt.subplots()
+        ax.errorbar(['c', 'k'], [trial_mean[f'c{i}'], trial_mean[f'k{i}']], marker='o', ls='none',
+                    yerr=[trial_err[f'c{i}'], trial_err[f'k{i}']])
+        ax.axhline(moment_pars[f'k{i}']['true'], ls='--', color='red')
+    plt.show()
 
 
-def sim_centrality(dist, trials, moment_pars, binning, percentiles, events):
+def sim_centrality(dist, trials, moment_pars, binning, percentiles, events, threads):
     print(f'Simulating Centrality')
     trial_cbwc_moments = {x: [] for x in moment_pars.keys()}
-    event_sum = sum(events)
-    for trial in range(trials):
-        cbwc_moments = {x: 0 for x in moment_pars.keys()}
-        for n in events:
-            hist, bin_edges = np.histogram(dist.rvs(size=n), binning)
-            hist = dict(zip((bin_edges[1:] + bin_edges[:-1]) / 2.0, hist))
-            for moment, moment_val in calc_moments(hist, moment_pars).items():
-                cbwc_moments[moment] += moment_val * n / event_sum
 
-        for moment, cbwc_val in cbwc_moments.items():
+    # [0] trial number [1] independent state for each trial
+    rand_states = list(zip(range(trials), [np.random.RandomState() for i in range(trials)]))
+    func = partial(sim_cent_trial, dist, moment_pars, binning, events)
+    with Pool(threads) as p:
+        trial_cbwc_stats = p.map(func, rand_states)
+
+    for trial_moments in trial_cbwc_stats:
+        for moment, cbwc_val in trial_moments.items():
             trial_cbwc_moments[moment].append(cbwc_val)
 
     return comb_trials(trial_cbwc_moments, percentiles)
+
+
+def sim_cent_trial(dist, moment_pars, binning, events, state):
+    print(f'Trial #{state[0]}')
+    cbwc_moments = {x: 0 for x in moment_pars.keys()}
+    event_sum = sum(events)
+    for n in events:
+        hist, bin_edges = np.histogram(dist.rvs(size=n, random_state=state[1]), binning)
+        hist = dict(zip((bin_edges[1:] + bin_edges[:-1]) / 2.0, hist))
+        for moment, moment_val in calc_moments(hist, moment_pars).items():
+            cbwc_moments[moment] += moment_val * n / event_sum
+
+    return cbwc_moments
 
 
 def calc_moments(hist, moment_pars):
