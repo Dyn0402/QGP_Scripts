@@ -62,13 +62,37 @@ class AzimuthBinData:
                 else:
                     self.pull_dist.update({pull: self.data[total_particles][bin_particles]})
 
-    def get_ratio_dist(self):
+    def get_ratio_dist(self, binning=None, norm=False):
         self.ratio_trans()
-        return self.ratio_dist
+        if binning is None:
+            return self.ratio_dist
+        else:
+            hist = [0 for i in range(len(binning) - 1)]
+            for bin_index in range(len(hist)):
+                for val, count in self.ratio_dist.items():
+                    if binning[bin_index] <= val < binning[bin_index + 1]:
+                        hist[bin_index] += count
+            if norm:
+                total = sum(hist)
+                for bin_index in range(len(hist)):
+                    hist[bin_index] /= total
+            return hist
 
-    def get_pull_dist(self):
+    def get_pull_dist(self, binning=None, norm=False):
         self.pull_trans()
-        return self.pull_dist
+        if binning is None:
+            return self.pull_dist
+        else:
+            hist = [0 for i in range(len(binning) - 1)]
+            for bin_index in range(len(hist)):
+                for val, count in self.pull_dist.items():
+                    if binning[bin_index] <= val < binning[bin_index + 1]:
+                        hist[bin_index] += count
+            if norm:
+                total = sum(hist)
+                for bin_index in range(len(hist)):
+                    hist[bin_index] /= total
+            return hist
 
     def print_dist(self):
         for total_particles in self.data:
