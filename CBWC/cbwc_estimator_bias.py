@@ -16,6 +16,7 @@ from Analyzer.DistStats import DistStats
 import time
 from multiprocessing import Pool
 from functools import partial
+from pickle_methods import *
 
 
 def main():
@@ -58,10 +59,10 @@ def main():
     #                          'true': 1}
     #                }
 
-    num_events = np.asarray(np.arange(10, 250, 5))
+    num_events = np.asarray(np.arange(10, 1000, 10))
     threads = 13
     # num_events = np.asarray(np.arange(50, 5000, 10))
-    percentiles = []
+    percentiles = [16, 84]
 
     mu1, mu2 = 20.9, 0.2
     mu_bar = (mu1 + mu2) / 2
@@ -167,18 +168,6 @@ def simulate(dist, num_events, trials, binning, moment_pars, percentiles, thread
     return event_means, event_errs, event_percs
 
 
-def sim_events(dist, trials, moment_pars, binning, percentiles, nevents_state):
-    events = nevents_state[0]
-    print(f'Events: {events}')
-    trial_moments = {x: [] for x in moment_pars.keys()}
-    for trial in range(trials):
-        hist, bin_edges = np.histogram(dist.rvs(size=events, random_state=nevents_state[1]), binning)
-        hist = dict(zip((bin_edges[1:] + bin_edges[:-1]) / 2.0, hist))
-        for moment, moment_val in calc_moments(hist, moment_pars).items():
-            trial_moments[moment].append(moment_val)
-    return comb_trials(trial_moments, percentiles)
-
-
 def simulate_single(dist, num_events, binning, moment_pars, threads):
     event_means = {x: [] for x in moment_pars.keys()}
     event_errs = {x: [] for x in moment_pars.keys()}
@@ -206,49 +195,6 @@ def simulate_single(dist, num_events, binning, moment_pars, threads):
         event_errs[moment] = np.asarray(event_errs[moment])
 
     return event_means, event_errs
-
-
-def sim_events_single(dist, moment_pars, binning, nevents_state):
-    events = nevents_state[0]
-    print(f'Events: {events}')
-    means, errs = {}, {}
-    hist, bin_edges = np.histogram(dist.rvs(size=events, random_state=nevents_state[1]), binning)
-    hist = dict(zip((bin_edges[1:] + bin_edges[:-1]) / 2.0, hist))
-    for moment, moment_meas in calc_moments_single(hist, moment_pars).items():
-        means.update({moment: moment_meas.val})
-        errs.update({moment: moment_meas.err})
-
-    return means, errs, events
-
-
-def calc_moments(hist, moment_pars):
-    moments = {}
-    stats = DistStats(hist)
-    for moment, pars in moment_pars.items():
-        moments.update({moment: pars['method'](stats)})
-
-    return moments
-
-
-def calc_moments_single(hist, moment_pars):
-    moments = {}
-    stats = DistStats(hist)
-    for moment, pars in moment_pars.items():
-        if 'method_single' in pars:
-            moments.update({moment: pars['method_single'](stats)})
-
-    return moments
-
-
-def comb_trials(trial_moments, percentiles):
-    means, errs, percs = {}, {}, {}
-    for moment, trial_vals in trial_moments.items():
-        means.update({moment: np.mean(trial_vals)})
-        errs.update({moment: np.std(trial_vals) / np.sqrt(len(trial_vals))})
-        perc = np.percentile(trial_vals, percentiles)
-        percs.update({moment: dict(zip(percentiles, perc))})
-
-    return means, errs, percs
 
 
 def plot_moments(num_events, event_means, event_errs, event_percs, moment_pars, percs):
@@ -301,9 +247,9 @@ def plot_moments_together(num_events, event_means, event_errs, event_percs, mome
                             color='g', alpha=0.3)
 
         ax.fill_between(num_events, event_means[c] + event_errs[c], event_means[c] - event_errs[c],
-                        color='b', alpha=0.3)
+                        color='b', alpha=1)
         ax.fill_between(num_events, event_means[k] + event_errs[k], event_means[k] - event_errs[k],
-                        color='g', alpha=0.3)
+                        color='g', alpha=1)
 
         ax.plot(num_events, event_means[c], color='b', label=f'{c}')
         ax.plot(num_events, event_means[k], color='g', label=f'{k}')
@@ -314,6 +260,8 @@ def plot_moments_together(num_events, event_means, event_errs, event_percs, mome
 
 
 def plot_moments_together_single(num_events, event_means, event_errs, moment_pars):
+    num_events_c = np.asarray(num_events) - 1
+    num_events_k = np.asarray(num_events) + 1
     fig = plt.figure()
     gs1 = gridspec.GridSpec(5, 1)
     gs1.update(hspace=0.0)
@@ -330,8 +278,10 @@ def plot_moments_together_single(num_events, event_means, event_errs, moment_par
         else:
             ax.axhline(moment_pars[k]['true'], color='r', ls='--')
 
-        ax.errorbar(num_events, event_means[c], yerr=event_errs[c], color='b', marker='_', ls='none', label=f'{c}')
-        ax.errorbar(num_events, event_means[k], yerr=event_errs[k], color='g', marker='_', ls='none', label=f'{k}')
+        ax.errorbar(num_events_c, event_means[c], yerr=event_errs[c], color='b', marker='o', ls='none', label=f'{c}',
+                    alpha=1, markersize=4)
+        ax.errorbar(num_events_k, event_means[k], yerr=event_errs[k], color='g', marker='o', ls='none', label=f'{k}',
+                    alpha=1, markersize=4)
         ax.legend()
         if i == 6:
             ax.set_xlabel('Sample Size n')
@@ -565,134 +515,6 @@ def plot_k2_est_vs_n():
     ax.axhline(1.0, color='red', ls='--')
     ax.plot(n, (k4s / k2s) / 0.8)
     plt.show()
-
-
-def get_c2(x):
-    return x.get_cumulant(2).val
-
-
-def get_c3(x):
-    return x.get_cumulant(3).val
-
-
-def get_c4(x):
-    return x.get_cumulant(4).val
-
-
-def get_c5(x):
-    return x.get_cumulant(5).val
-
-
-def get_c6(x):
-    return x.get_cumulant(6).val
-
-
-def get_k2(x):
-    return x.get_k_stat(2).val
-
-
-def get_k3(x):
-    return x.get_k_stat(3).val
-
-
-def get_k4(x):
-    return x.get_k_stat(4).val
-
-
-def get_k5(x):
-    return x.get_k_stat(5).val
-
-
-def get_k6(x):
-    return x.get_k_stat(6).val
-
-
-def get_c4_div_c2(x):
-    return x.get_cumulant(4).val / x.get_cumulant(2).val
-
-
-def get_k4_div_k2(x):
-    return x.get_k_stat(4).val / x.get_k_stat(2).val
-
-
-def get_c6_div_c2(x):
-    return x.get_cumulant(6).val / x.get_cumulant(2).val
-
-
-def get_k6_div_k2(x):
-    return x.get_k_stat(6).val / x.get_k_stat(2).val
-
-
-def get_c4_div_c2_sub_k4_div_k2(x):
-    return x.get_cumulant(4).val / x.get_cumulant(2).val - x.get_k_stat(4).val / x.get_k_stat(2).val
-
-
-def get_c6_div_c2_sub_k6_div_k2(x):
-    return x.get_cumulant(6).val / x.get_cumulant(2).val - x.get_k_stat(6).val / x.get_k_stat(2).val
-
-
-def get_c2_meas(x):
-    return x.get_cumulant(2)
-
-
-def get_c3_meas(x):
-    return x.get_cumulant(3)
-
-
-def get_c4_meas(x):
-    return x.get_cumulant(4)
-
-
-def get_c5_meas(x):
-    return x.get_cumulant(5)
-
-
-def get_c6_meas(x):
-    return x.get_cumulant(6)
-
-
-def get_k2_meas(x):
-    return x.get_k_stat(2)
-
-
-def get_k3_meas(x):
-    return x.get_k_stat(3)
-
-
-def get_k4_meas(x):
-    return x.get_k_stat(4)
-
-
-def get_k5_meas(x):
-    return x.get_k_stat(5)
-
-
-def get_k6_meas(x):
-    return x.get_k_stat(6)
-
-
-def get_c4_div_c2_meas(x):  # Delta theorem errors will be wrong, need to apply directly to quantity
-    return x.get_cumulant(4) / x.get_cumulant(2)
-
-
-def get_k4_div_k2_meas(x):  # Delta theorem errors will be wrong, need to apply directly to quantity
-    return x.get_k_stat(4) / x.get_k_stat(2)
-
-
-def get_c6_div_c2_meas(x):  # Delta theorem errors will be wrong, need to apply directly to quantity
-    return x.get_cumulant(6) / x.get_cumulant(2)
-
-
-def get_k6_div_k2_meas(x):  # Delta theorem errors will be wrong, need to apply directly to quantity
-    return x.get_k_stat(6) / x.get_k_stat(2)
-
-
-def get_c4_div_c2_sub_k4_div_k2_meas(x):  # Delta theorem errors will be wrong, need to apply directly to quantity
-    return x.get_cumulant(4) / x.get_cumulant(2) - x.get_k_stat(4) / x.get_k_stat(2)
-
-
-def get_c6_div_c2_sub_k6_div_k2_meas(x):  # Delta theorem errors will be wrong, need to apply directly to quantity
-    return x.get_cumulant(6) / x.get_cumulant(2) - x.get_k_stat(6) / x.get_k_stat(2)
 
 
 if __name__ == '__main__':

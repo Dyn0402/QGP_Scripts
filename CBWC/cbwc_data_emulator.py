@@ -17,6 +17,7 @@ import time
 from multiprocessing import Pool
 from functools import partial
 import ROOT as r
+from pickle_methods import *
 
 
 def main():
@@ -32,38 +33,38 @@ def main():
     mu_delta = mu1 - mu2
     dist = skellam(mu1, mu2)
     binning = np.arange(-0.5, mu_bar * 2 * 10 + 1.5, 1)
-    trials = 10000
-    moment_pars = {'c2': {'method': get_c2, 'true': 2 * mu_bar},
-                   'c3': {'method': get_c3, 'true': mu_delta},
-                   'c4': {'method': get_c4, 'true': 2 * mu_bar},
-                   'c5': {'method': get_c5, 'true': mu_delta},
-                   'c6': {'method': get_c6, 'true': 2 * mu_bar},
-                   'k2': {'method': get_k2, 'true': 2 * mu_bar},
-                   'k3': {'method': get_k3, 'true': mu_delta},
-                   'k4': {'method': get_k4, 'true': 2 * mu_bar},
-                   'k5': {'method': get_k5, 'true': mu_delta},
-                   'k6': {'method': get_k6, 'true': 2 * mu_bar},
-                   'c4/c2': {'method': get_c4_div_c2, 'true': 1},
-                   'k4/k2': {'method': get_k4_div_k2, 'true': 1},
-                   'c6/c2': {'method': get_c6_div_c2, 'true': 1},
-                   'k6/k2': {'method': get_k6_div_k2, 'true': 1},
-                   'c4/c2 - k4/k2': {'method': get_c4_div_c2_sub_k4_div_k2, 'true': 1},
-                   'c6/c2 - k6/k2': {'method': get_c6_div_c2_sub_k6_div_k2, 'true': 1},
+    trials = 1000
+    moment_pars = {'c2': {'method': get_c2_meas, 'true': 2 * mu_bar},
+                   'c3': {'method': get_c3_meas, 'true': mu_delta},
+                   'c4': {'method': get_c4_meas, 'true': 2 * mu_bar},
+                   'c5': {'method': get_c5_meas, 'true': mu_delta},
+                   'c6': {'method': get_c6_meas, 'true': 2 * mu_bar},
+                   'k2': {'method': get_k2_meas, 'true': 2 * mu_bar},
+                   'k3': {'method': get_k3_meas, 'true': mu_delta},
+                   'k4': {'method': get_k4_meas, 'true': 2 * mu_bar},
+                   'k5': {'method': get_k5_meas, 'true': mu_delta},
+                   'k6': {'method': get_k6_meas, 'true': 2 * mu_bar},
+                   'c4/c2': {'method': get_c4_div_c2_meas, 'true': 1},
+                   'k4/k2': {'method': get_k4_div_k2_meas, 'true': 1},
+                   'c6/c2': {'method': get_c6_div_c2_meas, 'true': 1},
+                   'k6/k2': {'method': get_k6_div_k2_meas, 'true': 1},
+                   'c4/c2 - k4/k2': {'method': get_c4_div_c2_sub_k4_div_k2_meas, 'true': 1},
+                   'c6/c2 - k6/k2': {'method': get_c6_div_c2_sub_k6_div_k2_meas, 'true': 1},
                    }
 
     save_path = '/home/dylan/Desktop/'
 
-    emulate_data(cent_edges, dist, binning, trials, moment_pars, percentiles, threads)
+    emulate_data(cent_edges, dist, binning, trials, moment_pars, percentiles, threads, save_path)
 
     print('donzo')
 
 
-def emulate_data(cent_edges, dist, binning, trials, moment_pars, percentiles, threads):
+def emulate_data(cent_edges, dist, binning, trials, moment_pars, percentiles, threads, save_path):
     ref3, events = get_events()
     plot_ref3_dist(ref3, events, cent_edges)
 
     start = time.time()
-    simulate(dist, np.asarray(events), trials, binning, moment_pars, percentiles, threads)
+    simulate(dist, np.asarray(events), trials, binning, moment_pars, percentiles, threads, save_path)
     print(f'Simulation time: {time.time() - start}s')
 
 
@@ -93,16 +94,40 @@ def get_events():
     return ref3, events
 
 
-def simulate(dist, events, trials, binning, moment_pars, percentiles, threads):
+def simulate(dist, events, trials, binning, moment_pars, percentiles, threads, save_path):
     trial_mean, trial_err, trial_perc = sim_centrality(dist, trials, moment_pars, binning, percentiles, events, threads)
 
     print("Plotting...")
 
     for i in range(2, 7):
         fig, ax = plt.subplots()
-        ax.errorbar(['c', 'k'], [trial_mean[f'c{i}'], trial_mean[f'k{i}']], marker='o', ls='none',
+        c_str = f'c{i}'
+        k_str = f'k{i}'
+        print(f'{c_str} val: {trial_mean[c_str]}  |  std: {trial_err[c_str]}')
+        print(f'{k_str} val: {trial_mean[k_str]}  |  std: {trial_err[k_str]}')
+        ax.errorbar(['c', 'k'], [trial_mean[f'c{i}'].val, trial_mean[f'k{i}'].val], marker='o', ls='none',
                     yerr=[trial_err[f'c{i}'], trial_err[f'k{i}']])
+        ax.errorbar(['c', 'k'], [trial_mean[f'c{i}'].val, trial_mean[f'k{i}'].val], marker='', ls='none', alpha=0.6,
+                    yerr=[trial_mean[f'c{i}'].err, trial_mean[f'k{i}'].err], elinewidth=3)
         ax.axhline(moment_pars[f'k{i}']['true'], ls='--', color='red')
+        ax.set_title(f'{c_str} vs {k_str}')
+        fig.savefig(f'{save_path}{c_str}.png')
+
+    plots = [['c4/c2', 'k4/k2'], ['c6/c2', 'k6/k2']]
+    for plot_type in plots:
+        fig, ax = plt.subplots()
+        c_str = plot_type[0]
+        k_str = plot_type[1]
+        print(f'{c_str} val: {trial_mean[c_str]}  |  std: {trial_err[c_str]}')
+        print(f'{k_str} val: {trial_mean[k_str]}  |  std: {trial_err[k_str]}')
+        ax.errorbar(['c', 'k'], [trial_mean[f'{c_str}'].val, trial_mean[f'{k_str}'].val], marker='o', ls='none',
+                    yerr=[trial_err[f'{c_str}'], trial_err[f'{k_str}']])
+        ax.errorbar(['c', 'k'], [trial_mean[f'{c_str}'].val, trial_mean[f'{k_str}'].val], marker='', ls='none', alpha=0.6,
+                    yerr=[trial_mean[f'{c_str}'].err, trial_mean[f'{k_str}'].err], elinewidth=3)
+        ax.axhline(moment_pars[f'{k_str}']['true'], ls='--', color='red')
+        ax.set_title(f'{c_str} vs {k_str}')
+        fig.savefig(f'{save_path}{c_str.replace("/", "_")}.png')
+
     plt.show()
 
 
@@ -116,44 +141,11 @@ def sim_centrality(dist, trials, moment_pars, binning, percentiles, events, thre
     with Pool(threads) as p:
         trial_cbwc_stats = p.map(func, rand_states)
 
-    for trial_moments in trial_cbwc_stats:
+    for trial_moments in trial_cbwc_stats:  # Iterate over trials
         for moment, cbwc_val in trial_moments.items():
             trial_cbwc_moments[moment].append(cbwc_val)
 
-    return comb_trials(trial_cbwc_moments, percentiles)
-
-
-def sim_cent_trial(dist, moment_pars, binning, events, state):
-    print(f'Trial #{state[0]}')
-    cbwc_moments = {x: 0 for x in moment_pars.keys()}
-    event_sum = sum(events)
-    for n in events:
-        hist, bin_edges = np.histogram(dist.rvs(size=n, random_state=state[1]), binning)
-        hist = dict(zip((bin_edges[1:] + bin_edges[:-1]) / 2.0, hist))
-        for moment, moment_val in calc_moments(hist, moment_pars).items():
-            cbwc_moments[moment] += moment_val * n / event_sum
-
-    return cbwc_moments
-
-
-def calc_moments(hist, moment_pars):
-    moments = {}
-    stats = DistStats(hist)
-    for moment, pars in moment_pars.items():
-        moments.update({moment: pars['method'](stats)})
-
-    return moments
-
-
-def comb_trials(trial_moments, percentiles):
-    means, errs, percs = {}, {}, {}
-    for moment, trial_vals in trial_moments.items():
-        means.update({moment: np.mean(trial_vals)})
-        errs.update({moment: np.std(trial_vals) / np.sqrt(len(trial_vals))})
-        perc = np.percentile(trial_vals, percentiles)
-        percs.update({moment: dict(zip(percentiles, perc))})
-
-    return means, errs, percs
+    return comb_trials_cent(trial_cbwc_moments, percentiles)
 
 
 def plot_moments(num_events, event_means, event_errs, event_percs, moment_pars, percs):
@@ -438,70 +430,6 @@ def plot_k2_est_vs_n():
     ax.axhline(1.0, color='red', ls='--')
     ax.plot(n, (k4s / k2s) / 0.8)
     plt.show()
-
-
-def get_c2(x):
-    return x.get_cumulant(2).val
-
-
-def get_c3(x):
-    return x.get_cumulant(3).val
-
-
-def get_c4(x):
-    return x.get_cumulant(4).val
-
-
-def get_c5(x):
-    return x.get_cumulant(5).val
-
-
-def get_c6(x):
-    return x.get_cumulant(6).val
-
-
-def get_k2(x):
-    return x.get_k_stat(2).val
-
-
-def get_k3(x):
-    return x.get_k_stat(3).val
-
-
-def get_k4(x):
-    return x.get_k_stat(4).val
-
-
-def get_k5(x):
-    return x.get_k_stat(5).val
-
-
-def get_k6(x):
-    return x.get_k_stat(6).val
-
-
-def get_c4_div_c2(x):
-    return x.get_cumulant(4).val / x.get_cumulant(2).val
-
-
-def get_k4_div_k2(x):
-    return x.get_k_stat(4).val / x.get_k_stat(2).val
-
-
-def get_c6_div_c2(x):
-    return x.get_cumulant(6).val / x.get_cumulant(2).val
-
-
-def get_k6_div_k2(x):
-    return x.get_k_stat(6).val / x.get_k_stat(2).val
-
-
-def get_c4_div_c2_sub_k4_div_k2(x):
-    return x.get_cumulant(4).val / x.get_cumulant(2).val - x.get_k_stat(4).val / x.get_k_stat(2).val
-
-
-def get_c6_div_c2_sub_k6_div_k2(x):
-    return x.get_cumulant(6).val / x.get_cumulant(2).val - x.get_k_stat(6).val / x.get_k_stat(2).val
 
 
 if __name__ == '__main__':
