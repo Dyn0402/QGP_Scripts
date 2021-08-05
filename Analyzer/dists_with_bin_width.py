@@ -14,6 +14,7 @@ from AzimuthBinData import AzimuthBinData
 
 
 def main():
+    plt.rcParams['figure.autolayout'] = True
     raw_mix_comp()
     print('donzo')
 
@@ -64,10 +65,13 @@ def raw_mix_comp():
     ratio_bin_centers = (ratio_binning[1:] + ratio_binning[:-1]) / 2
 
     for div in divs:
-        fig, ax = plt.subplots()
+        fig_diff, ax_diff = plt.subplots()
         fig_norm, ax_norm = plt.subplots()
-        # ax.axvline(0.5, color='black', ls='dotted', alpha=0.4)
-        ax_norm.axvline(0.5, color='black', ls='dotted', alpha=0.4)
+        fig_diff_div, ax_diff_div = plt.subplots()
+        ax_diff.axhline(0, color='red', ls='--', alpha=1.0)
+        ax_diff_div.axhline(0, color='red', ls='--', alpha=1.0)
+        ax_norm.axvline(0.5, color='black', ls='dotted', alpha=0.4, label='0.5')
+        ax_norm.axvline(div / 360, color='red', ls='dashed', alpha=0.8, label='mean')
 
         hists = {}
         for data, data_path in [('raw', base_raw_path), ('mix', base_mix_path)]:
@@ -78,11 +82,16 @@ def raw_mix_comp():
             ax_norm.bar(ratio_bin_centers, ratio_hist_norm, ratio_binning[1:] - ratio_binning[:-1], alpha=0.5,
                         label=f'{data} {div}$^\circ$')
 
-        ax.scatter(ratio_bin_centers, hists['raw'] - hists['mix'], label=f'Raw - Mixed {div}$^\circ$')
+        ax_diff.scatter(ratio_bin_centers, hists['raw'] - hists['mix'], label=f'Raw - Mixed {div}$^\circ$')
+        diff_div = [2 * (r - m) / (r + m) if r > 0 and m > 0 else float('nan')
+                    for r, m in zip(hists['raw'], hists['mix'])]
+        ax_diff_div.scatter(ratio_bin_centers, diff_div, label=f'2*(Raw - Mixed) / (Raw + Mixed) {div}$^\circ$')
 
-        fig.legend()
-        ax.grid()
-        fig_norm.legend()
+        ax_diff.legend()
+        ax_diff.grid()
+        ax_diff_div.grid()
+        ax_diff_div.legend()
+        ax_norm.legend()
         ax_norm.grid()
     plt.show()
 
