@@ -11,11 +11,13 @@ Created as QGP_Scripts/dists_with_bin_width
 import numpy as np
 import matplotlib.pyplot as plt
 from AzimuthBinData import AzimuthBinData
+import seaborn as sns
 
 
 def main():
     plt.rcParams['figure.autolayout'] = True
-    raw_mix_comp()
+    # raw_mix_comp()
+    raw_dists()
     print('donzo')
 
 
@@ -32,8 +34,10 @@ def raw_dists():
 
     fig, ax = plt.subplots()
     fig_norm, ax_norm = plt.subplots()
+    fig_kde, ax_kde = plt.subplots()
     ax.axvline(0.5, color='black', ls='dotted', alpha=0.4)
     ax_norm.axvline(0.5, color='black', ls='dotted', alpha=0.4)
+    colors = dict(zip(divs, ['b', 'g', 'r', 'c', 'm', 'y', 'k'][:len(divs)]))
 
     for div in divs:
         path = f'{base_path}{set_name}{set_num}/{energy}GeV/ratios_divisions_{div}_centrality_{cent}_local.txt'
@@ -44,7 +48,15 @@ def raw_dists():
         ratio_hist_norm = az_data.get_ratio_dist(ratio_binning, True)
         ax_norm.bar(ratio_bin_centers, ratio_hist_norm, ratio_binning[1:] - ratio_binning[:-1], alpha=0.5,
                     label=f'{div}$^\circ$')
+        ratio_unbin = az_data.get_ratio_dist()
+        values = []
+        for x, num in ratio_unbin.items():
+            for i in range(num):
+                values.append(x)
+        sns.histplot(ax=ax_kde, x=values, stat='probability', bins=ratio_binning, kde=True, color=colors[div])
+        # sns.rugplot(ax=ax_kde, x=values)
 
+    fig_kde.legend(labels=[f'{div}$^\circ$' for div in divs])
     fig.legend()
     ax.grid()
     fig_norm.legend()
@@ -68,6 +80,7 @@ def raw_mix_comp():
         fig_diff, ax_diff = plt.subplots()
         fig_norm, ax_norm = plt.subplots()
         fig_diff_div, ax_diff_div = plt.subplots()
+        fig_kde, ax_kde = plt.subplots()
         ax_diff.axhline(0, color='red', ls='--', alpha=1.0)
         ax_diff_div.axhline(0, color='red', ls='--', alpha=1.0)
         ax_norm.axvline(0.5, color='black', ls='dotted', alpha=0.4, label='0.5')
@@ -81,6 +94,12 @@ def raw_mix_comp():
             hists.update({data: np.asarray(ratio_hist_norm)})
             ax_norm.bar(ratio_bin_centers, ratio_hist_norm, ratio_binning[1:] - ratio_binning[:-1], alpha=0.5,
                         label=f'{data} {div}$^\circ$')
+            ratio_unbin = az_data.get_ratio_dist()
+            values = []
+            for x, num in ratio_unbin.items():
+                for i in range(num):
+                    values.append(x)
+            sns.kdeplot(ax=ax_kde, x=values)
 
         ax_diff.scatter(ratio_bin_centers, hists['raw'] - hists['mix'], label=f'Raw - Mixed {div}$^\circ$')
         diff_div = [2 * (r - m) / (r + m) if r > 0 and m > 0 else float('nan')
