@@ -56,7 +56,7 @@ def binoms_divs():
     fig2, ax2 = plt.subplots()
     fig3, ax3 = plt.subplots()
     for div in divs:
-        x = np.asarray(range(0, tracks + 2))
+        x = np.asarray(range(0, tracks + 1))
         x2 = x / x[-1]  # np.linspace(0, 1, len(x))
         x3 = x - x[-1] * float(div[0]) / 360.0
         ax1.plot(x, binom.pmf(x, tracks, div[0] / 360.0), color=div[1], marker='.', label=f'{div[0]}$^\circ$')
