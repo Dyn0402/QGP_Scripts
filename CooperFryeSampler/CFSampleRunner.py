@@ -20,11 +20,15 @@ class Pars:
     def __init__(self):
         self.build_path = '/home/dylan/git/Research/CooperFryeSampler/build/'
         self.converter_path = '/home/dylan/git/Research/CooperFryeSampler/'
-        self.temp_path = '/home/dylan/Research/CFSample_Trees/temp'
+        self.temp_path = '/home/dylan/Desktop/temp/'  # '/home/dylan/Research/CFSample_Trees/temp/'
         self.out_dir = '/home/dylan/Research/CFSample_Trees/'
+        self.root_path = '/home/dylan/Software/root/bin/root'
+        self.in_sample_path = '/home/dylan/git/Research/CooperFryeSampler/input/input.AuAu.7.7.C0-5'
         self.sampler_name = 'CooperFryeSampler'
+        self.converter_name = 'CFSampleRootConvert.cpp'
         self.ram_buffer = 2
-        self.ram_energy = {7: 1.5, 200: 2.5}
+        self.ram_energy = {7: 6.4, 19: 6.9, 27: 10.5, 39: 11.6, 62: 12.4}  # ram estimate for each energy in GB
+        self.time_energy = {7: 17, 19: 32, 27: 36, 39: 43, 62: 52}  # time estimate per event for each energy in ms
         self.sample_submit_sleep = 20
 
 
@@ -39,22 +43,38 @@ def init_pars():
     #         'ram_energy': {7: 1.5, 200: 2.5},
     #         'sample_submit_sleep': 20  # seconds to sleep between sample submission check
     #         }
-    samplers = [{'energy': 7, 'rand_seed': 5, 'nevents': 100,
-                 'hyper_input': f'{pars["converter_path"]}/input/input.AuAu.7.7.C0-5'}]
+    samplers = [{'energy': 7, 'randomseed': 1, 'nevents': 10000,
+                 'hypersurface_file': f'{pars.build_path}/hydro/AuAu.7.7/C0-5/surface_eps_0.26.dat'},
+                # {'energy': 27, 'randomseed': 2147483649, 'nevents': 1000,
+                #  'hypersurface_file': f'{pars.build_path}hydro/AuAu.27/C0-5/surface_eps_0.26.dat'},
+                # {'energy': 19, 'randomseed': 5, 'nevents': 1000,
+                #  'hypersurface_file': f'{pars.build_path}hydro/AuAu.19.6/C0-5/surface_eps_0.26.dat'},
+                # {'energy': 39, 'randomseed': 5, 'nevents': 1000,
+                #  'hypersurface_file': f'{pars.build_path}hydro/AuAu.39/C0-5/surface_eps_0.26.dat'},
+                # {'energy': 62, 'randomseed': 5, 'nevents': 1000,
+                #  'hypersurface_file': f'{pars.build_path}hydro/AuAu.62.4/C0-5/surface_eps_0.26.dat'},
+                # {'energy': 27, 'randomseed': 5, 'nevents': 1000,
+                #  'hypersurface_file': f'{pars.build_path}hydro/AuAu.27/C0-5/surface_eps_0.26.dat'},
+                # {'energy': 7, 'randomseed': 83, 'nevents': 100000,
+                #  'hypersurface_file': f'{pars.build_path}/hydro/AuAu.7.7/C0-5/surface_eps_0.26.dat'},
+                # {'energy': 7, 'randomseed': 171, 'nevents': 100000,
+                #  'hypersurface_file': f'{pars.build_path}/hydro/AuAu.7.7/C0-5/surface_eps_0.26.dat'},
+                ]
 
     return pars, samplers
 
 
 def main():
     pars, samplers = init_pars()
-    if not os.path.isdir(pars.temp_path):
-        os.mkdir(pars.temp_path)
+    if os.path.isdir(pars.temp_path):
+        shutil.rmtree(pars.temp_path)
+    os.mkdir(pars.temp_path)
     run_samplers(pars, samplers)
-    shutil.rmtree(pars.temp_path)
+    # shutil.rmtree(pars.temp_path)
     # generate_input()  # Generate input file from sample plus passed parameters
     # run_sampler()
     # dat_to_root()
-    gen_input_file()
+    # gen_input_file()
     # dat_to_root()
     print('donzo')
 
@@ -65,6 +85,7 @@ def run_samplers(pars, samplers):
         free_ram = psutil.virtual_memory().available / 1e9
         if pars.ram_energy[samplers[sampler_index]['energy']] < free_ram - pars.ram_buffer:
             run_sampler(samplers[sampler_index], pars)  # Run sampler at sampler_index if enough ram available
+            samplers.pop(sampler_index)  # Remove sampler from list once finished
 
         sleep(pars.sample_submit_sleep)
         sampler_index += 1
@@ -73,12 +94,49 @@ def run_samplers(pars, samplers):
 
 
 def run_sampler(sampler, pars):
-    file_name = f'{sampler["energy"]}GeV_rand{sampler["rand_seed"]}_nevent{sampler["nevent"]}'
+    file_name = f'{sampler["energy"]}GeV_rand{sampler["randomseed"]}_nevents{sampler["nevents"]}'
+    info = f'echo "Running {file_name}"' \
+           f'Estimated time {pars.time_energy[sampler["energy"]] * sampler["nevents"] / 1000 / 60} mins'
+    temp_dat_path = f'{pars.temp_path}{file_name}.dat'
+
+    sampler.update({'output_file': temp_dat_path, 'temp_input_path': pars.temp_path+file_name+'.input'})
+    gen_input_file(sampler, pars)
+
+    out_root_path = f'{pars.out_dir}{sampler["energy"]}GeV/{file_name}.root'
     cd_build = f'cd {pars.build_path}'
-    sampler_call = f'./{pars.sampler_name} {sampler["hyper_input"]} {pars.temp_path}' \
-                   f''
-    convert_call = f'{pars.out_dir}{sampler["energy"]}GeV/'
-    full_command = f''
+    sampler_call = f'./{pars.sampler_name} {sampler["temp_input_path"]} {temp_dat_path}'
+    cd_convert = f'cd {pars.converter_path}'
+    convert_call = f'{pars.root_path} -b -q "{pars.converter_name}(\\"{temp_dat_path}\\", \\"{out_root_path}\\")"'
+    rm_dat = f'rm {temp_dat_path}'
+    full_command = f'{info}; {cd_build}; {sampler_call}; sleep 15; {cd_convert}; {convert_call}; {rm_dat}; read x;'
+    print(full_command)
+    os.system(f'gnome-terminal -- bash -c \'{full_command}\'')
+
+
+def gen_input_file(sampler, pars):
+    with open(pars.in_sample_path, 'r') as file:
+        sample_lines = file.readlines()
+
+    out_lines = []
+    for line in sample_lines:
+        first_word = line.strip().split()
+        if len(first_word) > 0:
+            first_word = first_word[0]
+        else:
+            first_word = line
+        if first_word in sampler:
+            old_val = line.strip().split()[1]
+            end_string = line[line.find(old_val) + len(old_val):]
+            out_lines.append(f'{first_word} {sampler[first_word]}{end_string}')
+        else:
+            out_lines.append(line)
+
+    with open(sampler['temp_input_path'], 'w') as file:
+        file.writelines(out_lines)
+
+    print(sample_lines)
+
+    print(out_lines)
 
 
 def run_sampler_test():
@@ -112,7 +170,7 @@ def dat_to_root():
     os.system(f'gnome-terminal -- bash -c \'echo "{info}"; cd {path}; {command}; sleep 15\'')
 
 
-def gen_input_file():
+def gen_input_file_test():
     sample_path = '/home/dylan/git/Research/CooperFryeSampler/input/input.AuAu.7.7.C0-5'
     temp_path = '/home/dylan/Desktop/test.input'
     parameters = {'nevents': 500, 'randomseed': 5, 'hypersurface_file': 'hydro/AuAu.7.7/C0-5/surface_eps_0.26.dat',
