@@ -16,6 +16,7 @@ from Analyzer.DistStats import DistStats
 import time
 from multiprocessing import Pool
 from functools import partial
+from pickle_methods import *
 
 
 def main():
@@ -58,9 +59,10 @@ def main():
     #                          'true': 1}
     #                }
 
-    # num_events = np.asarray(np.arange(10, 250, 1))
-    num_events = np.asarray(np.arange(50, 5000, 10))
-    percentiles = []
+    num_events = np.asarray(np.arange(10, 1000, 10))
+    threads = 13
+    # num_events = np.asarray(np.arange(50, 5000, 10))
+    percentiles = [16, 84]
 
     mu1, mu2 = 20.9, 0.2
     mu_bar = (mu1 + mu2) / 2
@@ -68,29 +70,46 @@ def main():
     dist = skellam(mu1, mu2)
     binning = np.arange(-0.5, mu_bar * 2 * 10 + 1.5, 1)
     trials = 10000
-    moment_pars = {'c2': {'method': get_c2, 'true': 2 * mu_bar},
-                   'c3': {'method': get_c3, 'true': mu_delta},
-                   'c4': {'method': get_c4, 'true': 2 * mu_bar},
-                   'c5': {'method': get_c5, 'true': mu_delta},
-                   'c6': {'method': get_c6, 'true': 2 * mu_bar},
-                   'k2': {'method': get_k2, 'true': 2 * mu_bar},
-                   'k3': {'method': get_k3, 'true': mu_delta},
-                   'k4': {'method': get_k4, 'true': 2 * mu_bar},
-                   'k5': {'method': get_k5, 'true': mu_delta},
-                   'k6': {'method': get_k6, 'true': 2 * mu_bar},
-                   'c4/c2': {'method': get_c4_div_c2, 'true': 1},
-                   'k4/k2': {'method': get_k4_div_k2, 'true': 1},
-                   'c6/c2': {'method': get_c6_div_c2, 'true': 1},
-                   'k6/k2': {'method': get_k6_div_k2, 'true': 1},
-                   'c4/c2 - k4/k2': {'method': get_c4_div_c2_sub_k4_div_k2, 'true': 1},
-                   'c6/c2 - k6/k2': {'method': get_c6_div_c2_sub_k6_div_k2, 'true': 1},
+    moment_pars = {'c2': {'method': get_c2, 'method_single': get_c2_meas, 'true': 2 * mu_bar},
+                   'c3': {'method': get_c3, 'method_single': get_c3_meas, 'true': mu_delta},
+                   'c4': {'method': get_c4, 'method_single': get_c4_meas, 'true': 2 * mu_bar},
+                   'c5': {'method': get_c5, 'method_single': get_c5_meas, 'true': mu_delta},
+                   'c6': {'method': get_c6, 'method_single': get_c6_meas, 'true': 2 * mu_bar},
+                   'k2': {'method': get_k2, 'method_single': get_k2_meas, 'true': 2 * mu_bar},
+                   'k3': {'method': get_k3, 'method_single': get_k3_meas, 'true': mu_delta},
+                   'k4': {'method': get_k4, 'method_single': get_k4_meas, 'true': 2 * mu_bar},
+                   'k5': {'method': get_k5, 'method_single': get_k5_meas, 'true': mu_delta},
+                   'k6': {'method': get_k6, 'method_single': get_k6_meas, 'true': 2 * mu_bar},
+                   'c4/c2': {'method': get_c4_div_c2, 'method_single': get_c4_div_c2_meas, 'true': 1},
+                   'k4/k2': {'method': get_k4_div_k2, 'method_single': get_k4_div_k2_meas, 'true': 1},
+                   'c6/c2': {'method': get_c6_div_c2, 'method_single': get_c6_div_c2_meas, 'true': 1},
+                   'k6/k2': {'method': get_k6_div_k2, 'method_single': get_k6_div_k2_meas, 'true': 1},
+                   'c4/c2 - k4/k2': {'method': get_c4_div_c2_sub_k4_div_k2,
+                                     'method_single': get_c4_div_c2_sub_k4_div_k2_meas, 'true': 1},
+                   'c6/c2 - k6/k2': {'method': get_c6_div_c2_sub_k6_div_k2,
+                                     'method_single': get_c6_div_c2_sub_k6_div_k2_meas, 'true': 1},
                    }
 
     save_path = '/home/dylan/Desktop/'
 
     # demo_plots(dist)
+    sim_single_trial(dist, num_events, binning, moment_pars, threads)
+    # sim_trials(dist, num_events, trials, binning, percentiles, moment_pars, threads)
+    # start = time.time()
+    # event_means, event_errs, event_percs = simulate(dist, num_events, trials, binning, moment_pars, percentiles)
+    # print(f'Simulation time: {time.time() - start}s')
+    # # plot_moments(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
+    # plot_moments_together(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
+    # # plot_cumulants(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
+    # plot_cumulant_ratios(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
+    # plot_ratios(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
+
+    print('donzo')
+
+
+def sim_trials(dist, num_events, trials, binning, percentiles, moment_pars, threads):
     start = time.time()
-    event_means, event_errs, event_percs = simulate(dist, num_events, trials, binning, moment_pars, percentiles)
+    event_means, event_errs, event_percs = simulate(dist, num_events, trials, binning, moment_pars, percentiles, threads)
     print(f'Simulation time: {time.time() - start}s')
     # plot_moments(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
     plot_moments_together(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
@@ -98,7 +117,13 @@ def main():
     plot_cumulant_ratios(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
     plot_ratios(num_events, event_means, event_errs, event_percs, moment_pars, percentiles)
 
-    print('donzo')
+
+def sim_single_trial(dist, num_events, binning, moment_pars, threads):
+    start = time.time()
+    event_means, event_errs = simulate_single(dist, num_events, binning, moment_pars, threads)
+    print(f'Simulation time: {time.time() - start}s')
+    plot_moments_together_single(num_events, event_means, event_errs, moment_pars)
+    plot_ratios_single(num_events, event_means, event_errs, moment_pars)
 
 
 def demo_plots(dist):
@@ -110,43 +135,29 @@ def demo_plots(dist):
     # plot_k2_est_vs_n()
 
 
-def simulate(dist, num_events, trials, binning, moment_pars, percentiles):
+def simulate(dist, num_events, trials, binning, moment_pars, percentiles, threads):
     event_means = {x: [] for x in moment_pars.keys()}
     event_errs = {x: [] for x in moment_pars.keys()}
     event_percs = {x: {y: [] for y in percentiles} for x in moment_pars.keys()}
 
-    # job_pars = []
-    # for event in num_events:
-    #     job_pars.append([dist, trials, event, moment_pars, binning, percentiles])
+    # 0 element events, 1 random state
+    nevents_state = list(zip(num_events, [np.random.RandomState() for i in range(len(num_events))]))
+    func = partial(sim_events, dist, trials, moment_pars, binning, percentiles)
+    with Pool(threads) as p:
+        trial_stats = p.map(func, nevents_state)
 
     # trial_stats = []
-    func = partial(sim_events, dist, trials, moment_pars, binning, percentiles)
-    with Pool(8) as p:
-        trial_stats = p.map(func, num_events)
+    # for n in num_events:
+    #     trial_stats.append(sim_events(dist, trials, moment_pars, binning, percentiles, n))
 
     print("Combining events and plotting...")
 
-    for trial_mean, trial_err, trial_perc in trial_stats:
+    for trial_mean, trial_err, trial_perc in trial_stats:  # Iterate over num_events
         for moment, mean in trial_mean.items():
             event_means[moment].append(mean)
             event_errs[moment].append(trial_err[moment])
             for perc, perc_val in trial_perc[moment].items():
                 event_percs[moment][perc].append(perc_val)
-
-    # for events in num_events:
-    #     print(f'Events: {events}')
-    #     trial_moments = {x: [] for x in moment_pars.keys()}
-    #     for trial in range(trials):
-    #         hist, bin_edges = np.histogram(dist.rvs(size=events), binning)
-    #         hist = dict(zip((bin_edges[1:] + bin_edges[:-1]) / 2.0, hist))
-    #         for moment, moment_val in calc_moments(hist, moment_pars).items():
-    #             trial_moments[moment].append(moment_val)
-    #     trial_mean, trial_err, trial_perc = comb_trials(trial_moments, percentiles)
-    #     for moment, mean in trial_mean.items():
-    #         event_means[moment].append(mean)
-    #         event_errs[moment].append(trial_err[moment])
-    #         for perc, perc_val in trial_perc[moment].items():
-    #             event_percs[moment][perc].append(perc_val)
 
     for moment, means in event_means.items():
         event_means[moment] = np.asarray(means)
@@ -157,35 +168,33 @@ def simulate(dist, num_events, trials, binning, moment_pars, percentiles):
     return event_means, event_errs, event_percs
 
 
-def sim_events(dist, trials, moment_pars, binning, percentiles, events):
-    print(f'Events: {events}')
-    trial_moments = {x: [] for x in moment_pars.keys()}
-    for trial in range(trials):
-        hist, bin_edges = np.histogram(dist.rvs(size=events), binning)
-        hist = dict(zip((bin_edges[1:] + bin_edges[:-1]) / 2.0, hist))
-        for moment, moment_val in calc_moments(hist, moment_pars).items():
-            trial_moments[moment].append(moment_val)
-    return comb_trials(trial_moments, percentiles)
+def simulate_single(dist, num_events, binning, moment_pars, threads):
+    event_means = {x: [] for x in moment_pars.keys()}
+    event_errs = {x: [] for x in moment_pars.keys()}
 
+    # 0 element events, 1 random state
+    nevents_state = list(zip(num_events, [np.random.RandomState() for i in range(len(num_events))]))
+    func = partial(sim_events_single, dist, moment_pars, binning)
+    with Pool(threads) as p:
+        stats = p.map(func, nevents_state)
 
-def calc_moments(hist, moment_pars):
-    moments = {}
-    stats = DistStats(hist)
-    for moment, pars in moment_pars.items():
-        moments.update({moment: pars['method'](stats)})
+    # stats = []
+    # for n in num_events:
+    #     stats.append(sim_events_single(dist, moment_pars, binning, n))
 
-    return moments
+    print("Combining events and plotting...")
 
+    for means, errs, events in stats:  # Iterate over num_events, getting means and errs from each
+        print(events)
+        for moment, mean in means.items():  # Iterate over different moments for num_events
+            event_means[moment].append(mean)
+            event_errs[moment].append(errs[moment])
 
-def comb_trials(trial_moments, percentiles):
-    means, errs, percs = {}, {}, {}
-    for moment, trial_vals in trial_moments.items():
-        means.update({moment: np.mean(trial_vals)})
-        errs.update({moment: np.std(trial_vals) / np.sqrt(len(trial_vals))})
-        perc = np.percentile(trial_vals, percentiles)
-        percs.update({moment: dict(zip(percentiles, perc))})
+    for moment, means in event_means.items():
+        event_means[moment] = np.asarray(means)
+        event_errs[moment] = np.asarray(event_errs[moment])
 
-    return means, errs, percs
+    return event_means, event_errs
 
 
 def plot_moments(num_events, event_means, event_errs, event_percs, moment_pars, percs):
@@ -215,13 +224,13 @@ def plot_moments(num_events, event_means, event_errs, event_percs, moment_pars, 
 
 
 def plot_moments_together(num_events, event_means, event_errs, event_percs, moment_pars, percs):
-    fig = plt.figure(figsize=(5,1))
+    fig = plt.figure()
     gs1 = gridspec.GridSpec(5, 1)
     gs1.update(hspace=0.0)
     # axs = gs1.subplots(sharex=True)
     # # fig, axs = plt.subplots(5, 1, sharex=True)
     # plt.subplots_adjust(hspace=0.0, wspace=0.0)
-    fig.canvas.manager.set_window_title('Cumulant KStat Compare')
+    fig.canvas.manager.set_window_title('Cumulant KStat Compare Threads')
     for i in range(2, 7):
         ax = plt.subplot(gs1[i - 2])
         c, k = 'c' + str(i), 'k' + str(i)
@@ -238,9 +247,9 @@ def plot_moments_together(num_events, event_means, event_errs, event_percs, mome
                             color='g', alpha=0.3)
 
         ax.fill_between(num_events, event_means[c] + event_errs[c], event_means[c] - event_errs[c],
-                        color='b', alpha=0.3)
+                        color='b', alpha=1)
         ax.fill_between(num_events, event_means[k] + event_errs[k], event_means[k] - event_errs[k],
-                        color='g', alpha=0.3)
+                        color='g', alpha=1)
 
         ax.plot(num_events, event_means[c], color='b', label=f'{c}')
         ax.plot(num_events, event_means[k], color='g', label=f'{k}')
@@ -250,34 +259,33 @@ def plot_moments_together(num_events, event_means, event_errs, event_percs, mome
     plt.show()
 
 
-# def plot_moments_together(num_events, event_means, event_errs, event_percs, moment_pars, percs):
-#     fig, axs = plt.subplots(5, 1, sharex=True)
-#     plt.subplots_adjust(hspace=0.0, wspace=0.0)
-#     fig.canvas.manager.set_window_title('Cumulant KStat Compare')
-#     for i in range(2, 7):
-#         c, k = 'c' + str(i), 'k' + str(i)
-#
-#         if i == 2:
-#             axs[i-2].axhline(moment_pars[k]['true'], color='r', ls='--', label='Analytical')
-#         else:
-#             axs[i - 2].axhline(moment_pars[k]['true'], color='r', ls='--')
-#
-#         for j in range(int(len(percs) / 2)):
-#             axs[i-2].fill_between(num_events, event_percs[c][percs[j]], event_percs[c][percs[len(percs) - 1 - j]],
-#                             color='b', alpha=0.3)
-#             axs[i-2].fill_between(num_events, event_percs[k][percs[j]], event_percs[k][percs[len(percs) - 1 - j]],
-#                             color='g', alpha=0.3)
-#
-#         axs[i-2].fill_between(num_events, event_means[c] + event_errs[c], event_means[c] - event_errs[c],
-#                         color='b', alpha=0.3)
-#         axs[i-2].fill_between(num_events, event_means[k] + event_errs[k], event_means[k] - event_errs[k],
-#                         color='g', alpha=0.3)
-#
-#         axs[i-2].plot(num_events, event_means[c], color='b', label=f'{c}')
-#         axs[i-2].plot(num_events, event_means[k], color='g', label=f'{k}')
-#         axs[i-2].legend()
-#     axs[2].set_xlabel('Sample Size n')
-#     plt.show()
+def plot_moments_together_single(num_events, event_means, event_errs, moment_pars):
+    num_events_c = np.asarray(num_events) - 1
+    num_events_k = np.asarray(num_events) + 1
+    fig = plt.figure()
+    gs1 = gridspec.GridSpec(5, 1)
+    gs1.update(hspace=0.0)
+    # axs = gs1.subplots(sharex=True)
+    # # fig, axs = plt.subplots(5, 1, sharex=True)
+    # plt.subplots_adjust(hspace=0.0, wspace=0.0)
+    fig.canvas.manager.set_window_title('Cumulant KStat Compare')
+    for i in range(2, 7):
+        ax = plt.subplot(gs1[i - 2])
+        c, k = 'c' + str(i), 'k' + str(i)
+
+        if i == 2:
+            ax.axhline(moment_pars[k]['true'], color='r', ls='--', label='Analytical')
+        else:
+            ax.axhline(moment_pars[k]['true'], color='r', ls='--')
+
+        ax.errorbar(num_events_c, event_means[c], yerr=event_errs[c], color='b', marker='o', ls='none', label=f'{c}',
+                    alpha=1, markersize=4)
+        ax.errorbar(num_events_k, event_means[k], yerr=event_errs[k], color='g', marker='o', ls='none', label=f'{k}',
+                    alpha=1, markersize=4)
+        ax.legend()
+        if i == 6:
+            ax.set_xlabel('Sample Size n')
+    plt.show()
 
 
 def plot_cumulants(num_events, event_means, event_errs, event_percs, moment_pars, percs):
@@ -305,7 +313,7 @@ def plot_cumulants(num_events, event_means, event_errs, event_percs, moment_pars
 
 def plot_ratios(num_events, event_means, event_errs, event_percs, moment_pars, percs):
     fig1, axs1 = plt.subplots(2, 1, sharex=True)
-    fig1.canvas.manager.set_window_title('C4 / C2 with K4 / K2')
+    fig1.canvas.manager.set_window_title('C4 / C2 with K4 / K2 Threads')
 
     axs1[0].axhline(moment_pars['k4/k2']['true'], color='r', ls='--', label='Analytical')
     axs1[0].fill_between(num_events, event_means['c4/c2'] - event_errs['c4/c2'], event_means['c4/c2'] + event_errs['c4/c2'],
@@ -331,7 +339,7 @@ def plot_ratios(num_events, event_means, event_errs, event_percs, moment_pars, p
     axs1[1].set_xlabel('Sample Size n')
 
     fig2, axs2 = plt.subplots(2, 1, sharex=True)
-    fig2.canvas.manager.set_window_title('(C4 / C2) - (K4 / K2)')
+    fig2.canvas.manager.set_window_title('(C4 / C2) - (K4 / K2) Threads')
     axs2[0].axhline(0, color='black', ls='--')
     axs2[0].fill_between(num_events, event_means['c4/c2 - k4/k2'] - event_errs['c4/c2 - k4/k2'],
                      event_means['c4/c2 - k4/k2'] + event_errs['c4/c2 - k4/k2'],
@@ -345,6 +353,45 @@ def plot_ratios(num_events, event_means, event_errs, event_percs, moment_pars, p
                          event_means['c6/c2 - k6/k2'] + event_errs['c6/c2 - k6/k2'],
                          color='red', alpha=0.3)
     axs2[1].plot(num_events, event_means['c6/c2 - k6/k2'], color='r', label='C6/C2 - K6/K2')
+    axs2[1].legend()
+    axs2[1].grid()
+    axs2[1].set_xlabel('Sample Size n')
+
+    plt.show()
+
+
+def plot_ratios_single(num_events, event_means, event_errs, moment_pars):
+    fig1, axs1 = plt.subplots(2, 1, sharex=True)
+    fig1.canvas.manager.set_window_title('C4 / C2 with K4 / K2')
+
+    axs1[0].axhline(moment_pars['k4/k2']['true'], color='r', ls='--', label='Analytical')
+
+    axs1[0].errorbar(num_events, event_means['c4/c2'], yerr=event_errs['c4/c2'], marker='o', ls='none', color='b',
+                     label=f'C4/C2')
+    axs1[0].errorbar(num_events, event_means['k4/k2'], yerr=event_errs['k4/k2'], marker='o', ls='none', color='g',
+                     label=f'K4/K2')
+    axs1[0].legend()
+
+    axs1[1].axhline(moment_pars['k6/k2']['true'], color='r', ls='--', label='Analytical')
+
+    axs1[1].errorbar(num_events, event_means['c6/c2'], yerr=event_errs['c6/c2'], marker='o', ls='none', color='b',
+                     label=f'C6/C2')
+    axs1[1].errorbar(num_events, event_means['k6/k2'], yerr=event_errs['k6/k2'], marker='o', ls='none', color='g',
+                     label=f'K6/K2')
+    axs1[1].legend()
+    axs1[1].set_xlabel('Sample Size n')
+
+    fig2, axs2 = plt.subplots(2, 1, sharex=True)
+    fig2.canvas.manager.set_window_title('(C4 / C2) - (K4 / K2)')
+    axs2[0].axhline(0, color='black', ls='--')
+    axs2[0].errorbar(num_events, event_means['c4/c2 - k4/k2'], yerr=event_errs['c4/c2 - k4/k2'], marker='o', ls='none',
+                     color='r', label='C4/C2 - K4/K2')
+    axs2[0].legend()
+    axs2[0].grid()
+
+    axs2[1].axhline(0, color='black', ls='--')
+    axs2[1].errorbar(num_events, event_means['c6/c2 - k6/k2'], yerr=event_errs['c6/c2 - k6/k2'], marker='o', ls='none',
+                     color='r', label='C6/C2 - K6/K2')
     axs2[1].legend()
     axs2[1].grid()
     axs2[1].set_xlabel('Sample Size n')
@@ -468,70 +515,6 @@ def plot_k2_est_vs_n():
     ax.axhline(1.0, color='red', ls='--')
     ax.plot(n, (k4s / k2s) / 0.8)
     plt.show()
-
-
-def get_c2(x):
-    return x.get_cumulant(2).val
-
-
-def get_c3(x):
-    return x.get_cumulant(3).val
-
-
-def get_c4(x):
-    return x.get_cumulant(4).val
-
-
-def get_c5(x):
-    return x.get_cumulant(5).val
-
-
-def get_c6(x):
-    return x.get_cumulant(6).val
-
-
-def get_k2(x):
-    return x.get_k_stat(2).val
-
-
-def get_k3(x):
-    return x.get_k_stat(3).val
-
-
-def get_k4(x):
-    return x.get_k_stat(4).val
-
-
-def get_k5(x):
-    return x.get_k_stat(5).val
-
-
-def get_k6(x):
-    return x.get_k_stat(6).val
-
-
-def get_c4_div_c2(x):
-    return x.get_cumulant(4).val / x.get_cumulant(2).val
-
-
-def get_k4_div_k2(x):
-    return x.get_k_stat(4).val / x.get_k_stat(2).val
-
-
-def get_c6_div_c2(x):
-    return x.get_cumulant(6).val / x.get_cumulant(2).val
-
-
-def get_k6_div_k2(x):
-    return x.get_k_stat(6).val / x.get_k_stat(2).val
-
-
-def get_c4_div_c2_sub_k4_div_k2(x):
-    return x.get_cumulant(4).val / x.get_cumulant(2).val - x.get_k_stat(4).val / x.get_k_stat(2).val
-
-
-def get_c6_div_c2_sub_k6_div_k2(x):
-    return x.get_cumulant(6).val / x.get_cumulant(2).val - x.get_k_stat(6).val / x.get_k_stat(2).val
 
 
 if __name__ == '__main__':

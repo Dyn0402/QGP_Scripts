@@ -188,6 +188,9 @@ class Measure:
         except ValueError:
             return NotImplemented
 
+    def conjugate(self):
+        return self
+
     def __str__(self):
         dec = err_dec(self.err)
         return f'{self.val:.{dec}f} ± {self.err:.{dec}f}'
