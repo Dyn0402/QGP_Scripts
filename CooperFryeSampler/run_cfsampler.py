@@ -25,7 +25,7 @@ def main():
     randomseed = randint(1, 2147483647)
     sampler = {'energy': hypersurface_energy+'_', 'randomseed': randomseed, 'nevents': nevents,
                'hypersurface_file': hypersurface_name, 'input_sample_name': 'input.AuAu.7.7.C0-5',
-               'cfsampler_name': 'CooperFryeSampler', 'converter_name': 'CFSampleRootConverter.cpp',
+               'cfsampler_name': 'CooperFryeSampler', 'converter_name': 'CFSampleRootConvert.cpp',
                'root_path': '/star/u/dneff/Software/root/root-6.14.06/obj/bin/root'}
     sampler.update({'output_file': f'{sampler["energy"]}nevents_{sampler["nevents"]}_rand_{sampler["randomseed"]}'})
     run(sampler)
