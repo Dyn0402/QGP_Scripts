@@ -36,7 +36,7 @@ def run(sampler):
     input_path = gen_input_file(sampler)
     dat_name = sampler['output_file'] + '.dat'
     output_root = sampler['output_file'] + '.root'
-    os.system(f'./{sampler["CooperFryeSampler"]} {input_path} {dat_name}')
+    os.system(f'./{sampler["cfsampler_name"]} {input_path} {dat_name}')
     os.system(f'{sampler["root_path"]} -b -q {sampler["converter_name"]}("{dat_name}", "{output_root}")')
 
 
