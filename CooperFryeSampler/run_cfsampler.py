@@ -37,7 +37,7 @@ def run(sampler):
     dat_name = sampler['output_file'] + '.dat'
     output_root = sampler['output_file'] + '.root'
     os.system(f'./{sampler["cfsampler_name"]} {input_path} {dat_name}')
-    os.system(f'{sampler["root_path"]} -b -q {sampler["converter_name"]}("{dat_name}", "{output_root}")')
+    os.system(f'{sampler["root_path"]} -b -q "{sampler["converter_name"]}(\\"{dat_name}\\", \\"{output_root}\\")"')
 
 
 def gen_input_file(sampler):
