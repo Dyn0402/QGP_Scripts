@@ -14,22 +14,24 @@ import os
 import shutil
 from time import sleep
 import psutil
+from random import randint
 
 
 class Pars:
     def __init__(self):
         self.build_path = '/home/dylan/git/Research/CooperFryeSampler/build/'
         self.converter_path = '/home/dylan/git/Research/CooperFryeSampler/'
-        self.temp_path = '/home/dylan/Desktop/temp/'  # '/home/dylan/Research/CFSample_Trees/temp/'
+        self.temp_path = '/home/dylan/Desktop/CooperFryeSampler_temp/'  # '/home/dylan/Research/CFSample_Trees/temp/'
         self.out_dir = '/home/dylan/Research/CFSample_Trees/'
         self.root_path = '/home/dylan/Software/root/bin/root'
         self.in_sample_path = '/home/dylan/git/Research/CooperFryeSampler/input/input.AuAu.7.7.C0-5'
         self.sampler_name = 'CooperFryeSampler'
         self.converter_name = 'CFSampleRootConvert.cpp'
-        self.ram_buffer = 2
+        self.ram_buffer = 1
         self.ram_energy = {7: 6.4, 19: 6.9, 27: 10.5, 39: 11.6, 62: 12.4}  # ram estimate for each energy in GB
         self.time_energy = {7: 17, 19: 32, 27: 36, 39: 43, 62: 52}  # time estimate per event for each energy in ms
         self.sample_submit_sleep = 20
+        self.random_seed_range = (1, 2147483647)
 
 
 def init_pars():
@@ -43,32 +45,33 @@ def init_pars():
     #         'ram_energy': {7: 1.5, 200: 2.5},
     #         'sample_submit_sleep': 20  # seconds to sleep between sample submission check
     #         }
-    samplers = [{'energy': 7, 'randomseed': 1, 'nevents': 10000,
-                 'hypersurface_file': f'{pars.build_path}/hydro/AuAu.7.7/C0-5/surface_eps_0.26.dat'},
-                # {'energy': 27, 'randomseed': 2147483649, 'nevents': 1000,
-                #  'hypersurface_file': f'{pars.build_path}hydro/AuAu.27/C0-5/surface_eps_0.26.dat'},
-                # {'energy': 19, 'randomseed': 5, 'nevents': 1000,
-                #  'hypersurface_file': f'{pars.build_path}hydro/AuAu.19.6/C0-5/surface_eps_0.26.dat'},
-                # {'energy': 39, 'randomseed': 5, 'nevents': 1000,
-                #  'hypersurface_file': f'{pars.build_path}hydro/AuAu.39/C0-5/surface_eps_0.26.dat'},
-                # {'energy': 62, 'randomseed': 5, 'nevents': 1000,
-                #  'hypersurface_file': f'{pars.build_path}hydro/AuAu.62.4/C0-5/surface_eps_0.26.dat'},
-                # {'energy': 27, 'randomseed': 5, 'nevents': 1000,
-                #  'hypersurface_file': f'{pars.build_path}hydro/AuAu.27/C0-5/surface_eps_0.26.dat'},
-                # {'energy': 7, 'randomseed': 83, 'nevents': 100000,
-                #  'hypersurface_file': f'{pars.build_path}/hydro/AuAu.7.7/C0-5/surface_eps_0.26.dat'},
-                # {'energy': 7, 'randomseed': 171, 'nevents': 100000,
-                #  'hypersurface_file': f'{pars.build_path}/hydro/AuAu.7.7/C0-5/surface_eps_0.26.dat'},
-                ]
+    meta_samplers = [{'energy': 62, 'nevents': 1001, 'target_events': 2000,
+                      'hypersurface_file': f'{pars.build_path}/hydro/AuAu.62.4/C0-5/surface_eps_0.26.dat'},
+                     # {'energy': 27, 'randomseed': 2147483649, 'nevents': 1000,
+                     #  'hypersurface_file': f'{pars.build_path}hydro/AuAu.27/C0-5/surface_eps_0.26.dat'},
+                     # {'energy': 19, 'randomseed': 5, 'nevents': 1000,
+                     #  'hypersurface_file': f'{pars.build_path}hydro/AuAu.19.6/C0-5/surface_eps_0.26.dat'},
+                     # {'energy': 39, 'randomseed': 5, 'nevents': 1000,
+                     #  'hypersurface_file': f'{pars.build_path}hydro/AuAu.39/C0-5/surface_eps_0.26.dat'},
+                     # {'energy': 62, 'randomseed': 5, 'nevents': 1000,
+                     #  'hypersurface_file': f'{pars.build_path}hydro/AuAu.62.4/C0-5/surface_eps_0.26.dat'},
+                     # {'energy': 27, 'randomseed': 5, 'nevents': 1000,
+                     #  'hypersurface_file': f'{pars.build_path}hydro/AuAu.27/C0-5/surface_eps_0.26.dat'},
+                     # {'energy': 7, 'randomseed': 83, 'nevents': 100000,
+                     #  'hypersurface_file': f'{pars.build_path}/hydro/AuAu.7.7/C0-5/surface_eps_0.26.dat'},
+                     # {'energy': 7, 'randomseed': 171, 'nevents': 100000,
+                     #  'hypersurface_file': f'{pars.build_path}/hydro/AuAu.7.7/C0-5/surface_eps_0.26.dat'},
+                     ]
 
-    return pars, samplers
+    return pars, meta_samplers
 
 
 def main():
-    pars, samplers = init_pars()
+    pars, meta_samplers = init_pars()
     if os.path.isdir(pars.temp_path):
         shutil.rmtree(pars.temp_path)
     os.mkdir(pars.temp_path)
+    samplers = gen_samplers(meta_samplers, pars)
     run_samplers(pars, samplers)
     # shutil.rmtree(pars.temp_path)
     # generate_input()  # Generate input file from sample plus passed parameters
@@ -79,18 +82,42 @@ def main():
     print('donzo')
 
 
-def run_samplers(pars, samplers):
-    sampler_index = 0
-    while len(samplers) > 0:
-        free_ram = psutil.virtual_memory().available / 1e9
-        if pars.ram_energy[samplers[sampler_index]['energy']] < free_ram - pars.ram_buffer:
-            run_sampler(samplers[sampler_index], pars)  # Run sampler at sampler_index if enough ram available
-            samplers.pop(sampler_index)  # Remove sampler from list once finished
+def gen_samplers(meta_samplers, pars):
+    samplers = []
+    for meta_sampler in meta_samplers:
+        for i in range(1 + int(meta_sampler['target_events'] / meta_sampler['nevents'])):
+            sampler = {key: val for key, val in meta_sampler.items()}
+            sampler.update({'randomseed': randint(pars.random_seed_range[0], pars.random_seed_range[1])})
+            samplers.append(sampler)
 
-        sleep(pars.sample_submit_sleep)
-        sampler_index += 1
-        if sampler_index >= len(samplers):
-            sampler_index = 0
+    return samplers
+
+
+def run_samplers(pars, samplers):
+    # Pair expected ram with each sampler and sort from most RAM usage to least so high RAM processes run first
+    # print([pars.ram_energy[x['energy']] for x in samplers])
+    # print(samplers)
+    # print([x for x in zip([pars.ram_energy[x['energy']] for x in samplers], samplers)])
+    samplers = sorted(zip([pars.ram_energy[x['energy']] for x in samplers], samplers), key=lambda y: y[0], reverse=True)
+
+    while len(samplers) > 0:
+        free_ram = psutil.virtual_memory().available / 1e9  # See how much RAM available on system
+        if free_ram >= min(pars.ram_energy.values()) + pars.ram_buffer:
+            for sampler_index in range(len(samplers)):  # Search for largest RAM sampler that will fit and run it
+                if pars.ram_energy[samplers[sampler_index][1]['energy']] < free_ram - pars.ram_buffer:
+                    run_sampler(samplers[sampler_index][1], pars)  # Run sampler at sampler_index if ram available
+                    samplers.pop(sampler_index)  # Remove sampler from list once finished
+                    break
+        sleep(pars.sample_submit_sleep)  # Wait long enough for submitted process to allocate RAM before checking again
+
+        # if pars.ram_energy[samplers[sampler_index]['energy']] < free_ram - pars.ram_buffer:
+        #     run_sampler(samplers[sampler_index], pars)  # Run sampler at sampler_index if enough ram available
+        #     samplers.pop(sampler_index)  # Remove sampler from list once finished
+        #
+        # sleep(pars.sample_submit_sleep)
+        # sampler_index += 1
+        # if sampler_index >= len(samplers):
+        #     sampler_index = 0
 
 
 def run_sampler(sampler, pars):
@@ -99,7 +126,7 @@ def run_sampler(sampler, pars):
            f'Estimated time {pars.time_energy[sampler["energy"]] * sampler["nevents"] / 1000 / 60} mins'
     temp_dat_path = f'{pars.temp_path}{file_name}.dat'
 
-    sampler.update({'output_file': temp_dat_path, 'temp_input_path': pars.temp_path+file_name+'.input'})
+    sampler.update({'output_file': temp_dat_path, 'temp_input_path': pars.temp_path + file_name + '.input'})
     gen_input_file(sampler, pars)
 
     out_root_path = f'{pars.out_dir}{sampler["energy"]}GeV/{file_name}.root'
