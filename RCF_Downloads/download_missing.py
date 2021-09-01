@@ -21,25 +21,32 @@ def main():
 
 
 def download():
-    data_set = 'BES1'
+    data_set = 'CF'
     data_sets = {'BES1': {'remote_path_suf': 'BES1/', 'remote_tree_pref': 'trees/output',
                           'local_path': '/media/ucla/Research/', 'local_tree_pref': 'BES1_Trees'},
                  'AMPT_Run': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
                               'local_path': '/media/ssd/Research/', 'local_tree_pref': 'AMPT_Trees/min_bias/default'},
                  'AMPT_Run_mcent_sm': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
-                              'local_path': '/media/ssd/Research/', 'local_tree_pref': 'AMPT_Trees/most_central/string_melting'},
+                                       'local_path': '/media/ssd/Research/',
+                                       'local_tree_pref': 'AMPT_Trees/most_central/string_melting'},
                  'AMPT_Run_mcent_sm_slim': {'remote_path_suf': 'AMPT/',
                                             'remote_tree_pref': 'slim_most_central/string_melting',
                                             'local_path': '/media/ucla/Research/',
                                             'local_tree_pref': 'AMPT_Trees/most_central/string_melting'},
                  'AMPT_cent_def': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'most_central/default',
-                                   'local_path': '/media/ssd/Research/', 'local_tree_pref': 'AMPT_Trees/most_central/default'},
+                                   'local_path': '/media/ssd/Research/',
+                                   'local_tree_pref': 'AMPT_Trees/most_central/default'},
                  'AMPT_minbias_sm': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'min_bias/string_melting',
-                                   'local_path': '/media/dylan/ucla/Research/',
-                                   'local_tree_pref': 'AMPT_Trees/min_bias/string_melting'},
-                 'AMPT_slimcent_sm': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'slim_most_central/string_melting',
                                      'local_path': '/media/dylan/ucla/Research/',
-                                     'local_tree_pref': 'AMPT_Trees/slim_most_central/string_melting'}
+                                     'local_tree_pref': 'AMPT_Trees/min_bias/string_melting'},
+                 'AMPT_slimcent_sm': {'remote_path_suf': 'AMPT/',
+                                      'remote_tree_pref': 'slim_most_central/string_melting',
+                                      'local_path': '/media/dylan/ucla/Research/',
+                                      'local_tree_pref': 'AMPT_Trees/slim_most_central/string_melting'},
+                 'CF': {'remote_path_suf': 'CooperFrye/',
+                        'remote_tree_pref': 'output',
+                        'local_path': '/media/ucla/Research/',
+                        'local_tree_pref': 'Cooper_Frye_Trees'},
                  }
 
     energies = [7, 11, 15, 19, 27, 39, 62]
