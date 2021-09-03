@@ -14,24 +14,28 @@ import shutil
 
 
 def main():
-    # set_folder = '7GeV'
-    # origin_base_path = '/home/dylan/Research/'
-    # out_base_path = '/media/dylan/DYLAN_NEFF/Transfer/Research/'
-    # dirs = ['Data_Ampt', 'Data_Ampt_Mix']
-    set_folder = 'subsubsub1'
-    origin_base_path = '/home/dylan/Desktop/test/in/'
-    out_base_path = '/home/dylan/Desktop/test/out/'
-    dirs = ['1']
+    action = True
+    set_folder = '7GeV'
+    origin_base_path = '/home/dylan/Research/'
+    out_base_path = '/media/dylan/DYLAN_NEFF/Transfer/Research/'
+    dirs = ['Data_Ampt_Mix']
     for d in dirs:
         d_path = origin_base_path + d + '/'
         for set_group in os.listdir(d_path):
             sg_path = d_path + set_group + '/'
+            sg_out_path = f'{out_base_path}{d}/{set_group}/'
+            if not os.path.exists(sg_out_path):
+                print(f'Make dir: {sg_out_path}')
+                if action:
+                    os.mkdir(sg_out_path)
             for set_name in os.listdir(sg_path):
                 in_path = sg_path + set_name + '/' + set_folder
                 out_path = f'{out_base_path}{d}/{set_group}/{set_name}/{set_folder}'
                 print(f'{in_path} --> {out_path}')
-                shutil.rmtree(out_path)
-                shutil.copytree(in_path, out_path)
+                if action:
+                    if os.path.exists(out_path):
+                        shutil.rmtree(out_path)
+                    shutil.copytree(in_path, out_path)
     print('donzo')
 
 
