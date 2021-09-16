@@ -94,6 +94,9 @@ class AzimuthBinData:
                     hist[bin_index] /= total
             return hist
 
+    def get_dist(self):
+        return self.data
+
     def print_dist(self):
         for total_particles in self.data:
             out_line = f'{total_particles}\t'
