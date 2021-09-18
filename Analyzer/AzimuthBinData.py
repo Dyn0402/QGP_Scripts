@@ -19,6 +19,9 @@ class AzimuthBinData:
         self.path = path
         self.div = div
 
+        self.max_particle = 0
+        self.max_bin = None
+
         self.data = {}
         self.ratio_dist = {}
         self.pull_dist = {}
@@ -29,6 +32,7 @@ class AzimuthBinData:
     def read_data(self):
         with open(self.path, 'r') as file:
             lines = file.readlines()
+            self.max_particle = int(lines[-1].strip().split('\t')[0])
             for line in lines:
                 line = line.strip().split('\t')
                 total_particles = int(line[0])
@@ -94,9 +98,21 @@ class AzimuthBinData:
                     hist[bin_index] /= total
             return hist
 
+    def get_dist(self):
+        return self.data
+
+    def get_max_bin(self):
+        if self.max_bin is None:
+            self.max_bin = 0
+            for total_particles, bins in self.data.items():
+                for bin_particles, counts in enumerate(bins):
+                    if bin_particles > self.max_bin and counts > 0:
+                        self.max_bin = bin_particles
+        return self.max_bin
+
     def print_dist(self):
-        for total_particles in self.data:
+        for total_particles, bins in self.data.items():
             out_line = f'{total_particles}\t'
-            for bin_particles in range(len(self.data[total_particles])):
-                out_line += f'{bin_particles}:{self.data[total_particles][bin_particles]} '
+            for bin_particles, counts in enumerate(bins):
+                out_line += f'{bin_particles}:{counts} '
             print(out_line)
