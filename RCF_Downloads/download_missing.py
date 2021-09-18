@@ -21,7 +21,7 @@ def main():
 
 
 def download():
-    data_set = 'CF'
+    data_set = 'AMPT_slimcent_sm'
     data_sets = {'BES1': {'remote_path_suf': 'BES1/', 'remote_tree_pref': 'trees/output',
                           'local_path': '/media/ucla/Research/', 'local_tree_pref': 'BES1_Trees'},
                  'AMPT_Run': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
@@ -41,8 +41,12 @@ def download():
                                      'local_tree_pref': 'AMPT_Trees/min_bias/string_melting'},
                  'AMPT_slimcent_sm': {'remote_path_suf': 'AMPT/',
                                       'remote_tree_pref': 'slim_most_central/string_melting',
-                                      'local_path': '/media/dylan/ucla/Research/',
+                                      'local_path': '/media/ucla/Research/',
                                       'local_tree_pref': 'AMPT_Trees/slim_most_central/string_melting'},
+                 'AMPT_cent_sm': {'remote_path_suf': 'AMPT/',
+                                  'remote_tree_pref': 'most_central/string_melting',
+                                  'local_path': '/media/ucla/Research/',
+                                  'local_tree_pref': 'AMPT_Trees/most_central/string_melting'},
                  'CF': {'remote_path_suf': 'CooperFrye/',
                         'remote_tree_pref': 'output',
                         'local_path': '/media/ucla/Research/',
