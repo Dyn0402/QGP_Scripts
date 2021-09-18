@@ -16,6 +16,13 @@ import os
 
 
 def main():
+    macro_name = 'ampt_identical_track_finder_single.cpp'
+    macro_path = f'C:/Users/Dylan/Source/Repos/Dyn0402/Root_Macros/src/{macro_name}'
+
+
+
+
+def uproot_finder():
     vector.register_awkward()
     # Found: AMPT_Trees/min_bias/string_melting/7GeV/data_741821621.root EVENT:1617 - 1618
     # path = '/home/dylan/Research/AMPT_Trees/min_bias/string_melting/7GeV/'
