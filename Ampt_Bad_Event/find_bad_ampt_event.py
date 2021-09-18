@@ -8,8 +8,7 @@ Created as QGP_Scripts/find_bad_ampt_event
 @author: Dylan Neff, dylan
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
+
 import ROOT
 # from ROOT import TFile, TTree
 import os

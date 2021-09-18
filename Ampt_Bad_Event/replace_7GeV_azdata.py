@@ -16,9 +16,9 @@ import shutil
 def main():
     action = True
     set_folder = '7GeV'
-    origin_base_path = '/home/dylan/Research/'
-    out_base_path = '/media/dylan/DYLAN_NEFF/Transfer/Research/'
-    dirs = ['Data_Ampt_Mix']
+    origin_base_path = '/media/dylan/DYLAN_NEFF/Transfer/Research/'
+    out_base_path = '/home/dylan/Research/'
+    dirs = ['Data_Ampt', 'Data_Ampt_Mix']
     for d in dirs:
         d_path = origin_base_path + d + '/'
         for set_group in os.listdir(d_path):
