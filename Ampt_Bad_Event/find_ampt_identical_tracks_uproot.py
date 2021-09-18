@@ -16,13 +16,36 @@ import os
 
 
 def main():
+    print('donzo')
+
+
+def file_writer():
+    out_path = '/home/dylan/Research/Ampt_Bad_Event/root_paths.txt'
+    in_path = '/home/dylan/Research/AMPT_Trees/'
+    with open(out_path, 'w') as out_file:
+        for root, dirs, files in os.walk(in_path):
+            for file_name in files:
+                if '.root' not in file_name:
+                    continue
+                root_path = os.path.join(root, file_name)
+                out_file.write(f'{root_path}\n')
+
+
+def macro_caller():
+    """ Still too slow """
     macro_name = 'ampt_identical_track_finder_single.cpp'
-    macro_path = f'C:/Users/Dylan/Source/Repos/Dyn0402/Root_Macros/src/{macro_name}'
-
-
+    macro_path = f'C:\\Users\\Dylan\\source\\sepos\\Dyn0402\\Root_Macros\\src\\{macro_name}'
+    path = 'D:/Research/AMPT_Trees/'
+    for root, dirs, files in os.walk(path):
+        for file_name in files:
+            if '.root' not in file_name:
+                continue
+            root_path = os.path.join(root, file_name)
+            os.system(f'root -l -q -b \'{macro_path}(\\"{root_path}\\")\'')
 
 
 def uproot_finder():
+    """ Too slow """
     vector.register_awkward()
     # Found: AMPT_Trees/min_bias/string_melting/7GeV/data_741821621.root EVENT:1617 - 1618
     # path = '/home/dylan/Research/AMPT_Trees/min_bias/string_melting/7GeV/'
@@ -66,8 +89,6 @@ def uproot_finder():
     with open(out_file_path, 'w') as file:
         for bad_event in bad_events:
             file.write(f'{bad_event["path"]}, {bad_event["event_num"]}, {bad_event["num_identical"]}')
-
-    print('donzo')
 
 
 if __name__ == '__main__':
