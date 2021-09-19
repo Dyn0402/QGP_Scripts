@@ -60,7 +60,7 @@ def uproot_finder():
 
     out_file_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_minbias.txt'
     # path = '/home/dylan/Research/AMPT_Trees/'
-    path = '/media/ucla/Research/AMPT_Trees/min_bias/default/'
+    path = '/media/ucla/Research/AMPT_Trees/min_bias/string_melting/7GeV/'
     threads = 3
     tree_name = 'tree'
     write_mode = 'w'
