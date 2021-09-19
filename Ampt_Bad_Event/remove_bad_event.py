@@ -14,6 +14,14 @@ import ROOT
 
 
 def main():
+    bad_file_list_path = ''
+    bad_events = get_bad_event_file(bad_file_list_path)
+
+
+    print('donzo')
+
+
+def remove_specific():
     # Found: AMPT_Trees/min_bias/string_melting/7GeV/data_741821621.root EVENT:1617 - 1618
     path = '/home/dylan/Research/Ampt_Bad_Event/data_741821621_bad.root'
     new_path = '/home/dylan/Research/Ampt_Bad_Event/data_741821621.root'
@@ -28,7 +36,10 @@ def main():
     bad_file.Close()
     new_file.Write()
     new_file.Close()
-    print('donzo')
+
+
+def get_bad_event_file(path):
+    pass
 
 
 if __name__ == '__main__':
