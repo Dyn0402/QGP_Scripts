@@ -41,8 +41,12 @@ def download():
                                      'local_tree_pref': 'AMPT_Trees/min_bias/string_melting'},
                  'AMPT_slimcent_sm': {'remote_path_suf': 'AMPT/',
                                       'remote_tree_pref': 'slim_most_central/string_melting',
-                                      'local_path': '/media/dylan/ucla/Research/',
+                                      'local_path': '/media/ucla/Research/',
                                       'local_tree_pref': 'AMPT_Trees/slim_most_central/string_melting'},
+                 'AMPT_cent_sm': {'remote_path_suf': 'AMPT/',
+                                  'remote_tree_pref': 'most_central/string_melting',
+                                  'local_path': '/media/ucla/Research/',
+                                  'local_tree_pref': 'AMPT_Trees/most_central/string_melting'},
                  'CF': {'remote_path_suf': 'CooperFrye/',
                         'remote_tree_pref': 'output',
                         'local_path': '/media/ucla/Research/',
@@ -50,7 +54,7 @@ def download():
                  }
 
     energies = [7, 11, 15, 19, 27, 39, 62]
-    bwlimit = 5  # bandwidth limit per energy in MBPS or None
+    bwlimit = None  # bandwidth limit per energy in MBPS or None
     size_tolerance = 0.001  # percentage tolerance between remote and local sizes, re-download if different
 
     remote_path = 'dneff@rftpexp.rhic.bnl.gov:/gpfs01/star/pwg/dneff/data/'

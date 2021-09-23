@@ -13,26 +13,35 @@ from DistStats import DistStats
 
 
 def main():
-    base_path = '/home/dylan/Research/Data/'
-    set_name = 'eta05_n1ratios_dca3'
+    base_path = '/home/dylan/Research/Data_Ampt/default/'
+    set_name = 'Ampt_rapid05_n1ratios_'
     set_num = 0
     energy = 7
     div = 120
-    cent = 8
+    cent = 3
 
     path = f'{base_path}{set_name}{set_num}/{energy}GeV/ratios_divisions_{div}_centrality_{cent}_local.txt'
 
     az_data = AzimuthBinData(div=div, path=path)
+    az_data.print_dist()
 
-    # az_data.print_dist()
     ratio_dist = az_data.get_ratio_dist()
-
     az_ratio_stats = DistStats(dist=ratio_dist)
+    print(f'Ratio: {path}')
     print(f'mean: {az_ratio_stats.get_mean()}')
     print(f'sd: {az_ratio_stats.get_sd()}')
     print(f'skew: {az_ratio_stats.get_skewness()}')
     print(f'kurt: {az_ratio_stats.get_kurtosis()}')
     print(f'kurt*var: {az_ratio_stats.get_kurt_var()}')
+
+    pull_dist = az_data.get_pull_dist()
+    az_pull_stats = DistStats(dist=pull_dist)
+    print(f'Pull: {path}')
+    print(f'mean: {az_pull_stats.get_mean()}')
+    print(f'sd: {az_pull_stats.get_sd()}')
+    print(f'skew: {az_pull_stats.get_skewness()}')
+    print(f'kurt: {az_pull_stats.get_kurtosis()}')
+    print(f'kurt*var: {az_pull_stats.get_kurt_var()}')
 
     print('donzo')
 
