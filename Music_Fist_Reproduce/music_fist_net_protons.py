@@ -7,7 +7,7 @@ Created as QGP_Scripts/music_fist_net_protons
 
 @author: Dylan Neff, dylan
 """
-
+import matplotlib.ticker
 import numpy as np
 import matplotlib.pyplot as plt
 import os
@@ -23,7 +23,7 @@ from DistStats import DistStats
 def main():
     vector.register_awkward()
     path = '/home/dylan/Research/CF_NetProton_Trees/'
-    energies = [27]  # [7, 19, 27, 39, 62]
+    energies = [7, 19, 27, 39, 62]
     stats = {}
     for energy in energies:
         proton_stats, anti_proton_stats = get_stats(f'{path}{energy}GeV/')
@@ -48,7 +48,7 @@ def get_stats(path):
     protons = np.zeros(len(binning) - 1, dtype=int)
     anti_protons = np.zeros(len(binning) - 1, dtype=int)
 
-    files = 1
+    files = 25
     file_num = 0
     for file_name in os.listdir(path):
         print(file_name)
@@ -67,9 +67,9 @@ def get_stats(path):
         if file_num >= files:
             break
 
-    plt.step(binning[:-1], protons, where='post', color='blue')
-    plt.step(binning[:-1], anti_protons, where='post', color='red')
-    plt.show()
+    # plt.step(binning[:-1], protons, where='post', color='blue')
+    # plt.step(binning[:-1], anti_protons, where='post', color='red')
+    # plt.show()
 
     bin_centers = (binning[1:] + binning[:-1]) / 2
     proton_stats = DistStats(dict(zip(bin_centers, protons)))
@@ -79,6 +79,12 @@ def get_stats(path):
 
 
 def cumulants_plot(stats):
+    ranges = {'c2/c1 - 1': [-0.165, 0.03], 'c3/c2 - 1': [-0.45, 0.15]}
+    y_ticks = {'c2/c1 - 1': ([-0.16, -0.12, -0.08, -0.04, 0.00], [-0.14, -0.10, -0.06, -0.02, 0.02]),
+               'c3/c2 - 1': ([-0.4, -0.3, -0.2, -0.1, 0.0, 0.1], [-0.35, -0.25, -0.15, -0.05, 0.05])}
+    x_range = (4, 400)
+    ticks = [5, 10, 20, 50, 100, 200]
+
     energies = []
     c2_c1 = {p: {'low': [], 'high': []} for p in ['protons', 'anti-protons']}
     c3_c1 = {p: {'low': [], 'high': []} for p in ['protons', 'anti-protons']}
@@ -94,10 +100,19 @@ def cumulants_plot(stats):
 
     for title, y in {'c2/c1 - 1': c2_c1, 'c3/c2 - 1': c3_c1}.items():
         fig, ax = plt.subplots()
-        ax.fill_between(energies, y['protons']['high'], y['protons']['low'], color='r')
-        ax.fill_between(energies, y['anti-protons']['high'], y['anti-protons']['low'], color='gray')
+        ax.fill_between(energies, y['protons']['high'], y['protons']['low'], color='lightcoral')
+        ax.fill_between(energies, y['anti-protons']['high'], y['anti-protons']['low'], color='lightgray')
+        ax.set_ylim(ranges[title][0], ranges[title][1])
+        ax.set_xlim(x_range)
         ax.axhline(0, color='b', ls='--')
         ax.set_xscale('log')
+        ax.set_xticks(ticks)
+        ax.set_yticks(y_ticks[title][0])
+        ax.set_yticks(y_ticks[title][1], minor=True)
+        ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+        ax.tick_params(which='both', direction='in')
+        ax.get_xaxis().set_ticks_position('both')
+        ax.get_yaxis().set_ticks_position('both')
         ax.set_xlabel('Energy (GeV)')
         ax.set_ylabel(title)
         ax.set_title(title)

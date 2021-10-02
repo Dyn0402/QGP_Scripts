@@ -57,7 +57,7 @@ def download():
                             'local_tree_pref': 'CF_NetProton_Trees'},
                  }
 
-    energies = [19, 39, 62]  # [7, 11, 15, 19, 27, 39, 62]
+    energies = [7, 11, 15, 19, 27, 39, 62]
     bwlimit = None  # bandwidth limit per energy in MBPS or None
     size_tolerance = 0.001  # percentage tolerance between remote and local sizes, re-download if different
 
