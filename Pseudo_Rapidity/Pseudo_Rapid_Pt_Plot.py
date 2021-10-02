@@ -79,12 +79,10 @@ def ampt(m, energy):
         with uproot.open(root_path) as file:
             tracks = file[tree_name].arrays(track_atts)
             tracks = tracks[tracks.pid == good_pid]
-            tracks = ak.zip({'pid': tracks['pid'], 'px': tracks['px'], 'py': tracks['py'], 'pz': tracks['pz']},
-                            with_name='Momentum3D')
-            m_array = tracks.pt * 0 + m
-            rapid = rapidity(tracks.eta, tracks.pt, m_array)
-            h_rap_eta.fill(rapid=ak.flatten(rapid), eta=ak.flatten(tracks.eta))
-            h_rap_pt.fill(rapid=ak.flatten(rapid), pt=ak.flatten(tracks.pt))
+            tracks = ak.zip({'pid': tracks['pid'], 'px': tracks['px'], 'py': tracks['py'], 'pz': tracks['pz'],
+                             'M': tracks['px'] * 0 + m}, with_name='Momentum4D')
+            h_rap_eta.fill(rapid=ak.flatten(tracks.rapidity), eta=ak.flatten(tracks.eta))
+            h_rap_pt.fill(rapid=ak.flatten(tracks.rapidity), pt=ak.flatten(tracks.pt))
             h_eta_pt.fill(eta=ak.flatten(tracks.eta), pt=ak.flatten(tracks.pt))
         file_num += 1
         if file_num >= files:
@@ -113,14 +111,11 @@ def cf(m, energy):
         with uproot.open(root_path) as file:
             tracks = file[tree_name].arrays(track_atts)
             tracks = tracks[tracks.pid == good_pid]
-            tracks = ak.zip({'pid': tracks['pid'], 'px': tracks['px'], 'py': tracks['py'], 'pz': tracks['pz']},
-                            with_name='Momentum3D')
-            tracks = tracks[abs(tracks.pt) >= min_pt]
-            tracks = tracks[abs(tracks.eta) <= max_eta]  # max(h_rap_eta.axes[1].edges)]
-            m_array = tracks.pt * 0 + m
-            rapid = rapidity(tracks.eta, tracks.pt, m_array)
-            h_rap_eta.fill(rapid=ak.flatten(rapid), eta=ak.flatten(tracks.eta))
-            h_rap_pt.fill(rapid=ak.flatten(rapid), pt=ak.flatten(tracks.pt))
+            tracks = ak.zip({'pid': tracks['pid'], 'px': tracks['px'], 'py': tracks['py'], 'pz': tracks['pz'],
+                             'M': tracks['px'] * 0 + m}, with_name='Momentum4D')
+            tracks = tracks[(abs(tracks.pt) >= min_pt) & (abs(tracks.eta) <= max_eta)]
+            h_rap_eta.fill(rapid=ak.flatten(tracks.rapidity), eta=ak.flatten(tracks.eta))
+            h_rap_pt.fill(rapid=ak.flatten(tracks.rapidity), pt=ak.flatten(tracks.pt))
             h_eta_pt.fill(eta=ak.flatten(tracks.eta), pt=ak.flatten(tracks.pt))
         file_num += 1
         if file_num >= files:
@@ -156,8 +151,8 @@ def make_hists():
 
 def plot_hists(h_rap_eta, h_rap_pt, h_eta_pt, m, title=''):
     etas = [1.0, 1.4, 1.8, 2.1]
-    pt_cut_low = 0.3
-    pt_cut_high = 2.2
+    pt_cut_low = 0.4
+    pt_cut_high = 2.0
 
     shade = True
     to_plot = ['h_rap_pt']  # ['h_rap_eta', 'h_rap_pt', 'h_eta_pt']
@@ -189,7 +184,7 @@ def plot_hists(h_rap_eta, h_rap_pt, h_eta_pt, m, title=''):
             elif eta == 1.8 and shade:
                 ax2.fill_between(x_plus, y, pt_cut_low, where=(y > pt_cut_low) & (x_plus < 1), color='black', alpha=0.7)
                 ax2.fill_between(x_minus, y, pt_cut_low, where=(y > pt_cut_low) & (x_minus > -1), color='black', alpha=0.7)
-        ax2.axhline(pt_cut_low, color='red', ls='--')
+        ax2.axhline(pt_cut_low, color='blue', ls='--')
         ax2.axhline(pt_cut_high, color='red', ls='--')
         ax2.grid()
         ax2.legend()
@@ -203,7 +198,7 @@ def plot_hists(h_rap_eta, h_rap_pt, h_eta_pt, m, title=''):
         for eta in etas:
             ax3.axvline(eta, color='black', ls='--', label=f'|eta| = {eta}')
             ax3.axvline(-eta, color='black', ls='--')
-        ax3.axhline(pt_cut_low, color='red', ls='--')
+        ax3.axhline(pt_cut_low, color='blue', ls='--')
         ax3.axhline(pt_cut_high, color='red', ls='--')
         ax3.grid()
         ax3.legend()
