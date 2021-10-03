@@ -37,7 +37,7 @@ def get_bad_event_file(path):
         for line in lines:
             line = line.strip().split('\t')
             for item in line:
-                item = item.strip().split(':')
+                item = item.strip().split(': ')
                 bad_event.update({item[0]: item[-1]})
         bad_events.append(bad_event)
 
