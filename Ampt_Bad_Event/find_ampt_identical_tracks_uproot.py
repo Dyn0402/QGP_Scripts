@@ -56,14 +56,14 @@ def uproot_finder():
     # Found: AMPT_Trees/min_bias/string_melting/7GeV/data_741821621.root EVENT:1617 - 1618
     # path = '/home/dylan/Research/AMPT_Trees/min_bias/string_melting/7GeV/'
     # path = '/home/dylan/Research/AMPT_Bad_Event/'
-    # path = 'D:/Research/AMPT_Trees/min_bias/string_melting/7GeV/'
+    # path = 'D:/Research/AMPT_Trees/min_bias/string_melting/11GeV/'
 
     out_file_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_minbias.txt'
     # path = '/home/dylan/Research/AMPT_Trees/'
-    path = '/media/ucla/Research/AMPT_Trees/min_bias/string_melting/7GeV/'
-    threads = 3
+    path = '/media/ucla/Research/AMPT_Trees/min_bias/string_melting/62GeV/'
+    threads = 2
     tree_name = 'tree'
-    write_mode = 'w'
+    write_mode = 'a'
     max_eta = 1
     ignore_pids = [313, 111]
     track_attributes = ['pid', 'px', 'py', 'pz']

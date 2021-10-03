@@ -20,7 +20,8 @@ def main():
     bad_tree_repo = '/home/dylan/Research/Ampt_Bad_Event/'
     bad_tree_sufx = '_bad'
     fix_tree_sufx = '_fix'
-    bad_trees = get_bad_event_file(bad_file_list_path)
+    min_identical = 2
+    bad_trees = get_bad_event_file(bad_file_list_path, min_identical)
     for tree_path, tree in bad_trees.items():
         repo_tree_path = move_tree(tree_path, bad_tree_repo, bad_tree_sufx)
         fix_tree_path = fix_tree(tree, repo_tree_path, bad_tree_sufx, fix_tree_sufx)
@@ -29,7 +30,7 @@ def main():
     print('donzo')
 
 
-def get_bad_event_file(path):
+def get_bad_event_file(path, min_identical):
     bad_events = []
     with open(path, 'r') as file:
         lines = file.readlines()
@@ -39,7 +40,8 @@ def get_bad_event_file(path):
             for item in line:
                 item = item.strip().split(': ')
                 bad_event.update({item[0]: item[-1]})
-        bad_events.append(bad_event)
+        if bad_event['num_identical'] >= min_identical:
+            bad_events.append(bad_event)
 
     bad_trees = {}
     for event in bad_events:

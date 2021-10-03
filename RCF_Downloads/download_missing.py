@@ -21,7 +21,7 @@ def main():
 
 
 def download():
-    data_set = 'AMPT_slimcent_sm'
+    data_set = 'CF_Net'
     data_sets = {'BES1': {'remote_path_suf': 'BES1/', 'remote_tree_pref': 'trees/output',
                           'local_path': '/media/ucla/Research/', 'local_tree_pref': 'BES1_Trees'},
                  'AMPT_Run': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
@@ -51,10 +51,14 @@ def download():
                         'remote_tree_pref': 'output',
                         'local_path': '/media/ucla/Research/',
                         'local_tree_pref': 'Cooper_Frye_Trees'},
+                 'CF_Net': {'remote_path_suf': 'CooperFrye/',
+                            'remote_tree_pref': 'output',
+                            'local_path': '/media/ucla/Research/',
+                            'local_tree_pref': 'CF_NetProton_Trees'},
                  }
 
     energies = [7, 11, 15, 19, 27, 39, 62]
-    bwlimit = 5  # bandwidth limit per energy in MBPS or None
+    bwlimit = None  # bandwidth limit per energy in MBPS or None
     size_tolerance = 0.001  # percentage tolerance between remote and local sizes, re-download if different
 
     remote_path = 'dneff@rftpexp.rhic.bnl.gov:/gpfs01/star/pwg/dneff/data/'
