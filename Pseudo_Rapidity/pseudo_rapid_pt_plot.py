@@ -23,7 +23,7 @@ from rapidity_vs_pseudo import rapidity
 
 def main():
     m = 0.93827  # GeV, proton mass
-    energy = '19GeV'
+    energy = '7GeV'
     vector.register_awkward()
     bes1(m, energy)
     ampt(m, energy)
@@ -155,7 +155,7 @@ def plot_hists(h_rap_eta, h_rap_pt, h_eta_pt, m, title=''):
     pt_cut_high = 2.0
 
     shade = True
-    to_plot = ['h_rap_pt']  # ['h_rap_eta', 'h_rap_pt', 'h_eta_pt']
+    to_plot = ['h_eta_pt']  # ['h_rap_eta', 'h_rap_pt', 'h_eta_pt']
 
     if 'h_rap_eta' in to_plot:
         fig1, ax1 = plt.subplots()
