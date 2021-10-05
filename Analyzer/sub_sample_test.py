@@ -3,7 +3,7 @@
 """
 Created on November 04 4:20 PM 2020
 Created in PyCharm
-Created as QGP_Scripts/analysis_sandbox.py
+Created as QGP_Scripts/sub_sample_test.py
 
 @author: Dylan Neff, dylan
 """
