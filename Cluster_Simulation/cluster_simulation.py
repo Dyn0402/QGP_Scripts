@@ -12,6 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 from scipy.stats import poisson
+import timeit
 
 import awkward as ak
 
@@ -34,6 +35,13 @@ def main():
         skew = np.mean(skews)
         sd = np.mean(sds)
     print('donzo')
+
+
+def time_test():
+    pass
+
+
+def
 
 
 def gen_events(num_events, num_tracks):
