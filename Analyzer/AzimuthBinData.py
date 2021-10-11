@@ -65,7 +65,9 @@ class AzimuthBinData:
         if len(self.pull_dist) == 0:  # Skip if pull_dist is already filled
             for total_particles in self.data:
                 for bin_particles in range(len(self.data[total_particles])):
-                    pull = bin_particles - total_particles * (self.div / 360)
+                    p = self.div / 360
+                    diff = bin_particles - p * total_particles
+                    pull = diff / (total_particles * p * (1 - p))**0.5
                     if pull in self.pull_dist:
                         self.pull_dist[pull] += self.data[total_particles][bin_particles]
                     else:
@@ -124,7 +126,7 @@ class AzimuthBinData:
                 out_line += f'{bin_particles}:{counts} '
             print(out_line)
 
-    def plot_ratio_dist(self, binning=None, norm=False, logy=True):
+    def plot_ratio_dist(self, binning=None, norm=False, logy=True, show=True):
         self.ratio_trans()
         min_bin_edge = 0
         max_bin_edge = 1.01
@@ -138,14 +140,18 @@ class AzimuthBinData:
         hist = self.bin_dist('ratio_dist', binning, norm)
         bin_centers = (binning[1:] + binning[:-1]) / 2
         bin_widths = binning[1:] - binning[:-1]
-        plt.bar(bin_centers, hist, bin_widths, align='center', zorder=3)
-        plt.xlabel('Ratio')
-        plt.grid(zorder=0)
-        if logy:
-            plt.semilogy()
-        plt.show()
 
-    def plot_pull_dist(self, binning=None, norm=False, logy=True):
+        fig, ax = plt.subplots()
+        ax.bar(bin_centers, hist, bin_widths, align='center', zorder=3)
+        ax.set_xlabel('Ratio')
+        ax.grid(zorder=0)
+        ax.set_title(f'Ratio\n{self.path}')
+        if logy:
+            ax.semilogy()
+        if show:
+            plt.show()
+
+    def plot_pull_dist(self, binning=None, norm=False, logy=True, show=True):
         self.pull_trans()
         pull_min = min(self.pull_dist)
         pull_max = max(self.pull_dist)
@@ -165,12 +171,16 @@ class AzimuthBinData:
         hist = self.bin_dist('pull_dist', binning, norm)
         bin_centers = (binning[1:] + binning[:-1]) / 2
         bin_widths = binning[1:] - binning[:-1]
-        plt.bar(bin_centers, hist, bin_widths, align='center', zorder=3)
-        plt.xlabel('Pull')
-        plt.grid(zorder=0)
+
+        fig, ax = plt.subplots()
+        ax.bar(bin_centers, hist, bin_widths, align='center', zorder=3)
+        ax.set_xlabel('Pull')
+        ax.grid(zorder=0)
+        ax.set_title(f'Pull\n{self.path}')
         if logy:
-            plt.semilogy()
-        plt.show()
+            ax.semilogy()
+        if show:
+            plt.show()
 
     def bin_dist(self, dist_name, binning, norm):
         hist = [0 for i in range(len(binning) - 1)]
