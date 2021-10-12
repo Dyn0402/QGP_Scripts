@@ -18,7 +18,7 @@ import vector
 
 
 def main():
-    path = 'D:/Research/BES1_Trees/7GeV/'
+    path = '/home/dylan/Research/BES1_Trees/7GeV/'
     tree_name = 'tree'
     event_branches = ['refmult3']
     particle = 'proton'
@@ -37,6 +37,10 @@ def main():
             # Cuts
             # Phi selection
             # phi = branches['proton.phi']
+            # Add to mixer
+
+
+            # Azimuthal Binning
             bin_count = np.sum((0.2 < branches['proton.phi']) & (branches['proton.phi'] < 1.2), axis=1)
 
             print((0.2 < branches['proton.phi']) & (branches['proton.phi'] < 1.2))

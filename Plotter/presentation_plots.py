@@ -30,10 +30,10 @@ def main():
     raw = AzimuthBinData(path=path, div=divs)
     mix = AzimuthBinData(path=path_mix, div=divs)
 
-    title_sufx = f'\n{energy}GeV, 0-5% Centrality, {divs}° Bins'
+    title_sufx = f'\n{energy}GeV, 0-5% Centrality, {divs}° Divisions'
 
-    # plot_2d(raw.get_dist(), raw.max_particle, raw.get_max_bin(), divs, title_sufx)
-    # plot_ratio(raw.get_dist(), raw.max_particle, divs, x_bins=20, title_sufx=title_sufx)
+    plot_2d(raw.get_dist(), raw.max_particle, raw.get_max_bin(), divs, title_sufx)
+    plot_ratio(raw.get_dist(), raw.max_particle, divs, x_bins=20, title_sufx=title_sufx)
     plot_pull(raw.get_dist(), raw.max_particle, divs, x_bins=40, title_sufx=title_sufx)
 
     print('donzo')
