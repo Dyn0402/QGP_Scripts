@@ -8,22 +8,23 @@ Created as QGP_Scripts/check_azdata_stats.py
 @author: Dylan Neff, dylan
 """
 
+import matplotlib.pyplot as plt
+
 from AzimuthBinData import AzimuthBinData
 from DistStats import DistStats
 
 
 def main():
-    base_path = '/home/dylan/Research/Data_Ampt/default/'
-    set_name = 'Ampt_rapid05_n1ratios_'
+    base_path = '/home/dylan/Research/Data/default/'
+    set_name = 'rapid05_n1ratios_dca1_nsprx1_m2r6_m2s0_nhfit20_'
     set_num = 0
     energy = 7
     div = 120
-    cent = 3
+    cent = 8
 
     path = f'{base_path}{set_name}{set_num}/{energy}GeV/ratios_divisions_{div}_centrality_{cent}_local.txt'
 
     az_data = AzimuthBinData(div=div, path=path)
-    az_data.print_dist()
 
     ratio_dist = az_data.get_ratio_dist()
     az_ratio_stats = DistStats(dist=ratio_dist)
@@ -42,6 +43,9 @@ def main():
     print(f'skew: {az_pull_stats.get_skewness()}')
     print(f'kurt: {az_pull_stats.get_kurtosis()}')
     print(f'kurt*var: {az_pull_stats.get_kurt_var()}')
+
+    az_data.plot_ratio_dist(show=False)
+    az_data.plot_pull_dist(show=True)
 
     print('donzo')
 
