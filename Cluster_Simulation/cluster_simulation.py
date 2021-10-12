@@ -37,13 +37,6 @@ def main():
     print('donzo')
 
 
-def time_test():
-    pass
-
-
-def
-
-
 def gen_events(num_events, num_tracks):
     events = []
     poisson.rvs(10, size=num_events)
