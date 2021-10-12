@@ -18,12 +18,11 @@ def main():
     # data_set = ['raw', 'mix', 'pull_raw', 'pull_mix', 'divide', 'pull_divide']
     # data_set = ['divide', 'pull_divide']
     data_set = ['raw', 'mix', 'divide']
-    set_pre = 'Sim_pgroup'
     dist_plts = ['single10']  # , 'poisson10']
     energy_plt = 62
-    div_plt = [90, 120, 180, 240]
+    div_plt = [60, 90, 120, 240]
     cent_plt = 8
-    s_plts = [0.002]  # , 0.5]
+    s_plts = [0.002, 0.5]
     stats = ['mean', 'standard_deviation', 'skewness', 'non_excess_kurtosis']
 
     sys_path = '/home/dylan/Research/Results/Azimuth_Analysis/sys_vals_10-11-21_sim.txt'

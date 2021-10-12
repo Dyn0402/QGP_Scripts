@@ -16,16 +16,17 @@ import shutil
 
 
 def main():
-    bad_file_list_path = '/home/dylan/Research/Ampt_Bad_Event/bad.txt'
+    bad_file_list_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_slimcentral.txt'
     bad_tree_repo = '/home/dylan/Research/Ampt_Bad_Event/'
     bad_tree_sufx = '_bad'
     fix_tree_sufx = '_fix'
     min_identical = 2
     bad_trees = get_bad_event_file(bad_file_list_path, min_identical)
     for tree_path, tree in bad_trees.items():
-        repo_tree_path = move_tree(tree_path, bad_tree_repo, bad_tree_sufx)
-        fix_tree_path = fix_tree(tree, repo_tree_path, bad_tree_sufx, fix_tree_sufx)
-        replace_tree(fix_tree_path, tree_path)
+        print(tree_path, tree)
+        # repo_tree_path = move_tree(tree_path, bad_tree_repo, bad_tree_sufx)
+        # fix_tree_path = fix_tree(tree, repo_tree_path, bad_tree_sufx, fix_tree_sufx)
+        # replace_tree(fix_tree_path, tree_path)
 
     print('donzo')
 
@@ -39,7 +40,10 @@ def get_bad_event_file(path, min_identical):
             line = line.strip().split('\t')
             for item in line:
                 item = item.strip().split(': ')
-                bad_event.update({item[0]: item[-1]})
+                try:
+                    bad_event.update({item[0]: int(item[-1])})
+                except ValueError:
+                    bad_event.update({item[0]: item[-1]})
         if bad_event['num_identical'] >= min_identical:
             bad_events.append(bad_event)
 
