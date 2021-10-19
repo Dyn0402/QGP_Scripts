@@ -10,8 +10,10 @@ Created as QGP_Scripts/dists_with_bin_width
 
 import numpy as np
 import matplotlib.pyplot as plt
-from AzimuthBinData import AzimuthBinData
 import seaborn as sns
+
+from AzimuthBinData import AzimuthBinData
+from check_azdata_stats import print_stats
 
 
 def main():
@@ -22,11 +24,13 @@ def main():
 
 
 def raw_dists():
-    base_path = '/home/dylan/Research/Data/default/'
-    set_name = 'rapid05_n1ratios_dca1_nsprx1_m2r6_m2s0_nhfit20_'
+    # base_path = '/home/dylan/Research/Data/default/'
+    # set_name = 'rapid05_n1ratios_dca1_nsprx1_m2r6_m2s0_nhfit20_'
+    base_path = '/home/dylan/Research/Data_Sim/poisson10_pgroup2_spread002/'
+    set_name = 'Sim_pgroup2_spread002_poisson10_n1ratios_'
     set_num = 0
-    energy = 7
-    divs = [60, 180, 300]
+    energy = 62
+    divs = [60, 240]
     cent = 8
     ratio_bin_step = 0.02
     ratio_binning = np.arange(0 - ratio_bin_step / 2, 1 + ratio_bin_step * 3 / 2, ratio_bin_step)
@@ -43,6 +47,7 @@ def raw_dists():
         path = f'{base_path}{set_name}{set_num}/{energy}GeV/ratios_divisions_{div}_centrality_{cent}_local.txt'
 
         az_data = AzimuthBinData(div=div, path=path)
+        print_stats(az_data)
         ratio_hist = az_data.get_ratio_dist(ratio_binning)
         ax.bar(ratio_bin_centers, ratio_hist, ratio_binning[1:] - ratio_binning[:-1], alpha=0.5, label=f'{div}$^\circ$')
         ratio_hist_norm = az_data.get_ratio_dist(ratio_binning, True)
