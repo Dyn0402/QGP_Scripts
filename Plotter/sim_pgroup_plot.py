@@ -15,19 +15,49 @@ from SysReader import SysReader
 
 
 def main():
-    # data_set = ['raw', 'mix', 'pull_raw', 'pull_mix', 'divide', 'pull_divide']
-    # data_set = ['divide', 'pull_divide']
-    data_set = ['raw', 'mix', 'divide']
-    dist_plts = ['single10']  # , 'poisson10']
-    energy_plt = 62
-    div_plt = [60, 90, 120, 240]
-    cent_plt = 8
-    s_plts = [0.002, 0.5]
-    stats = ['mean', 'standard_deviation', 'skewness', 'non_excess_kurtosis']
-
     sys_path = '/home/dylan/Research/Results/Azimuth_Analysis/sys_vals_10-11-21_sim.txt'
     df = SysReader(sys_path).values
 
+    df = add_pgrp_spread(df)
+
+    plot1(df)
+
+    print('donzo')
+
+
+def plot1(df):
+    # data_set = ['raw', 'mix', 'pull_raw', 'pull_mix', 'divide', 'pull_divide']
+    data_set = ['raw', 'mix', 'divide', 'pull_divide']
+    dist_plts = ['single10']  # , 'poisson10']
+    div_plt = [60, 90, 120, 240, 300]
+    s_plts = [0.002]  # , 0.5]
+    stats = ['mean', 'standard_deviation', 'skewness', 'non_excess_kurtosis']
+
+    for s_plt in s_plts:
+        for dset in data_set:
+            for dist_plt in dist_plts:
+                plot_vs_pgroup(df, dset, div_plt, s_plt, dist_plt, stats)
+
+    plt.show()
+
+
+def plot2(df):
+    # data_set = ['raw', 'mix', 'pull_raw', 'pull_mix', 'divide', 'pull_divide']
+    data_set = ['raw', 'mix', 'divide']
+    dist_plts = ['single12']
+    div_plt = [60, 90, 120, 240, 300]
+    s_plts = [0.002]
+    stats = ['mean', 'standard_deviation', 'skewness', 'non_excess_kurtosis']
+
+    for s_plt in s_plts:
+        for dset in data_set:
+            for dist_plt in dist_plts:
+                plot_vs_pgroup(df, dset, div_plt, s_plt, dist_plt, stats)
+
+    plt.show()
+
+
+def add_pgrp_spread(df):
     ps = []
     ss = []
     dists = []
@@ -40,17 +70,10 @@ def main():
     df['pgroup'] = ps
     df['spread'] = ss
 
-    for s_plt in s_plts:
-        for dset in data_set:
-            for dist_plt in dist_plts:
-                plot(df, dset, div_plt, s_plt, dist_plt, stats)
-
-    plt.show()
-
-    print('donzo')
+    return df
 
 
-def plot(df, data_set, div_plt, s_plt, dist_plt, stats):
+def plot_vs_pgroup(df, data_set, div_plt, s_plt, dist_plt, stats):
     fig, ax = plt.subplots(2, 2, sharex=True)
 
     for div in div_plt:
