@@ -10,6 +10,7 @@ Created as QGP_Scripts/raw_mix_eff
 
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit as cf
 import pandas as pd
 
 from SysReader import SysReader
@@ -61,6 +62,7 @@ def main():
 def plot(df, cent, div, energy, data_type, data_sets, stats):
     fig, ax = plt.subplots(2, 2, sharex=True)
     c = {'BES1': 'r', 'AMPT': 'b'}
+    x = np.linspace(0, 55, 200)
 
     for data_set in data_sets:
         df_ds = df[(df['data_set'] == data_set) & (df['div'] == div) & (df['data_type'] == data_type) &
@@ -73,6 +75,13 @@ def plot(df, cent, div, energy, data_type, data_sets, stats):
                                 color=c[data_set], label=f'{data_set}')
             ax[ax_num].errorbar(df_stat['eff'], df_stat['val'], yerr=df_stat['sys_err'], marker='', ls='none',
                                 color=c[data_set], elinewidth=4, alpha=0.4)
+
+            if stat != 'mean' and data_set == 'AMPT':
+                popt, pcov = cf(pol_2, df_stat['eff'], df_stat['val'], sigma=df_stat['stat_err'], absolute_sigma=True)
+                ax[ax_num].plot(x, pol_2(x, *popt), color=c[data_set], alpha=0.6)
+                coefs = popt
+                coefs[-1] += df[]
+                np.roots([popt])
 
     for stat, ax_num in zip(stats, [(0, 0), (0, 1), (1, 0), (1, 1)]):
         y_lab = ax[ax_num].set_ylabel(stat)
@@ -87,6 +96,10 @@ def plot(df, cent, div, energy, data_type, data_sets, stats):
     ax[(0, 0)].legend()
     fig.suptitle(f'{energy}GeV {data_type} Centrality {cent} {div}° Divisions')
     plt.subplots_adjust(wspace=0.05, hspace=0, left=0.1, right=0.9, top=0.9, bottom=0.1)
+
+
+def pol_2(x, a, b, c):
+    return a * x**2 + b * x + c
 
 
 if __name__ == '__main__':
