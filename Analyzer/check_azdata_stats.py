@@ -26,9 +26,19 @@ def main():
 
     az_data = AzimuthBinData(div=div, path=path)
 
+    print_stats(az_data)
+
+    az_data.plot_ratio_dist(show=False)
+    az_data.plot_pull_dist(show=True)
+
+    print('donzo')
+
+
+def print_stats(az_data):
     ratio_dist = az_data.get_ratio_dist()
     az_ratio_stats = DistStats(dist=ratio_dist)
-    print(f'Ratio: {path}')
+    print(f'Path: {az_data.path}')
+    print(f'Ratio:')
     print(f'mean: {az_ratio_stats.get_mean()}')
     print(f'sd: {az_ratio_stats.get_sd()}')
     print(f'skew: {az_ratio_stats.get_skewness()}')
@@ -37,17 +47,12 @@ def main():
 
     pull_dist = az_data.get_pull_dist()
     az_pull_stats = DistStats(dist=pull_dist)
-    print(f'Pull: {path}')
+    print(f'Pull:')
     print(f'mean: {az_pull_stats.get_mean()}')
     print(f'sd: {az_pull_stats.get_sd()}')
     print(f'skew: {az_pull_stats.get_skewness()}')
     print(f'kurt: {az_pull_stats.get_kurtosis()}')
     print(f'kurt*var: {az_pull_stats.get_kurt_var()}')
-
-    az_data.plot_ratio_dist(show=False)
-    az_data.plot_pull_dist(show=True)
-
-    print('donzo')
 
 
 if __name__ == '__main__':
