@@ -31,7 +31,7 @@ class SysReader:
                         line[i] = int(line[i])
                     if line[0] == 'medians':  # Either medians or systematics
                         med_val, stat_err = line[-1].split('±')
-                        vals.append(line[1:-1] + [float(med_val), float(stat_err)])
+                        vals.append(line[1:-1] + [float(med_val.strip('Â')), float(stat_err)])  # Â for Windows issue
                     if line[0] == 'systematics':
                         if vals[-1][:-2] != line[1:-1]:
                             print('Systematic line doesn\'t match previous medians: ' + line)

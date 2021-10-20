@@ -15,7 +15,8 @@ from SysReader import SysReader
 
 
 def main():
-    sys_path = '/home/dylan/Research/Results/Azimuth_Analysis/sys_vals_10-11-21_sim.txt'
+    # sys_path = '/home/dylan/Research/Results/Azimuth_Analysis/sys_vals_10-11-21_sim.txt'
+    sys_path = 'C:\\Users\\Dylan\\Downloads\\sys_vals_10-11-21_sim.txt'
     df = SysReader(sys_path).values
 
     df = add_pgrp_spread(df)
