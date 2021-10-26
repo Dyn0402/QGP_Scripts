@@ -17,15 +17,15 @@ from SysReader import SysReader
 
 def main():
     pd.options.mode.chained_assignment = None
-    sys_path = '/home/dylan/Research/Results/Azimuth_Analysis/sys_vals_10-25-21_sim.txt'
-    # sys_path = 'C:\\Users\\Dylan\\Downloads\\sys_vals_10-11-21_sim.txt'
+    # sys_path = '/home/dylan/Research/Results/Azimuth_Analysis/sys_vals_10-25-21_sim.txt'
+    sys_path = 'C:\\Users\\Dyn04\\Downloads\\sys_vals_10-25-21_sim.txt'
     df = SysReader(sys_path).values
 
     df = add_pgrp_spread(df)
 
-    # plot1(df)
+    plot1(df)
     # plot2(df)
-    plot3(df)
+    # plot3(df)
     # plot4(df)
 
     print('donzo')
@@ -51,7 +51,7 @@ def plot1(df):
 
 def plot2(df):
     data_set = ['raw', 'mix', 'divide']
-    dist_plts = ['single12']
+    dist_plts = ['single48']
     div_plt = [60, 90, 120, 240, 300]
     s_plts = [0.002]
     stats = ['mean', 'standard_deviation', 'skewness', 'non_excess_kurtosis']

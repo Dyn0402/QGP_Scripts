@@ -26,8 +26,8 @@ def main():
 def raw_dists():
     # base_path = '/home/dylan/Research/Data/default/'
     # set_name = 'rapid05_n1ratios_dca1_nsprx1_m2r6_m2s0_nhfit20_'
-    base_path = '/home/dylan/Research/Data_Sim/single48_pgroup1_spread002/'
-    set_name = 'Sim_pgroup1_spread002_single48_n1ratios_'
+    base_path = 'D:/Transfer/Research/Data_Sim/single48_pgroup01_spread002/'
+    set_name = 'Sim_pgroup01_spread002_single48_n1ratios_'
     set_num = 0
     energy = 62
     divs = [60, 240]
@@ -58,7 +58,7 @@ def raw_dists():
         for x, num in ratio_unbin.items():
             for i in range(num):
                 values.append(x)
-        sns.histplot(ax=ax_kde, x=values, stat='probability', bins=ratio_binning, kde=True, color=colors[div])
+        sns.histplot(ax=ax_kde, x=values, stat='probability', bins=ratio_binning, kde=False, color=colors[div])
         # sns.rugplot(ax=ax_kde, x=values)
 
     fig_kde.legend(labels=[f'{div}$^\circ$' for div in divs])
