@@ -26,8 +26,8 @@ def main():
 def raw_dists():
     # base_path = '/home/dylan/Research/Data/default/'
     # set_name = 'rapid05_n1ratios_dca1_nsprx1_m2r6_m2s0_nhfit20_'
-    base_path = '/home/dylan/Research/Data_Sim/poisson10_pgroup2_spread002/'
-    set_name = 'Sim_pgroup2_spread002_poisson10_n1ratios_'
+    base_path = '/home/dylan/Research/Data_Sim/single48_pgroup1_spread002/'
+    set_name = 'Sim_pgroup1_spread002_single48_n1ratios_'
     set_num = 0
     energy = 62
     divs = [60, 240]
