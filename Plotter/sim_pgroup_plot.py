@@ -17,8 +17,8 @@ from SysReader import SysReader
 
 def main():
     pd.options.mode.chained_assignment = None
-    # sys_path = '/home/dylan/Research/Results/Azimuth_Analysis/sys_vals_10-25-21_sim.txt'
-    sys_path = 'C:\\Users\\Dyn04\\Downloads\\sys_vals_10-25-21_sim.txt'
+    sys_path = '/home/dylan/Research/Results/Azimuth_Analysis/sys_vals_11-1-21_anticlust_sim.txt'
+    # sys_path = 'C:\\Users\\Dyn04\\Downloads\\sys_vals_10-25-21_sim.txt'
     df = SysReader(sys_path).values
 
     df = add_pgrp_spread(df)
@@ -36,15 +36,16 @@ def plot1(df):
     data_set = ['raw', 'mix', 'divide', 'pull_divide']
     dist_plts = ['single10']  # , 'poisson10']
     div_plt = [60, 90, 120, 240, 300]
-    s_plts = [0.002]  # , 0.5]
-    stats = ['mean', 'standard_deviation', 'skewness', 'non_excess_kurtosis']
+    s_plts = [0.5]  # 0.002
+    stats = ['standard_deviation', 'skewness', 'non_excess_kurtosis']  # ['mean', 'standard_deviation', 'skewness', 'non_excess_kurtosis']
 
     for s_plt in s_plts:
         for dset in data_set:
             for dist_plt in dist_plts:
-                plot_vs_pgroup(df, dset, div_plt, s_plt, dist_plt, stats)
+                plot_vs_pgroup_3sub(df, dset, div_plt, s_plt, dist_plt, stats)
                 if 'divide' in data_set:
-                    plot_nsigma1_vs_pgroup(df, dset, div_plt, s_plt, dist_plt, stats)
+                    # plot_nsigma1_vs_pgroup(df, dset, div_plt, s_plt, dist_plt, stats)
+                    plot_nsigma1_vs_pgroup_3sub(df, dset, div_plt, s_plt, dist_plt, stats)
 
     plt.show()
 
@@ -69,7 +70,7 @@ def plot3(df):
     dist_plt = 'single'
     div_plt = [60, 90, 120, 240, 300]
     s_plts = [0.002]
-    pgroup = 10
+    pgroup = 20
     stats = ['mean', 'standard_deviation', 'skewness', 'non_excess_kurtosis']
 
     print(np.unique(df['pgroup']))
@@ -103,7 +104,13 @@ def add_pgrp_spread(df):
     ss = []
     dists = []
     for set_name in df['set']:
-        dist, p, s = set_name.split('_')[1:]
+        try:
+            dist, p, s = set_name.split('_')[1:]
+        except ValueError:
+            try:
+                dist, anticlust, p, s = set_name.split('_')[1:]
+            except ValueError:
+                print("Can't read name format")
         dists.append(dist)
         ps.append(float('0.' + p.strip('pgroup')) * 100)
         ss.append(float('0.' + s.strip('spread')))
@@ -142,6 +149,33 @@ def plot_vs_pgroup(df, data_set, div_plt, s_plt, dist_plt, stats):
             ax[ax_num].set_xlabel('Probability of Grouping (%)')
         ax[ax_num].grid()
     ax[(0, 0)].legend()
+    fig.suptitle(f'{data_set} {dist_plt} {div_plt}° Divisions {s_plt} spread')
+    plt.subplots_adjust(wspace=0.05, hspace=0, left=0.1, right=0.9, top=0.9, bottom=0.1)
+
+
+def plot_vs_pgroup_3sub(df, data_set, div_plt, s_plt, dist_plt, stats):
+    fig, ax = plt.subplots(3, 1, sharex=True)
+
+    for div in div_plt:
+        df_div = df[(df['data_type'] == data_set) & (df['div'] == div) & (df['spread'] == s_plt) &
+                    (df['dist'] == dist_plt)]
+
+        for stat, ax_num in zip(stats, [0, 1, 2]):
+            df_stat = df_div[df_div['stat'] == stat]
+            df_stat = df_stat.sort_values(by=['pgroup'])
+            # ax[ax_num].errorbar(df_stat['pgroup'], df_stat['val'], yerr=df_stat['stat_err'], marker='o', ls='none',
+            #                     label=f'{div}°')
+            ax[ax_num].fill_between(df_stat['pgroup'], df_stat['val'] + df_stat['stat_err'],
+                                    df_stat['val'] - df_stat['stat_err'], label=f'{div}°', alpha=0.7)
+            ax[ax_num].errorbar(df_stat['pgroup'], df_stat['val'], yerr=df_stat['sys_err'], marker='.', ls='none',
+                                elinewidth=4, alpha=0.7)
+
+    for stat, ax_num in zip(stats, [0, 1, 2]):
+        ax[ax_num].set_ylabel(stat)
+        if ax_num == 2:
+            ax[ax_num].set_xlabel('Probability of Grouping (%)')
+        ax[ax_num].grid()
+    ax[0].legend(ncol=2)
     fig.suptitle(f'{data_set} {dist_plt} {div_plt}° Divisions {s_plt} spread')
     plt.subplots_adjust(wspace=0.05, hspace=0, left=0.1, right=0.9, top=0.9, bottom=0.1)
 
@@ -206,6 +240,31 @@ def plot_nsigma1_vs_pgroup(df, data_set, div_plt, s_plt, dist_plt, stats):
             ax[ax_num].set_xlabel('Probability of Grouping (%)')
         ax[ax_num].grid()
     ax[(0, 0)].legend()
+    fig.suptitle(f'{data_set} {dist_plt} {div_plt}° Divisions {s_plt} spread')
+    plt.subplots_adjust(wspace=0.05, hspace=0, left=0.1, right=0.9, top=0.9, bottom=0.1)
+
+
+def plot_nsigma1_vs_pgroup_3sub(df, data_set, div_plt, s_plt, dist_plt, stats):
+    fig, ax = plt.subplots(3, 1, sharex=True)
+
+    for div in div_plt:
+        df_div = df[(df['data_type'] == data_set) & (df['div'] == div) & (df['spread'] == s_plt) &
+                    (df['dist'] == dist_plt)]
+
+        for stat, ax_num in zip(stats, [0, 1, 2]):
+            df_stat = df_div[df_div['stat'] == stat]
+            df_stat = df_stat.sort_values(by=['pgroup'])
+            # ax[ax_num].errorbar(df_stat['pgroup'], df_stat['val'], yerr=df_stat['stat_err'], marker='o', ls='none',
+            #                     label=f'{div}°')
+            ax[ax_num].plot(df_stat['pgroup'], (df_stat['val'] - 1) / df_stat['sys_err'], marker='.',
+                               label=f'{div}°', alpha=0.7)
+
+    for stat, ax_num in zip(stats, [0, 1, 2]):
+        ax[ax_num].set_ylabel(stat)
+        if ax_num == 2:
+            ax[ax_num].set_xlabel('Probability of Grouping (%)')
+        ax[ax_num].grid()
+    ax[0].legend(ncol=2)
     fig.suptitle(f'{data_set} {dist_plt} {div_plt}° Divisions {s_plt} spread')
     plt.subplots_adjust(wspace=0.05, hspace=0, left=0.1, right=0.9, top=0.9, bottom=0.1)
 
