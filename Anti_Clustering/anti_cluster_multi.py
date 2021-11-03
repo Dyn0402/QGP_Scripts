@@ -15,7 +15,7 @@ from scipy.stats import norm
 
 def main():
     means = [0.7, 3.5, 2.4]
-    sds = [0.2, 0.3, 0.5]
+    sds = [0.2, 0.2, 0.2]
     amps = 1 / (np.sqrt(2 * np.pi) * np.asarray(sds))
     aclust_amp = 0.4
     dists = [norm(mean, sd) for mean, sd in zip(means, sds)]
@@ -27,6 +27,8 @@ def main():
 
     fig_ind_clust, ax_ind_clust = plt.subplots()
     fig_ind_aclust, ax_ind_aclust = plt.subplots()
+    ax_ind_clust.set_xlabel('Phi Angle')
+    ax_ind_aclust.set_xlabel('Phi Angle')
     for dist, amp, sd in zip(dists, amps, sds):
         # clust_pdf = base + clust_amp(aclust_amp, sd, base_int) * dist.pdf(x) / amp
         clust_pdf = base + aclust_amp * dist.pdf(x) / amp
@@ -42,10 +44,17 @@ def main():
 
     fig_clust, ax_clust = plt.subplots()
     fig_aclust, ax_aclust = plt.subplots()
+    ax_clust.set_xlabel('Phi Angle')
+    ax_aclust.set_xlabel('Phi Angle')
     ax_clust.plot(x, p_clust)
     ax_aclust.plot(x, p_aclust)
     ax_clust.set_ylim(bottom=0)
     ax_aclust.set_ylim(bottom=0)
+
+    fig_ind_clust.tight_layout()
+    fig_ind_aclust.tight_layout()
+    fig_clust.tight_layout()
+    fig_aclust.tight_layout()
 
     plt.show()
     print('donzo')

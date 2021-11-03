@@ -34,14 +34,20 @@ def main():
 
     fig1, ax1 = plt.subplots()
     ax1.plot(r, p)
+    ax1.axvline(mean, color='black', ls=':')
     ax1.axhline(0, color='r', ls='--')
     ax1.axvline(0, ls='--')
     ax1.axvline(2 * np.pi, ls='--')
+    ax1.set_xlabel('Phi Angle')
+    ax1.set_ylabel('Probability')
 
     fig2, ax2 = plt.subplots()
     ax2.plot(r, p)
+    ax2.axvline(mean, color='black', ls=':')
     ax2.axhline(0, color='r', ls='--')
     ax2.set_xlim([0, 2 * np.pi])
+    ax2.set_xlabel('Phi Angle')
+    ax2.set_ylabel('Probability')
 
     plt.show()
     print('donzo')

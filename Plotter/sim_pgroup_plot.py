@@ -17,8 +17,8 @@ from SysReader import SysReader
 
 def main():
     pd.options.mode.chained_assignment = None
-    sys_path = '/home/dylan/Research/Results/Azimuth_Analysis/sys_vals_11-1-21_anticlust_sim.txt'
-    # sys_path = 'C:\\Users\\Dyn04\\Downloads\\sys_vals_10-25-21_sim.txt'
+    # sys_path = '/home/dylan/Research/Results/Azimuth_Analysis/sys_vals_11-1-21_anticlust_sim.txt'
+    sys_path = 'C:\\Users\\Dyn04\\Downloads\\sys_vals_11-1-21_anticlust_sim.txt'
     df = SysReader(sys_path).values
 
     df = add_pgrp_spread(df)
@@ -36,7 +36,7 @@ def plot1(df):
     data_set = ['raw', 'mix', 'divide', 'pull_divide']
     dist_plts = ['single10']  # , 'poisson10']
     div_plt = [60, 90, 120, 240, 300]
-    s_plts = [0.5]  # 0.002
+    s_plts = [0.5]  # 0.002, 0.5
     stats = ['standard_deviation', 'skewness', 'non_excess_kurtosis']  # ['mean', 'standard_deviation', 'skewness', 'non_excess_kurtosis']
 
     for s_plt in s_plts:
@@ -169,6 +169,8 @@ def plot_vs_pgroup_3sub(df, data_set, div_plt, s_plt, dist_plt, stats):
                                     df_stat['val'] - df_stat['stat_err'], label=f'{div}°', alpha=0.7)
             ax[ax_num].errorbar(df_stat['pgroup'], df_stat['val'], yerr=df_stat['sys_err'], marker='.', ls='none',
                                 elinewidth=4, alpha=0.7)
+            if 'divide' in data_set:
+                ax[ax_num].axhline(1, color='black', ls='--', alpha=0.6, zorder=5)
 
     for stat, ax_num in zip(stats, [0, 1, 2]):
         ax[ax_num].set_ylabel(stat)
@@ -177,7 +179,7 @@ def plot_vs_pgroup_3sub(df, data_set, div_plt, s_plt, dist_plt, stats):
         ax[ax_num].grid()
     ax[0].legend(ncol=2)
     fig.suptitle(f'{data_set} {dist_plt} {div_plt}° Divisions {s_plt} spread')
-    plt.subplots_adjust(wspace=0.05, hspace=0, left=0.1, right=0.9, top=0.9, bottom=0.1)
+    plt.subplots_adjust(wspace=0.05, hspace=0.05, left=0.1, right=0.99, top=0.9, bottom=0.1)
 
 
 def plot_vs_nevent(df, data_set, div_plt, s_plt, dist_plt, pgroup, stats):
@@ -258,6 +260,8 @@ def plot_nsigma1_vs_pgroup_3sub(df, data_set, div_plt, s_plt, dist_plt, stats):
             #                     label=f'{div}°')
             ax[ax_num].plot(df_stat['pgroup'], (df_stat['val'] - 1) / df_stat['sys_err'], marker='.',
                                label=f'{div}°', alpha=0.7)
+            if 'divide' in data_set:
+                ax[ax_num].axhline(1, color='black', ls='--', alpha=0.6, zorder=5)
 
     for stat, ax_num in zip(stats, [0, 1, 2]):
         ax[ax_num].set_ylabel(stat)
@@ -266,7 +270,7 @@ def plot_nsigma1_vs_pgroup_3sub(df, data_set, div_plt, s_plt, dist_plt, stats):
         ax[ax_num].grid()
     ax[0].legend(ncol=2)
     fig.suptitle(f'{data_set} {dist_plt} {div_plt}° Divisions {s_plt} spread')
-    plt.subplots_adjust(wspace=0.05, hspace=0, left=0.1, right=0.9, top=0.9, bottom=0.1)
+    plt.subplots_adjust(wspace=0.05, hspace=0.05, left=0.1, right=0.99, top=0.9, bottom=0.1)
 
 
 def plot_nsigma1_vs_nevent(df, data_set, div_plt, s_plt, dist_plt, pgroup, stats):
