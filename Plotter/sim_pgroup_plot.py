@@ -100,23 +100,26 @@ def plot4(df):
 
 
 def add_pgrp_spread(df):
-    ps = []
+    amps = []
     ss = []
     dists = []
+    nevent = []
     for set_name in df['set']:
         try:
-            dist, p, s = set_name.split('_')[1:]
+            dist, amp, s = set_name.split('_')[1:]
         except ValueError:
             try:
-                dist, anticlust, p, s = set_name.split('_')[1:]
+                dist, anticlust, amp, s = set_name.split('_')[1:]
             except ValueError:
                 print("Can't read name format")
         dists.append(dist)
-        ps.append(float('0.' + p.strip('pgroup')) * 100)
+        nevent.append(int(dist.strip('single').strip('poisson')))
+        amps.append(float('0.' + amp.strip('amp')))
         ss.append(float('0.' + s.strip('spread')))
     df['dist'] = dists
-    df['pgroup'] = ps
+    df['amp'] = amps
     df['spread'] = ss
+    df['nevent'] = nevent
 
     return df
 
@@ -188,7 +191,7 @@ def plot_vs_nevent(df, data_set, div_plt, s_plt, dist_plt, pgroup, stats):
     for div in div_plt:
         df_div = df[(df['data_type'] == data_set) & (df['div'] == div) & (df['spread'] == s_plt) &
                     (df['pgroup'] == pgroup) & (df['dist'].str.contains(dist_plt))]
-        df_div['nevent'] = df_div['dist'].str.strip(dist_plt).astype('int32')
+        # df_div['nevent'] = df_div['dist'].str.strip(dist_plt).astype('int32')
         # df_div.assign(nevent=df_div['dist'].str.strip(dist_plt).astype('int32').values)
 
         for stat, ax_num in zip(stats, [(0, 0), (0, 1), (1, 0), (1, 1)]):
@@ -279,7 +282,7 @@ def plot_nsigma1_vs_nevent(df, data_set, div_plt, s_plt, dist_plt, pgroup, stats
     for div in div_plt:
         df_div = df[(df['data_type'] == data_set) & (df['div'] == div) & (df['spread'] == s_plt) &
                     (df['pgroup'] == pgroup) & (df['dist'].str.contains(dist_plt))]
-        df_div['nevent'] = df_div['dist'].str.strip(dist_plt).astype('int32')
+        # df_div['nevent'] = df_div['dist'].str.strip(dist_plt).astype('int32')
         # df_div.assign(nevent=df_div['dist'].str.strip(dist_plt).astype('int32').values)
 
         for stat, ax_num in zip(stats, [(0, 0), (0, 1), (1, 0), (1, 1)]):
