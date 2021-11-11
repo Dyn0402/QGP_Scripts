@@ -14,11 +14,12 @@ from scipy.stats import rv_continuous
 from scipy.stats import norm
 from scipy.stats import uniform
 from scipy.interpolate import CubicSpline
+from scipy.interpolate import interp1d
 
 
 def main():
-    # random_tracks(50)
-    clustered_tracks(50)
+    # random_tracks()
+    clustered_tracks()
     # rv_test()
     print('donzo')
 
@@ -69,7 +70,8 @@ def specific_vals():
     plt.show()
 
 
-def random_tracks(n_tracks):
+def random_tracks():
+    n_tracks = 50
     track_means = uniform.rvs(size=n_tracks) * 2 * np.pi
     sd = 0.2
     amp = 1 / (np.sqrt(2 * np.pi) * sd)
@@ -114,10 +116,10 @@ def random_tracks(n_tracks):
     plt.show()
 
 
-def clustered_tracks(n_tracks):
-    sd = 0.2
-    clust_amp = 0.2
-    anti = True
+def clustered_tracks():
+    n_tracks = 60
+    sd = 0.3
+    cl_amp = -0.1
     x = np.linspace(0, 2 * np.pi, 1000)
 
     # fig_ind_clust, ax_ind_clust = plt.subplots()
@@ -125,10 +127,10 @@ def clustered_tracks(n_tracks):
     # ax_ind_clust.set_xlabel('Phi Angle')
     ax_ind_aclust.set_xlabel('Phi Angle')
     phis = []
-    prob_dist = ClustDist(phis, sd, clust_amp, a=0, b=2*np.pi, anti=anti)
+    prob_dist = ClustDist(phis, sd, cl_amp, a=0, b=2*np.pi)
     while len(phis) < n_tracks:
         phis.append(prob_dist.rvs())
-        prob_dist = ClustDist(phis, sd, clust_amp, a=0, b=2*np.pi, anti=anti)
+        prob_dist = ClustDist(phis, sd, cl_amp, a=0, b=2*np.pi)
         # ax_ind_aclust.plot(x, aclust_pdf)
         ax_ind_aclust.axvline(phis[-1], color='black', ls='--', alpha=0.7)
         # ax_ind_clust.set_ylim(bottom=0)
@@ -167,29 +169,26 @@ def clust_amp(aclust_amp, sigma, base_int):
 
 
 class ClustDist(rv_continuous):
-    def __init__(self, means, sd, amp, a, b, base=1, anti=True):
+    def __init__(self, means, sd, amp, a, b, base=1):
         self.means = means
         self.sd = sd
         self.base = base
-        self.amp = amp
+        self.amp = amp  # Positive for clustering, negative for anti-clustering
         self.amp_norm = 1 / (np.sqrt(2 * np.pi) * self.sd)
         self.dists = [[norm(mean, sd), norm(mean - 2 * np.pi, sd), norm(mean + 2 * np.pi, sd)] for mean in means]
         self.n_points = 1000
         self.x = np.linspace(a, b, self.n_points)
         self.prob = np.ones(self.n_points)
-        if anti:
-            self.sign = -1
-        else:
-            self.sign = 1
 
         for dist in self.dists:
             clust_pdf = self.base
             for dist_sub in dist:
-                clust_pdf += self.sign * self.amp * dist_sub.pdf(self.x) / self.amp_norm
+                clust_pdf += self.amp * dist_sub.pdf(self.x) / self.amp_norm
             self.prob *= clust_pdf
         self.prob /= np.sum(self.prob) / self.n_points * (b - a)
 
-        self.prob_interp = CubicSpline(self.x, self.prob, bc_type='periodic')
+        # self.prob_interp = CubicSpline(self.x, self.prob)  # , bc_type='periodic')
+        self.prob_interp = interp1d(self.x, self.prob)
 
         rv_continuous.__init__(self, a=a, b=b)
 
