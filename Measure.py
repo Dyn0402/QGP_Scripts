@@ -127,6 +127,9 @@ class Measure:
                 result = NotImplemented
         return result
 
+    def sqrt(self):
+        return self**0.5
+
     def __rpow__(self, o):  # If o is Measure then o.__pow__ should run, so assume o is not Measure
         result = Measure()
         try:
