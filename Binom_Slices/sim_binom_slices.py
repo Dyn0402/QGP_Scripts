@@ -19,6 +19,7 @@ from DistStats import DistStats
 def main():
     base_path = '/home/dylan/Research/'
     div = 120
+    divs = [60, 120, 240, 300]
     cent = 8
     sim_pars = [('amp05', 'spread1'), ('amp1', 'spread1'), ('amp05', 'spread3'), ('amp1', 'spread2'),
                 ('amp1', 'spread3'), ('amp15', 'spread1'), ('amp15', 'spread2'), ('amp15', 'spread3'),
@@ -28,9 +29,13 @@ def main():
     y_ranges = {'mean': (0.8, 1.2), 'standard deviation': (0.8, 1.05), 'skewness': (0, 1.25), 'kurtosis': (-3, 2)}
     stats_plot = ['standard deviation', 'skewness', 'kurtosis']
 
-    dist_stats = get_dist_stats(base_path, div, cent, sim_pars, stats)
+    div_stats = {}
+    for div in divs:
+        div_stats[div] = get_dist_stats(base_path, div, cent, sim_pars, stats)
 
-    plot(dist_stats, stats_plot, y_ranges)
+    # dist_stats = get_dist_stats(base_path, div, cent, sim_pars, stats)
+    #
+    # plot(dist_stats, stats_plot, y_ranges)
     print('donzo')
 
 
