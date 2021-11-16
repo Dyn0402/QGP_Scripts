@@ -19,13 +19,16 @@ class DistStats:
         Initiate with 1D distribution
         :param dist: Distribution to calculate stats for. dist ~ dictionary{key=x_value, value=counts}
         """
-        self.dist = dist
         self.raw_moments = {}
         self.cent_moments = {}
         self.m = {}
         self.total_counts = None
         if debug:
             warnings.filterwarnings('error')
+        if type(dist) == 'dict':
+            self.dist = dist
+        else:
+            self.dist = dict(zip(range(len(dist)), dist))
 
     def calc_total_counts(self):
         self.calc_raw_moments(1, 0)
