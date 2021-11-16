@@ -17,15 +17,15 @@ from SysReader import SysReader
 
 def main():
     pd.options.mode.chained_assignment = None
-    # sys_path = '/home/dylan/Research/Results/Azimuth_Analysis/sys_vals_11-1-21_anticlust_sim.txt'
-    sys_path = 'C:\\Users\\Dyn04\\Downloads\\sys_vals_11-1-21_anticlust_sim.txt'
+    sys_path = '/home/dylan/Research/Results/Azimuth_Analysis/sys_vals_11-1-21_anticlust_sim.txt'
+    # sys_path = 'C:\\Users\\Dyn04\\Downloads\\sys_vals_11-1-21_anticlust_sim.txt'
     df = SysReader(sys_path).values
 
     df = add_pgrp_spread(df)
 
-    plot1(df)
+    # plot1(df)
     # plot2(df)
-    # plot3(df)
+    plot3(df)
     # plot4(df)
 
     print('donzo')
@@ -69,8 +69,8 @@ def plot3(df):
     data_set = ['raw', 'mix', 'divide', 'pull_divide']
     dist_plt = 'single'
     div_plt = [60, 90, 120, 240, 300]
-    s_plts = [0.002]
-    pgroup = 20
+    s_plts = [0.5]
+    pgroup = 0.1
     stats = ['mean', 'standard_deviation', 'skewness', 'non_excess_kurtosis']
 
     print(np.unique(df['pgroup']))
@@ -100,7 +100,7 @@ def plot4(df):
 
 
 def add_pgrp_spread(df):
-    amps = []
+    pgroups = []
     ss = []
     dists = []
     nevent = []
@@ -114,10 +114,10 @@ def add_pgrp_spread(df):
                 print("Can't read name format")
         dists.append(dist)
         nevent.append(int(dist.strip('single').strip('poisson')))
-        amps.append(float('0.' + amp.strip('amp')))
+        pgroups.append(float('0.' + amp.strip('pgroup')))
         ss.append(float('0.' + s.strip('spread')))
     df['dist'] = dists
-    df['amp'] = amps
+    df['pgroup'] = pgroups
     df['spread'] = ss
     df['nevent'] = nevent
 

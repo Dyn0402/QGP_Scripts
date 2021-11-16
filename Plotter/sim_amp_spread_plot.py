@@ -14,8 +14,6 @@ import pandas as pd
 
 from SysReader import SysReader
 
-from sim_pgroup_plot import add_pgrp_spread
-
 
 def main():
     pd.options.mode.chained_assignment = None
@@ -36,6 +34,30 @@ def main():
 
     print('donzo')
 
+
+def add_pgrp_spread(df):
+    amps = []
+    ss = []
+    dists = []
+    nevent = []
+    for set_name in df['set']:
+        try:
+            dist, amp, s = set_name.split('_')[1:]
+        except ValueError:
+            try:
+                dist, anticlust, amp, s = set_name.split('_')[1:]
+            except ValueError:
+                print("Can't read name format")
+        dists.append(dist)
+        nevent.append(int(dist.strip('single').strip('poisson')))
+        amps.append(float('0.' + amp.strip('amp')))
+        ss.append(float('0.' + s.strip('spread')))
+    df['dist'] = dists
+    df['amp'] = amps
+    df['spread'] = ss
+    df['nevent'] = nevent
+
+    return df
 
 def plot1(df):
     # data_set = ['raw', 'mix', 'pull_raw', 'pull_mix', 'divide', 'pull_divide']
