@@ -97,6 +97,8 @@ class Measure:
         return self.__mul__(o)
 
     def __truediv__(self, o):
+        if o == 0:
+            return Measure(float('nan'), float('nan'))
         result = Measure()
         if type(o) == Measure:
             result.val = self.val / o.val
