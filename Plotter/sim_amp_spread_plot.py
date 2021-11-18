@@ -26,9 +26,10 @@ def main():
     print(df.head())
     print(df.columns)
 
-    plot1(df)
-    plot2(df)
-    plot3(df)
+    # plot1(df)
+    # plot2(df)
+    # plot3(df)
+    plot4(df)
 
     plt.show()
 
@@ -58,6 +59,7 @@ def add_pgrp_spread(df):
     df['nevent'] = nevent
 
     return df
+
 
 def plot1(df):
     # data_set = ['raw', 'mix', 'pull_raw', 'pull_mix', 'divide', 'pull_divide']
@@ -103,6 +105,21 @@ def plot3(df):
             for dset in data_set:
                 for dist_plt in dist_plts:
                     plot_vs_nevent_3sub(df, dset, div_plt, amp_plt, s_plt, dist_plt, stats)
+
+
+def plot4(df):
+    data_set = ['divide']
+    dist_plts = ['single10']  # , 'poisson10']
+    div_plt = [60, 90, 120, 240, 300]
+    amp_plts = [0.1]
+    s_plts = [0.8]
+    stats = ['standard_deviation', 'skewness', 'non_excess_kurtosis']
+
+    for amp_plt in amp_plts:
+        for s_plt in s_plts:
+            for dset in data_set:
+                for dist_plt in dist_plts:
+                    plot_vs_div_3sub(df, dset, amp_plt, s_plt, dist_plt, stats)
 
 
 def plot_vs_amp_3sub(df, data_set, div_plt, s_plt, dist_plt, stats):
@@ -189,6 +206,52 @@ def plot_vs_nevent_3sub(df, data_set, div_plt, amp_plt, s_plt, dist_plt, stats):
         ax[ax_num].grid()
     ax[0].legend(ncol=2)
     fig.suptitle(f'{data_set} {dist_plt} {div_plt}° Divisions {amp_plt} amp {s_plt} spread')
+    plt.subplots_adjust(wspace=0.05, hspace=0.05, left=0.1, right=0.99, top=0.9, bottom=0.1)
+
+
+def plot_vs_div_3sub(df, data_set, amp_plt, s_plt, dist_plt, stats):
+    fig, ax = plt.subplots(3, 1, sharex=True)
+
+    # print(data_set, amp_plt, s_plt, dist_plt)
+    # print(np.unique(df['amp']))
+    # print(np.unique(df['spread']))
+    # print(np.unique(df['dist']))
+    df_set = df[(df['data_type'] == data_set) & (df['amp'] == amp_plt) &
+                (df['spread'] == s_plt) & (df['dist'] == dist_plt)]
+
+    # df = df[(df['data_type'] == data_set)]
+    # print('after set', df)
+    # df = df[(df['amp'] == amp_plt)]
+    # print('after amp', df)
+    # df = df[(df['spread'] == s_plt)]
+    # print('after spread', df)
+    # print(np.unique(df['dist']))
+    # df = df[(df['dist'] == dist_plt)]
+    # print('after dist', df)
+
+    # df_set = df
+
+    # print(df_set)
+
+    for stat, ax_num in zip(stats, [0, 1, 2]):
+        df_stat = df_set[df_set['stat'] == stat]
+        df_stat = df_stat.sort_values(by=['div'])
+        # ax[ax_num].errorbar(df_stat['pgroup'], df_stat['val'], yerr=df_stat['stat_err'], marker='o', ls='none',
+        #                     label=f'{div}°')
+        ax[ax_num].fill_between(df_stat['div'], df_stat['val'] + df_stat['stat_err'],
+                                df_stat['val'] - df_stat['stat_err'], alpha=0.7)
+        ax[ax_num].errorbar(df_stat['div'], df_stat['val'], yerr=df_stat['sys_err'], marker='.', ls='none',
+                            elinewidth=4, alpha=0.7)
+        if 'divide' in data_set:
+            ax[ax_num].axhline(1, color='black', ls='--', alpha=0.6, zorder=5)
+
+    for stat, ax_num in zip(stats, [0, 1, 2]):
+        ax[ax_num].set_ylabel(stat)
+        if ax_num == 2:
+            ax[ax_num].set_xlabel('Division Width')
+        ax[ax_num].grid()
+    # ax[0].legend(ncol=2)
+    fig.suptitle(f'{data_set} {dist_plt} {amp_plt} amp {s_plt} spread')
     plt.subplots_adjust(wspace=0.05, hspace=0.05, left=0.1, right=0.99, top=0.9, bottom=0.1)
 
 
