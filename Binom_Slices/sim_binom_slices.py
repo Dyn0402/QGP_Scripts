@@ -34,13 +34,13 @@ def main():
     # for div in divs:
     #     div_stats[div] = get_dist_stats(base_path, div, cent, sim_pars, stats)
 
-    df_sim, df_ampt = get_dist_stats(base_path, divs, cents, sim_pars, stats)
+    df = get_dist_stats(base_path, divs, cents, sim_pars, stats)
 
     # print(div_stats[120])
 
     # dist_stats = get_dist_stats(base_path, div, cent, sim_pars, stats)
     #
-    plot(df_sim, df_ampt, stats_plot, y_ranges)
+    plot(df, stats_plot, y_ranges)
     # plot_vs_divs(div_stats, stats_plot, y_ranges)
     print('donzo')
 
@@ -53,8 +53,8 @@ def get_dist_stats(base_path, divs, cents, sim_pars, stats):
 
     ampt_set = 'default/Ampt_rapid05_n1ratios_'
 
-    df_sim = pd.DataFrame()
-    df_ampt = pd.DataFrame()
+    df = pd.DataFrame()
+    # df_ampt = pd.DataFrame()
 
     for div in divs:
         for cent in cents:
@@ -64,20 +64,22 @@ def get_dist_stats(base_path, divs, cents, sim_pars, stats):
                 sim_dist_mix = get_sim_dists(base_path + 'Data_Sim_Mix/', range(11), div, cent, sim_energy,
                                              exact_keys=['anticlmulti', *pars], contain_keys=['single'])
                 stats_dict = get_stats(sim_dist, sim_dist_mix, stats)
-                pars_dict = {'div': div, 'cent': cent, 'energy': sim_energy, 'amp': sim_pars[0], 'spread': sim_pars[1]}
+                pars_dict = {'div': div, 'cent': cent, 'energy': sim_energy, 'amp': sim_pars[0], 'spread': sim_pars[1],
+                             'name': f'sim_{sim_pars[0]}_{sim_pars[1]}'}
                 new_df = pd.DataFrame([entry.update(pars_dict) for entry in stats_dict])
-                df_sim.append(new_df)
+                df.append(new_df)
                 # dist_stats.update({f'sim_{pars[0]}_{pars[1]}': get_stats(sim_dist, sim_dist_mix, stats)})
 
             ampt_dist = get_ampt_dist(base_path + 'Data_Ampt/' + ampt_set, div, cent, ampt_energy, range(60))
             ampt_dist_mix = get_ampt_dist(base_path + 'Data_Ampt_Mix/' + ampt_set, div, cent, ampt_energy, range(60))
             stats_dict = get_stats(ampt_dist, ampt_dist_mix, stats)
-            pars_dict = {'div': div, 'cent': cent, 'energy': ampt_energy, 'amp': sim_pars[0], 'spread': sim_pars[1]}
+            pars_dict = {'div': div, 'cent': cent, 'energy': ampt_energy, 'amp': sim_pars[0], 'spread': sim_pars[1],
+                         'name': 'ampt'}
             new_df = pd.DataFrame([entry.update(pars_dict) for entry in stats_dict])
-            df_ampt.append(new_df)
+            df.append(new_df)
             # dist_stats.update({'ampt': get_stats(ampt_dist, ampt_dist_mix, stats)})
 
-    return df_sim, df_ampt
+    return df
 
 
 def get_stats(raw_dists, mix_dists, stat_names):
@@ -127,7 +129,7 @@ def get_stats(raw_dists, mix_dists, stat_names):
     # return total_protons_list, stat_vals, stat_errs, stat_syss
 
 
-def plot(df_sim, df_ampt, stat_names, y_ranges):
+def plot(df, stat_names, y_ranges):
     for stat in stat_names:
         fig, ax = plt.subplots()
         ax.set_title(stat)
@@ -135,16 +137,20 @@ def plot(df_sim, df_ampt, stat_names, y_ranges):
         ax.axhline(1, ls='--')
         ax.set_ylim(y_ranges[stat])
 
-        for data_set_name, data_set in data_sets.items():
-            total_protons, stat_vals, stat_errs, stat_syss = data_set
-            vals = np.asarray(stat_vals[stat])
-            errs = np.asarray(stat_errs[stat])
-            syss = np.asarray(stat_syss[stat])
-            if 'ampt' in data_set_name:
-                ax.errorbar(total_protons, vals, errs, label=data_set_name, marker='o', ls='', color='blue')
-                ax.errorbar(total_protons, vals, syss, marker='', ls='', elinewidth=3, color='blue', alpha=0.3)
+        for data_set in np.unique(df['name']):
+            df_set = df[df['name'] == data_set]
+            # total_protons, stat_vals, stat_errs, stat_syss = data_set
+            # vals = np.asarray(stat_vals[stat])
+            # errs = np.asarray(stat_errs[stat])
+            # syss = np.asarray(stat_syss[stat])
+            if 'ampt' in data_set:
+                ax.errorbar(df_set['total_protons'], df_set['val'], df_set['err'], label=data_set, marker='o', ls='',
+                            color='blue')
+                ax.errorbar(df_set['total_protons'], df_set['val'], df_set['sys'], marker='', ls='', elinewidth=3,
+                            color='blue', alpha=0.3)
             else:
-                ax.fill_between(total_protons, vals - errs, vals + errs, label=data_set_name)
+                ax.fill_between(df_set['total_protons'], df_set['val'] - df_set['err'], df_set['val'] + df_set['err'],
+                                label=data_set)
         ax.legend()
         fig.tight_layout()
 
