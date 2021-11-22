@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 def main():
     print(vz_correction(0.845083, '11GeV_set1'))
     print(vz_correction(0.0880397, '11GeV_set1'))
+    plot_corr_62()
     plot_corr_11()
     print('donzo')
 
