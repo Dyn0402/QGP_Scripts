@@ -16,15 +16,15 @@ import numpy as np
 
 def main():
     energies = [7, 11, 19, 27, 39, 62]
-    divisions = [3]
+    divisions = [120]
     centralities = [8]
-    path = {'raw': ['/home/dylan/Research/Data_Old_Ref3/eta050/', 'GeV/ratios_divisions_', '_centrality_', '_local.txt'],
-            'mix': ['/home/dylan/Research/Data_Old_Ref3_Mix/eta050/', 'GeV/ratios_divisions_', '_centrality_',
+    path = {'raw': ['/home/dylan/Research/Data/eta05_n1ratios_dca30/', 'GeV/ratios_divisions_', '_centrality_', '_local.txt'],
+            'mix': ['/home/dylan/Research/Data_Mix/eta05_n1ratios_dca30/', 'GeV/ratios_divisions_', '_centrality_',
                     '_local.txt']}
     colors = {7: 'red', 11: 'blue', 19: 'green', 27: 'cyan', 39: 'magenta', 62: 'black'}
-    cdf_plot = {'energy': 7, 'division': 3, 'centrality': 8, 'total particles': 35}
-    sd_plot = {'energy': 7, 'division': 3, 'centrality': 8}
-    title_sufx = f'\n{sd_plot["energy"]}GeV, 0-5% Centrality, {sd_plot["division"]} Azimuthal Divisions'
+    cdf_plot = {'energy': 7, 'division': 120, 'centrality': 8, 'total particles': 35}
+    sd_plot = {'energy': 7, 'division': 120, 'centrality': 8}
+    title_sufx = f'\n{sd_plot["energy"]}GeV, 0-5% Centrality, {sd_plot["division"]}° Bins'
 
     data = {'raw': {}, 'mix': {}}
     for source in data.keys():
@@ -33,8 +33,8 @@ def main():
             for division in divisions:
                 data[source][energy][division] = {}
                 for centrality in centralities:
-                    current_path = path[source][0]+str(energy)+path[source][1]+str(division)+path[source][2]+\
-                                   str(centrality)+path[source][3]
+                    current_path = path[source][0] + str(energy)+path[source][1] + str(division) + path[source][2] +\
+                                   str(centrality) + path[source][3]
                     data[source][energy][division][centrality] = AzData(path=current_path, div=division)
 
     plot_data_ks2 = {}
@@ -146,21 +146,24 @@ def main():
     raw_y = sd_data_raw[sd_plot['energy']][1]
     mix_x = sd_data_mix[sd_plot['energy']][0]
     mix_y = sd_data_mix[sd_plot['energy']][1]
-    p = 1.0 / float(sd_plot['division'])
-    y = (np.asarray(mix_x) * p * (1 - p)) ** 0.5
+    p = float(sd_plot['division']) / 360
+    y_mix = (np.asarray(mix_x) * p * (1 - p)) ** 0.5
+
+    raw_x, raw_y = list(zip(*[(x, y) for x, y in zip(raw_x, raw_y) if y > 0]))
+    y_raw = (np.asarray(raw_x) * p * (1 - p)) ** 0.5
 
     # fig5.set_size_inches(7, 7)
     ax5.scatter(raw_x, raw_y, zorder=2, color='blue', label='Raw SD')
     ax5.scatter(mix_x, mix_y, zorder=1, color='green', label='Mix SD')
-    ax5.plot(mix_x, y, color='red', zorder=0, label='Binomal SD')
+    ax5.plot(mix_x, y_mix, color='red', zorder=0, label='Binomal SD')
     ax5.set_xlabel('Total Particles')
     ax5.set_ylabel('Standard Deviation of Slice')
     ax5.set_title(f'Standard Deviation of Total Particle Slices for {sd_plot["energy"]}GeV'+title_sufx)
     ax5.legend()
 
     # fig6.set_size_inches(10, 7)
-    raw_ratio = raw_y / y
-    mix_ratio = mix_y / y
+    raw_ratio = raw_y / y_raw
+    mix_ratio = mix_y / y_mix
     ax6.scatter(raw_x, raw_ratio, zorder=2, color='blue', label='Raw SD / Binomial SD')
     ax6.scatter(mix_x, mix_ratio, zorder=1, color='green', label='Mix SD / Binomial SD')
     ax6.axhline(1, zorder=0, color='red', ls='--')

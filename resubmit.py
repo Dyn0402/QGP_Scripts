@@ -45,7 +45,8 @@ def resub():
     out_list = get_out_list(output_path)
     failed_jobs = get_failed_jobs(script_list, out_list)
     cross_check_failed(failed_jobs, status_lists)
-    resub_flag, resub_set = ask_to_resub(status_lists['terminated']+status_lists['breaks'], failed_jobs, energy)
+    resub_flag, resub_set = ask_to_resub(status_lists['terminated']+status_lists['breaks'], failed_jobs,
+                                         status_lists['running'], energy)
     if resub_flag:
         resub_jobs(script_path, resub_set)
 
@@ -88,7 +89,7 @@ def get_failed_jobs(script_list, out_list):
     return failed_jobs
 
 
-def ask_to_resub(incomplete_jobs, missing_jobs, energy):
+def ask_to_resub(incomplete_jobs, missing_jobs, running_jobs, energy):
     """
     Display failed jobs and ask user if they should be resubmitted.
     """
@@ -105,7 +106,8 @@ def ask_to_resub(incomplete_jobs, missing_jobs, energy):
             print(job)
         res = input('\nResubmit stopped jobs listed above? '
                     '\nEnter "yes" to resubmit stopped jobs only, "missing" to resubmit missing jobs only, '
-                    '"both" to resubmit both (without duplicates), and anything else to quit: ')
+                    '"both" to resubmit both (without duplicates), "running" to resubmit only running jobs, '
+                    'and anything else to quit: ')
         if res.strip().lower() == 'yes' or res.strip().lower() == 'y':
             resub_flag = True
             resub_set = incomplete_jobs
@@ -116,6 +118,9 @@ def ask_to_resub(incomplete_jobs, missing_jobs, energy):
             resub_flag = True
             resub_set = incomplete_jobs.copy()
             resub_set.extend([x for x in missing_jobs if x not in incomplete_jobs])
+        elif res.strip().lower() == 'running':
+            resub_flag = True
+            resub_set = running_jobs  # Not sure if this is right, untested.
         else:
             resub_flag = False
 
