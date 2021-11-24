@@ -19,20 +19,22 @@ from DistStats import DistStats
 
 
 def main():
-    # base_path = '/home/dylan/Research/'
-    base_path = 'D:/Transfer/Research/'
+    base_path = '/home/dylan/Research/'
+    # base_path = 'D:/Transfer/Research/'
     # div = 120
     divs = [60, 72, 89, 90, 120, 240, 270, 288, 300]
     cents = [8]
-    sim_pars = [('amp05', 'spread1'), ('amp1', 'spread1'), ('amp05', 'spread3'), ('amp1', 'spread2'),
-                ('amp1', 'spread3'), ('amp15', 'spread1'), ('amp15', 'spread2'), ('amp15', 'spread3'),
-                ('amp05', 'spread2')]
+    sim_pars = [('amp05', 'spread01'), ('amp1', 'spread01'), ('amp05', 'spread03'), ('amp1', 'spread02'),
+                ('amp1', 'spread03'), ('amp15', 'spread01'), ('amp15', 'spread02'), ('amp15', 'spread03'),
+                ('amp05', 'spread02'), ('amp01', 'spread08'),
+                ('amp01', 'spread1'), ('amp02', 'spread1'), ('amp03', 'spread1'), ('amp04', 'spread1'),
+                ('amp01', 'spread15'), ('amp02', 'spread15'), ('amp03', 'spread15'), ('amp04', 'spread15')]
     stats = {'mean': getattr(DistStats, 'get_mean'), 'standard deviation': getattr(DistStats, 'get_sd'),
              'skewness': getattr(DistStats, 'get_skewness'), 'kurtosis': getattr(DistStats, 'get_kurtosis')}
     y_ranges = {'mean': (0.8, 1.2), 'standard deviation': (0.8, 1.05), 'skewness': (0, 1.25), 'kurtosis': (-3, 2)}
     stats_plot = ['standard deviation', 'skewness', 'kurtosis']
     div_plt = 60
-    total_protons_plt = 30
+    total_protons_plt = 32
     cent_plt = 8
     data_type_plt = 'divide'
 
@@ -63,7 +65,7 @@ def get_dist_stats(base_path, divs, cents, sim_pars, stats):
                 sim_dist_mix = get_sim_dists(base_path + 'Data_Sim_Mix/', range(11), div, cent, sim_energy,
                                              exact_keys=['anticlmulti', *pars], contain_keys=['single'])
                 stats_dict = get_stats(sim_dist, sim_dist_mix, stats)
-                pars_dict = {'div': div, 'cent': cent, 'energy': sim_energy, 'amp': sim_pars[0], 'spread': sim_pars[1],
+                pars_dict = {'div': div, 'cent': cent, 'energy': sim_energy, 'amp': pars[0], 'spread': pars[1],
                              'name': f'sim_{pars[0]}_{pars[1]}'}
                 sim_dfs.append(pd.DataFrame([{**entry, **pars_dict} for entry in stats_dict]))
 
@@ -71,7 +73,7 @@ def get_dist_stats(base_path, divs, cents, sim_pars, stats):
             ampt_dist = get_ampt_dist(base_path + 'Data_Ampt/' + ampt_set, div, cent, ampt_energy, range(60))
             ampt_dist_mix = get_ampt_dist(base_path + 'Data_Ampt_Mix/' + ampt_set, div, cent, ampt_energy, range(60))
             stats_dict = get_stats(ampt_dist, ampt_dist_mix, stats)
-            pars_dict = {'div': div, 'cent': cent, 'energy': ampt_energy, 'amp': sim_pars[0], 'spread': sim_pars[1],
+            pars_dict = {'div': div, 'cent': cent, 'energy': ampt_energy, 'amp': 'ampt', 'spread': 'ampt',
                          'name': 'ampt'}
             ampt_dfs.append(pd.DataFrame([{**entry, **pars_dict} for entry in stats_dict]))
 
@@ -155,7 +157,7 @@ def line(x, a, b):
 
 
 def quad_180(x, a, c):
-    return a * (x - 180)**2 + c
+    return a * (x - 180) ** 2 + c
 
 
 def plot_vs_protons(df, stat_names, div, cent, data_type, y_ranges):
@@ -238,8 +240,10 @@ def fit_vs_protons(df, stat_names, div, cent, data_type, y_ranges):
             else:
                 ax.fill_between(df_set['total_protons'], df_set['val'] - df_set['err'], df_set['val'] + df_set['err'],
                                 label=data_set, color=c)
-            popt, pcov = cf(line, df_set['total_protons'], df_set['val'], sigma=df_set['err'], absolute_sigma=True)
-            ax.plot(df_set['total_protons'], line(df_set['total_protons'], *popt), ls='--', color=c)
+            if len(df_set['val']) > 1:
+                # print(f'df_set[total_protons]: {df_set["total_protons"]}, df_set[val]: {df_set["val"]}')
+                popt, pcov = cf(line, df_set['total_protons'], df_set['val'], sigma=df_set['err'], absolute_sigma=True)
+                ax.plot(df_set['total_protons'], line(df_set['total_protons'], *popt), ls='--', color=c)
         ax.legend()
         fig.tight_layout()
 
@@ -253,6 +257,7 @@ def fit_vs_divs(df, stat_names, total_protons, cent, data_type, y_ranges):
         ax.set_ylim(y_ranges[stat])
 
         color = iter(plt.cm.rainbow(np.linspace(0, 1, len(np.unique(df['name'])))))
+        fit_pars = []
         for data_set in np.unique(df['name']):
             c = next(color)
             df_set = df[(df['name'] == data_set) & (df['data_type'] == data_type) &
@@ -266,11 +271,38 @@ def fit_vs_divs(df, stat_names, total_protons, cent, data_type, y_ranges):
             else:
                 ax.fill_between(df_set['div'], df_set['val'] - df_set['err'], df_set['val'] + df_set['err'],
                                 label=data_set, color=c)
-            popt, pcov = cf(quad_180, df_set['div'], df_set['val'], sigma=df_set['err'], absolute_sigma=True)
-            x = np.linspace(0, 360, 100)
-            ax.plot(x, quad_180(x, *popt), ls='--', color=c)
+            if len(df_set['val'] > 1):
+                popt, pcov = cf(quad_180, df_set['div'], df_set['val'], sigma=df_set['err'], absolute_sigma=True)
+                perr = np.sqrt(np.diag(pcov))
+                fit_pars.append({'data_set': data_set, 'curvature': popt[0], 'baseline': popt[1], 'color': c,
+                                 'spread': df_set['spread'].iloc[0], 'amp': df_set['amp'].iloc[0],
+                                 'curve_err': perr[0], 'base_err': perr[1]})
+                x = np.linspace(0, 360, 100)
+                ax.plot(x, quad_180(x, *popt), ls='--', color=c)
         ax.legend()
         fig.tight_layout()
+
+        df_pars = pd.DataFrame(fit_pars)
+        fig2, ax2 = plt.subplots()
+        ax2.set_title(stat)
+        ax2.set_xlabel('baseline')
+        ax2.set_ylabel('curvature')
+        spreads = np.unique(df_pars['spread'])
+        print(spreads)
+        color = iter(plt.cm.rainbow(np.linspace(0, 1, len(spreads))))
+        for spread in spreads:
+            c = next(color)
+            df_spread = df_pars[df_pars['spread'] == spread]
+            if len(df_spread['curvature']) > 1:
+                popt, pcov = cf(line, df_spread['baseline'], df_spread['curvature'], sigma=df_spread['curve_err'],
+                                absolute_sigma=True)
+                x_plt = np.linspace(0.5, 1, 3)
+                ax2.plot(x_plt, line(x_plt, *popt), ls='--', alpha=0.7, color=c)
+            ax2.errorbar(df_spread['baseline'], df_spread['curvature'], xerr=df_spread['base_err'],
+                         yerr=df_spread['curve_err'], color=c, label=spread, ls='none')
+        ax2.legend()
+        ax2.grid()
+        fig2.tight_layout()
 
 
 if __name__ == '__main__':
