@@ -21,29 +21,39 @@ from DistStats import DistStats
 def main():
     base_path = '/home/dylan/Research/'
     # base_path = 'D:/Transfer/Research/'
+    df_path = '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df.csv'
     # div = 120
+    read_data = False  # Read data from text files instead of reading dataframe
     divs = [60, 72, 89, 90, 120, 240, 270, 288, 300]
     cents = [8]
     sim_pars = [('amp05', 'spread01'), ('amp1', 'spread01'), ('amp05', 'spread03'), ('amp1', 'spread02'),
                 ('amp1', 'spread03'), ('amp15', 'spread01'), ('amp15', 'spread02'), ('amp15', 'spread03'),
-                ('amp05', 'spread02'), ('amp01', 'spread08'),
+                ('amp05', 'spread02'),
                 ('amp01', 'spread1'), ('amp02', 'spread1'), ('amp03', 'spread1'), ('amp04', 'spread1'),
-                ('amp01', 'spread15'), ('amp02', 'spread15'), ('amp03', 'spread15'), ('amp04', 'spread15')]
+                ('amp01', 'spread15'), ('amp02', 'spread15'), ('amp03', 'spread15'), ('amp04', 'spread15'),
+                ('amp01', 'spread08'), ('amp02', 'spread08'), ('amp03', 'spread08'), ('amp04', 'spread08'),
+                ('amp01', 'spread2'), ('amp02', 'spread2'), ('amp03', 'spread2'), ('amp04', 'spread2')]
     stats = {'mean': getattr(DistStats, 'get_mean'), 'standard deviation': getattr(DistStats, 'get_sd'),
              'skewness': getattr(DistStats, 'get_skewness'), 'kurtosis': getattr(DistStats, 'get_kurtosis')}
     y_ranges = {'mean': (0.8, 1.2), 'standard deviation': (0.8, 1.05), 'skewness': (0, 1.25), 'kurtosis': (-3, 2)}
-    stats_plot = ['standard deviation', 'skewness', 'kurtosis']
+    stats_plot = ['standard deviation']  # , 'skewness', 'kurtosis']
     div_plt = 60
     total_protons_plt = 32
     cent_plt = 8
     data_type_plt = 'divide'
+    data_sets_plt = ['sim_amp02_spread15']
 
-    df = get_dist_stats(base_path, divs, cents, sim_pars, stats)
+    if read_data:
+        df = get_dist_stats(base_path, divs, cents, sim_pars, stats)
+        df.to_csv(df_path)
+    else:
+        df = pd.read_csv(df_path)
 
     # plot_vs_protons(df, stats_plot, div_plt, cent_plt, data_type_plt, y_ranges)
     # plot_vs_divs(df, stats_plot, total_protons_plt, cent_plt, data_type_plt, y_ranges)
-    fit_vs_protons(df, stats_plot, div_plt, cent_plt, data_type_plt, y_ranges)
-    fit_vs_divs(df, stats_plot, total_protons_plt, cent_plt, data_type_plt, y_ranges)
+    for div_plt in divs:
+        fit_vs_protons(df, stats_plot, div_plt, cent_plt, data_type_plt, y_ranges, data_sets_plt)
+    # fit_vs_divs(df, stats_plot, total_protons_plt, cent_plt, data_type_plt, y_ranges, data_sets_plt)
     plt.show()
     print('donzo')
 
@@ -218,10 +228,10 @@ def plot_vs_divs(df, stat_names, total_protons, cent, data_type, y_ranges):
     # plt.show()
 
 
-def fit_vs_protons(df, stat_names, div, cent, data_type, y_ranges):
+def fit_vs_protons(df, stat_names, div, cent, data_type, y_ranges, data_set_plt):
     for stat in stat_names:
         fig, ax = plt.subplots()
-        ax.set_title(stat)
+        ax.set_title(f'{stat} {div}° Divisions')
         ax.set_xlabel('Total Protons in Event')
         ax.axhline(1, ls='--')
         ax.set_ylim(y_ranges[stat])
@@ -234,24 +244,26 @@ def fit_vs_protons(df, stat_names, div, cent, data_type, y_ranges):
             df_set = df_set.sort_values(by=['total_protons'])
             if 'ampt' in data_set:
                 ax.errorbar(df_set['total_protons'], df_set['val'], df_set['err'], label=data_set, marker='o', ls='',
-                            color=c)
+                            color=c, alpha=0.8)
                 ax.errorbar(df_set['total_protons'], df_set['val'], df_set['sys'], marker='', ls='', elinewidth=3,
-                            color=c, alpha=0.3)
-            else:
+                            color=c, alpha=0.2)
+            elif data_set in data_set_plt:
                 ax.fill_between(df_set['total_protons'], df_set['val'] - df_set['err'], df_set['val'] + df_set['err'],
-                                label=data_set, color=c)
+                                label=data_set, color=c, alpha=0.8)
             if len(df_set['val']) > 1:
                 # print(f'df_set[total_protons]: {df_set["total_protons"]}, df_set[val]: {df_set["val"]}')
+                # Why are some linear fits failing?
                 popt, pcov = cf(line, df_set['total_protons'], df_set['val'], sigma=df_set['err'], absolute_sigma=True)
-                ax.plot(df_set['total_protons'], line(df_set['total_protons'], *popt), ls='--', color=c)
+                if 'ampt' in data_set or data_set in data_set_plt:
+                    ax.plot(df_set['total_protons'], line(df_set['total_protons'], *popt), ls='--', color=c)
         ax.legend()
         fig.tight_layout()
 
 
-def fit_vs_divs(df, stat_names, total_protons, cent, data_type, y_ranges):
+def fit_vs_divs(df, stat_names, total_protons, cent, data_type, y_ranges, data_set_plt):
     for stat in stat_names:
         fig, ax = plt.subplots()
-        ax.set_title(stat)
+        ax.set_title(f'{stat} {total_protons} protons')
         ax.set_xlabel('Division Width')
         ax.axhline(1, ls='--')
         ax.set_ylim(y_ranges[stat])
@@ -265,12 +277,12 @@ def fit_vs_divs(df, stat_names, total_protons, cent, data_type, y_ranges):
             df_set = df_set.sort_values(by=['div'])
             if 'ampt' in data_set:
                 ax.errorbar(df_set['div'], df_set['val'], df_set['err'], label=data_set, marker='o', ls='',
-                            color=c)
+                            color=c, alpha=0.8)
                 ax.errorbar(df_set['div'], df_set['val'], df_set['sys'], marker='', ls='', elinewidth=3,
                             color=c, alpha=0.3)
-            else:
+            elif data_set in data_set_plt:
                 ax.fill_between(df_set['div'], df_set['val'] - df_set['err'], df_set['val'] + df_set['err'],
-                                label=data_set, color=c)
+                                label=data_set, color=c, alpha=0.8)
             if len(df_set['val'] > 1):
                 popt, pcov = cf(quad_180, df_set['div'], df_set['val'], sigma=df_set['err'], absolute_sigma=True)
                 perr = np.sqrt(np.diag(pcov))
@@ -278,7 +290,8 @@ def fit_vs_divs(df, stat_names, total_protons, cent, data_type, y_ranges):
                                  'spread': df_set['spread'].iloc[0], 'amp': df_set['amp'].iloc[0],
                                  'curve_err': perr[0], 'base_err': perr[1]})
                 x = np.linspace(0, 360, 100)
-                ax.plot(x, quad_180(x, *popt), ls='--', color=c)
+                if 'ampt' in data_set or data_set in data_set_plt:
+                    ax.plot(x, quad_180(x, *popt), ls='--', color=c)
         ax.legend()
         fig.tight_layout()
 
@@ -296,10 +309,10 @@ def fit_vs_divs(df, stat_names, total_protons, cent, data_type, y_ranges):
             if len(df_spread['curvature']) > 1:
                 popt, pcov = cf(line, df_spread['baseline'], df_spread['curvature'], sigma=df_spread['curve_err'],
                                 absolute_sigma=True)
-                x_plt = np.linspace(0.5, 1, 3)
+                x_plt = np.linspace(y_ranges[stat][0], 1, 3)
                 ax2.plot(x_plt, line(x_plt, *popt), ls='--', alpha=0.7, color=c)
-            ax2.errorbar(df_spread['baseline'], df_spread['curvature'], xerr=df_spread['base_err'],
-                         yerr=df_spread['curve_err'], color=c, label=spread, ls='none')
+            ax2.errorbar(df_spread['baseline'], df_spread['curvature'], xerr=df_spread['base_err'], marker='o',
+                         yerr=df_spread['curve_err'], color=c, label=spread, ls='none', alpha=0.6)
         ax2.legend()
         ax2.grid()
         fig2.tight_layout()
