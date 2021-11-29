@@ -49,9 +49,11 @@ def main():
     else:
         df = pd.read_csv(df_path)
 
+    df = df.dropna()
+
     # plot_vs_protons(df, stats_plot, div_plt, cent_plt, data_type_plt, y_ranges)
     # plot_vs_divs(df, stats_plot, total_protons_plt, cent_plt, data_type_plt, y_ranges)
-    for div_plt in divs:
+    for div_plt in [240]:
         fit_vs_protons(df, stats_plot, div_plt, cent_plt, data_type_plt, y_ranges, data_sets_plt)
     # fit_vs_divs(df, stats_plot, total_protons_plt, cent_plt, data_type_plt, y_ranges, data_sets_plt)
     plt.show()
@@ -255,6 +257,9 @@ def fit_vs_protons(df, stat_names, div, cent, data_type, y_ranges, data_set_plt)
                 # Why are some linear fits failing?
                 popt, pcov = cf(line, df_set['total_protons'], df_set['val'], sigma=df_set['err'], absolute_sigma=True)
                 if 'ampt' in data_set or data_set in data_set_plt:
+                    print(df_set['total_protons'])
+                    print(df_set['val'])
+                    print(df_set['err'])
                     ax.plot(df_set['total_protons'], line(df_set['total_protons'], *popt), ls='--', color=c)
         ax.legend()
         fig.tight_layout()
