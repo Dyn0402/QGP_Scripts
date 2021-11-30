@@ -53,9 +53,11 @@ def main():
 
     # plot_vs_protons(df, stats_plot, div_plt, cent_plt, data_type_plt, y_ranges)
     # plot_vs_divs(df, stats_plot, total_protons_plt, cent_plt, data_type_plt, y_ranges)
-    for div_plt in [240]:
-        fit_vs_protons(df, stats_plot, div_plt, cent_plt, data_type_plt, y_ranges, data_sets_plt)
-    # fit_vs_divs(df, stats_plot, total_protons_plt, cent_plt, data_type_plt, y_ranges, data_sets_plt)
+    # for div_plt in [240]:
+    #     fit_vs_protons(df, stats_plot, div_plt, cent_plt, data_type_plt, y_ranges, data_sets_plt)
+    df_pars = fit_vs_divs(df, stats_plot, total_protons_plt, cent_plt, data_type_plt, y_ranges, data_sets_plt)
+    df_fits = interp_vs_div(df_pars, y_ranges, plot=True)
+    plot_fits(df_fits)
     plt.show()
     print('donzo')
 
@@ -168,6 +170,10 @@ def line(x, a, b):
     return a * x + b
 
 
+def line_fixed(x, a):
+    return a * (x - 1)
+
+
 def quad_180(x, a, c):
     return a * (x - 180) ** 2 + c
 
@@ -265,62 +271,128 @@ def fit_vs_protons(df, stat_names, div, cent, data_type, y_ranges, data_set_plt)
         fig.tight_layout()
 
 
-def fit_vs_divs(df, stat_names, total_protons, cent, data_type, y_ranges, data_set_plt):
+def fit_vs_divs(df, stat_names, total_protons, cent, data_type, y_ranges, data_set_plt, plot=False):
+    df_pars = {}
     for stat in stat_names:
-        fig, ax = plt.subplots()
-        ax.set_title(f'{stat} {total_protons} protons')
-        ax.set_xlabel('Division Width')
-        ax.axhline(1, ls='--')
-        ax.set_ylim(y_ranges[stat])
+        if plot:
+            fig, ax = plt.subplots()
+            ax.set_title(f'{stat} {total_protons} protons')
+            ax.set_xlabel('Division Width')
+            ax.axhline(1, ls='--')
+            ax.set_ylim(y_ranges[stat])
 
-        color = iter(plt.cm.rainbow(np.linspace(0, 1, len(np.unique(df['name'])))))
+            color = iter(plt.cm.rainbow(np.linspace(0, 1, len(np.unique(df['name'])))))
         fit_pars = []
         for data_set in np.unique(df['name']):
-            c = next(color)
             df_set = df[(df['name'] == data_set) & (df['data_type'] == data_type) &
                         (df['total_protons'] == total_protons) & (df['cent'] == cent) & (df['stat'] == stat)]
             df_set = df_set.sort_values(by=['div'])
-            if 'ampt' in data_set:
-                ax.errorbar(df_set['div'], df_set['val'], df_set['err'], label=data_set, marker='o', ls='',
-                            color=c, alpha=0.8)
-                ax.errorbar(df_set['div'], df_set['val'], df_set['sys'], marker='', ls='', elinewidth=3,
-                            color=c, alpha=0.3)
-            elif data_set in data_set_plt:
-                ax.fill_between(df_set['div'], df_set['val'] - df_set['err'], df_set['val'] + df_set['err'],
-                                label=data_set, color=c, alpha=0.8)
+
+            if plot:
+                c = next(color)
+                if 'ampt' in data_set:
+                    ax.errorbar(df_set['div'], df_set['val'], df_set['err'], label=data_set, marker='o', ls='',
+                                color=c, alpha=0.8)
+                    ax.errorbar(df_set['div'], df_set['val'], df_set['sys'], marker='', ls='', elinewidth=3,
+                                color=c, alpha=0.3)
+                elif data_set in data_set_plt:
+                    ax.fill_between(df_set['div'], df_set['val'] - df_set['err'], df_set['val'] + df_set['err'],
+                                    label=data_set, color=c, alpha=0.8)
+
             if len(df_set['val'] > 1):
                 popt, pcov = cf(quad_180, df_set['div'], df_set['val'], sigma=df_set['err'], absolute_sigma=True)
                 perr = np.sqrt(np.diag(pcov))
-                fit_pars.append({'data_set': data_set, 'curvature': popt[0], 'baseline': popt[1], 'color': c,
+                fit_pars.append({'data_set': data_set, 'curvature': popt[0], 'baseline': popt[1],
                                  'spread': df_set['spread'].iloc[0], 'amp': df_set['amp'].iloc[0],
                                  'curve_err': perr[0], 'base_err': perr[1]})
                 x = np.linspace(0, 360, 100)
-                if 'ampt' in data_set or data_set in data_set_plt:
+                if plot and ('ampt' in data_set or data_set in data_set_plt):
                     ax.plot(x, quad_180(x, *popt), ls='--', color=c)
-        ax.legend()
-        fig.tight_layout()
+        if plot:
+            ax.legend()
+            fig.tight_layout()
 
-        df_pars = pd.DataFrame(fit_pars)
-        fig2, ax2 = plt.subplots()
-        ax2.set_title(stat)
-        ax2.set_xlabel('baseline')
-        ax2.set_ylabel('curvature')
+        df_pars.update({stat: pd.DataFrame(fit_pars)})
+
+    return df_pars
+
+
+def interp_vs_div(df_pars_stats, y_ranges, plot=False):
+    base_curve_lin_fits = {}
+    for stat, df_pars in df_pars_stats.items():
+        fit_df = []
         spreads = np.unique(df_pars['spread'])
-        print(spreads)
-        color = iter(plt.cm.rainbow(np.linspace(0, 1, len(spreads))))
+        if plot:
+            fig, ax = plt.subplots()
+            ax.set_title(stat)
+            ax.set_xlabel('baseline')
+            ax.set_ylabel('curvature')
+            fix_dev, ax_dev = plt.subplots()
+            ax_dev.set_title(f'{stat} Deviation from linear')
+            ax_dev.set_xlabel('baseline')
+            ax_dev.set_ylabel('curvature deviation from fit')
+            ax_dev.axhline(0, ls='--')
+            fig_rs, ax_rs = plt.subplots()
+            ax_rs.set_title('Rs vs amp')
+            ax_rs.set_xlabel('amp')
+            ax_rs.set_ylabel('r')
+            # print(spreads)
+            color = iter(plt.cm.rainbow(np.linspace(0, 1, len(spreads))))
         for spread in spreads:
-            c = next(color)
+            if plot:
+                c = next(color)
             df_spread = df_pars[df_pars['spread'] == spread]
             if len(df_spread['curvature']) > 1:
-                popt, pcov = cf(line, df_spread['baseline'], df_spread['curvature'], sigma=df_spread['curve_err'],
+                popt, pcov = cf(line_fixed, df_spread['baseline'], df_spread['curvature'], sigma=df_spread['curve_err'],
                                 absolute_sigma=True)
-                x_plt = np.linspace(y_ranges[stat][0], 1, 3)
-                ax2.plot(x_plt, line(x_plt, *popt), ls='--', alpha=0.7, color=c)
-            ax2.errorbar(df_spread['baseline'], df_spread['curvature'], xerr=df_spread['base_err'], marker='o',
-                         yerr=df_spread['curve_err'], color=c, label=spread, ls='none', alpha=0.6)
-        ax2.legend()
-        ax2.grid()
-        fig2.tight_layout()
+                perr = np.sqrt(np.diag(pcov))
+                spread_float = float(f'0.{spread.strip("spread")}') * 10
+                rs = np.sqrt(np.power(df_spread['curvature'], 2) + np.power((df_spread['baseline'] - 1), 2))
+                # New column of df equal to sqrt(curvature**2 + (baseline - 1)**2)
+                if len(popt) == 1:  # Ideally just append this to original df
+                    fit_df.append({'spread': spread_float, 'slope': popt[0], 'slope_err': perr[0]})
+                elif len(popt) == 2:
+                    fit_df.append({'spread': spread_float, 'slope': popt[0], 'slope_err': perr[0],
+                                   'int': popt[1], 'int_err': perr[1]})  # Ideally just append this to original df
+                if plot:
+                    x_plt = np.linspace(y_ranges[stat][0], 1, 3)
+                    ax.plot(x_plt, line_fixed(x_plt, *popt), ls='--', alpha=0.7, color=c)
+                    ax_dev.scatter(df_spread['baseline'],
+                                df_spread['curvature'] - line_fixed(df_spread['baseline'], *popt), color=c)
+                    amp_floats = [float(f'0.{amp.strip("amp")}') for amp in df_spread['amp']]
+                    popt1, perr1 = cf(line, amp_floats, rs)
+                    x_plt1 = np.array([0, 0.15])
+                    ax_rs.plot(x_plt1, line(x_plt1, *popt1), ls='--', alpha=0.8, color=c)
+                    ax_rs.scatter(amp_floats, rs, color=c, marker='o', alpha=0.6)
+                    ax_rs.grid()
+            if plot:
+                ax.errorbar(df_spread['baseline'], df_spread['curvature'], xerr=df_spread['base_err'], marker='o',
+                             yerr=df_spread['curve_err'], color=c, label=spread, ls='none', alpha=0.6)
+        fit_df = pd.DataFrame(fit_df)
+
+        if plot:
+            ax.legend()
+            ax.grid()
+            fig.tight_layout()
+        base_curve_lin_fits.update({stat: fit_df})
+
+        return base_curve_lin_fits
+
+
+def plot_fits(df_fits):
+    for stat, df in df_fits.items():
+        if 'int' in df:
+            fig_int, ax_int = plt.subplots()
+            ax_int.errorbar(df['spread'], df['int'], df['int_err'])
+            ax_int.set_title(f'{stat} Intercepts')
+            ax_int.set_xlabel('Spread')
+            ax_int.set_ylabel('Intercept')
+
+        fig_slope, ax_slope = plt.subplots()
+        ax_slope.errorbar(df['spread'], df['slope'], df['slope_err'])
+        ax_slope.set_title(f'{stat} Slopes')
+        ax_slope.set_xlabel('Spread')
+        ax_slope.set_ylabel('Slope')
 
 
 if __name__ == '__main__':
