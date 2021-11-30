@@ -53,9 +53,9 @@ def main():
 
     # plot_vs_protons(df, stats_plot, div_plt, cent_plt, data_type_plt, y_ranges)
     # plot_vs_divs(df, stats_plot, total_protons_plt, cent_plt, data_type_plt, y_ranges)
-    # for div_plt in [240]:
-    #     fit_vs_protons(df, stats_plot, div_plt, cent_plt, data_type_plt, y_ranges, data_sets_plt)
-    df_pars = fit_vs_divs(df, stats_plot, total_protons_plt, cent_plt, data_type_plt, y_ranges, data_sets_plt)
+    for div_plt in [240]:
+        fit_vs_protons(df, stats_plot, div_plt, cent_plt, data_type_plt, y_ranges, data_sets_plt, True)
+    df_pars = fit_vs_divs(df, stats_plot, total_protons_plt, cent_plt, data_type_plt, y_ranges, data_sets_plt, True)
     df_fits = interp_vs_div(df_pars, y_ranges, plot=True)
     plot_fits(df_fits)
     plt.show()
