@@ -153,6 +153,9 @@ class DistStats:
 
         return Measure(val, err)
 
+    def get_non_excess_kurtosis(self):
+        return self.get_kurtosis() + 3
+
     def get_kurt_var(self):
         """
         Get kurtosis*variance of distribution with error from delta theorem

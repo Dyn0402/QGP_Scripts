@@ -34,9 +34,11 @@ def main():
                 ('amp01', 'spread08'), ('amp02', 'spread08'), ('amp03', 'spread08'), ('amp04', 'spread08'),
                 ('amp01', 'spread2'), ('amp02', 'spread2'), ('amp03', 'spread2'), ('amp04', 'spread2')]
     stats = {'mean': getattr(DistStats, 'get_mean'), 'standard deviation': getattr(DistStats, 'get_sd'),
-             'skewness': getattr(DistStats, 'get_skewness'), 'kurtosis': getattr(DistStats, 'get_kurtosis')}
-    y_ranges = {'mean': (0.8, 1.2), 'standard deviation': (0.8, 1.05), 'skewness': (0, 1.25), 'kurtosis': (-3, 2)}
-    stats_plot = ['standard deviation']  # , 'skewness', 'kurtosis']
+             'skewness': getattr(DistStats, 'get_skewness'), 'kurtosis': getattr(DistStats, 'get_kurtosis'),
+             'non-excess kurtosis': getattr(DistStats, 'get_non_excess_kurtosis')}
+    y_ranges = {'mean': (0.8, 1.2), 'standard deviation': (0.8, 1.05), 'skewness': (0, 1.25), 'kurtosis': (-3, 2),
+                'non-excess kurtosis': (0.95, 1.025)}
+    stats_plot = ['standard deviation', 'skewness', 'non-excess kurtosis']
     div_plt = 60
     total_protons_plt = 32
     cent_plt = 8
@@ -54,7 +56,9 @@ def main():
     # plot_vs_protons(df, stats_plot, div_plt, cent_plt, data_type_plt, y_ranges)
     # plot_vs_divs(df, stats_plot, total_protons_plt, cent_plt, data_type_plt, y_ranges)
     for div_plt in [240]:
+        # plot_vs_protons(df, stats_plot, div_plt, cent_plt, data_type_plt, y_ranges, data_sets_plt)
         fit_vs_protons(df, stats_plot, div_plt, cent_plt, data_type_plt, y_ranges, data_sets_plt, True)
+    # plot_vs_divs(df, stats_plot, total_protons_plt, cent_plt, data_type_plt, data_sets_plt, y_ranges)
     df_pars = fit_vs_divs(df, stats_plot, total_protons_plt, cent_plt, data_type_plt, y_ranges, data_sets_plt, True)
     df_fits = interp_vs_div(df_pars, y_ranges, plot=True)
     plot_fits(df_fits)
@@ -178,65 +182,10 @@ def quad_180(x, a, c):
     return a * (x - 180) ** 2 + c
 
 
-def plot_vs_protons(df, stat_names, div, cent, data_type, y_ranges):
+def plot_vs_protons(df, stat_names, div, cent, data_type, y_ranges, data_set_plt):
     # div = 60
     # cent = 8
     # data_type = 'divide'
-    for stat in stat_names:
-        fig, ax = plt.subplots()
-        ax.set_title(stat)
-        ax.set_xlabel('Total Protons in Event')
-        ax.axhline(1, ls='--')
-        ax.set_ylim(y_ranges[stat])
-
-        for data_set in np.unique(df['name']):
-            df_set = df[(df['name'] == data_set) & (df['data_type'] == data_type) & (df['div'] == div) &
-                        (df['cent'] == cent) & (df['stat'] == stat)]
-            df_set = df_set.sort_values(by=['total_protons'])
-            if 'ampt' in data_set:
-                ax.errorbar(df_set['total_protons'], df_set['val'], df_set['err'], label=data_set, marker='o', ls='',
-                            color='blue')
-                ax.errorbar(df_set['total_protons'], df_set['val'], df_set['sys'], marker='', ls='', elinewidth=3,
-                            color='blue', alpha=0.3)
-            else:
-                ax.fill_between(df_set['total_protons'], df_set['val'] - df_set['err'], df_set['val'] + df_set['err'],
-                                label=data_set)
-        ax.legend()
-        fig.tight_layout()
-
-    # plt.show()
-
-
-def plot_vs_divs(df, stat_names, total_protons, cent, data_type, y_ranges):
-    # cent = 8
-    # data_type = 'divide'
-    # total_protons = 30
-    for stat in stat_names:
-        fig, ax = plt.subplots()
-        ax.set_title(stat)
-        ax.set_xlabel('Division Width')
-        ax.axhline(1, ls='--')
-        ax.set_ylim(y_ranges[stat])
-
-        for data_set in np.unique(df['name']):
-            df_set = df[(df['name'] == data_set) & (df['data_type'] == data_type) &
-                        (df['total_protons'] == total_protons) & (df['cent'] == cent) & (df['stat'] == stat)]
-            df_set = df_set.sort_values(by=['div'])
-            if 'ampt' in data_set:
-                ax.errorbar(df_set['div'], df_set['val'], df_set['err'], label=data_set, marker='o', ls='',
-                            color='blue')
-                ax.errorbar(df_set['div'], df_set['val'], df_set['sys'], marker='', ls='', elinewidth=3,
-                            color='blue', alpha=0.3)
-            else:
-                ax.fill_between(df_set['div'], df_set['val'] - df_set['err'], df_set['val'] + df_set['err'],
-                                label=data_set)
-        ax.legend()
-        fig.tight_layout()
-
-    # plt.show()
-
-
-def fit_vs_protons(df, stat_names, div, cent, data_type, y_ranges, data_set_plt):
     for stat in stat_names:
         fig, ax = plt.subplots()
         ax.set_title(f'{stat} {div}° Divisions')
@@ -254,21 +203,81 @@ def fit_vs_protons(df, stat_names, div, cent, data_type, y_ranges, data_set_plt)
                 ax.errorbar(df_set['total_protons'], df_set['val'], df_set['err'], label=data_set, marker='o', ls='',
                             color=c, alpha=0.8)
                 ax.errorbar(df_set['total_protons'], df_set['val'], df_set['sys'], marker='', ls='', elinewidth=3,
-                            color=c, alpha=0.2)
+                            color=c, alpha=0.3)
             elif data_set in data_set_plt:
                 ax.fill_between(df_set['total_protons'], df_set['val'] - df_set['err'], df_set['val'] + df_set['err'],
-                                label=data_set, color=c, alpha=0.8)
+                                label=data_set, color=c)
+        ax.legend()
+        fig.tight_layout()
+
+    # plt.show()
+
+
+def plot_vs_divs(df, stat_names, total_protons, cent, data_type, data_sets_plt, y_ranges):
+    # cent = 8
+    # data_type = 'divide'
+    # total_protons = 30
+    for stat in stat_names:
+        fig, ax = plt.subplots()
+        ax.set_title(f'{stat} {total_protons} protons')
+        ax.set_xlabel('Division Width')
+        ax.axhline(1, ls='--')
+        ax.set_ylim(y_ranges[stat])
+
+        for data_set in np.unique(df['name']):
+            df_set = df[(df['name'] == data_set) & (df['data_type'] == data_type) &
+                        (df['total_protons'] == total_protons) & (df['cent'] == cent) & (df['stat'] == stat)]
+            df_set = df_set.sort_values(by=['div'])
+            if 'ampt' in data_set:
+                ax.errorbar(df_set['div'], df_set['val'], df_set['err'], label=data_set, marker='o', ls='',
+                            color='blue')
+                ax.errorbar(df_set['div'], df_set['val'], df_set['sys'], marker='', ls='', elinewidth=3,
+                            color='blue', alpha=0.3)
+            elif data_set in data_sets_plt:
+                ax.fill_between(df_set['div'], df_set['val'] - df_set['err'], df_set['val'] + df_set['err'],
+                                label=data_set)
+        ax.legend()
+        fig.tight_layout()
+
+    # plt.show()
+
+
+def fit_vs_protons(df, stat_names, div, cent, data_type, y_ranges, data_set_plt, plot=False):
+    for stat in stat_names:
+        if plot:
+            fig, ax = plt.subplots()
+            ax.set_title(f'{stat} {div}° Divisions')
+            ax.set_xlabel('Total Protons in Event')
+            ax.axhline(1, ls='--')
+            ax.set_ylim(y_ranges[stat])
+            color = iter(plt.cm.rainbow(np.linspace(0, 1, len(np.unique(df['name'])))))
+
+        for data_set in np.unique(df['name']):
+            df_set = df[(df['name'] == data_set) & (df['data_type'] == data_type) & (df['div'] == div) &
+                        (df['cent'] == cent) & (df['stat'] == stat)]
+            df_set = df_set.sort_values(by=['total_protons'])
+            if plot:
+                c = next(color)
+                if 'ampt' in data_set:
+                    ax.errorbar(df_set['total_protons'], df_set['val'], df_set['err'], label=data_set, marker='o', ls='',
+                                color=c, alpha=0.8)
+                    ax.errorbar(df_set['total_protons'], df_set['val'], df_set['sys'], marker='', ls='', elinewidth=3,
+                                color=c, alpha=0.2)
+                elif data_set in data_set_plt:
+                    ax.fill_between(df_set['total_protons'], df_set['val'] - df_set['err'], df_set['val'] + df_set['err'],
+                                    label=data_set, color=c, alpha=0.8)
             if len(df_set['val']) > 1:
                 # print(f'df_set[total_protons]: {df_set["total_protons"]}, df_set[val]: {df_set["val"]}')
                 # Why are some linear fits failing?
                 popt, pcov = cf(line, df_set['total_protons'], df_set['val'], sigma=df_set['err'], absolute_sigma=True)
-                if 'ampt' in data_set or data_set in data_set_plt:
-                    print(df_set['total_protons'])
-                    print(df_set['val'])
-                    print(df_set['err'])
+                if 'ampt' in data_set or data_set in data_set_plt and plot:
+                    # print(df_set['total_protons'])
+                    # print(df_set['val'])
+                    # print(df_set['err'])
                     ax.plot(df_set['total_protons'], line(df_set['total_protons'], *popt), ls='--', color=c)
-        ax.legend()
-        fig.tight_layout()
+        if plot:
+            ax.legend()
+            fig.tight_layout()
 
 
 def fit_vs_divs(df, stat_names, total_protons, cent, data_type, y_ranges, data_set_plt, plot=False):
@@ -358,7 +367,7 @@ def interp_vs_div(df_pars_stats, y_ranges, plot=False):
                     x_plt = np.linspace(y_ranges[stat][0], 1, 3)
                     ax.plot(x_plt, line_fixed(x_plt, *popt), ls='--', alpha=0.7, color=c)
                     ax_dev.scatter(df_spread['baseline'],
-                                df_spread['curvature'] - line_fixed(df_spread['baseline'], *popt), color=c)
+                                   df_spread['curvature'] - line_fixed(df_spread['baseline'], *popt), color=c)
                     amp_floats = [float(f'0.{amp.strip("amp")}') for amp in df_spread['amp']]
                     popt1, perr1 = cf(line, amp_floats, rs)
                     x_plt1 = np.array([0, 0.15])
@@ -367,7 +376,7 @@ def interp_vs_div(df_pars_stats, y_ranges, plot=False):
                     ax_rs.grid()
             if plot:
                 ax.errorbar(df_spread['baseline'], df_spread['curvature'], xerr=df_spread['base_err'], marker='o',
-                             yerr=df_spread['curve_err'], color=c, label=spread, ls='none', alpha=0.6)
+                            yerr=df_spread['curve_err'], color=c, label=spread, ls='none', alpha=0.6)
         fit_df = pd.DataFrame(fit_df)
 
         if plot:
