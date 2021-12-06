@@ -53,15 +53,13 @@ def uproot_finder():
     """ Looks like this runs just as fast as compiled ROOT code, just slow 2-p comparisons """
     print(f'Start {datetime.now()}\n')
     vector.register_awkward()
-    # Found: AMPT_Trees/min_bias/string_melting/7GeV/data_741821621.root EVENT:1617 - 1618
-    # path = '/home/dylan/Research/AMPT_Trees/min_bias/string_melting/7GeV/'
-    # path = '/home/dylan/Research/AMPT_Bad_Event/'
-    # path = 'D:/Research/AMPT_Trees/min_bias/string_melting/11GeV/'
 
-    out_file_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_minbias.txt'
+    # out_file_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_minbias.txt'
+    out_file_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_minbias_after.txt'
     # path = '/home/dylan/Research/AMPT_Trees/'
-    path = '/media/ucla/Research/AMPT_Trees/min_bias/string_melting/62GeV/'
-    threads = 2
+    # path = '/media/ucla/Research/AMPT_Trees/min_bias/string_melting/62GeV/'
+    path = '/media/ucla/Research/AMPT_Trees/min_bias/string_melting/11GeV/'
+    threads = 14
     tree_name = 'tree'
     write_mode = 'a'
     max_eta = 1
@@ -76,11 +74,13 @@ def uproot_finder():
             root_path = os.path.join(root, file_name)
             root_paths.append(root_path)
 
-    print(f'{len(root_paths)} files found to be checked.')
+    n_files = len(root_paths)
+    print(f'{n_files} files found to be checked.')
 
     with Pool(threads) as pool:
-        bad_trees = pool.starmap(check_file, [(root_path, tree_name, track_attributes, max_eta, ignore_pids) for
-                                              root_path in root_paths])
+        bad_trees = pool.starmap(check_file,
+                                 [(root_path, tree_name, track_attributes, max_eta, ignore_pids, num, n_files) for
+                                  num, root_path in enumerate(root_paths)])
 
     with open(out_file_path, write_mode) as file:
         for bad_tree in bad_trees:
@@ -92,9 +92,9 @@ def uproot_finder():
     print(f'\nEnd {datetime.now()}')
 
 
-def check_file(root_path, tree_name, track_attributes, max_eta, ignore_pids):
+def check_file(root_path, tree_name, track_attributes, max_eta, ignore_pids, root_num=-1, root_num_total=-1):
     bad_events = []
-    print(f'{root_path} :\t{datetime.now()}')
+    print(f'{root_num}/{root_num_total} {root_path} :\t{datetime.now()}')
     with uproot.open(root_path) as file:
         tracks = file[tree_name].arrays(track_attributes)
         tracks = ak.zip({'pid': tracks['pid'], 'px': tracks['px'], 'py': tracks['py'], 'pz': tracks['pz']},
@@ -106,7 +106,7 @@ def check_file(root_path, tree_name, track_attributes, max_eta, ignore_pids):
         ident_p = track_a == track_b  # Check if momenta same
         ident_pid = ak.where(track_a['pid'] == track_b['pid'], True, False)
         ident = ident_p * ident_pid
-        num_ident = [{'event_num': x, 'num_identical': y} for x, y in enumerate(ak.sum(ident, axis=1)) if y > 0]
+        num_ident = [{'event_num': x + 1, 'num_identical': y} for x, y in enumerate(ak.sum(ident, axis=1)) if y > 0]
         if len(num_ident) > 0:
             print(f'{root_path} {datetime.now()}')
             id_tracks = track_a[ident]

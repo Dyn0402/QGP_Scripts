@@ -16,7 +16,8 @@ import shutil
 
 
 def main():
-    bad_file_list_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_slimcentral.txt'
+    # bad_file_list_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_slimcentral.txt'
+    bad_file_list_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_minbias.txt'
     bad_tree_repo = '/home/dylan/Research/Ampt_Bad_Event/'
     bad_tree_sufx = '_bad'
     fix_tree_sufx = '_fix'
@@ -24,9 +25,9 @@ def main():
     bad_trees = get_bad_event_file(bad_file_list_path, min_identical)
     for tree_path, tree in bad_trees.items():
         print(tree_path, tree)
-        # repo_tree_path = move_tree(tree_path, bad_tree_repo, bad_tree_sufx)
-        # fix_tree_path = fix_tree(tree, repo_tree_path, bad_tree_sufx, fix_tree_sufx)
-        # replace_tree(fix_tree_path, tree_path)
+        repo_tree_path = move_tree(tree_path, bad_tree_repo, bad_tree_sufx)
+        fix_tree_path = fix_tree(tree, repo_tree_path, bad_tree_sufx, fix_tree_sufx)
+        replace_tree(fix_tree_path, tree_path)
 
     print('donzo')
 
@@ -35,8 +36,8 @@ def get_bad_event_file(path, min_identical):
     bad_events = []
     with open(path, 'r') as file:
         lines = file.readlines()
-        bad_event = {}
         for line in lines:
+            bad_event = {}
             line = line.strip().split('\t')
             for item in line:
                 item = item.strip().split(': ')
@@ -44,8 +45,8 @@ def get_bad_event_file(path, min_identical):
                     bad_event.update({item[0]: int(item[-1])})
                 except ValueError:
                     bad_event.update({item[0]: item[-1]})
-        if bad_event['num_identical'] >= min_identical:
-            bad_events.append(bad_event)
+            if bad_event['num_identical'] >= min_identical:
+                bad_events.append(bad_event)
 
     bad_trees = {}
     for event in bad_events:
@@ -75,7 +76,7 @@ def fix_tree(tree, bad_tree_path, bad_sufx, fix_sufx):
     new_tree = bad_tree.CloneTree(0)
     for event in bad_tree:
         for bad_event in tree:
-            if event.event != bad_event['bad_event']:
+            if event.event != bad_event['event_num']:
                 new_tree.Fill()
     bad_file.Close()
     new_file.Write()
