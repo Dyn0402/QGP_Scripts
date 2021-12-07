@@ -14,7 +14,7 @@ import shutil
 def main():
     """Same as remove_bad_event but no actual tree editing so it doesn't have ROOT dependence.
     Used to copy already fixed files into correct directories in RCF."""
-    bad_file_list_path = '/star/u/dneff/Ampt_Bad_Event/bad_ampt_events_slimcentral.txt'
+    bad_file_list_path = '/star/u/dneff/Ampt_Bad_Event/bad_ampt_events_minbias.txt'
     bad_tree_repo = '/star/u/dneff/Ampt_Bad_Event/'
     bad_tree_sufx = '_bad'
     fix_tree_sufx = '_fix'
