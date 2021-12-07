@@ -17,16 +17,21 @@ import shutil
 
 def main():
     # bad_file_list_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_slimcentral.txt'
-    bad_file_list_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_minbias.txt'
-    bad_tree_repo = '/home/dylan/Research/Ampt_Bad_Event/'
+    bad_file_list_path = '/star/u/dneff/Ampt_Bad_Event/bad_ampt_events_slimcentral.txt'
+    # bad_tree_repo = '/home/dylan/Research/Ampt_Bad_Event/'
+    bad_tree_repo = '/star/u/dneff/Ampt_Bad_Event/'
     bad_tree_sufx = '_bad'
     fix_tree_sufx = '_fix'
     min_identical = 2
     bad_trees = get_bad_event_file(bad_file_list_path, min_identical)
     for tree_path, tree in bad_trees.items():
+        tree_path.replace('/media/ucla/Research/AMPT_Trees', '/gpfs01/star/pwg/dneff/data/AMPT')
         print(tree_path, tree)
         repo_tree_path = move_tree(tree_path, bad_tree_repo, bad_tree_sufx)
-        fix_tree_path = fix_tree(tree, repo_tree_path, bad_tree_sufx, fix_tree_sufx)
+        # fix_tree_path = fix_tree(tree, repo_tree_path, bad_tree_sufx, fix_tree_sufx)
+        # Below only for RCF!
+        fix_tree_path = repo_tree_path.replace(bad_tree_sufx, fix_tree_sufx)
+        # Above only for RCF!
         replace_tree(fix_tree_path, tree_path)
 
     print('donzo')
@@ -63,7 +68,7 @@ def move_tree(tree_path, repo_path, sufx):
     tree_name = tree_name.split('.')
     tree_name = tree_name[0] + sufx + '.' + tree_name[-1]
     repo_tree_path = repo_path + tree_name
-    shutil.move(tree_path, repo_tree_path)
+    # shutil.move(tree_path, repo_tree_path)
 
     return repo_tree_path
 
