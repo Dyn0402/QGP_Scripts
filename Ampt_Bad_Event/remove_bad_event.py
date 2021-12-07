@@ -16,7 +16,7 @@ import shutil
 
 
 def main():
-    bad_file_list_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_slimcentral.txt'
+    bad_file_list_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_minbias.txt'
     bad_tree_repo = '/home/dylan/Research/Ampt_Bad_Event/'
     bad_tree_sufx = '_bad'
     fix_tree_sufx = '_fix'
@@ -27,7 +27,6 @@ def main():
         print(tree_path, tree)
         repo_tree_path = move_tree(tree_path, bad_tree_repo, bad_tree_sufx)
         fix_tree_path = fix_tree(tree, repo_tree_path, bad_tree_sufx, fix_tree_sufx)
-        fix_tree_path = repo_tree_path.replace(bad_tree_sufx, fix_tree_sufx)
         replace_tree(fix_tree_path, tree_path)
 
     print('donzo')
@@ -87,7 +86,7 @@ def fix_tree(tree, bad_tree_path, bad_sufx, fix_sufx):
 
 
 def replace_tree(fixed_tree_path, original_path):
-    shutil.move(fixed_tree_path, original_path)
+    shutil.copy(fixed_tree_path, original_path)
 
 
 def remove_specific():
