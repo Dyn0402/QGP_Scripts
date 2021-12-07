@@ -93,8 +93,8 @@ def main():
     save_path = '/home/dylan/Desktop/'
 
     # demo_plots(dist)
-    sim_single_trial(dist, num_events, binning, moment_pars, threads)
-    # sim_trials(dist, num_events, trials, binning, percentiles, moment_pars, threads)
+    # sim_single_trial(dist, num_events, binning, moment_pars, threads)
+    sim_trials(dist, num_events, trials, binning, percentiles, moment_pars, threads)
     # start = time.time()
     # event_means, event_errs, event_percs = simulate(dist, num_events, trials, binning, moment_pars, percentiles)
     # print(f'Simulation time: {time.time() - start}s')

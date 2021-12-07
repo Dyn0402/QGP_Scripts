@@ -26,17 +26,17 @@ def main():
     # events = gen_events(10, 10)
     # hist_events_ebe(events, 10, 120, 50)
 
-    stat_deviation_with_events()
+    # stat_deviation_with_events()
     # stats_with_events()
-    # stats_with_samples()
+    stats_with_samples()
     # gif_events_maker()
     # gif_maker()
     print('donzo')
 
 
 def stats_with_samples():
-    gif_sets = [{'bin_width': 120, 'sd_lim': [0.8, 1.2], 'kurt_lim': [0.5, 1.5], 'max_sample': 100, 'dpi': 70,
-                 'events': 1000, 'tracks': 150}]
+    gif_sets = [{'bin_width': 120, 'sd_lim': [0.8, 1.2], 'kurt_lim': [0.5, 1.5], 'max_sample': 10, 'dpi': 70,
+                 'events': 10, 'tracks': 5}]
     gif = gif_sets[0]
     fig, axs = plt.subplots(2, 1, figsize=(10, 7), dpi=gif['dpi'])
     fig.set_tight_layout(True)
@@ -47,6 +47,8 @@ def stats_with_samples():
     plot_samples = []
     stds = []
     kurts = []
+
+    print(events)
     for sample in np.arange(1, gif['max_sample'] + 1):
         plot_samples.append(sample)
         events_hist = hist_events(events, gif['tracks'], gif['bin_width'], sample)

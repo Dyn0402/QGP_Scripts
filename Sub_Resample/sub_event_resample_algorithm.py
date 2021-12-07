@@ -23,9 +23,10 @@ def main():
     bin_width = 3
     samples = 13
     # angles = list(np.deg2rad(angles))
-    print(get_resamples(angles, bin_width, samples))
-    angles = list(np.rad2deg(angles))
-    print(get_hist(angles, np.rad2deg(bin_width), samples))
+    # print(get_resamples(angles, bin_width, samples))
+    # angles = list(np.rad2deg(angles))
+    # print(get_hist(angles, np.rad2deg(bin_width), samples))
+    plot_resamples(angles, bin_width, samples)
 
     print('donzo')
 
