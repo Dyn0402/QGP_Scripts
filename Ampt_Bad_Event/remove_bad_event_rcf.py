@@ -66,7 +66,10 @@ def move_tree(tree_path, repo_path, sufx):
 
 
 def replace_tree(fixed_tree_path, original_path):
-    shutil.move(fixed_tree_path, original_path)
+    try:
+        shutil.copy(fixed_tree_path, original_path)
+    except PermissionError:
+        print(f'Not copied: {original_path}')
 
 
 if __name__ == '__main__':

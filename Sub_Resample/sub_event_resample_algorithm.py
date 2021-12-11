@@ -19,14 +19,17 @@ def main():
     Copy and transcribe C++ algorithm to test and visualize
     :return:
     """
-    angles = [0.5, 1.5]
-    bin_width = 3
-    samples = 13
+    # angles = [0.5, 1.5]
+    angles = list(np.deg2rad([20, 50, 55, 60, 187, 310]))
+    bin_width = np.deg2rad(120)
+    samples = 10
     # angles = list(np.deg2rad(angles))
     # print(get_resamples(angles, bin_width, samples))
     # angles = list(np.rad2deg(angles))
     # print(get_hist(angles, np.rad2deg(bin_width), samples))
-    plot_resamples(angles, bin_width, samples)
+    hist = plot_resamples(angles, bin_width, samples)
+    # plt.hist(hist, bins=np.arange(-0.5, len(angles) + 0.5, 1))
+    # plt.show()
 
     print('donzo')
 
@@ -72,15 +75,14 @@ def get_resamples(angles_in, bin_width, samples):
     return hist
 
 
-def plot_resamples(angles, bin_width, samples):
+def plot_resamples(angles_in, bin_width, samples):
+    angles = angles_in.copy()
     if bin_width > 2 * np.pi or bin_width <= 0:
         print(f'get_resamples bin_width {bin_width} out of range, setting to 2_PI')
         bin_width = 2 * np.pi
     if samples < 0:
         print(f'get_resamples samples {samples} less than 0, taking absolute value: {samples} --> {abs(samples)}')
         samples = abs(samples)
-
-    # sort here
 
     hist = np.empty(samples, dtype=int)
     if samples == 0:
@@ -100,22 +102,25 @@ def plot_resamples(angles, bin_width, samples):
 
     low_index = 0
     high_index = 0
-    print(angles)
+    # print(angles)
     for sample_i in range(samples):
         while angles[low_index] < bin_low:
             low_index += 1
         while angles[high_index] < bin_high:
             high_index += 1
         hist[sample_i] = high_index - low_index
-        plot_binning(angles[:num_angles], bin_low, bin_high, hist[sample_i])
+        plot_binning(angles[:num_angles], bin_low, bin_high, hist[sample_i], hist[:sample_i + 1])
         bin_low += dphi
         bin_high += dphi
 
     return hist
 
 
-def plot_binning(angles, bin_low, bin_high, counts):
-    fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
+def plot_binning(angles, bin_low, bin_high, counts, hist):
+    fig = plt.figure(figsize=(10, 5))
+    ax = plt.subplot(121, projection='polar')
+    ax_hist = plt.subplot(122)
+    # fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
     ax.vlines(angles, 0, 1, color='red', label='tracks')
     ax.fill_between(np.linspace(bin_low, bin_high, 1000), 0, 1, alpha=0.5, color='gray', label='bin')
     ax.grid(False)
@@ -124,6 +129,11 @@ def plot_binning(angles, bin_low, bin_high, counts):
     leg_angle = np.deg2rad(300)
     ax.legend(loc="upper left", bbox_to_anchor=(.5 + np.cos(leg_angle) / 2, .5 + np.sin(leg_angle) / 2))
     ax.text(-0.1, -0.02, f'Tracks in \nbin: {counts}', horizontalalignment='left', transform=ax.transAxes)
+    # print(hist)
+    ax_hist.hist(hist, bins=np.arange(-0.5, len(angles) + 0.5), color='red', label='new')
+    ax_hist.hist(hist[:-1], bins=np.arange(-0.5, len(angles) + 0.5), color='blue')
+    ax_hist.legend()
+    fig.tight_layout()
     plt.show()
 
 
