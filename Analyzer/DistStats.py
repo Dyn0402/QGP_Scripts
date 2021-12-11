@@ -25,7 +25,7 @@ class DistStats:
         self.total_counts = None
         if debug:
             warnings.filterwarnings('error')
-        if type(dist) == 'dict':
+        if type(dist) == dict:
             self.dist = dist
         else:
             self.dist = dict(zip(range(len(dist)), dist))
@@ -274,3 +274,6 @@ class DistStats:
             err = float('nan')
 
         return Measure(val, err)
+
+    def print_dist(self):
+        print(self.dist)
