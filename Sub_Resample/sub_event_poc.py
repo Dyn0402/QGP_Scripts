@@ -26,6 +26,7 @@ def main():
     n_events = 100
     bin_width = np.deg2rad(120)
     bootstraps = 100
+    experiments = 10
 
     n = n_tracks
     p = bin_width / (2 * np.pi)
@@ -41,30 +42,33 @@ def main():
 
     stats_plt = ['non-excess kurtosis']
 
+    ensemble = []
+
     stats_list = {stat: [] for stat in stats_plt}
     stats_err_list = {stat: [] for stat in stats_plt}
     for n_sample in n_samples:
         print(f'{n_sample} samples')
         data = {bin_count: 0 for bin_count in range(n_tracks + 1)}
         data_bs = [{bin_count: 0 for bin_count in range(n_tracks + 1)} for i in range(bootstraps)]
-        for i in range(n_events):
-            event = list(sorted(gen_event(n_tracks)))
-            hist = get_resamples(event, bin_width, n_sample)
-            for count in hist:
-                data[count] += 1
-            for bootstrap in data_bs:
-                for x in range(pois.rvs()):
-                    for count in hist:
-                        bootstrap[count] += 1
+        for experiment in range(experiments):
+            for i in range(n_events):
+                event = list(sorted(gen_event(n_tracks)))
+                hist = get_resamples(event, bin_width, n_sample)
+                for count in hist:
+                    data[count] += 1
+                for bootstrap in data_bs:
+                    for x in range(pois.rvs()):
+                        for count in hist:
+                            bootstrap[count] += 1
 
-        data_stats = DistStats(data)
-        data_bs_stats = [DistStats(bs) for bs in data_bs]
-        for stat in stats_plt:
-            stats_list[stat].append(stats[stat](data_stats).val)
-            bs_list = []
-            for i in range(len(data_bs_stats)):
-                bs_list.append(stats[stat](data_bs_stats[i]).val)
-            stats_err_list[stat].append(np.std(bs_list))
+            data_stats = DistStats(data)
+            data_bs_stats = [DistStats(bs) for bs in data_bs]
+            for stat in stats_plt:
+                stats_list[stat].append(stats[stat](data_stats).val)
+                bs_list = []
+                for i in range(len(data_bs_stats)):
+                    bs_list.append(stats[stat](data_bs_stats[i]).val)
+                stats_err_list[stat].append(np.std(bs_list))
 
     plt.errorbar(n_samples, stats_list[stats_plt[0]], yerr=stats_err_list[stats_plt[0]], marker='o',
                  ls='none')
