@@ -54,12 +54,12 @@ def uproot_finder():
     print(f'Start {datetime.now()}\n')
     vector.register_awkward()
 
-    # out_file_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_minbias.txt'
-    out_file_path = '/star/u/dneff/Ampt_Bad_Event/bad_ampt_events_central.txt'
+    out_file_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_slim_most_central_after.txt'
+    # out_file_path = '/star/u/dneff/Ampt_Bad_Event/bad_ampt_events_central.txt'
     # path = '/home/dylan/Research/AMPT_Trees/'
-    # path = '/media/ucla/Research/AMPT_Trees/min_bias/string_melting/62GeV/'
-    path = '/gpfs01/star/pwg/dneff/data/AMPT/most_central/string_melting/7GeV/'
-    threads = 1
+    path = '/media/ucla/Research/AMPT_Trees/slim_most_central/string_melting/7GeV/'
+    # path = '/gpfs01/star/pwg/dneff/data/AMPT/slim_most_central/string_melting/7GeV/'
+    threads = 10
     tree_name = 'tree'
     write_mode = 'a'
     max_eta = 1
