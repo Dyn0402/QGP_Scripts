@@ -14,7 +14,8 @@ import pandas as pd
 
 
 def main():
-    path = '/home/dylan/Desktop/Old_PC_Tree_Reader_Break_Output.txt'
+    # path = '/home/dylan/Desktop/Old_PC_Tree_Reader_Break_Output.txt'
+    path = 'C:/Users/Dylan/Desktop/Old_PC_Tree_Reader_Resample_Progress_Output.txt'
     df = []
     with open(path, 'r') as file:
         lines = file.readlines()
