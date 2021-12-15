@@ -24,8 +24,8 @@ def main():
     :return:
     """
 
-    get_resamples(np.array([0.5, 1.5]), 2.09, 3)
-    return
+    # get_resamples(np.array([0.5, 1.5]), 2.09, 3)
+    # return
     n_tracks = 15
     # n_samples = np.arange(3, 100, 2)
     n_sample = 3
@@ -52,17 +52,17 @@ def main():
     stats_err_list = {stat: [] for stat in stats_plt}
     for experiment in range(experiments):
         print(f'Experiment {experiment}')
-        data = {bin_count: 0 for bin_count in range(n_tracks + 1)}
-        data_bs = [{bin_count: 0 for bin_count in range(n_tracks + 1)} for i in range(bootstraps)]
+        # data = {bin_count: 0 for bin_count in range(n_tracks + 1)}
+        # data_bs = [{bin_count: 0 for bin_count in range(n_tracks + 1)} for i in range(bootstraps)]
+        data = np.zeros(n_tracks + 1, dtype=int)
+        data_bs = np.zeros((bootstraps, n_tracks + 1), dtype=int)
         for i in range(n_events):
             event = np.sort(gen_event(n_tracks))
             hist = get_resamples(event, bin_width, n_sample)
-            for count in hist:
-                data[count] += 1
+            data += hist
             for bootstrap in data_bs:
                 for x in range(pois.rvs()):
-                    for count in hist:
-                        bootstrap[count] += 1
+                    bootstrap += hist
 
         data_stats = DistStats(data)
         data_bs_stats = [DistStats(bs) for bs in data_bs]

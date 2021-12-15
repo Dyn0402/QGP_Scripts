@@ -22,14 +22,15 @@ def main():
     """
     angles = [0.5, 1.5]
     # angles = list(np.deg2rad([20, 50, 55, 60, 187, 310]))
-    bin_width = 2.09  # np.deg2rad(120)
+    bin_width = np.deg2rad(120)  # 2.09
     samples = 3
     # angles = list(np.deg2rad(angles))
+    print(get_resamples(np.asarray(angles), bin_width, samples))
     print(get_resamples3(angles, bin_width, samples))
     # angles = list(np.rad2deg(angles))
     # print(get_hist(angles, np.rad2deg(bin_width), samples))
-    hist = plot_resamples(angles, bin_width, samples)
-    print(hist)
+    hist = plot_resamples3(angles, bin_width, samples)
+    # print(hist)
     # plt.hist(hist, bins=np.arange(-0.5, len(angles) + 0.5, 1))
     # plt.show()
 
@@ -78,7 +79,6 @@ def get_resamples3(angles_in, bin_width, samples):
 
 
 def get_resamples(angles_in, bin_width, samples):
-    # BAD ALGORITHM!!!!!!!!! Doesn't work, need to fix.
     # Expecting angles is numpy array
     # angles = angles_in.copy()
     # if bin_width > 2 * np.pi or bin_width <= 0:
@@ -106,8 +106,6 @@ def get_resamples(angles_in, bin_width, samples):
         #     print('angles unsorted')
     angles = np.append(angles_in, np.append(angles_in + 2 * np.pi, 4 * np.pi))
 
-    print(angles, num_angles, hist, dphi, bin_high, bin_low)
-
     low_index = 0
     high_index = 0
     sample_i = 0
@@ -127,12 +125,10 @@ def get_resamples(angles_in, bin_width, samples):
 
     hist[high_index - low_index] -= sample_i - samples
 
-    print(hist)
-
     return hist
 
 
-def plot_resamples(angles_in, bin_width, samples):
+def plot_resamples3(angles_in, bin_width, samples):
     angles = angles_in.copy()
     if bin_width > 2 * np.pi or bin_width <= 0:
         print(f'get_resamples bin_width {bin_width} out of range, setting to 2_PI')
@@ -187,9 +183,11 @@ def plot_binning(angles, bin_low, bin_high, counts, hist):
     ax.legend(loc="upper left", bbox_to_anchor=(.5 + np.cos(leg_angle) / 2, .5 + np.sin(leg_angle) / 2))
     ax.text(-0.1, -0.02, f'Tracks in \nbin: {counts}', horizontalalignment='left', transform=ax.transAxes)
     # print(hist)
-    ax_hist.hist(hist, bins=np.arange(-0.5, len(angles) + 0.5), color='red', label='new')
-    ax_hist.hist(hist[:-1], bins=np.arange(-0.5, len(angles) + 0.5), color='blue')
+    print(hist, counts)
+    ax_hist.hist(hist, bins=np.arange(-0.5, len(angles) + 1.5), color='red', label='new')
+    ax_hist.hist(hist[:-1], bins=np.arange(-0.5, len(angles) + 1.5), color='blue')
     ax_hist.legend()
+    ax_hist.set_xlabel('Tracks in Bin')
     fig.tight_layout()
     plt.show()
 
