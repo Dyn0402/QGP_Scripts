@@ -16,6 +16,7 @@ from scipy.optimize import curve_fit as cf
 from scipy.interpolate import interp1d
 
 from AzimuthBinData import AzimuthBinData
+from Bootstrap_Az_Bin import BootstrapAzBin
 from DistStats import DistStats
 from Measure import Measure
 
@@ -27,7 +28,7 @@ def main():
 
 def init_pars():
     pars = {'datasets': define_datasets(),
-            'base_path': 'D:/Research/'  # '/home/dylan/Research/'
+            'base_path': '/home/dylan/Research/'
             }
 
     return pars
@@ -40,9 +41,16 @@ def define_datasets():
     :return: list of dictionaries containing parameters for defining datasets
     """
 
-    par_names = ['name', 'base_ext', 'exact_keys', 'contain_keys']
-    par_vals = [['ampt_def', '_Ampt', ['default'], []],
-                ['sim_amp01_spread01', '_Sim', ['anticlmulti', 'amp05', 'spread01'], ['single']]]
+    all_divs = [120]
+    all_energies = [62]
+
+    par_names = ['name', 'base_ext', 'exact_keys', 'contain_keys', 'exclude_keys',
+                 'set_nums', 'energies', 'cents', 'divs']
+    par_vals = [
+        ['ampt_def', '_Ampt', ['default'], [], ['resample'], range(1), all_energies, [8], all_divs],
+        # ['ampt_resample_def', '_Ampt', ['default', 'resample'], [], [], [0], all_energies, [8], all_divs],
+        # ['sim_amp01_spread01', '_Sim', ['anticlmulti', 'amp05', 'spread01'], ['single'], [], [0], [62], [8], all_divs]
+    ]
 
     datasets = [dict(zip(par_names, dset)) for dset in par_vals]
 
@@ -53,21 +61,57 @@ def get_data(pars):
     df = []
     for dataset in pars['datasets']:
         print(dataset)
-        get_dataset(dataset, pars)
+        get_dataset(dataset, pars, df)
 
 
-def get_dataset(dataset, pars):
+def get_dataset(dataset, pars, df):
     raw_path = pars['base_path'] + 'Data' + dataset['base_ext'] + '/'
     mix_path = pars['base_path'] + 'Data' + dataset['base_ext'] + '_Mix' + '/'
 
-    for d in os.listdir(raw_path):
+    for set_dir in os.listdir(raw_path):
         good = True
-        if not all(x in d.split('_') for x in dataset['exact_keys']):
+        if not all(x in set_dir.split('_') for x in dataset['exact_keys']):
             good = False
-        if not all(x in d for x in dataset['contain_keys']):
+        if not all(x in set_dir for x in dataset['contain_keys']):
+            good = False
+        if any(x in set_dir.split('_') for x in dataset['exclude_keys']):
             good = False
         if good:
-            print(d)
+            print(set_dir)
+            read_set(dataset, set_dir, {'raw': raw_path, 'mix': mix_path}, df)
+
+
+def read_set(dataset, set_dir, raw_mix, df):
+    for energy in dataset['energies']:
+        for div in dataset['divs']:
+            for cent in dataset['cents']:
+                for rm, base in raw_mix.items():
+                    path = f'{base}{set_dir}'
+                    pass
+
+
+def get_dists(path, div):
+    """
+    Get counts per bin distributions for each total protons per event
+    :param path: Path to set number directory with text files
+    :param div: Bin width
+    :return: Dict of {total_protons: counts per bin distribution}, list of similar dicts for each bootstrap
+    """
+    dists = {}
+    bs_dists = []
+    bin_data = BootstrapAzBin(div, path)
+    for total_protons in bin_data.data:
+        dists[total_protons] = bin_data.data[total_protons]
+    for bs in bin_data.data_bs:
+        bs_dists.append({})
+        for total_protons in bs:
+            bs_dists[-1][total_protons] = bs[total_protons]
+
+    return dists, bs_dists
+
+
+def get_stats(dist, stats):
+    pass
 
 
 # def get_dist_stats(base_path, divs, cents, sim_pars, stats):
