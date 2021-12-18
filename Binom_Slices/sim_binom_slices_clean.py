@@ -19,6 +19,7 @@ from AzimuthBinData import AzimuthBinData
 from Bootstrap_Az_Bin import BootstrapAzBin
 from DistStats import DistStats
 from Measure import Measure
+from pickle_methods import *
 
 
 def main():
@@ -28,7 +29,8 @@ def main():
 
 def init_pars():
     pars = {'datasets': define_datasets(),
-            'base_path': '/home/dylan/Research/'
+            'base_path': '/home/dylan/Research/',
+            'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis'])
             }
 
     return pars
@@ -57,6 +59,35 @@ def define_datasets():
     return datasets
 
 
+def define_stats(stats):
+    stat_methods = {'mean': get_mean_meas,
+                    'standard deviation': get_sd_meas,
+                    'skewness': get_skewness_meas,
+                    'kurtosis': get_kurtosis_meas,
+                    'non-excess kurtosis': get_nekurtosis_meas,
+                    'c1': get_c1_meas,
+                    'c2': get_c2_meas,
+                    'c3': get_c3_meas,
+                    'c4': get_c4_meas,
+                    'c5': get_c5_meas,
+                    'c6': get_c6_meas,
+                    'k1': get_k1_meas,
+                    'k2': get_k2_meas,
+                    'k3': get_k3_meas,
+                    'k4': get_k4_meas,
+                    'k5': get_k5_meas,
+                    'k6': get_k6_meas,
+                    'c4/c2': get_c4_div_c2_meas,
+                    'k4/k2': get_k4_div_k2_meas,
+                    'c6/c2': get_c6_div_c2_meas,
+                    'k6/k2': get_k6_div_k2_meas,
+                    'c4/c2 - k4/k2': get_c4_div_c2_sub_k4_div_k2_meas,
+                    'c6/c2 - k6/k2': get_c6_div_c2_sub_k6_div_k2_meas,
+                    }
+
+    return {stat: stat_methods[stat] for stat in stats}
+
+
 def get_data(pars):
     df = []
     for dataset in pars['datasets']:
@@ -78,16 +109,25 @@ def get_dataset(dataset, pars, df):
             good = False
         if good:
             print(set_dir)
-            read_set(dataset, set_dir, {'raw': raw_path, 'mix': mix_path}, df)
+            read_set(dataset, set_dir, {'raw': raw_path, 'mix': mix_path}, pars['stats'], df)
 
 
-def read_set(dataset, set_dir, raw_mix, df):
+def read_set(dataset, set_dir, raw_mix_dict, stats, df):
     for energy in dataset['energies']:
         for div in dataset['divs']:
             for cent in dataset['cents']:
-                for rm, base in raw_mix.items():
-                    path = f'{base}{set_dir}'
-                    pass
+                raw_mix_data = {}
+                for raw_mix, base in raw_mix_dict.items():
+                    for sub_set_dir in os.listdir(f'{base}{set_dir}'):
+                        set_num = int(sub_set_dir.split('_')[-1])
+                        if set_num in dataset['set_nums']:
+                            path = f'{base}{set_dir}/{sub_set_dir}/{energy}GeV/ratios_divisions_{div}_' \
+                                   f'centrality{cent}_local.txt'
+                            # df.append({''})
+                            raw_mix_data.update({raw_mix: BootstrapAzBin(div, path)})
+                if 'raw' in raw_mix_data and 'mix' in raw_mix_data:
+                    for stat in stats:
+                        raw, mix, div = get_stats(raw_mix_data['raw'], raw_mix_data['mix'], stats[stat])
 
 
 def get_dists(path, div):
@@ -110,8 +150,9 @@ def get_dists(path, div):
     return dists, bs_dists
 
 
-def get_stats(dist, stats):
-    pass
+def get_stats(raw_dist, mix_dist, stat_method):
+    for total_protons in mix_dist:
+        mix_stat = stat_method(DistStats(mix_dist[total_protons])).val
 
 
 # def get_dist_stats(base_path, divs, cents, sim_pars, stats):
