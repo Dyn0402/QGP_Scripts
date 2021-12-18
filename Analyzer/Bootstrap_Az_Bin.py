@@ -54,3 +54,12 @@ class BootstrapAzBin:
                             i += 1
                         data[total_particles].append(int(entry[1]))
                         i += 1
+
+            if self.data is None:
+                self.data = AzimuthBinData(self.div)
+                self.data.data = data.copy()
+                self.data.max_particle = max(data)
+            else:
+                self.data_bs.append(AzimuthBinData(self.div))
+                self.data_bs[-1].data = data.copy()
+                self.data_bs[-1].max_particle = max(data)
