@@ -63,3 +63,9 @@ class BootstrapAzBin:
                 self.data_bs.append(AzimuthBinData(self.div))
                 self.data_bs[-1].data = data.copy()
                 self.data_bs[-1].max_particle = max(data)
+
+    def get_dist(self):
+        return self.data.get_dist()
+
+    def get_dist_bs(self):
+        return [bs.get_dist() for bs in self.data_bs]
