@@ -16,11 +16,13 @@ from scipy.stats import norm
 from scipy.stats import binom
 from scipy.stats import sem
 from multiprocessing import Pool
+import tqdm
 
 from DistStats import DistStats
 from Measure import Measure
 from sub_event_resample_algorithm import get_resamples
 from pickle_methods import *
+import istarmap
 
 
 def main():
@@ -30,21 +32,27 @@ def main():
     """
     threads = 16
     n_tracks = 15
-    n_sample = 1
-    n_events = 100
+    n_sample = 3
+    n_events = 10000
     bin_width = np.deg2rad(120)
     bootstraps = 250
     experiments = 1000
-    plot_out_dir = '/home/dylan/Research/Results/Resample_POC/'
+    plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
+    show_plot = False
 
     stats = define_stats(n_tracks, bin_width)
 
     stats_plt = ['standard deviation', 'skewness', 'non-excess kurtosis']
 
+    write_info_file(plot_out_dir, threads, n_tracks, n_sample, n_events, bin_width, bootstraps, experiments, stats_plt)
+
+    jobs = [(n_tracks, n_events, bin_width, n_sample, bootstraps, stats, stats_plt,
+             n_exp, True, plot_out_dir) for n_exp in range(experiments)]
+
+    exp_stats = []
     with Pool(threads) as pool:
-        exp_stats = pool.starmap(run_experiment,
-                                 [(n_tracks, n_events, bin_width, n_sample, bootstraps, stats, stats_plt,
-                                   n_exp, True, plot_out_dir) for n_exp in range(experiments)])
+        for exp_stat in tqdm.tqdm(pool.istarmap(run_experiment, jobs), total=len(jobs)):
+            exp_stats.append(exp_stat)
 
     n_exps = []
     stats_list = {stat: [] for stat in stats_plt}
@@ -63,17 +71,13 @@ def main():
                          stats[stat]['true'], stat, plot_out_dir)
         plot_bs_vs_delta(n_exps, stats_err_list[stat], stats_err_delta_list[stat], stat, plot_out_dir)
         plot_bs_vs_delta_hist(stats_err_list[stat], stats_err_delta_list[stat], stat, plot_out_dir)
-        # plot_exp_deviation(stats_list[stat], stats[stat]['true'], stat, plot_out_dir)
-        # plot_exp_sigmas(stats_list[stat], stats_err_list[stat], stats[stat]['true'], stat, plot_out_dir)
+        plot_exp_deviation(stats_list[stat], stats[stat]['true'], stat, plot_out_dir)
+        plot_exp_sigmas(stats_list[stat], stats_err_list[stat], stats[stat]['true'], stat, plot_out_dir)
 
-    plt.show()
+    if show_plot:
+        plt.show()
 
-    plot_vs_samples()
     print('donzo')
-
-
-def plot_vs_samples():
-    pass
 
 
 def gen_event(n_tracks):
@@ -86,7 +90,6 @@ def gen_experiment(n_events, n_tracks, rng=np.random.default_rng()):
 
 def run_experiment(n_tracks, n_events, bin_width, samples, bootstraps, stats,
                    stats_plt, n_exp=None, plot=False, out_dir=''):
-    print(f'Experiment {n_exp}')
     rng = np.random.default_rng()
     experiment = gen_experiment(n_events, n_tracks, rng)
     data, data_bs = bin_experiment(experiment, n_tracks, bin_width, samples, bootstraps, rng)
@@ -249,6 +252,20 @@ def define_stats(n_tracks, bin_width):
              }
 
     return stats
+
+
+def write_info_file(plot_out_dir, threads, n_tracks, n_sample, n_events, bin_width, bootstraps, experiments, stats_plt):
+    with open(plot_out_dir + 'info.txt', 'w') as file:
+        file.write(f'threads: {threads}\n')
+        file.write(f'n_tracks: {n_tracks}\n')
+        file.write(f'n_sample: {n_sample}\n')
+        file.write(f'n_events: {n_events}\n')
+        file.write(f'bin_width: {bin_width}\n')
+        file.write(f'bootstraps: {bootstraps}\n')
+        file.write(f'experiments: {experiments}\n')
+        file.write('stats: ')
+        for stat in stats_plt:
+            file.write(f'{stat}, ')
 
 
 if __name__ == '__main__':
