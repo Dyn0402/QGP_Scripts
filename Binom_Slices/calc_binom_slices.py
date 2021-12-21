@@ -8,22 +8,15 @@ Created as QGP_Scripts/calc_binom_slices.py
 @author: Dylan Neff, Dylan
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
 import os
-from scipy.optimize import curve_fit as cf
-from scipy.interpolate import interp1d
 from multiprocessing import Pool
-import itertools
 import tqdm
 
-import istarmap
-from AzimuthBinData import AzimuthBinData
 from Bootstrap_Az_Bin import BootstrapAzBin
-from DistStats import DistStats
 from Measure import Measure
 from pickle_methods import *
+import istarmap
 
 
 def main():
@@ -35,12 +28,14 @@ def main():
 
 def init_pars():
     pars = {'base_path': '/home/dylan/Research/',
-            'csv_path': '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df_new.csv',
+            'csv_path': '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df.csv',
+            'csv_append': False,  # If true read dataframe from csv_path and append new datasets to it, else overwrite
             'threads': 16,
             'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
             'datasets': define_datasets(),
-            'sys_sets': define_sys_sets(),
             }
+
+    pars.update({'sys_sets': define_sys_sets(pars['datasets'])})
 
     return pars
 
@@ -52,30 +47,70 @@ def define_datasets():
     :return: list of dictionaries containing parameters for defining datasets
     """
 
-    all_divs = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300]
+    all_divs = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356]
     all_energies = [7, 11, 19, 27, 39, 62]
+    all_cents = [0, 1, 2, 3, 4, 5, 6, 7, 8]
 
     entry_names = ['name', 'base_ext', 'exact_keys', 'contain_keys', 'exclude_keys',
                    'set_nums', 'energies', 'cents', 'divs']
     entry_vals = [
-        ['ampt_def', '_Ampt', ['default'], [], ['resample'], range(10), all_energies, [8], all_divs],
-        ['ampt_resample_def', '_Ampt', ['default', 'resample'], [], [], [0], all_energies, [8], all_divs],
-        # ['sim_amp01_spread01', '_Sim', ['anticlmulti', 'amp05', 'spread01'], ['single'], [], [0], [62], [8], all_divs]
+        ['ampt_def', '_Ampt', ['default'], [], ['resample'], range(60), all_energies, all_cents, all_divs],
+        ['ampt_resample_def', '_Ampt', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
+        ['bes_def', '', ['default'], [], ['resample'], range(60), all_energies, [8], all_divs],
+        ['bes_resample_def', '', ['default', 'resample'], [], [], [0], all_energies, [8], all_divs],
+        # ['sim_amp01_spread01', '_Sim', ['anticlmulti', 'amp05', 'spread01'], ['single'], [], [0], [62], [8], all_divs],
+        # ['sim_aclmul_amp01_spread2', '_Sim', ['anticlmulti', 'amp01', 'spread2', 'resample'], ['flat'], [], [0], [62],
+        #  [8], all_divs],
+        # ['sim_aclmul_amp02_spread2', '_Sim', ['anticlmulti', 'amp02', 'spread2', 'resample'], ['flat'], [], [0], [62],
+        #  [8], all_divs],
+        ['sim_aclmul_amp01_spread4', '_Sim', ['anticlmulti', 'amp01', 'spread4', 'resample'], ['flat'], [], [0], [62],
+         [8], all_divs],
+        ['sim_aclmul_amp02_spread4', '_Sim', ['anticlmulti', 'amp02', 'spread4', 'resample'], ['flat'], [], [0], [62],
+         [8], all_divs],
+        ['sim_aclmul_amp03_spread4', '_Sim', ['anticlmulti', 'amp03', 'spread4', 'resample'], ['flat'], [], [0], [62],
+         [8], all_divs],
+        ['sim_aclmul_amp04_spread4', '_Sim', ['anticlmulti', 'amp04', 'spread4', 'resample'], ['flat'], [], [0], [62],
+         [8], all_divs],
     ]
+
+    amps = ['01', '02', '03', '04', '05', '06']
+    spreads = ['02', '05', '1', '15', '2', '25']
+    for amp in amps:
+        for spread in spreads:
+            entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
+                               ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
+                               ['flat'], [], [0], [62], [8], all_divs])
 
     datasets = [dict(zip(entry_names, dset)) for dset in entry_vals]
 
     return datasets
 
 
-def define_sys_sets():
-    sys_sets = [{'default': {'name': 'ampt_def', 'set_nums': range(10)},
-                 'sys': [{'name': 'ampt_def', 'set_nums': range(1)}]},
-                {'default': {'name': 'ampt_resample_def', 'set_nums': range(0)},
-                 'sys': [{'name': 'ampt_def', 'set_nums': range(1)}]}
-                ]
+def define_sys_sets(datasets):
+    # sys_sets = [{'default': {'name': 'ampt_def', 'set_nums': range(10)},
+    #              'sys': [{'name': 'ampt_def', 'set_nums': range(1)}]},
+    #             {'default': {'name': 'ampt_resample_def', 'set_nums': range(0)},
+    #              'sys': [{'name': 'ampt_resample_def', 'set_nums': range(0)}]},
+    #             {'default': {'name': 'sim_aclmul_amp01_spread2', 'set_nums': range(0)},
+    #              'sys': [{'name': 'sim_aclmul_amp01_spread2', 'set_nums': range(1)}]},
+    #             {'default': {'name': 'sim_aclmul_amp02_spread2', 'set_nums': range(0)},
+    #              'sys': [{'name': 'sim_aclmul_amp02_spread2', 'set_nums': range(1)}]},
+    #             ]
 
-    return sys_sets
+    entry_names = ['sys_name', 'default', 'sys_sets']
+    entry_vals = [['ampt_def', {'name': 'ampt_def', 'set_nums': range(60)}, []],
+                  ]
+    systematic_sets = [dict(zip(entry_names, dset)) for dset in entry_vals]
+
+    sys_names = [sset['sys_name'] for sset in systematic_sets]
+
+    # For each dataset, if not already in systematic_sets and overridden, make blank systematic
+    for dataset in datasets:
+        if dataset['name'] not in sys_names:
+            entry_val = [dataset['name'], {'name': dataset['name'], 'set_nums': range(0)}, []]
+            systematic_sets.append(dict(zip(entry_names, entry_val)))
+
+    return systematic_sets
 
 
 def define_stats(stats):
@@ -114,19 +149,21 @@ def read_data(pars):
         jobs.extend(get_dataset_jobs(dataset, pars))
 
     df_subsets = []
-    # pool = Pool(processes=pars['threads'])
-    # for df_subset in tqdm.tqdm(pool.starmap(read_subset, jobs), total=len(jobs)):
-    #     df_subsets.extend(df_subset)
     with Pool(pars['threads']) as pool:
         for df_subset in tqdm.tqdm(pool.istarmap(read_subset, jobs), total=len(jobs)):
-            # print(df_subset)
             df_subsets.extend(df_subset)
-            # df_subsets = pool.starmap(read_subset, jobs)
 
-    # df = list(itertools.chain.from_iterable(df_subsets))
     df = pd.DataFrame(df_subsets)
     df_sys = get_systematics(pars, df)
-    df_sys.to_csv(pars['csv_path'])
+    if pars['csv_append']:
+        try:
+            df_old = pd.read_csv(pars['csv_path'])
+            df_sys = df_sys.append(df_old, ignore_index=True)
+        except FileNotFoundError:
+            print(f'{pars["csv_path"]} not found! Skipping read and writing new.')
+
+    print(df_sys)
+    df_sys.to_csv(pars['csv_path'], index=False)
 
 
 def get_dataset_jobs(dataset, pars):
@@ -142,7 +179,6 @@ def get_dataset_jobs(dataset, pars):
         if any(x in set_dir.split('_') for x in dataset['exclude_keys']):
             good = False
         if good:
-            # print(set_dir)
             dataset_jobs.extend(get_set_jobs(dataset, set_dir, {'raw': path + '/', 'mix': path + '_Mix/'}, pars['stats']))
 
     return dataset_jobs
@@ -160,8 +196,6 @@ def get_set_jobs(dataset, set_dir, base_paths, stats):
                         if not os.path.exists(f'{base_paths["mix"]}{path}'):
                             print(f'Mixed file missing! {base_paths["mix"]}{path}')
                             continue
-                        # print(path)
-                        # continue
                         other_columns = {'name': dataset['name'], 'set': set_dir, 'set_num': set_num,
                                          'energy': energy, 'div': div, 'cent': cent}
                         subset_jobs.append((f'{base_paths["raw"]}{path}', f'{base_paths["mix"]}{path}', div,
@@ -233,7 +267,7 @@ def get_systematics(pars, df):
     sys_df = []
     # attributes = ['energy', 'div', 'cent', 'total_protons', 'stat', 'data_type']
     # lambda df, att : np.unique(df[att])
-    print(df)
+    # print(df)
     for sys_set in pars['sys_sets']:
         # default
         df_def = df[df['name'] == sys_set['default']['name']]
@@ -255,13 +289,30 @@ def get_systematics(pars, df):
                                     med = np.median(meases)
                                     new_row = {'val': med.val, 'err': med.err, 'sys': np.std(df_dtype['val'])}
                                 else:
-                                    new_row = {'val': df_dtype['val'].iloc[0], 'err': df_dtype['err'].iloc[0]}
-                                new_row.update({'name': sys_set['default']['name'], 'energy': energy, 'div': div,
+                                    # For now set sys to 0 if only one set_num. Then don't have issues with NA values
+                                    new_row = {'val': df_dtype['val'].iloc[0], 'err': df_dtype['err'].iloc[0], 'sys': 0}
+                                new_row.update({'name': sys_set['sys_name'], 'energy': energy, 'div': div,
                                                 'cent': cent, 'total_protons': total_protons, 'stat': stat,
                                                 'data_type': data_type})
+                                if 'sim_' in sys_set['sys_name']:
+                                    amp, spread = get_name_amp_spread(sys_set['sys_name'])
+                                    new_row.update({'amp': amp, 'spread': spread})
+                                else:
+                                    new_row.update({'amp': 0, 'spread': 0})
                                 sys_df.append(new_row)
 
     return pd.DataFrame(sys_df)
+
+
+def get_name_amp_spread(name):
+    name = name.split('_')
+    for x in name:
+        if 'amp' in x:
+            amp = float(f'0.{x.strip("amp")}')
+        if 'spread' in x:
+            spread = float(f'0.{x.strip("spread")}') * 10
+
+    return amp, spread
 
 
 if __name__ == '__main__':
