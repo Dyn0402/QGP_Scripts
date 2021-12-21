@@ -11,17 +11,21 @@ Created as QGP_Scripts/presentation_plots
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+from scipy.stats import binom
 from fractions import Fraction
+
 from Analyzer.AzimuthBinData import AzimuthBinData
 
 
 def main():
     divs = 120
     cent = 8
-    energy = 7
+    energy = 39
     set_group = 'default'
     set_name = 'Ampt_rapid05_n1ratios_'
-    set_num = 8
+    # set_group = 'default_resample'
+    # set_name = 'Ampt_rapid05_resample_norotate_'
+    set_num = 0
     data_set = '_Ampt'
     base_path = '/home/dylan/Research/Data'
     set_path = f'{set_group}/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
@@ -33,8 +37,9 @@ def main():
     title_sufx = f'\n{energy}GeV, 0-5% Centrality, {divs}° Divisions'
 
     plot_2d(raw.get_dist(), raw.max_particle, raw.get_max_bin(), divs, title_sufx)
-    plot_ratio(raw.get_dist(), raw.max_particle, divs, x_bins=20, title_sufx=title_sufx)
-    plot_pull(raw.get_dist(), raw.max_particle, divs, x_bins=40, title_sufx=title_sufx)
+    plot_binomial(raw.get_dist(), 20, divs, title_sufx=title_sufx)
+    # plot_ratio(raw.get_dist(), raw.max_particle, divs, x_bins=20, title_sufx=title_sufx)
+    # plot_pull(raw.get_dist(), raw.max_particle, divs, x_bins=40, title_sufx=title_sufx)
 
     print('donzo')
 
@@ -239,6 +244,47 @@ def plot_pull1d(pull, x_edges, plt_range=None, title_sufx=''):
     plt.title(f'Pull Distribution{title_sufx}')
     plt.legend()
     plt.tight_layout()
+    plt.show()
+
+
+def plot_binomial(data, particles, divs, title_sufx=''):
+    y = np.zeros(shape=particles + 1)
+    y[:len(data[particles])] = data[particles]
+    x = range(particles + 1)
+    y_binom = sum(y)*binom.pmf(x, particles, float(divs) / 360)
+    y_err = np.sqrt(y)
+    fig1, ax1 = plt.subplots()
+    ax1.bar(x, y, align='center', zorder=0, label=f'{particles} Particle Events')
+    ax1.scatter(x, y_binom, color='red', label='Binomial Distribution')
+    ax1.set_xticks(range(0, len(y), 2))
+    ax1.set_title(f'Particles in {divs}° Bin vs Binomial for {particles} Particle Events'+title_sufx)
+    ax1.set_xlabel('Number of Particles in Bin')
+    ax1.set_ylabel('Events')
+    ax1.set_xlim([-0.5, particles+0.5])
+    ax1.legend()
+
+    fig2, ax2 = plt.subplots()
+    y_diff = y - y_binom
+    ax2.axhline(0, color='red', ls='--')
+    ax2.errorbar(x, y_diff, yerr=y_err, fmt='bo')
+    ax2.set_xticks(range(0, len(y), 2))
+    ax2.set_title(f'Particles in {divs}° Bin Minus Binomial for {particles} Particle Events'+title_sufx)
+    ax2.set_xlabel('Number of Particles in Bin')
+    ax2.set_ylabel('Data Events Minus Binomial')
+    ax2.set_xlim([-0.5, particles+0.5])
+
+    fig3, ax3 = plt.subplots()
+    y_ratio = y / y_binom
+    y_ratio_err = y_err / y_binom
+    ax3.axhline(1, color='red', ls='--')
+    ax3.errorbar(x, y_ratio, yerr=y_ratio_err, fmt='bo')
+    ax3.set_xticks(range(0, len(y), 2))
+    ax3.set_title(f'Particles in {divs}° Bin Divided by Binomial for {particles} Particle Events' + title_sufx)
+    ax3.set_xlabel('Number of Particles in Bin')
+    ax3.set_ylabel('Data Events Divided by Binomial')
+    ax3.set_xlim([-0.5, particles + 0.5])
+
+    print(f'Binomial Difference Sum: {sum(y_diff)}')
     plt.show()
 
 

@@ -15,7 +15,7 @@ import numpy as np
 
 
 def main():
-    # binoms_tracks()
+    binoms_tracks()
     binoms_divs()
     binoms_divs_stitch()
 
