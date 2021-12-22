@@ -197,7 +197,9 @@ def get_set_jobs(dataset, set_dir, base_paths, stats):
                             print(f'Mixed file missing! {base_paths["mix"]}{path}')
                             continue
                         other_columns = {'name': dataset['name'], 'set': set_dir, 'set_num': set_num,
-                                         'energy': energy, 'div': div, 'cent': cent}
+                                         'energy': energy, 'divs': div, 'cent': cent}
+                        if 'sim_' in dataset['name']:
+                            other_columns['energy'] = 'sim'
                         subset_jobs.append((f'{base_paths["raw"]}{path}', f'{base_paths["mix"]}{path}', div,
                                             stats, other_columns))
 
@@ -273,8 +275,8 @@ def get_systematics(pars, df):
         df_def = df[df['name'] == sys_set['default']['name']]
         for energy in np.unique(df_def['energy']):
             df_energy = df_def[df_def['energy'] == energy]
-            for div in np.unique(df_energy['div']):
-                df_div = df_energy[df_energy['div'] == div]
+            for div in np.unique(df_energy['divs']):
+                df_div = df_energy[df_energy['divs'] == div]
                 for cent in np.unique(df_div['cent']):
                     df_cent = df_div[df_div['cent'] == cent]
                     for total_protons in np.unique(df_cent['total_protons']):
@@ -291,7 +293,7 @@ def get_systematics(pars, df):
                                 else:
                                     # For now set sys to 0 if only one set_num. Then don't have issues with NA values
                                     new_row = {'val': df_dtype['val'].iloc[0], 'err': df_dtype['err'].iloc[0], 'sys': 0}
-                                new_row.update({'name': sys_set['sys_name'], 'energy': energy, 'div': div,
+                                new_row.update({'name': sys_set['sys_name'], 'energy': energy, 'divs': div,
                                                 'cent': cent, 'total_protons': total_protons, 'stat': stat,
                                                 'data_type': data_type})
                                 if 'sim_' in sys_set['sys_name']:

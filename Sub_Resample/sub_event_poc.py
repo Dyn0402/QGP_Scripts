@@ -37,7 +37,8 @@ def main():
     bin_width = np.deg2rad(120)
     bootstraps = 250
     experiments = 1000
-    plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
+    # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
+    plot_out_dir = 'D:/Research/Resample_POC/delta_sigmas_nsample1/'
     show_plot = False
 
     stats = define_stats(n_tracks, bin_width)
