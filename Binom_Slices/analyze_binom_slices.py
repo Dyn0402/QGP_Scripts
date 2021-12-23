@@ -23,7 +23,9 @@ from Measure import Measure
 
 def main():
     # df_path = '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df.csv'
-    df_path = 'D:/Research/Results/Azimuth_Analysis/binom_slice_df.csv'
+    # df_path = 'D:/Research/Results/Azimuth_Analysis/binom_slice_df.csv'
+    # df_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/binom_slice_df.csv'
+    df_path = 'C:/Users/Dyn04/Desktop/binom_slice_df.csv'
     sim_sets = []
     amps = ['01', '02', '03', '04', '05', '06']
     spreads = ['02', '05', '1', '15', '2', '25']
@@ -54,20 +56,20 @@ def main():
     #                                plot=False, fit=True)
     # plot_protons_fits(protons_fits)
 
-    protons_fits = []
-    for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
-        protons_fits_div = stat_vs_protons(df, stat_plot, div, cent_plt, energies_plt, data_types_plt, all_sets_plt,
-                                           plot=False, fit=True)
-        protons_fits.append(protons_fits_div)
-    protons_fits = pd.concat(protons_fits, ignore_index=True)
-    print(protons_fits)
-    plot_protons_fits_divs(protons_fits, data_sets_plt)
-
-    # stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, data_types_plt, data_sets_plt, plot=True, fit=True)
-    # chi2_sets = []
+    # protons_fits = []
     # for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
-    #     chi2_sets.extend(chi2_vs_protons(df, stat_plot, div, cent_plt, energy_plt, data_type_plt, data_sets_plt))
-    # data_sim_sets_plt = plot_chi2_protons(pd.DataFrame(chi2_sets), n_sims_plt=4)
+    #     protons_fits_div = stat_vs_protons(df, stat_plot, div, cent_plt, energies_plt, data_types_plt, all_sets_plt,
+    #                                        plot=False, fit=True)
+    #     protons_fits.append(protons_fits_div)
+    # protons_fits = pd.concat(protons_fits, ignore_index=True)
+    # print(protons_fits)
+    # plot_protons_fits_divs(protons_fits, data_sets_plt)
+
+    stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, data_types_plt, data_sets_plt, plot=True, fit=True)
+    chi2_sets = []
+    for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
+        chi2_sets.extend(chi2_vs_protons(df, stat_plot, div, cent_plt, energy_plt, data_type_plt, data_sets_plt))
+    data_sim_sets_plt = plot_chi2_protons(pd.DataFrame(chi2_sets), n_sims_plt=4)
     # for data_set, sim_sets_plt in data_sim_sets_plt.items():
     #     sets = [data_set] + list(sim_sets_plt)
     #     print(sets)
@@ -258,21 +260,26 @@ def chi2_vs_protons(df, stat, div, cent, energy, data_type, data_sets_plt):
             diff = np.array(data_meases) - np.array(sim_meases)
             # print(diff)
             chi2 = sum([(x.val / x.err) ** 2 for x in diff])
-            chi2_sets.append({'data_name': data_set, 'sim_name': sim_set, 'chi2': chi2, 'n': len(diff), 'divs': div})
+            chi2_sets.append({'data_name': data_set, 'sim_name': sim_set, 'chi2': chi2, 'n': len(diff), 'divs': div,
+                              'amp': df_sim['amp'], 'spread': df_sim['spread']})
 
     return chi2_sets
 
 
 def plot_chi2_protons(df, n_sims_plt=6):
     sim_sets_plt = {}
+    chi_df = {}
     for data_set in np.unique(df['data_name']):
         chi2_sums = []
         df_data = df[df['data_name'] == data_set]
         for sim_set in np.unique(df_data['sim_name']):
             df_sim = df_data[df_data['sim_name'] == sim_set]
             chi2_sum = df_sim['chi2'].sum()
-            chi2_sums.append({'sim_name': sim_set, 'chi2_sum': chi2_sum})
-        chi2_sums = pd.DataFrame(chi2_sums).sort_values(by='chi2_sum').head(n_sims_plt)
+            chi2_sums.append({'sim_name': sim_set, 'chi2_sum': chi2_sum, 'amp': df_sim['amp'],
+                              'spread': df_sim['spread']})
+        chi2_sums = pd.DataFrame(chi2_sums)
+        chi_df.update({data_set: chi2_sums})
+        chi2_sums = chi2_sums.sort_values(by='chi2_sum').head(n_sims_plt)
         sim_sets_plt.update({data_set: chi2_sums['sim_name']})
     print(sim_sets_plt)
 
@@ -288,6 +295,19 @@ def plot_chi2_protons(df, n_sims_plt=6):
             ax.plot(df_sim['divs'], df_sim['chi2'], marker='o', alpha=0.8, label=f'{sim_set}')
         ax.legend()
         fig.tight_layout()
+
+        df_chi = chi_df[data_set]
+        f = interp2d(df_chi['amp'], df_chi['spread'], df_chi['chi2_sum'], kind='cubic')
+        x = np.linspace(df_chi['amp'].min(), df_chi['amp'].max(), 100)
+        y = np.linspace(df_chi['spread'].min(), df_chi['spread'].max(), 100)
+        xx, yy = np.meshgrid(x, y)
+        fig_3d_interp = plt.figure()
+        ax_3d_interp = plt.axes(projection='3d')
+        z = f(x, y)
+        ax_3d_interp.plot_surface(xx, yy, z, cmap='viridis', edgecolor='none')
+        ax_3d_interp.set_xlabel('amp')
+        ax_3d_interp.set_ylabel('spread')
+        ax_3d_interp.set_zlabel('chi2')
 
     return sim_sets_plt
 
