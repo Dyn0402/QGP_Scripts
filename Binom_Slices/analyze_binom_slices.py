@@ -41,6 +41,7 @@ def main():
     total_protons_plt = 20
     cent_plt = 8
     energies_plt = [62, 'sim']  # [7, 11, 19, 27, 39, 62]
+    energies_fit = [7, 11, 19, 27, 39, 62]
     energy_plt = 62
     data_types_plt = ['divide']
     data_type_plt = 'divide'
@@ -66,11 +67,16 @@ def main():
     # print(protons_fits)
     # plot_protons_fits_divs(protons_fits, data_sets_plt)
 
-    stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, data_types_plt, data_sets_plt, plot=True, fit=True)
-    chi2_sets = []
-    for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
-        chi2_sets.extend(chi2_vs_protons(df, stat_plot, div, cent_plt, energy_plt, data_type_plt, data_sets_plt))
-    data_sim_sets_plt = plot_chi2_protons(pd.DataFrame(chi2_sets), n_sims_plt=4)
+    # stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, data_types_plt, data_sets_plt, plot=True, fit=True)
+    chi_res = []
+    for energy in energies_fit:
+        chi2_sets = []
+        for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
+            print(f'{energy}GeV {div} bin width')
+            chi2_sets.extend(chi2_vs_protons(df, stat_plot, div, cent_plt, energy, data_type_plt, data_sets_plt))
+        data_sim_sets_plt, chi_res_e = plot_chi2_protons(pd.DataFrame(chi2_sets), energy, n_sims_plt=4)
+        chi_res.extend(chi_res_e)
+    plot_chi_sim_pars(pd.DataFrame(chi_res))
     # for data_set, sim_sets_plt in data_sim_sets_plt.items():
     #     sets = [data_set] + list(sim_sets_plt)
     #     print(sets)
@@ -260,7 +266,7 @@ def chi2_vs_protons(df, stat, div, cent, energy, data_type, data_sets_plt):
     return chi2_sets
 
 
-def plot_chi2_protons(df, n_sims_plt=6):
+def plot_chi2_protons(df, energy, n_sims_plt=6):
     sim_sets_plt = {}
     chi_df = {}
     for data_set in np.unique(df['data_name']):
@@ -275,8 +281,8 @@ def plot_chi2_protons(df, n_sims_plt=6):
         chi_df.update({data_set: chi2_sums})
         chi2_sums = chi2_sums.sort_values(by='chi2_sum').head(n_sims_plt)
         sim_sets_plt.update({data_set: chi2_sums['sim_name']})
-    print(sim_sets_plt)
 
+    chi_res = []
     for data_set in np.unique(df['data_name']):
         fig, ax = plt.subplots()
         ax.set_title(data_set)
@@ -298,20 +304,37 @@ def plot_chi2_protons(df, n_sims_plt=6):
         fig_3d_interp = plt.figure()
         ax_3d_interp = plt.axes(projection='3d')
         z = f(x, y)
+        z = np.where(z > 0, z, 0.001)
         print(data_set)
-        min_res = minimize(lambda x_opt: f(*x_opt), [0.02, 2], bounds=[(0, None), (0, None)])
+        x0 = [0.02, 1.5]
+        min_res = minimize(lambda x_opt: f(*x_opt) if f(*x_opt) > 0 else 0.001, x0, bounds=[(0, 0.1), (0, None)])
         print(min_res)
+        print(*min_res.x, min_res.fun)
+        chi_res.append({'data_set': data_set, 'energy': energy, 'amp': min_res.x[0], 'spread': min_res.x[1]})
 
-        ax_3d_interp.plot_surface(xx, yy, z, cmap='viridis', edgecolor='none')
-        ax_3d_interp.scatter(*min_res.x, min_res.fun[0], color='red', label='Minimum')
+        ax_3d_interp.plot_surface(xx, yy, np.log10(z), cmap='viridis', edgecolor='none')
+        ax_3d_interp.scatter(*x0, np.log10(f(*x0)), color='black', label='Start')
+        ax_3d_interp.scatter(*min_res.x, np.log10(min_res.fun), color='red', label='Minimum')
         ax_3d_interp.set_xlabel('amp')
         ax_3d_interp.set_ylabel('spread')
-        ax_3d_interp.set_zlabel('chi2')
+        ax_3d_interp.set_zlabel('log10 chi2')
         ax_3d_interp.set_title(data_set)
         ax_3d_interp.legend()
         fig_3d_interp.tight_layout()
 
-    return sim_sets_plt
+    return sim_sets_plt, chi_res
+
+
+def plot_chi_sim_pars(chi_res):
+    fig, ax = plt.subplots()
+    ax.set_xlabel('Amp')
+    ax.set_ylabel('Spread')
+    for data_set in np.unique(chi_res['data_set']):
+        df_set = chi_res[chi_res['data_set'] == data_set]
+        ax.scatter(df_set['amp'], df_set['spread'], label=data_set)
+    ax.legend()
+    ax.grid()
+    fig.tight_layout()
 
 
 def stat_vs_divs(df, stat, total_protons, cent, energies, data_types, data_sets_plt, exclude_divs=[], y_ranges=None,
