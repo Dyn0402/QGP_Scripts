@@ -14,6 +14,7 @@ import matplotlib.colors
 from mpl_toolkits import mplot3d
 import pandas as pd
 from scipy.optimize import curve_fit as cf
+from scipy.optimize import minimize
 from scipy.interpolate import interp1d
 from scipy.interpolate import interp2d
 
@@ -23,9 +24,9 @@ from Measure import Measure
 
 def main():
     # df_path = '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df.csv'
-    # df_path = 'D:/Research/Results/Azimuth_Analysis/binom_slice_df.csv'
+    df_path = 'D:/Research/Results/Azimuth_Analysis/binom_slice_df.csv'
     # df_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/binom_slice_df.csv'
-    df_path = 'C:/Users/Dyn04/Desktop/binom_slice_df.csv'
+    # df_path = 'C:/Users/Dyn04/Desktop/binom_slice_df.csv'
     sim_sets = []
     amps = ['01', '02', '03', '04', '05', '06']
     spreads = ['02', '05', '1', '15', '2', '25']
@@ -248,20 +249,13 @@ def chi2_vs_protons(df, stat, div, cent, energy, data_type, data_sets_plt):
             # Sim should have all possible tproton values, so just filter out those that aren't in data
             df_sim_set = df_sim_set[df_sim_set['total_protons'].isin(df_data_set['total_protons'])]
             df_sim_set.sort_values(by=['total_protons'])
-            # print('data_protons', df_data_set['total_protons'])
-            # print('sim_protons', df_sim_set['total_protons'])
             if list(df_data_set['total_protons']) != list(df_sim_set['total_protons']):
                 print('Data and sim don\'t match total protons!')
             sim_meases = df_sim_set.apply(lambda row: Measure(row['val'], row['err']), axis=1)
-            # print(f'{data_set}, {sim_set}: #data: {len(data_meases)}, #sim: {len(sim_meases)}')
-
-            # print('data_meas: ', type(data_meases), len(data_meases))
-            # print('sim_meas: ', type(sim_meases), len(sim_meases))
             diff = np.array(data_meases) - np.array(sim_meases)
-            # print(diff)
             chi2 = sum([(x.val / x.err) ** 2 for x in diff])
             chi2_sets.append({'data_name': data_set, 'sim_name': sim_set, 'chi2': chi2, 'n': len(diff), 'divs': div,
-                              'amp': df_sim['amp'], 'spread': df_sim['spread']})
+                              'amp': df_sim_set['amp'].iloc[0], 'spread': df_sim_set['spread'].iloc[0]})
 
     return chi2_sets
 
@@ -275,8 +269,8 @@ def plot_chi2_protons(df, n_sims_plt=6):
         for sim_set in np.unique(df_data['sim_name']):
             df_sim = df_data[df_data['sim_name'] == sim_set]
             chi2_sum = df_sim['chi2'].sum()
-            chi2_sums.append({'sim_name': sim_set, 'chi2_sum': chi2_sum, 'amp': df_sim['amp'],
-                              'spread': df_sim['spread']})
+            chi2_sums.append({'sim_name': sim_set, 'chi2_sum': chi2_sum, 'amp': df_sim['amp'].iloc[0],
+                              'spread': df_sim['spread'].iloc[0]})
         chi2_sums = pd.DataFrame(chi2_sums)
         chi_df.update({data_set: chi2_sums})
         chi2_sums = chi2_sums.sort_values(by='chi2_sum').head(n_sims_plt)
@@ -304,10 +298,18 @@ def plot_chi2_protons(df, n_sims_plt=6):
         fig_3d_interp = plt.figure()
         ax_3d_interp = plt.axes(projection='3d')
         z = f(x, y)
+        print(data_set)
+        min_res = minimize(lambda x_opt: f(*x_opt), [0.02, 2], bounds=[(0, None), (0, None)])
+        print(min_res)
+
         ax_3d_interp.plot_surface(xx, yy, z, cmap='viridis', edgecolor='none')
+        ax_3d_interp.scatter(*min_res.x, min_res.fun[0], color='red', label='Minimum')
         ax_3d_interp.set_xlabel('amp')
         ax_3d_interp.set_ylabel('spread')
         ax_3d_interp.set_zlabel('chi2')
+        ax_3d_interp.set_title(data_set)
+        ax_3d_interp.legend()
+        fig_3d_interp.tight_layout()
 
     return sim_sets_plt
 
