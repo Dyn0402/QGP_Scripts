@@ -1,21 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on September 01 4:27 PM 2021
+Created on December 06 5:20 PM 2021
 Created in PyCharm
-Created as QGP_Scripts/remove_bad_event
+Created as QGP_Scripts/remove_bad_event_copy
 
 @author: Dylan Neff, dylan
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
-import ROOT
-import os
 import shutil
 
 
 def main():
+    """Same as remove_bad_event but no actual tree editing so it doesn't have ROOT dependence.
+    Used to copy already fixed files into correct directories in RCF."""
+    # bad_file_list_path = '/star/u/dneff/Ampt_Bad_Event/bad_ampt_events_minbias.txt'
     bad_file_list_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_minbias.txt'
     bad_tree_repo = '/home/dylan/Research/Ampt_Bad_Event/'
     bad_tree_sufx = '_bad'
@@ -23,10 +22,10 @@ def main():
     min_identical = 2
     bad_trees = get_bad_event_file(bad_file_list_path, min_identical)
     for tree_path, tree in bad_trees.items():
-        tree_path.replace('/media/ucla/Research/AMPT_Trees', '/gpfs01/star/pwg/dneff/data/AMPT')
+        # tree_path = tree_path.replace('/media/ucla/Research/AMPT_Trees', '/gpfs01/star/pwg/dneff/data/AMPT')
         print(tree_path, tree)
         repo_tree_path = move_tree(tree_path, bad_tree_repo, bad_tree_sufx)
-        fix_tree_path = fix_tree(tree, repo_tree_path, bad_tree_sufx, fix_tree_sufx)
+        fix_tree_path = repo_tree_path.replace(bad_tree_sufx, fix_tree_sufx)
         replace_tree(fix_tree_path, tree_path)
 
     print('donzo')
@@ -63,47 +62,15 @@ def move_tree(tree_path, repo_path, sufx):
     tree_name = tree_name.split('.')
     tree_name = tree_name[0] + sufx + '.' + tree_name[-1]
     repo_tree_path = repo_path + tree_name
-    shutil.move(tree_path, repo_tree_path)
 
     return repo_tree_path
 
 
-def fix_tree(tree, bad_tree_path, bad_sufx, fix_sufx):
-    fix_tree_path = bad_tree_path.replace(bad_sufx, fix_sufx)
-    bad_file = ROOT.TFile(bad_tree_path, 'READ')
-    new_file = ROOT.TFile(fix_tree_path, 'RECREATE')
-    bad_tree = bad_file.tree
-    new_tree = bad_tree.CloneTree(0)
-    for event in bad_tree:
-        for bad_event in tree:
-            if event.event != bad_event['event_num']:
-                new_tree.Fill()
-    bad_file.Close()
-    new_file.Write()
-    new_file.Close()
-
-    return fix_tree_path
-
-
 def replace_tree(fixed_tree_path, original_path):
-    shutil.copy(fixed_tree_path, original_path)
-
-
-def remove_specific():
-    # Found: AMPT_Trees/min_bias/string_melting/7GeV/data_741821621.root EVENT:1617 - 1618
-    path = '/home/dylan/Research/Ampt_Bad_Event/data_741821621_bad.root'
-    new_path = '/home/dylan/Research/Ampt_Bad_Event/data_741821621.root'
-    bad_event = 1618
-    bad_file = ROOT.TFile(path, 'READ')
-    new_file = ROOT.TFile(new_path, 'RECREATE')
-    bad_tree = bad_file.tree
-    new_tree = bad_tree.CloneTree(0)
-    for event in bad_tree:
-        if event.event != bad_event:
-            new_tree.Fill()
-    bad_file.Close()
-    new_file.Write()
-    new_file.Close()
+    try:
+        shutil.copy(fixed_tree_path, original_path)
+    except PermissionError:
+        print(f'Not copied: {original_path}')
 
 
 if __name__ == '__main__':

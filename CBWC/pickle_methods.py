@@ -91,6 +91,10 @@ def comb_trials_cent(trial_moments, percentiles):
     return means, errs, percs
 
 
+def get_c1(x):
+    return x.get_cumulant(1).val
+
+
 def get_c2(x):
     return x.get_cumulant(2).val
 
@@ -109,6 +113,10 @@ def get_c5(x):
 
 def get_c6(x):
     return x.get_cumulant(6).val
+
+
+def get_k1(x):
+    return x.get_k_stat(1).val
 
 
 def get_k2(x):
@@ -155,6 +163,10 @@ def get_c6_div_c2_sub_k6_div_k2(x):
     return x.get_cumulant(6).val / x.get_cumulant(2).val - x.get_k_stat(6).val / x.get_k_stat(2).val
 
 
+def get_c1_meas(x):
+    return x.get_cumulant(1)
+
+
 def get_c2_meas(x):
     return x.get_cumulant(2)
 
@@ -173,6 +185,10 @@ def get_c5_meas(x):
 
 def get_c6_meas(x):
     return x.get_cumulant(6)
+
+
+def get_k1_meas(x):
+    return x.get_k_stat(1)
 
 
 def get_k2_meas(x):
@@ -217,6 +233,26 @@ def get_c4_div_c2_sub_k4_div_k2_meas(x):  # Delta theorem errors will be wrong, 
 
 def get_c6_div_c2_sub_k6_div_k2_meas(x):  # Delta theorem errors will be wrong, need to apply directly to quantity
     return x.get_cumulant(6) / x.get_cumulant(2) - x.get_k_stat(6) / x.get_k_stat(2)
+
+
+def get_mean_meas(x):
+    return x.get_mean()
+
+
+def get_sd_meas(x):
+    return x.get_sd()
+
+
+def get_skewness_meas(x):
+    return x.get_skewness()
+
+
+def get_kurtosis_meas(x):
+    return x.get_kurtosis()
+
+
+def get_nekurtosis_meas(x):
+    return x.get_non_excess_kurtosis()
 
 
 def main():

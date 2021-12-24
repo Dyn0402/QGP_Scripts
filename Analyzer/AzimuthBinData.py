@@ -35,21 +35,25 @@ class AzimuthBinData:
     def read_data(self):
         with open(self.path, 'r') as file:
             lines = file.readlines()
-            self.max_particle = int(lines[-1].strip().split('\t')[0])
+            # self.max_particle = int(lines[-1].strip().split('\t')[0])
             for line in lines:
                 line = line.strip().split('\t')
-                total_particles = int(line[0])
-                bin_particles_string = line[1].split(' ')
-                if len(bin_particles_string) > 0:
-                    self.data[total_particles] = []
-                i = 0
-                for entry in bin_particles_string:
-                    entry = entry.split(':')
-                    while int(entry[0]) > i:
-                        self.data[total_particles].append(0)
+                if len(line) == 2:
+                    total_particles = int(line[0])
+                    bin_particles_string = line[1].split(' ')
+                    if len(bin_particles_string) > 0:
+                        self.data[total_particles] = []
+                    i = 0
+                    for entry in bin_particles_string:
+                        entry = entry.split(':')
+                        while int(entry[0]) > i:
+                            self.data[total_particles].append(0)
+                            i += 1
+                        self.data[total_particles].append(int(entry[1]))
                         i += 1
-                    self.data[total_particles].append(int(entry[1]))
-                    i += 1
+                else:
+                    break
+            self.max_particle = max(self.data)
 
     def ratio_trans(self):
         if len(self.ratio_dist) == 0:  # Skip if pull_dist is already filled

@@ -25,7 +25,7 @@ class DistStats:
         self.total_counts = None
         if debug:
             warnings.filterwarnings('error')
-        if type(dist) == 'dict':
+        if type(dist) == dict:
             self.dist = dist
         else:
             self.dist = dict(zip(range(len(dist)), dist))
@@ -153,6 +153,9 @@ class DistStats:
 
         return Measure(val, err)
 
+    def get_non_excess_kurtosis(self):
+        return self.get_kurtosis() + 3
+
     def get_kurt_var(self):
         """
         Get kurtosis*variance of distribution with error from delta theorem
@@ -271,3 +274,6 @@ class DistStats:
             err = float('nan')
 
         return Measure(val, err)
+
+    def print_dist(self):
+        print(self.dist)
