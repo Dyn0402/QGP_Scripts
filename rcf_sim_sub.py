@@ -8,9 +8,8 @@ Created as QGP_Scripts/rcf_sim_sub
 @author: Dylan Neff, Dyn04
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
 import os
+from time import sleep
 
 
 def main():
@@ -26,19 +25,19 @@ def get_sets():
     sets = [['flat80_anticlmulti_spread4_amp05_resample', 'Sim_spread4_amp05_flat80_anticlmulti_norotate_resample_'],
             ['flat80_anticlmulti_spread4_amp06_resample', 'Sim_spread4_amp06_flat80_anticlmulti_norotate_resample_']]
 
-    # amps = ['0', '005', '015', '07', '08', '09', '12', '2']
-    # spreads = ['0', '02', '05', '1', '15', '2', '25', '4']
-    # for amp in amps:
-    #     for spread in spreads:
-    #         sets.append([f'flat80_anticlmulti_spread{spread}_amp{amp}_resample',
-    #                      f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_'])
-    #
-    # amps = ['01', '02', '03', '04', '05', '06']
-    # spreads = ['0']
-    # for amp in amps:
-    #     for spread in spreads:
-    #         sets.append([f'flat80_anticlmulti_spread{spread}_amp{amp}_resample',
-    #                      f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_'])
+    amps = ['0', '005', '015', '07', '08', '09', '12', '2']
+    spreads = ['0', '02', '05', '1', '15', '2', '25', '4']
+    for amp in amps:
+        for spread in spreads:
+            sets.append([f'flat80_anticlmulti_spread{spread}_amp{amp}_resample',
+                         f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_'])
+
+    amps = ['01', '02', '03', '04', '05', '06']
+    spreads = ['0']
+    for amp in amps:
+        for spread in spreads:
+            sets.append([f'flat80_anticlmulti_spread{spread}_amp{amp}_resample',
+                         f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_'])
 
     # for seti in sets:
     #     print(seti)
@@ -65,9 +64,11 @@ def submit_set(set_i, xml_path):
         file.writelines(new_lines)
 
     print(f'star-submit {new_xml_path}')
-    # os.system(f'star-submit {new_xml_path}')
+    os.system(f'star-submit {new_xml_path}')
 
-    # os.remove(new_xml_path)
+    sleep(2)
+
+    os.remove(new_xml_path)
 
 
 if __name__ == '__main__':
