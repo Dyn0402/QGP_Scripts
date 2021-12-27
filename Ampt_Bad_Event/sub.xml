@@ -14,13 +14,13 @@
     </Package>
   </SandBox>
 
-  <stderr URL="file:/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/sub/err_$JOBID.err"></stderr>
-  <stdout URL="file:/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/sub/log_$JOBID.out" />
+  <stderr URL="file:/star/u/dneff/Ampt_Bad_Event/sub/err_$JOBID.err"></stderr>
+  <stdout URL="file:/star/u/dneff/Ampt_Bad_Event/sub/log_$JOBID.out" />
  
   <Generator>
-    <Location>/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/sub/</Location>
-    <ScriptLocation>/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/sub/</ScriptLocation>
-    <ListLocation>/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/sub/</ListLocation>
+    <Location>/star/u/dneff/Ampt_Bad_Event/sub/</Location>
+    <ScriptLocation>/star/u/dneff/Ampt_Bad_Event/sub/</ScriptLocation>
+    <ListLocation>/star/u/dneff/Ampt_Bad_Event/sub/</ListLocation>
   </Generator>
   
 </job>
