@@ -29,14 +29,15 @@ class BootstrapAzBin:
 
             for line in lines:
                 if 'bootstrap' in line:
-                    if self.data is None:
-                        self.data = AzimuthBinData(self.div)
-                        self.data.data = data.copy()
-                        self.data.max_particle = max(data)
-                    else:
-                        self.data_bs.append(AzimuthBinData(self.div))
-                        self.data_bs[-1].data = data.copy()
-                        self.data_bs[-1].max_particle = max(data)
+                    # if self.data is None:
+                    #     self.data = AzimuthBinData(self.div)
+                    #     self.data.data = data.copy()
+                    #     self.data.max_particle = max(data)
+                    # else:
+                    #     self.data_bs.append(AzimuthBinData(self.div))
+                    #     self.data_bs[-1].data = data.copy()
+                    #     self.data_bs[-1].max_particle = max(data)
+                    self.append_set(data)
                     data = {}
                     continue
 
@@ -55,6 +56,24 @@ class BootstrapAzBin:
                         data[total_particles].append(int(entry[1]))
                         i += 1
 
+            self.append_set(data)
+            # if self.data is None:
+            #     self.data = AzimuthBinData(self.div)
+            #     self.data.data = data.copy()
+            #     self.data.max_particle = max(data)
+            # else:
+            #     self.data_bs.append(AzimuthBinData(self.div))
+            #     self.data_bs[-1].data = data.copy()
+            #     self.data_bs[-1].max_particle = max(data)
+
+    def get_dist(self):
+        return self.data.get_dist()
+
+    def get_dist_bs(self):
+        return [bs.get_dist() for bs in self.data_bs]
+
+    def append_set(self, data):
+        if data:  # Check if dict is empty
             if self.data is None:
                 self.data = AzimuthBinData(self.div)
                 self.data.data = data.copy()
@@ -63,9 +82,5 @@ class BootstrapAzBin:
                 self.data_bs.append(AzimuthBinData(self.div))
                 self.data_bs[-1].data = data.copy()
                 self.data_bs[-1].max_particle = max(data)
-
-    def get_dist(self):
-        return self.data.get_dist()
-
-    def get_dist_bs(self):
-        return [bs.get_dist() for bs in self.data_bs]
+        else:
+            print(f'Misread: {self.path}')
