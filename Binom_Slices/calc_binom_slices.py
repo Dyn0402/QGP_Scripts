@@ -27,12 +27,13 @@ def main():
 
 
 def init_pars():
-    pars = {'base_path': '/home/dylan/Research/',
-            'csv_path': '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df.csv',
+    pars = {'base_path': 'D:/Transfer/Research/',  # '/home/dylan/Research/',
+            'csv_path': 'C:/Users/Dylan/Research/Results/Azimuth_Analysis/binom_slice_cent_sds_df.csv',  # '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df.csv',
             'csv_append': False,  # If true read dataframe from csv_path and append new datasets to it, else overwrite
-            'threads': 16,
-            'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
+            'threads': 8,
+            'stats': define_stats(['standard deviation']),  # , 'skewness', 'non-excess kurtosis']),
             'datasets': define_datasets(),
+            'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
             }
 
     pars.update({'sys_sets': define_sys_sets(pars['datasets'])})
@@ -49,7 +50,7 @@ def define_datasets():
 
     all_divs = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356]
     all_energies = [7, 11, 19, 27, 39, 62]
-    all_cents = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+    all_cents = [8]  # [0, 1, 2, 3, 4, 5, 6, 7, 8]
 
     entry_names = ['name', 'base_ext', 'exact_keys', 'contain_keys', 'exclude_keys',
                    'set_nums', 'energies', 'cents', 'divs']
@@ -63,20 +64,16 @@ def define_datasets():
         #  [8], all_divs],
         # ['sim_aclmul_amp02_spread2', '_Sim', ['anticlmulti', 'amp02', 'spread2', 'resample'], ['flat'], [], [0], [62],
         #  [8], all_divs],
-        ['sim_aclmul_amp01_spread4', '_Sim', ['anticlmulti', 'amp01', 'spread4', 'resample'], ['flat'], [], [0], [62],
-         [8], all_divs],
-        ['sim_aclmul_amp02_spread4', '_Sim', ['anticlmulti', 'amp02', 'spread4', 'resample'], ['flat'], [], [0], [62],
-         [8], all_divs],
-        ['sim_aclmul_amp03_spread4', '_Sim', ['anticlmulti', 'amp03', 'spread4', 'resample'], ['flat'], [], [0], [62],
-         [8], all_divs],
-        ['sim_aclmul_amp04_spread4', '_Sim', ['anticlmulti', 'amp04', 'spread4', 'resample'], ['flat'], [], [0], [62],
-         [8], all_divs],
     ]
 
-    amps = ['01', '02', '03', '04', '05', '06']
-    spreads = ['02', '05', '1', '15', '2', '25']
+    amps = ['0', '005', '01', '015', '02', '03', '04', '05', '06', '07', '08', '09', '12', '2']
+    spreads = ['0', '02', '05', '1', '15', '2', '25', '4']
     for amp in amps:
         for spread in spreads:
+# ▼▼▼REMOVE THIS WHEN DATA FIXED!!!!!!!!
+            if (amp == '04' and spread == '25') or (amp == '06' and spread == '15'):
+                continue
+# ▲▲▲REMOVE THIS WHEN DATA FIXED!!!!!!!!
             entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
                                ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
                                ['flat'], [], [0], [62], [8], all_divs])
@@ -148,6 +145,12 @@ def read_data(pars):
         print(dataset)
         jobs.extend(get_dataset_jobs(dataset, pars))
 
+    if pars['check_only']:  # Just check the files and return
+        with Pool(pars['threads']) as pool:
+            for df_subset in tqdm.tqdm(pool.istarmap(check_subset, jobs), total=len(jobs)):
+                pass
+        return
+
     df_subsets = []
     with Pool(pars['threads']) as pool:
         for df_subset in tqdm.tqdm(pool.istarmap(read_subset, jobs), total=len(jobs)):
@@ -199,7 +202,7 @@ def get_set_jobs(dataset, set_dir, base_paths, stats):
                         other_columns = {'name': dataset['name'], 'set': set_dir, 'set_num': set_num,
                                          'energy': energy, 'divs': div, 'cent': cent}
                         if 'sim_' in dataset['name']:
-                            other_columns['energy'] = 'sim'
+                            other_columns['energy'] = 0
                         subset_jobs.append((f'{base_paths["raw"]}{path}', f'{base_paths["mix"]}{path}', div,
                                             stats, other_columns))
 
@@ -225,6 +228,18 @@ def read_subset(raw_path, mix_path, div, stats, other_columns):
         #           f'{mix_az_data.path}')
 
     return df_subset
+
+
+def check_subset(raw_path, mix_path, div, stats, other_columns):
+    """
+    Just read files to see if all are able to be read. If not hopefully get print to screen with bad path
+    :param raw_path:
+    :param mix_path:
+    :param div:
+    :return:
+    """
+    BootstrapAzBin(div, raw_path)
+    BootstrapAzBin(div, mix_path)
 
 
 def get_div(raw_az_data, mix_az_data, total_protons, stat_method):
