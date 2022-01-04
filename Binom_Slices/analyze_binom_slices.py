@@ -11,10 +11,12 @@ Created as QGP_Scripts/analyze_binom_slices
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors
+import matplotlib as mpl
 from mpl_toolkits import mplot3d
 import pandas as pd
 from scipy.optimize import curve_fit as cf
 from scipy.optimize import minimize
+from scipy.optimize import basinhopping
 from scipy.interpolate import interp1d
 from scipy.interpolate import interp2d
 
@@ -24,9 +26,10 @@ from Measure import Measure
 
 def main():
     # df_path = '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df.csv'
-    df_path = 'D:/Research/Results/Azimuth_Analysis/binom_slice_df.csv'
+    # df_path = 'D:/Research/Results/Azimuth_Analysis/binom_slice_df.csv'
     # df_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/binom_slice_df.csv'
     # df_path = 'C:/Users/Dyn04/Desktop/binom_slice_df.csv'
+    df_path = 'C:/Users/Dylan/Research/Results/Azimuth_Analysis/binom_slice_cent_sds_df.csv'
     sim_sets = []
     amps = ['01', '02', '03', '04', '05', '06']
     spreads = ['02', '05', '1', '15', '2', '25']
@@ -37,16 +40,16 @@ def main():
                 'non-excess kurtosis': (0.95, 1.025)}
     stat_plot = 'standard deviation'  # ['standard deviation']  # , 'skewness', 'non-excess kurtosis']
     div_plt = 120
-    exclude_divs = [356]
+    exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]  # [356]
     total_protons_plt = 20
     cent_plt = 8
     energies_plt = [62, 'sim']  # [7, 11, 19, 27, 39, 62]
-    energies_fit = [7, 11, 19, 27, 39, 62]
+    energies_fit = [7]  # , 11, 19, 27, 39, 62]
     energy_plt = 62
     data_types_plt = ['divide']
     data_type_plt = 'divide'
-    data_sets_plt = ['bes_resample_def', 'ampt_resample_def']
-    all_sets_plt = data_sets_plt + sim_sets
+    data_sets_plt = ['ampt_resample_def']
+    all_sets_plt = data_sets_plt + sim_sets[:3]
 
     df = pd.read_csv(df_path)
     df = df.dropna()
@@ -68,6 +71,9 @@ def main():
     # plot_protons_fits_divs(protons_fits, data_sets_plt)
 
     # stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, data_types_plt, data_sets_plt, plot=True, fit=True)
+    # stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, data_types_plt, all_sets_plt, plot=True, fit=False)
+    # plt.show()
+    # return
     chi_res = []
     for energy in energies_fit:
         chi2_sets = []
@@ -290,37 +296,102 @@ def plot_chi2_protons(df, energy, n_sims_plt=6):
         ax.set_xlabel('Bin Width')
         df_data = df[df['data_name'] == data_set]
         for sim_set in sim_sets_plt[data_set]:
-            df_sim = df_data[df_data['sim_name'] == sim_set]
+            df_sim = df_data[df_data['sim_name'] == sim_set].sort_values(by='divs')
             ax.axhline(0, ls='--', color='black')
             ax.plot(df_sim['divs'], df_sim['chi2'], marker='o', alpha=0.8, label=f'{sim_set}')
         ax.legend()
         fig.tight_layout()
 
         df_chi = chi_df[data_set]
-        f = interp2d(df_chi['amp'], df_chi['spread'], df_chi['chi2_sum'], kind='cubic')
+        fig_chisum, ax_chisum = plt.subplots()
+
+        color = iter(plt.cm.rainbow(np.linspace(0, 1, len(np.unique(df_chi['spread'])))))
+        ax_chisum.grid()
+        ax_chisum.axhline(0, color='black', ls='--')
+        for spread in np.unique(df_chi['spread']):
+            c = next(color)
+            df_s = df_chi[df_chi['spread'] == spread].sort_values(by='amp')
+            ax_chisum.scatter(df_s['amp'], df_s['chi2_sum'], marker='o', color=c, label=spread)
+            ax_chisum.plot(df_s['amp'], df_s['chi2_sum'], marker='o', color=c, alpha=0.8)
+        ax_chisum.set_title(f'{data_set} {energy}GeV')
+        ax_chisum.set_xlabel('amp')
+        ax_chisum.set_ylabel('chi2 sum')
+        ax_chisum.legend()
+        fig_chisum.tight_layout()
+
+        f = interp2d(df_chi['amp'], df_chi['spread'], df_chi['chi2_sum'], kind='linear')
         x = np.linspace(df_chi['amp'].min(), df_chi['amp'].max(), 100)
         y = np.linspace(df_chi['spread'].min(), df_chi['spread'].max(), 100)
         xx, yy = np.meshgrid(x, y)
-        fig_3d_interp = plt.figure()
-        ax_3d_interp = plt.axes(projection='3d')
         z = f(x, y)
-        z = np.where(z > 0, z, 0.001)
+        z_min = np.min(z)
+        z = z - z_min + 1  # np.where(z > 0, z, 0.001)
         print(data_set)
-        x0 = [0.02, 1.5]
-        min_res = minimize(lambda x_opt: f(*x_opt) if f(*x_opt) > 0 else 0.001, x0, bounds=[(0, 0.1), (0, None)])
+        x0 = [0.04, 2.1]
+        min_res = minimize(lambda x_opt: f(*x_opt) - z_min + 1, x0, bounds=[(0, 0.1), (0, None)])
         print(min_res)
-        print(*min_res.x, min_res.fun)
-        chi_res.append({'data_set': data_set, 'energy': energy, 'amp': min_res.x[0], 'spread': min_res.x[1]})
+        # print(*min_res.x, min_res.fun)
+        mybounds = MyBounds()
+        bas_res = basinhopping(lambda x_opt: f(*x_opt) - z_min + 1, x0, minimizer_kwargs={'method': 'L-BFGS-B'},
+                               niter=100, accept_test=mybounds)
+        print(bas_res)
+        print('local_min: ', *min_res.x, min_res.fun)
+        print('basin min: ', *bas_res.x, bas_res.fun)
+        chi_res.append({'data_set': data_set, 'energy': energy, 'amp': bas_res.x[0], 'spread': bas_res.x[1]})
 
-        ax_3d_interp.plot_surface(xx, yy, np.log10(z), cmap='viridis', edgecolor='none')
-        ax_3d_interp.scatter(*x0, np.log10(f(*x0)), color='black', label='Start')
-        ax_3d_interp.scatter(*min_res.x, np.log10(min_res.fun), color='red', label='Minimum')
-        ax_3d_interp.set_xlabel('amp')
-        ax_3d_interp.set_ylabel('spread')
-        ax_3d_interp.set_zlabel('log10 chi2')
-        ax_3d_interp.set_title(data_set)
-        ax_3d_interp.legend()
-        fig_3d_interp.tight_layout()
+        # fig_interp1d, ax_interp1d = plt.subplots()
+        # norm = matplotlib.colors.Normalize(vmin=y.min(), vmax=y.max())
+        # cmap = mpl.cm.ScalarMappable(norm=norm, cmap=mpl.cm.plasma)
+        # # cm = plt.cm.get_cmap('plasma')
+        # # color = iter(plt.cm.rainbow(np.linspace(0, 1, len(data))))
+        # for spread in y[::5]:
+        #     ax_interp1d.plot(x, f(x, spread), color=cmap.to_rgba(spread))
+        # ax_interp1d.set_title(f'{data_set} {energy}GeV')
+        # ax_interp1d.set_xlabel('amp')
+        # ax_interp1d.set_ylabel('spread')
+        # fig_interp1d.colorbar(cmap, ticks=np.arange(y.min(), y.max(), 1))
+
+        fig_2d, ax_2d = plt.subplots()
+        im_obj = ax_2d.imshow(np.log10(z), extent=[min(x), max(x), min(y), max(y)], aspect='auto', origin='lower',
+                              cmap='jet')
+        ax_2d.contour(np.log10(z), origin='lower', cmap='plasma', extent=[min(x), max(x), min(y), max(y)])
+        ax_2d.scatter(df_chi['amp'], df_chi['spread'], c=np.log10(df_chi['chi2_sum']), marker='o', cmap='jet')
+        ax_2d.scatter(*x0, color='black', label='Local Start')
+        ax_2d.scatter(*min_res.x, color='orange', label='Local Min')
+        ax_2d.scatter(*bas_res.x, color='red', label='Global Min')
+        ax_2d.set_title(f'{data_set} {energy}GeV')
+        ax_2d.set_xlabel('amp')
+        ax_2d.set_ylabel('spread')
+        ax_2d.legend()
+        fig_2d.colorbar(im_obj, ax=ax_2d)
+        fig_2d.tight_layout()
+
+        # fig_3d_interp = plt.figure()
+        # ax_3d_interp = plt.axes(projection='3d')
+        # ax_3d_interp.plot_surface(xx, yy, z, cmap='viridis', edgecolor='none')
+        # ax_3d_interp.scatter(*x0, f(*x0), color='black', label='Start')
+        # ax_3d_interp.scatter(*min_res.x, min_res.fun, color='orange', label='Local Min')
+        # ax_3d_interp.scatter(*bas_res.x, bas_res.fun, color='red', label='Global Min')
+        # ax_3d_interp.set_xlabel('amp')
+        # ax_3d_interp.set_ylabel('spread')
+        # ax_3d_interp.set_zlabel('chi2')
+        # ax_3d_interp.set_zlim(0, 10000)
+        # ax_3d_interp.set_title(f'{data_set} {energy}GeV')
+        # ax_3d_interp.legend()
+        # fig_3d_interp.tight_layout()
+
+        fig_3d_interp_log = plt.figure()
+        ax_3d_interp_log = plt.axes(projection='3d')
+        ax_3d_interp_log.plot_surface(xx, yy, np.log10(z), cmap='viridis', edgecolor='none')
+        ax_3d_interp_log.scatter(*x0, np.log10(f(*x0)), color='black', label='Start')
+        ax_3d_interp_log.scatter(*min_res.x, np.log10(min_res.fun), color='orange', label='Local Min')
+        ax_3d_interp_log.scatter(*bas_res.x, np.log10(bas_res.fun), color='red', label='Global Min')
+        ax_3d_interp_log.set_xlabel('amp')
+        ax_3d_interp_log.set_ylabel('spread')
+        ax_3d_interp_log.set_zlabel('log10 chi2')
+        ax_3d_interp_log.set_title(data_set)
+        ax_3d_interp_log.legend()
+        fig_3d_interp_log.tight_layout()
 
     return sim_sets_plt, chi_res
 
@@ -332,6 +403,8 @@ def plot_chi_sim_pars(chi_res):
     for data_set in np.unique(chi_res['data_set']):
         df_set = chi_res[chi_res['data_set'] == data_set]
         ax.scatter(df_set['amp'], df_set['spread'], label=data_set)
+    for x, y, e in zip(chi_res['amp'], chi_res['spread'], chi_res['energy']):
+        ax.annotate(f'{e}GeV', (x, y), textcoords='offset points', xytext=(0, 10), ha='center')
     ax.legend()
     ax.grid()
     fig.tight_layout()
@@ -517,6 +590,18 @@ def plot_fits(df_fits):
         ax_slope.set_ylabel('Slope')
         ax_slope.grid()
         fig_slope.tight_layout()
+
+
+class MyBounds:
+    def __init__(self, xmax=[0, 0.06], xmin=[0, 4.2]):
+        self.xmax = np.array(xmax)
+        self.xmin = np.array(xmin)
+
+    def __call__(self, **kwargs):
+        x = kwargs["x_new"]
+        tmax = bool(np.all(x <= self.xmax))
+        tmin = bool(np.all(x >= self.xmin))
+        return tmax and tmin
 
 
 if __name__ == '__main__':

@@ -16,12 +16,15 @@ def main():
     Due to bug all total protons were shifted by 1 (except default raw dists). Go through resample files and correct.
     :return:
     """
-    base_path = '/home/dylan/Research/'
+    # base_path = '/home/dylan/Research/'
+    base_path = 'D:/Transfer/Research/'
     raw_data_paths = ['Data', 'Data_Ampt', 'Data_Sim']
     mix_data_paths = ['Data_Mix', 'Data_Ampt_Mix', 'Data_Sim_Mix']
     total_proton_shift = -1
     fix = True
+    fix_time = 1640293741  # seconds since epoch for Thu Dec 23 2021. Only fix if not modified after
 
+    n_fix_files = 0
     for data_type, paths in zip(['raw', 'mix'], [raw_data_paths, mix_data_paths]):
         for data_path in paths:
             data_full_path = f'{base_path}{data_path}/'
@@ -36,10 +39,13 @@ def main():
                             for file_name in os.listdir(energy_path):
                                 if 'ratios_divisions_' in file_name:
                                     file_path = f'{energy_path}{file_name}'
-                                    # print(file_path)
-                                    if fix:
-                                        fix_file(file_path, data_type, total_proton_shift)
+                                    if os.path.getmtime(file_path) < fix_time:
+                                        # print(file_path)
+                                        n_fix_files += 1
+                                        if fix:
+                                            fix_file(file_path, data_type, total_proton_shift)
 
+    print(f'Number of fix files: {n_fix_files}')
     print('donzo')
 
 
