@@ -19,6 +19,8 @@ from scipy.optimize import minimize
 from scipy.optimize import basinhopping
 from scipy.interpolate import interp1d
 from scipy.interpolate import interp2d
+import scipy.interpolate as interp
+from scipy.interpolate import RectBivariateSpline
 
 from DistStats import DistStats
 from Measure import Measure
@@ -26,13 +28,13 @@ from Measure import Measure
 
 def main():
     # df_path = '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df.csv'
-    # df_path = 'D:/Research/Results/Azimuth_Analysis/binom_slice_df.csv'
+    df_path = 'D:/Research/Results/Azimuth_Analysis/binom_slice_cent_sds_df.csv'
     # df_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/binom_slice_df.csv'
     # df_path = 'C:/Users/Dyn04/Desktop/binom_slice_df.csv'
-    df_path = 'C:/Users/Dylan/Research/Results/Azimuth_Analysis/binom_slice_cent_sds_df.csv'
+    # df_path = 'C:/Users/Dylan/Research/Results/Azimuth_Analysis/binom_slice_cent_sds_df.csv'
     sim_sets = []
-    amps = ['01', '02', '03', '04', '05', '06']
-    spreads = ['02', '05', '1', '15', '2', '25']
+    amps = ['15']  # ['01', '02', '03', '04', '05', '06']
+    spreads = ['02', '05', '1', '15', '2', '25']  # ['1']  # ['02', '05', '1', '15', '2', '25']
     for amp in amps:
         for spread in spreads:
             sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}')
@@ -49,13 +51,14 @@ def main():
     data_types_plt = ['divide']
     data_type_plt = 'divide'
     data_sets_plt = ['ampt_resample_def']
-    all_sets_plt = data_sets_plt + sim_sets[:3]
+    all_sets_plt = data_sets_plt + sim_sets[:]
 
     df = pd.read_csv(df_path)
     df = df.dropna()
     # df_data = df[~df['name'].str.contains('sim_')]
     # df_sim = df[df['name'].str.contains('sim_')]
     df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
+    df = df[df['spread'] != 1.2]
 
     # protons_fits = stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, data_types_plt, all_sets_plt,
     #                                plot=False, fit=True)
@@ -71,6 +74,7 @@ def main():
     # plot_protons_fits_divs(protons_fits, data_sets_plt)
 
     # stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, data_types_plt, data_sets_plt, plot=True, fit=True)
+    # stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, ['raw', 'mix'], all_sets_plt, plot=True, fit=False)
     # stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, data_types_plt, all_sets_plt, plot=True, fit=False)
     # plt.show()
     # return
@@ -82,7 +86,7 @@ def main():
             chi2_sets.extend(chi2_vs_protons(df, stat_plot, div, cent_plt, energy, data_type_plt, data_sets_plt))
         data_sim_sets_plt, chi_res_e = plot_chi2_protons(pd.DataFrame(chi2_sets), energy, n_sims_plt=4)
         chi_res.extend(chi_res_e)
-    plot_chi_sim_pars(pd.DataFrame(chi_res))
+    # plot_chi_sim_pars(pd.DataFrame(chi_res))
     # for data_set, sim_sets_plt in data_sim_sets_plt.items():
     #     sets = [data_set] + list(sim_sets_plt)
     #     print(sets)
@@ -303,6 +307,7 @@ def plot_chi2_protons(df, energy, n_sims_plt=6):
         fig.tight_layout()
 
         df_chi = chi_df[data_set]
+        df_chi = df_chi.sort_values(by=['spread', 'amp'])
         fig_chisum, ax_chisum = plt.subplots()
 
         color = iter(plt.cm.rainbow(np.linspace(0, 1, len(np.unique(df_chi['spread'])))))
@@ -311,33 +316,62 @@ def plot_chi2_protons(df, energy, n_sims_plt=6):
         for spread in np.unique(df_chi['spread']):
             c = next(color)
             df_s = df_chi[df_chi['spread'] == spread].sort_values(by='amp')
-            ax_chisum.scatter(df_s['amp'], df_s['chi2_sum'], marker='o', color=c, label=spread)
-            ax_chisum.plot(df_s['amp'], df_s['chi2_sum'], marker='o', color=c, alpha=0.8)
+            ax_chisum.scatter(df_s['amp'], np.log10(df_s['chi2_sum']), marker='o', color=c, label=spread)
+            # ax_chisum.plot(df_s['amp'], df_s['chi2_sum'], marker='o', color=c, alpha=0.8)
+            f_1d = interp1d(df_s['amp'], np.log10(df_s['chi2_sum']), kind='cubic')
+            x_interp = np.linspace(min(df_s['amp']), max(df_s['amp']), 1000)
+            ax_chisum.plot(x_interp, f_1d(x_interp), color=c, alpha=0.8)
         ax_chisum.set_title(f'{data_set} {energy}GeV')
         ax_chisum.set_xlabel('amp')
-        ax_chisum.set_ylabel('chi2 sum')
+        ax_chisum.set_ylabel('log10 chi2 sum')
         ax_chisum.legend()
         fig_chisum.tight_layout()
 
-        f = interp2d(df_chi['amp'], df_chi['spread'], df_chi['chi2_sum'], kind='linear')
-        x = np.linspace(df_chi['amp'].min(), df_chi['amp'].max(), 100)
+        df_rect = df_chi[(df_chi['amp'] != 1.5) & (df_chi['spread'] != 0) & (df_chi['spread'] != 12) &
+                         (df_chi['spread'] != 4)]
+        # x_rect = np.unique(df_rect['amp'])
+        # y_rect = np.unique(df_rect['spread'])
+        # z_rect = []
+        # for xi_rect in x_rect:
+        #     z_rect.append([])
+        #     for yi_rect in y_rect:
+        #         z_rect[-1].append(df_rect[(df_rect['amp'] == xi_rect) &
+        #                                   (df_rect['spread'] == yi_rect)].iloc[0]['chi2_sum'])
+        # z_rect = np.asarray(z_rect)
+        # print(x_rect.shape, y_rect.shape, z_rect.shape)
+        # f = RectBivariateSpline(x_rect, y_rect, z_rect)
+
+        x_in, y_in, z_in = np.array(df_chi['amp']), np.array(df_chi['spread']), np.array(df_chi['chi2_sum'])
+        z_in_log = np.log10(z_in)
+        # print(x_in.shape, y_in.shape, z_in.shape)
+        # print(x_in, y_in, z_in, z_in_log)
+
+        tcks = interp.bisplrep(x_in, y_in, z_in_log, kx=3, ky=3)
+
+        # f = interp2d(df_chi['amp'], df_chi['spread'], df_chi['chi2_sum'], kind='cubic')
+        x = np.linspace(df_chi['amp'].min(), df_chi['amp'].max(), 120)
         y = np.linspace(df_chi['spread'].min(), df_chi['spread'].max(), 100)
         xx, yy = np.meshgrid(x, y)
-        z = f(x, y)
-        z_min = np.min(z)
-        z = z - z_min + 1  # np.where(z > 0, z, 0.001)
+        # z = f(x, y)
+        z = interp.bisplev(x, y, tcks)
+        print(z)
+        print(z.shape)
+        print(interp.bisplev(0.025, 3.0, tcks))
+        print(interp.bisplev(0.155, 1.8, tcks))
+        # z_min = np.min(z)
+        # z = z - z_min + 1  # np.where(z > 0, z, 0.001)
         print(data_set)
         x0 = [0.04, 2.1]
-        min_res = minimize(lambda x_opt: f(*x_opt) - z_min + 1, x0, bounds=[(0, 0.1), (0, None)])
-        print(min_res)
-        # print(*min_res.x, min_res.fun)
-        mybounds = MyBounds()
-        bas_res = basinhopping(lambda x_opt: f(*x_opt) - z_min + 1, x0, minimizer_kwargs={'method': 'L-BFGS-B'},
-                               niter=100, accept_test=mybounds)
-        print(bas_res)
-        print('local_min: ', *min_res.x, min_res.fun)
-        print('basin min: ', *bas_res.x, bas_res.fun)
-        chi_res.append({'data_set': data_set, 'energy': energy, 'amp': bas_res.x[0], 'spread': bas_res.x[1]})
+        # min_res = minimize(lambda x_opt: f(*x_opt) - z_min + 1, x0, bounds=[(0, 0.1), (0, None)])
+        # print(min_res)
+        # # print(*min_res.x, min_res.fun)
+        # mybounds = MyBounds()
+        # bas_res = basinhopping(lambda x_opt: f(*x_opt) - z_min + 1, x0, minimizer_kwargs={'method': 'L-BFGS-B'},
+        #                        niter=100, accept_test=mybounds)
+        # print(bas_res)
+        # print('local_min: ', *min_res.x, min_res.fun)
+        # print('basin min: ', *bas_res.x, bas_res.fun)
+        # chi_res.append({'data_set': data_set, 'energy': energy, 'amp': bas_res.x[0], 'spread': bas_res.x[1]})
 
         # fig_interp1d, ax_interp1d = plt.subplots()
         # norm = matplotlib.colors.Normalize(vmin=y.min(), vmax=y.max())
@@ -352,13 +386,13 @@ def plot_chi2_protons(df, energy, n_sims_plt=6):
         # fig_interp1d.colorbar(cmap, ticks=np.arange(y.min(), y.max(), 1))
 
         fig_2d, ax_2d = plt.subplots()
-        im_obj = ax_2d.imshow(np.log10(z), extent=[min(x), max(x), min(y), max(y)], aspect='auto', origin='lower',
+        im_obj = ax_2d.imshow(z, extent=[min(x), max(x), min(y), max(y)], aspect='auto', origin='lower',
                               cmap='jet')
-        ax_2d.contour(np.log10(z), origin='lower', cmap='plasma', extent=[min(x), max(x), min(y), max(y)])
-        ax_2d.scatter(df_chi['amp'], df_chi['spread'], c=np.log10(df_chi['chi2_sum']), marker='o', cmap='jet')
+        ax_2d.contour(z, origin='lower', cmap='plasma', extent=[min(x), max(x), min(y), max(y)])
+        ax_2d.scatter(x_in, y_in, c=z_in_log, marker='o', cmap='jet')
         ax_2d.scatter(*x0, color='black', label='Local Start')
-        ax_2d.scatter(*min_res.x, color='orange', label='Local Min')
-        ax_2d.scatter(*bas_res.x, color='red', label='Global Min')
+        # ax_2d.scatter(*min_res.x, color='orange', label='Local Min')
+        # ax_2d.scatter(*bas_res.x, color='red', label='Global Min')
         ax_2d.set_title(f'{data_set} {energy}GeV')
         ax_2d.set_xlabel('amp')
         ax_2d.set_ylabel('spread')
@@ -366,32 +400,40 @@ def plot_chi2_protons(df, energy, n_sims_plt=6):
         fig_2d.colorbar(im_obj, ax=ax_2d)
         fig_2d.tight_layout()
 
-        # fig_3d_interp = plt.figure()
-        # ax_3d_interp = plt.axes(projection='3d')
-        # ax_3d_interp.plot_surface(xx, yy, z, cmap='viridis', edgecolor='none')
+        fig_3d_scatter = plt.figure()
+        ax_3d_scatter = plt.axes(projection='3d')
+        ax_3d_scatter.scatter3D(x_in, y_in, z_in_log, c=z_in_log, cmap='viridis')
+        ax_3d_scatter.set_xlabel('amp')
+        ax_3d_scatter.set_ylabel('spread')
+        ax_3d_scatter.set_zlabel('log chi2_sum')
+
+        fig_3d_interp = plt.figure()
+        ax_3d_interp = plt.axes(projection='3d')
+        ax_3d_interp.plot_surface(xx, yy, z, cmap='viridis', edgecolor='none')
+        ax_3d_interp.scatter3D(x_in, y_in, z_in_log, color='black', linewidth=0.5, alpha=0.5)
         # ax_3d_interp.scatter(*x0, f(*x0), color='black', label='Start')
         # ax_3d_interp.scatter(*min_res.x, min_res.fun, color='orange', label='Local Min')
         # ax_3d_interp.scatter(*bas_res.x, bas_res.fun, color='red', label='Global Min')
-        # ax_3d_interp.set_xlabel('amp')
-        # ax_3d_interp.set_ylabel('spread')
-        # ax_3d_interp.set_zlabel('chi2')
+        ax_3d_interp.set_xlabel('amp')
+        ax_3d_interp.set_ylabel('spread')
+        ax_3d_interp.set_zlabel('log chi2')
         # ax_3d_interp.set_zlim(0, 10000)
-        # ax_3d_interp.set_title(f'{data_set} {energy}GeV')
+        ax_3d_interp.set_title(f'{data_set} {energy}GeV')
         # ax_3d_interp.legend()
-        # fig_3d_interp.tight_layout()
+        fig_3d_interp.tight_layout()
 
-        fig_3d_interp_log = plt.figure()
-        ax_3d_interp_log = plt.axes(projection='3d')
-        ax_3d_interp_log.plot_surface(xx, yy, np.log10(z), cmap='viridis', edgecolor='none')
-        ax_3d_interp_log.scatter(*x0, np.log10(f(*x0)), color='black', label='Start')
-        ax_3d_interp_log.scatter(*min_res.x, np.log10(min_res.fun), color='orange', label='Local Min')
-        ax_3d_interp_log.scatter(*bas_res.x, np.log10(bas_res.fun), color='red', label='Global Min')
-        ax_3d_interp_log.set_xlabel('amp')
-        ax_3d_interp_log.set_ylabel('spread')
-        ax_3d_interp_log.set_zlabel('log10 chi2')
-        ax_3d_interp_log.set_title(data_set)
-        ax_3d_interp_log.legend()
-        fig_3d_interp_log.tight_layout()
+        # fig_3d_interp_log = plt.figure()
+        # ax_3d_interp_log = plt.axes(projection='3d')
+        # ax_3d_interp_log.plot_surface(xx, yy, np.log10(z), cmap='viridis', edgecolor='none')
+        # # ax_3d_interp_log.scatter(*x0, np.log10(f(*x0)), color='black', label='Start')
+        # # ax_3d_interp_log.scatter(*min_res.x, np.log10(min_res.fun), color='orange', label='Local Min')
+        # # ax_3d_interp_log.scatter(*bas_res.x, np.log10(bas_res.fun), color='red', label='Global Min')
+        # ax_3d_interp_log.set_xlabel('amp')
+        # ax_3d_interp_log.set_ylabel('spread')
+        # ax_3d_interp_log.set_zlabel('log10 chi2')
+        # ax_3d_interp_log.set_title(data_set)
+        # # ax_3d_interp_log.legend()
+        # fig_3d_interp_log.tight_layout()
 
     return sim_sets_plt, chi_res
 
