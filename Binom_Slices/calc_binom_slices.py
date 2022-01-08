@@ -7,7 +7,8 @@ Created as QGP_Scripts/calc_binom_slices.py
 
 @author: Dylan Neff, Dylan
 """
-
+import numpy as np
+import matplotlib.pyplot as plt
 import pandas as pd
 import os
 from multiprocessing import Pool
@@ -16,7 +17,7 @@ import tqdm
 from Bootstrap_Az_Bin import BootstrapAzBin
 from Measure import Measure
 from pickle_methods import *
-import istarmap
+import istarmap  # Needed for tqdm
 
 
 def main():
@@ -27,24 +28,27 @@ def main():
 
 
 def init_pars():
-    pars = {'base_path': 'D:/Transfer/Research/',  # '/home/dylan/Research/',
-            'csv_path': 'C:/Users/Dylan/Research/Results/Azimuth_Analysis/binom_slice_cent_sds_df.csv',  # '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df.csv',
+    pars = {'base_path': 'D:/Research/',  # '/home/dylan/Research/',
+            'csv_path': 'D:/Research/Results/Azimuth_Analysis/binom_slice_cent_sds_df.csv',  # '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df.csv',
             'csv_append': False,  # If true read dataframe from csv_path and append new datasets to it, else overwrite
-            'threads': 8,
+            'threads': 16,
             'stats': define_stats(['standard deviation']),  # , 'skewness', 'non-excess kurtosis']),
-            'datasets': define_datasets(),
             'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
+            'min_events': 100,  # Min number of total events per total_proton. Skip total_proton if fewer
+            'min_bs': 100,  # Min number of bootstrap sets of total_proton. Skip if fewer
             }
 
+    pars.update({'datasets': define_datasets(pars['base_path'])})
     pars.update({'sys_sets': define_sys_sets(pars['datasets'])})
 
     return pars
 
 
-def define_datasets():
+def define_datasets(base_path):
     """
     Define sets to read for each dataset. Each dataset can contain multiple sets which will be combined to give
     systematic uncertainties. Here set parameters to define which sets will be read and combined.
+    :param base_path: Base path to data sets
     :return: list of dictionaries containing parameters for defining datasets
     """
 
@@ -59,21 +63,13 @@ def define_datasets():
         ['ampt_resample_def', '_Ampt', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
         ['bes_def', '', ['default'], [], ['resample'], range(60), all_energies, [8], all_divs],
         ['bes_resample_def', '', ['default', 'resample'], [], [], [0], all_energies, [8], all_divs],
-        # ['sim_amp01_spread01', '_Sim', ['anticlmulti', 'amp05', 'spread01'], ['single'], [], [0], [62], [8], all_divs],
-        # ['sim_aclmul_amp01_spread2', '_Sim', ['anticlmulti', 'amp01', 'spread2', 'resample'], ['flat'], [], [0], [62],
-        #  [8], all_divs],
-        # ['sim_aclmul_amp02_spread2', '_Sim', ['anticlmulti', 'amp02', 'spread2', 'resample'], ['flat'], [], [0], [62],
-        #  [8], all_divs],
     ]
 
-    amps = ['0', '005', '01', '015', '02', '03', '04', '05', '06', '07', '08', '09', '12', '2']
-    spreads = ['0', '02', '05', '1', '15', '2', '25', '4']
-    for amp in amps:
-        for spread in spreads:
-# ▼▼▼REMOVE THIS WHEN DATA FIXED!!!!!!!!
-            if (amp == '04' and spread == '25') or (amp == '06' and spread == '15'):
-                continue
-# ▲▲▲REMOVE THIS WHEN DATA FIXED!!!!!!!!
+    df = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample'])
+
+    for amp in np.unique(df['amp']):
+        df_amp = df[df['amp'] == amp]
+        for spread in np.unique(df_amp['spread']):
             entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
                                ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
                                ['flat'], [], [0], [62], [8], all_divs])
@@ -139,6 +135,26 @@ def define_stats(stats):
     return {stat: stat_methods[stat] for stat in stats}
 
 
+def find_sim_sets(path, keys):
+    df = []
+    for file_path in os.listdir(path):
+        file_keys = file_path.strip().split('_')
+        if all([key in file_keys for key in keys]):
+            df_i = {}
+            for key in file_keys:
+                for par_i in ['amp', 'spread']:
+                    if key[:len(par_i)] == par_i:
+                        df_i.update({par_i: key.strip(par_i)})
+            df.append(df_i)
+
+    df = pd.DataFrame(df)
+    for spread in np.unique(df['spread']):
+        df_spread = df[df['spread'] == spread]
+        print(f'spread {spread}: {np.unique(df_spread["amp"])}')
+
+    return df
+
+
 def read_data(pars):
     jobs = []
     for dataset in pars['datasets']:
@@ -182,12 +198,14 @@ def get_dataset_jobs(dataset, pars):
         if any(x in set_dir.split('_') for x in dataset['exclude_keys']):
             good = False
         if good:
-            dataset_jobs.extend(get_set_jobs(dataset, set_dir, {'raw': path + '/', 'mix': path + '_Mix/'}, pars['stats']))
+            new_job = get_set_jobs(dataset, set_dir, {'raw': path + '/', 'mix': path + '_Mix/'}, pars['stats'],
+                                   pars['min_events'], pars['min_bs'])
+            dataset_jobs.extend(new_job)
 
     return dataset_jobs
 
 
-def get_set_jobs(dataset, set_dir, base_paths, stats):
+def get_set_jobs(dataset, set_dir, base_paths, stats, min_events, min_bs):
     subset_jobs = []
     for energy in dataset['energies']:
         for div in dataset['divs']:
@@ -196,6 +214,7 @@ def get_set_jobs(dataset, set_dir, base_paths, stats):
                     set_num = int(sub_set_dir.split('_')[-1])
                     if set_num in dataset['set_nums']:
                         path = f'{set_dir}/{sub_set_dir}/{energy}GeV/ratios_divisions_{div}_centrality_{cent}_local.txt'
+                        info_path = f'{set_dir}/{sub_set_dir}/{energy}GeV/info.txt'
                         if not os.path.exists(f'{base_paths["mix"]}{path}'):
                             print(f'Mixed file missing! {base_paths["mix"]}{path}')
                             continue
@@ -203,22 +222,40 @@ def get_set_jobs(dataset, set_dir, base_paths, stats):
                                          'energy': energy, 'divs': div, 'cent': cent}
                         if 'sim_' in dataset['name']:
                             other_columns['energy'] = 0
-                        subset_jobs.append((f'{base_paths["raw"]}{path}', f'{base_paths["mix"]}{path}', div,
-                                            stats, other_columns))
+                        subset_jobs.append((f'{base_paths["raw"]}{path}', f'{base_paths["mix"]}{path}',
+                                            f'{base_paths["raw"]}{info_path}', div, stats, other_columns,
+                                            min_events, min_bs))
 
     return subset_jobs
 
 
-def read_subset(raw_path, mix_path, div, stats, other_columns):
-    # print(raw_path)
+def read_subset(raw_path, mix_path, info_path, div, stats, other_columns, min_events, min_bs):
+    """
+    Read a single raw/mix file pair. Calculate stats with bootstrap or delta errors depending on bootstrap's existence.
+    Calculate raw divided by mixed. Return as entries to convert to dataframe.
+    :param raw_path: Path to raw histogram file
+    :param mix_path: Path to mix histogram file
+    :param info_path: Path to info text file in raw directory, for determining type of binning and min_counts
+    :param div: Azimuthal division width
+    :param stats: Stats to calculate for each distribution
+    :param other_columns: Other columns characterizing this job, to be added to dataframe
+    :param min_events: Minimum required events for total_proton dataset to be kept, otherwise don't process
+    :param min_bs: Minimum required bootstrap sets for total_proton dataset to be kept
+    :return:
+    """
     df_subset = []
     raw_az_data = BootstrapAzBin(div, raw_path)
     mix_az_data = BootstrapAzBin(div, mix_path)
+
+    min_counts = get_min_counts(info_path, min_events, div)
+
     for total_protons in raw_az_data.get_dist():
         if total_protons in mix_az_data.get_dist():
             for stat, stat_method in stats.items():
                 other_columns.update({'total_protons': total_protons, 'stat': stat})
-                measures = get_div(raw_az_data, mix_az_data, total_protons, stat_method)
+                measures = get_div(raw_az_data, mix_az_data, total_protons, stat_method, min_counts, min_bs)
+                if any(x is None for x in measures):
+                    continue
                 for data_type, meas in zip(['raw', 'mix', 'divide'], measures):
                     df_new = {'data_type': data_type, 'val': meas.val, 'err': meas.err}
                     df_new.update(other_columns)
@@ -230,7 +267,7 @@ def read_subset(raw_path, mix_path, div, stats, other_columns):
     return df_subset
 
 
-def check_subset(raw_path, mix_path, div, stats, other_columns):
+def check_subset(raw_path, mix_path, div, stats, other_columns, min_events, min_bs):
     """
     Just read files to see if all are able to be read. If not hopefully get print to screen with bad path
     :param raw_path:
@@ -242,34 +279,79 @@ def check_subset(raw_path, mix_path, div, stats, other_columns):
     BootstrapAzBin(div, mix_path)
 
 
-def get_div(raw_az_data, mix_az_data, total_protons, stat_method):
-    raw_stat_meas, raw_bs_stats = get_stat(raw_az_data, total_protons, stat_method)
-    mix_stat_meas, mix_bs_stats = get_stat(mix_az_data, total_protons, stat_method)
+def get_min_counts(info_path, min_events, div):
+    """
+    Use info text file to figure out what type of binning done. Since multiple counts taken from single event depending
+    upon the binning, multiply counts per event by min_events to get min_counts.
+    !!! Don't check the mixed values, just assume they are the same as raw !!!
+    :param info_path: Path to the info file in the raw directory
+    :param min_events: Minimum number of events required to keep dataset. To be converted to min_counts
+    :param div: Azimuthal division width, needed to calculate number of counts per event for n1_ratios and default
+    :return: min_counts -> Minimum number of counts required to keep dataset
+    """
+    min_counts = min_events
+    with open(info_path, 'r') as file:
+        lines = file.readlines()
+        lines = [line.strip() for line in lines]
+        if 'resample: true' in lines:
+            for line in lines:
+                if line[:len('n_resamples')] == 'n_resamples':
+                    min_counts *= int(line.strip().split(': ')[-1])
+        elif 'n1_ratios: true' in lines:
+            min_counts *= int(360 / div) - 1
+        elif 'single_ratio: true':
+            pass  # 1 count per event
+        else:  # Default take all bins
+            min_counts *= int(360 / div)
 
-    div_stat_meas = raw_stat_meas / mix_stat_meas
-    if raw_bs_stats and mix_bs_stats:
-        div_stat_meas.err = np.std([raw / mix if abs(mix) > 0 else float('nan') for raw in raw_bs_stats
-                                    for mix in mix_bs_stats])
+    return min_counts
+
+
+def get_div(raw_az_data, mix_az_data, total_protons, stat_method, min_counts, min_bs):
+    raw_stat_meas, raw_bs_stats = get_stat(raw_az_data, total_protons, stat_method, min_counts, min_bs)
+    mix_stat_meas, mix_bs_stats = get_stat(mix_az_data, total_protons, stat_method, min_counts, min_bs)
+
+    if raw_stat_meas and mix_stat_meas:
+        div_stat_meas = raw_stat_meas / mix_stat_meas
+        if raw_bs_stats and mix_bs_stats:
+            div_stat_meas.err = np.std([raw / mix if abs(mix) > 0 else float('nan') for raw in raw_bs_stats
+                                        for mix in mix_bs_stats])
+    else:
+        div_stat_meas = None
 
     return raw_stat_meas, mix_stat_meas, div_stat_meas
 
 
-def get_stat(az_data, total_protons, stat_method):
+def get_stat(az_data, total_protons, stat_method, min_counts, min_bs):
     """
     Get statistic from az_data distribution. For error use bootstrap standard deviation if bootstraps exist, else use
     delta theorem. Return list of bootstrap set if they exist
     :param az_data: Bootstrap_Az_Bin data
     :param total_protons: Slice of az_data to take
     :param stat_method: Stat method to get from DistData of az_data[total_protons] distribution
-    :return:
+    :param min_counts: Minimum number of counts required to keep data. Otherwise return None
+    :param min_bs: Minimum number of bootstrap sets required to keep data. Otherwise return None
+    :return: Measure object for data with boostrap as err if enough, otherwise delta. Also boostrap float itself
     """
-    stat_meas = stat_method(DistStats(az_data.get_dist()[total_protons]))
+    # print(f'{total_protons}: {sum(az_data.get_dist()[total_protons]) / 1440}, {az_data.get_dist()[total_protons]}')
+    if sum(az_data.get_dist()[total_protons]) > min_counts:
+        stat_meas = stat_method(DistStats(az_data.get_dist()[total_protons]))
+    else:
+        stat_meas = None
     stat_bs = None
-    if len(az_data.data_bs) > 0:
-        # if not all(total_protons in bs for bs in az_data.get_dist_bs()):
-        #     print(f'Bootstrap missing total protons {total_protons}! {az_data.path}')
+    num_bootstraps = sum(total_protons in bs for bs in az_data.get_dist_bs())
+    if stat_meas and num_bootstraps > min_bs:
         stat_bs = [stat_method(DistStats(bs[total_protons])).val for bs in az_data.get_dist_bs() if total_protons in bs]
         stat_meas.err = np.std(stat_bs)
+        # if num_bootstraps < len(az_data.get_dist_bs()):
+        #     print(f'Bootstrap missing total protons {total_protons}! {num_bootstraps}/{len(az_data.get_dist_bs())} '
+        #           f'{az_data.path}')
+            # fig, ax = plt.subplots()
+            # ax.set_title(f'Total Protons {total_protons} {num_bootstraps}/{len(az_data.get_dist_bs())}')
+            # ax.hist([stat_method(DistStats(bs[total_protons])).val for bs in az_data.get_dist_bs()
+            #         if total_protons in bs])
+            # ax.axvline(stat_meas.val, ls='--', color='green')
+            # plt.show()
 
     return stat_meas, stat_bs
 
