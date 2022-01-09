@@ -346,7 +346,7 @@ def plot_chi2_protons(df, energy, n_sims_plt=6):
         # print(x_in.shape, y_in.shape, z_in.shape)
         # print(x_in, y_in, z_in, z_in_log)
 
-        tcks = interp.bisplrep(x_in, y_in, z_in_log, kx=3, ky=3)
+        tcks = interp.bisplrep(x_in, y_in, z_in_log, kx=1, ky=1)
 
         # f = interp2d(df_chi['amp'], df_chi['spread'], df_chi['chi2_sum'], kind='cubic')
         x = np.linspace(df_chi['amp'].min(), df_chi['amp'].max(), 120)
@@ -373,6 +373,25 @@ def plot_chi2_protons(df, energy, n_sims_plt=6):
         # print('basin min: ', *bas_res.x, bas_res.fun)
         # chi_res.append({'data_set': data_set, 'energy': energy, 'amp': bas_res.x[0], 'spread': bas_res.x[1]})
 
+        fig_chisum2, ax_chisum2 = plt.subplots()
+
+        color = iter(plt.cm.rainbow(np.linspace(0, 1, len(np.unique(df_chi['spread'])))))
+        ax_chisum2.grid()
+        ax_chisum2.axhline(0, color='black', ls='--')
+        for spread in np.unique(df_chi['spread']):
+            c = next(color)
+            df_s = df_chi[df_chi['spread'] == spread].sort_values(by='amp')
+            ax_chisum2.scatter(df_s['amp'], np.log10(df_s['chi2_sum']), marker='o', color=c, label=spread)
+            i = 0
+            while y[i] < spread:
+                i += 1
+            ax_chisum2.plot(x, z.T[i], color=c, alpha=0.8)
+        ax_chisum2.set_title(f'{data_set} {energy}GeV')
+        ax_chisum2.set_xlabel('amp')
+        ax_chisum2.set_ylabel('log10 chi2 sum')
+        ax_chisum2.legend()
+        fig_chisum2.tight_layout()
+
         # fig_interp1d, ax_interp1d = plt.subplots()
         # norm = matplotlib.colors.Normalize(vmin=y.min(), vmax=y.max())
         # cmap = mpl.cm.ScalarMappable(norm=norm, cmap=mpl.cm.plasma)
@@ -386,9 +405,9 @@ def plot_chi2_protons(df, energy, n_sims_plt=6):
         # fig_interp1d.colorbar(cmap, ticks=np.arange(y.min(), y.max(), 1))
 
         fig_2d, ax_2d = plt.subplots()
-        im_obj = ax_2d.imshow(z, extent=[min(x), max(x), min(y), max(y)], aspect='auto', origin='lower',
+        im_obj = ax_2d.imshow(z.T, extent=[min(x), max(x), min(y), max(y)], aspect='auto', origin='lower',
                               cmap='jet')
-        ax_2d.contour(z, origin='lower', cmap='plasma', extent=[min(x), max(x), min(y), max(y)])
+        ax_2d.contour(z.T, origin='lower', cmap='plasma', extent=[min(x), max(x), min(y), max(y)])
         ax_2d.scatter(x_in, y_in, c=z_in_log, marker='o', cmap='jet')
         ax_2d.scatter(*x0, color='black', label='Local Start')
         # ax_2d.scatter(*min_res.x, color='orange', label='Local Min')
@@ -409,7 +428,7 @@ def plot_chi2_protons(df, energy, n_sims_plt=6):
 
         fig_3d_interp = plt.figure()
         ax_3d_interp = plt.axes(projection='3d')
-        ax_3d_interp.plot_surface(xx, yy, z, cmap='viridis', edgecolor='none')
+        ax_3d_interp.plot_surface(xx, yy, z.T, cmap='viridis', edgecolor='none')
         ax_3d_interp.scatter3D(x_in, y_in, z_in_log, color='black', linewidth=0.5, alpha=0.5)
         # ax_3d_interp.scatter(*x0, f(*x0), color='black', label='Start')
         # ax_3d_interp.scatter(*min_res.x, min_res.fun, color='orange', label='Local Min')
