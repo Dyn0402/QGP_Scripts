@@ -27,8 +27,12 @@ from Measure import Measure
 
 
 def main():
+    base_path = 'D:/Research/Results/Azimuth_Analysis/'
+    df_name = 'binom_slice_cent_sds_df.csv'
+    chi_df_name = 'chi_df.csv'
+    df_path = base_path + df_name
     # df_path = '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df.csv'
-    df_path = 'D:/Research/Results/Azimuth_Analysis/binom_slice_cent_sds_df.csv'
+    # df_path = 'D:/Research/Results/Azimuth_Analysis/binom_slice_cent_sds_df.csv'
     # df_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/binom_slice_df.csv'
     # df_path = 'C:/Users/Dyn04/Desktop/binom_slice_df.csv'
     # df_path = 'C:/Users/Dylan/Research/Results/Azimuth_Analysis/binom_slice_cent_sds_df.csv'
@@ -42,7 +46,7 @@ def main():
                 'non-excess kurtosis': (0.95, 1.025)}
     stat_plot = 'standard deviation'  # ['standard deviation']  # , 'skewness', 'non-excess kurtosis']
     div_plt = 120
-    exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]  # [356]
+    exclude_divs = [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]  # [356]
     total_protons_plt = 20
     cent_plt = 8
     energies_plt = [62, 'sim']  # [7, 11, 19, 27, 39, 62]
@@ -78,14 +82,27 @@ def main():
     # stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, data_types_plt, all_sets_plt, plot=True, fit=False)
     # plt.show()
     # return
+
     chi_res = []
+    chi2_list_all = []
     for energy in energies_fit:
         chi2_sets = []
         for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
             print(f'{energy}GeV {div} bin width')
             chi2_sets.extend(chi2_vs_protons(df, stat_plot, div, cent_plt, energy, data_type_plt, data_sets_plt))
-        data_sim_sets_plt, chi_res_e = plot_chi2_protons(pd.DataFrame(chi2_sets), energy, n_sims_plt=4)
+        data_sim_sets_plt, chi_res_e, chi_list = plot_chi2_protons(pd.DataFrame(chi2_sets), energy, n_sims_plt=4)
+        chi2_list_all.extend(chi_list)
         chi_res.extend(chi_res_e)
+
+    chi2_sets_df = pd.DataFrame(chi2_list_all)
+    chi2_sets_df.to_csv(base_path + chi_df_name, index=False)
+
+    # chi_res = []
+    # chi2_sets_df = pd.read_csv(base_path + chi_df_name)
+    # for energy in np.unique(chi2_sets_df['energy']):
+    #     data_sim_sets_plt, chi_res_e = plot_chi2_protons(chi2_sets_df, energy, n_sims_plt=4)
+    #     chi_res.extend(chi_res_e)
+
     # plot_chi_sim_pars(pd.DataFrame(chi_res))
     # for data_set, sim_sets_plt in data_sim_sets_plt.items():
     #     sets = [data_set] + list(sim_sets_plt)
@@ -271,14 +288,15 @@ def chi2_vs_protons(df, stat, div, cent, energy, data_type, data_sets_plt):
             diff = np.array(data_meases) - np.array(sim_meases)
             chi2 = sum([(x.val / x.err) ** 2 for x in diff])
             chi2_sets.append({'data_name': data_set, 'sim_name': sim_set, 'chi2': chi2, 'n': len(diff), 'divs': div,
-                              'amp': df_sim_set['amp'].iloc[0], 'spread': df_sim_set['spread'].iloc[0]})
+                              'amp': df_sim_set['amp'].iloc[0], 'spread': df_sim_set['spread'].iloc[0],
+                              'energy': energy})
 
     return chi2_sets
 
 
-def plot_chi2_protons(df, energy, n_sims_plt=6):
+def plot_chi2_protons(df, energy, n_sims_plt=6, df_write_path=None):
     sim_sets_plt = {}
-    chi_df = {}
+    chi_list = []
     for data_set in np.unique(df['data_name']):
         chi2_sums = []
         df_data = df[df['data_name'] == data_set]
@@ -286,11 +304,14 @@ def plot_chi2_protons(df, energy, n_sims_plt=6):
             df_sim = df_data[df_data['sim_name'] == sim_set]
             chi2_sum = df_sim['chi2'].sum()
             chi2_sums.append({'sim_name': sim_set, 'chi2_sum': chi2_sum, 'amp': df_sim['amp'].iloc[0],
-                              'spread': df_sim['spread'].iloc[0]})
+                              'spread': df_sim['spread'].iloc[0], 'data_set': data_set, 'energy': energy})
+        chi_list.extend(chi2_sums)
         chi2_sums = pd.DataFrame(chi2_sums)
-        chi_df.update({data_set: chi2_sums})
+        # chi_df.update({data_set: chi2_sums, 'energy': energy})
         chi2_sums = chi2_sums.sort_values(by='chi2_sum').head(n_sims_plt)
         sim_sets_plt.update({data_set: chi2_sums['sim_name']})
+    chi_df = pd.DataFrame(chi_list)
+    chi_df.to_csv(df_write_path)
 
     chi_res = []
     for data_set in np.unique(df['data_name']):
@@ -306,7 +327,7 @@ def plot_chi2_protons(df, energy, n_sims_plt=6):
         ax.legend()
         fig.tight_layout()
 
-        df_chi = chi_df[data_set]
+        df_chi = chi_df[chi_df['data_set'] == data_set]
         df_chi = df_chi.sort_values(by=['spread', 'amp'])
         fig_chisum, ax_chisum = plt.subplots()
 
@@ -454,7 +475,7 @@ def plot_chi2_protons(df, energy, n_sims_plt=6):
         # # ax_3d_interp_log.legend()
         # fig_3d_interp_log.tight_layout()
 
-    return sim_sets_plt, chi_res
+    return sim_sets_plt, chi_res, chi_list
 
 
 def plot_chi_sim_pars(chi_res):
