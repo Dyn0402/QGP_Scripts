@@ -22,8 +22,10 @@ def main():
 
 def get_sets():
     names = ['set_group', 'set_name']
-    sets = [['flat80_anticlmulti_spread4_amp05_resample', 'Sim_spread4_amp05_flat80_anticlmulti_norotate_resample_'],
-            ['flat80_anticlmulti_spread4_amp06_resample', 'Sim_spread4_amp06_flat80_anticlmulti_norotate_resample_']]
+    sets = [
+        # ['flat80_anticlmulti_spread4_amp05_resample', 'Sim_spread4_amp05_flat80_anticlmulti_norotate_resample_'],
+        # ['flat80_anticlmulti_spread4_amp06_resample', 'Sim_spread4_amp06_flat80_anticlmulti_norotate_resample_']
+    ]
 
     # amps = ['0', '005', '015', '07', '08', '09', '12', '2']
     # spreads = ['0', '02', '05', '1', '15', '2', '25', '4']
