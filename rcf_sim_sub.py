@@ -39,22 +39,8 @@ def get_sets():
     #         sets.append([f'flat80_anticlmulti_spread{spread}_amp{amp}_resample',
     #                      f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_'])
 
-    amps = ['0', '01', '03', '08', '15', '2']
-    spreads = ['0']
-    for amp in amps:
-        for spread in spreads:
-            sets.append([f'flat80_anticlmulti_spread{spread}_amp{amp}_resample',
-                         f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_'])
-
-    amps = ['15']
-    spreads = ['4']
-    for amp in amps:
-        for spread in spreads:
-            sets.append([f'flat80_anticlmulti_spread{spread}_amp{amp}_resample',
-                         f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_'])
-
     amps = ['0', '005', '01', '015', '02', '03', '04', '05', '06', '07', '08', '09', '12', '15', '2']
-    spreads = ['3', '35', '45']
+    spreads = ['0']
     for amp in amps:
         for spread in spreads:
             sets.append([f'flat80_anticlmulti_spread{spread}_amp{amp}_resample',
