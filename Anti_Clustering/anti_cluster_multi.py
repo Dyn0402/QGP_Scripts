@@ -118,8 +118,9 @@ def random_tracks():
 
 def clustered_tracks():
     n_tracks = 60
-    sd = 0.3
-    cl_amp = -0.1
+    sd = 5
+    wrap_num = 4
+    cl_amp = -0.5
     x = np.linspace(0, 2 * np.pi, 1000)
 
     # fig_ind_clust, ax_ind_clust = plt.subplots()
@@ -127,10 +128,10 @@ def clustered_tracks():
     # ax_ind_clust.set_xlabel('Phi Angle')
     ax_ind_aclust.set_xlabel('Phi Angle')
     phis = []
-    prob_dist = ClustDist(phis, sd, cl_amp, a=0, b=2*np.pi)
+    prob_dist = ClustDist(phis, sd, cl_amp, a=0, b=2*np.pi, wrap_num=wrap_num)
     while len(phis) < n_tracks:
         phis.append(prob_dist.rvs())
-        prob_dist = ClustDist(phis, sd, cl_amp, a=0, b=2*np.pi)
+        prob_dist = ClustDist(phis, sd, cl_amp, a=0, b=2*np.pi, wrap_num=wrap_num)
         # ax_ind_aclust.plot(x, aclust_pdf)
         ax_ind_aclust.axvline(phis[-1], color='black', ls='--', alpha=0.7)
         # ax_ind_clust.set_ylim(bottom=0)
@@ -140,13 +141,19 @@ def clustered_tracks():
     ax_ind_aclust.set_xlim(left=0, right=2*np.pi)
 
     # fig_clust, ax_clust = plt.subplots()
-    fig_aclust, ax_aclust = plt.subplots()
     # ax_clust.set_xlabel('Phi Angle')
-    ax_aclust.set_xlabel('Phi Angle')
     # ax_clust.plot(x, p_clust)
-    ax_aclust.plot(x, prob_dist.pdf(x))
     # ax_clust.set_ylim(bottom=0)
-    ax_aclust.set_ylim(bottom=0)
+
+    fig_aclust, ax_aclust = plt.subplots()
+    ax_aclust.set_xlabel('Phi Angle')
+    for wrap_n in [1, 2, 3, 4, 5]:
+        prob_dist = ClustDist(phis, sd, cl_amp, a=0, b=2 * np.pi, wrap_num=wrap_n)
+        ax_aclust.plot(x, prob_dist.pdf(x), label=f'Wrap_num = {wrap_n}')
+        print(prob_dist.pdf(x))
+    ax_aclust.set_ylim(bottom=0, top=1.1*max(prob_dist.pdf(x)))
+    ax_aclust.legend()
+    fig_aclust.tight_layout()
 
     # fig_ind_clust.tight_layout()
     fig_ind_aclust.tight_layout()
@@ -169,13 +176,18 @@ def clust_amp(aclust_amp, sigma, base_int):
 
 
 class ClustDist(rv_continuous):
-    def __init__(self, means, sd, amp, a, b, base=1):
+    def __init__(self, means, sd, amp, a, b, base=1, wrap_num=1):
         self.means = means
         self.sd = sd
         self.base = base
         self.amp = amp  # Positive for clustering, negative for anti-clustering
         self.amp_norm = 1 / (np.sqrt(2 * np.pi) * self.sd)
-        self.dists = [[norm(mean, sd), norm(mean - 2 * np.pi, sd), norm(mean + 2 * np.pi, sd)] for mean in means]
+        self.dists = []
+        for mean in means:
+            self.dists.append([norm(mean, sd)])
+            for wrap_i in range(1, wrap_num + 1):
+                self.dists[-1].extend([norm(mean - 2 * wrap_i * np.pi, sd), norm(mean + 2 * wrap_i * np.pi, sd)])
+        # self.dists = [[norm(mean, sd), norm(mean - 2 * np.pi, sd), norm(mean + 2 * np.pi, sd)] for mean in means]
         self.n_points = 1000
         self.x = np.linspace(a, b, self.n_points)
         self.prob = np.ones(self.n_points)
