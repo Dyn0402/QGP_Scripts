@@ -41,20 +41,22 @@ def get_sets():
     #         sets.append([f'flat80_anticlmulti_spread{spread}_amp{amp}_resample',
     #                      f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_'])
 
+    # New spreads all amps
     amps = ['0', '005', '01', '015', '02', '025', '03', '035', '04', '045', '05', '06', '07', '08', '09',
             '12', '15', '175', '2', '225', '25']
-    spreads = ['225', '275', '325', '375', '5']
+    spreads = ['001', '01', '05', '1', '15', '2', '225', '25', '275', '3', '325', '35', '375', '4', '45', '5']
     for amp in amps:
         for spread in spreads:
             sets.append([f'flat80_anticlmulti_spread{spread}_amp{amp}_resample',
                          f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_'])
 
-    amps = ['025', '035', '045', '175', '225', '25']
-    spreads = ['0', '02', '05', '1', '15', '2', '225', '25', '275', '3', '325', '35', '375', '4', '45', '5']
-    for amp in amps:
-        for spread in spreads:
-            sets.append([f'flat80_anticlmulti_spread{spread}_amp{amp}_resample',
-                         f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_'])
+    # New amps all spreads
+    # amps = ['025', '035', '045', '175', '225', '25']
+    # spreads = ['0', '02', '05', '1', '15', '2', '225', '25', '275', '3', '325', '35', '375', '4', '45', '5']
+    # for amp in amps:
+    #     for spread in spreads:
+    #         sets.append([f'flat80_anticlmulti_spread{spread}_amp{amp}_resample',
+    #                      f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_'])
 
     # for seti in sets:
     #     print(seti)
