@@ -29,7 +29,7 @@ def main():
 
 def init_pars():
     pars = {'base_path': 'D:/Research/',  # '/home/dylan/Research/',
-            'csv_path': 'D:/Research/Results/Azimuth_Analysis/binom_slice_cent_sds_df.csv',  # '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df.csv',
+            'csv_path': 'D:/Research/Results/Azimuth_Analysis/binom_slice_cent_sds_df_tests.csv',  # '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df.csv',
             'csv_append': False,  # If true read dataframe from csv_path and append new datasets to it, else overwrite
             'threads': 16,
             'stats': define_stats(['standard deviation']),  # , 'skewness', 'non-excess kurtosis']),
@@ -59,20 +59,36 @@ def define_datasets(base_path):
     entry_names = ['name', 'base_ext', 'exact_keys', 'contain_keys', 'exclude_keys',
                    'set_nums', 'energies', 'cents', 'divs']
     entry_vals = [
-        ['ampt_def', '_Ampt', ['default'], [], ['resample'], range(60), all_energies, all_cents, all_divs],
-        ['ampt_resample_def', '_Ampt', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
-        ['bes_def', '', ['default'], [], ['resample'], range(60), all_energies, [8], all_divs],
-        ['bes_resample_def', '', ['default', 'resample'], [], [], [0], all_energies, [8], all_divs],
+        # ['ampt_def', '_Ampt', ['default'], [], ['resample'], range(60), all_energies, all_cents, all_divs],
+        # ['ampt_resample_def', '_Ampt', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
+        # ['bes_def', '', ['default'], [], ['resample'], range(60), all_energies, [8], all_divs],
+        # ['bes_resample_def', '', ['default', 'resample'], [], [], [0], all_energies, [8], all_divs],
     ]
 
-    df = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample'])
+    df = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample'], ['test'])
+
+    # for amp in np.unique(df['amp']):
+    #     df_amp = df[df['amp'] == amp]
+    #     for spread in np.unique(df_amp['spread']):
+    #         entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
+    #                            ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
+    #                            ['flat'], [], [0], [62], [8], all_divs])
+
+    df_tests = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample', 'test'])
+    for amp in np.unique(df_tests['amp']):
+        df_amp = df_tests[df_tests['amp'] == amp]
+        for spread in np.unique(df_amp['spread']):
+            entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}_test', '_Sim',
+                               ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample', 'test'],
+                               ['flat'], [], [0], [62], [8], all_divs])
 
     for amp in np.unique(df['amp']):
-        df_amp = df[df['amp'] == amp]
-        for spread in np.unique(df_amp['spread']):
-            entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
-                               ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
-                               ['flat'], [], [0], [62], [8], all_divs])
+        if amp in np.unique(df_tests['amp']):
+            df_amp = df[df['amp'] == amp]
+            for spread in np.unique(df_amp['spread']):
+                entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
+                                   ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
+                                   ['flat'], ['test'], [0], [62], [8], all_divs])
 
     datasets = [dict(zip(entry_names, dset)) for dset in entry_vals]
 
@@ -135,11 +151,13 @@ def define_stats(stats):
     return {stat: stat_methods[stat] for stat in stats}
 
 
-def find_sim_sets(path, keys):
+def find_sim_sets(path, include_keys, exclude_keys=[]):
     df = []
     for file_path in os.listdir(path):
         file_keys = file_path.strip().split('_')
-        if all([key in file_keys for key in keys]):
+        if any([key in file_keys for key in exclude_keys]):
+            continue
+        if all([key in file_keys for key in include_keys]):
             df_i = {}
             for key in file_keys:
                 for par_i in ['amp', 'spread']:
@@ -267,7 +285,7 @@ def read_subset(raw_path, mix_path, info_path, div, stats, other_columns, min_ev
     return df_subset
 
 
-def check_subset(raw_path, mix_path, div, stats, other_columns, min_events, min_bs):
+def check_subset(raw_path, mix_path, info_path, div, stats, other_columns, min_events, min_bs):
     """
     Just read files to see if all are able to be read. If not hopefully get print to screen with bad path
     :param raw_path:
