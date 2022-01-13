@@ -12,104 +12,229 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
 import scipy.interpolate as interp
+from scipy.optimize import minimize
+from scipy.optimize import basinhopping
 import pandas as pd
 
 
 def main():
     # scipy_doc_test_edit()
     chi2_data_test()
+    cents = [5, 8, 14, 24, 50]
+    print(get_edges(cents))
 
     print('donzo')
 
 
+def get_edges(centers):
+    centers = np.array(centers)
+    edges = (centers[1:] + centers[:-1]) / 2
+    edges = np.insert(edges, edges.size, centers[-1] + (centers[-1] - edges[-1]))
+    edges = np.insert(edges, 0, centers[0] - (edges[0] - centers[0]))
+
+    return edges
+
+
+class MyInterp2D:
+    def __init__(self, x, y, z, kx=3, ky=3):
+        if len(x) == len(y) == len(z):
+            # x, y, z = [np.array(coord_i) for coord_i in [x, y, z]]
+            # plt.scatter(x, y, c=z, cmap='jet')
+            # plt.colorbar()
+            # print(f'x: {x}\ny: {y}\nz: {z}')
+            df = pd.DataFrame({'x': x, 'y': y, 'z': z})
+            df = df.sort_values(by=['x', 'y'])
+            # print(f'x: {df["x"]}\ny: {df["y"]}\nz: {df["z"]}')
+            x, y = np.sort(pd.unique(df['x'])), np.sort(pd.unique(df['y']))
+            z = np.array(df['z']).reshape(x.size, y.size)
+            # print(f'x: {x}\ny: {y}\nz: {z}')
+            # plt.show()
+            # print(df)
+            # print(f'x: {x}\ny: {y}\nz: {z}')
+        self.rbs_interp = interp.RectBivariateSpline(x, y, z, kx=kx, ky=ky)
+        self.min = np.array([min(x), min(y), min(z.ravel())])
+        self.max = np.array([max(x), max(y), max(z.ravel())])
+        # print(f'x: {x}\ny: {y}\nmin: {self.min}\nmax: {self.max}')
+        # f = lambda x, y: rbs.ev(x, y)
+
+    def __call__(self, *coords):
+        if len(coords) == 1:
+            coords = coords[0]
+        if len(coords) == 2:
+            if any(coords[i] > self.max[i] for i in range(2)) or any(coords[i] < self.min[i] for i in range(2)):
+                cent = (self.max + self.min)[:2] / 2  # Get center
+                r_norm = np.sqrt(sum((np.array(coords) - cent)**2)) / np.sqrt(min((self.max[:2] - cent)**2))
+                # print(f'coords: {coords}\nmin: {self.min}\nmax: {self.max}\ncent: {cent} r_norm: {r_norm}')
+                return self.max[2] * 2 * r_norm
+            return self.rbs_interp.ev(*coords)
+        else:
+            print("Need 2D coords")
+            return None
+
+
+class BasinBounds:
+    def __init__(self, xmax=[1.1, 1.1], xmin=[-1.1, -1.1] ):
+        self.xmax = np.array(xmax)
+        self.xmin = np.array(xmin)
+
+    def __call__(self, **kwargs):
+        x = kwargs["x_new"]
+        tmax = bool(np.all(x <= self.xmax))
+        tmin = bool(np.all(x >= self.xmin))
+        return tmax and tmin
+
+
+def rect_func():
+    pass
+
+
 def chi2_data_test():
     base_path = 'D:/Research/Results/Azimuth_Analysis/'
-    chi_df_name = 'chi_df.csv'
-    df = pd.read_csv(base_path + chi_df_name)
-    print(df)
-    print(df.columns)
-    for spread in pd.unique(df['spread']):
-        print(f'spread {spread}, amps: {list(df[df["spread"] == spread]["amp"])}')
-    return
-    df = df[(df['spread'] != 0) & (df['spread'] != 4)]  # & (df['spread'] != 0.2) & (df['spread'] != 0.5) &
+    chi_df_name = 'chi_df_bes.csv'
+    df_all = pd.read_csv(base_path + chi_df_name)
+    for spread in pd.unique(df_all['spread']):
+        print(f'spread {spread}, amps: {sorted(list(pd.unique(df_all[df_all["spread"] == spread]["amp"])))}')
+    df_all = df_all[(df_all['spread'] != 0) & (df_all['spread'] != 4)]  # & (df['spread'] != 0.2) & (df['spread'] != 0.5) &
             # (df['spread'] != 1)]
-    df = df.sort_values(by=['spread', 'amp'])
+    # df = df.sort_values(by=['spread', 'amp'])
+    energies = [7]  # , 11, 19, 27, 39, 62]
 
-    print(df['amp'], df['spread'], np.log10(df['chi2_sum']))
-    x, y, z = [np.asarray(d) for d in [df['amp'], df['spread'], np.log10(df['chi2_sum'])]]
-    print(x, y, z)
-    # f = interp.interp2d(x, y, z, kind='cubic')
+    # a = MyInterp2D(df['amp'], df['spread'], np.log10(df['chi2_sum']))
+    # print(a(1, 2))
+    # print(a([1, 3]))
+    # print(a.max)
+    # print(a(1, 3))
+    # return
 
-    fig1 = plt.figure()
-    x_unq, y_unq = np.unique(x), np.unique(y)
-    X, Y = np.meshgrid(np.unique(x), np.unique(y))
-    Z = []
-    for spread in np.unique(df['spread']):
-        Z.append(list(np.log10(df[df['spread'] == spread]['chi2_sum'])))
-    pcm1 = plt.pcolormesh(X, Y, Z, cmap='jet')
-    plt.xlabel('amp')
-    plt.ylabel('spread')
-    fig1.colorbar(pcm1)
-    fig1.tight_layout()
+    min_amps = []
+    min_spreads = []
+    for energy in energies:
+        df = df_all[df_all['energy'] == energy]
+        df = df.sort_values(by=['spread', 'amp'])
 
-    print(np.asarray(Z).shape, np.unique(x).shape, np.unique(y).shape)
+        x, y, z = [np.asarray(d) for d in [df['amp'], df['spread'], np.log10(df['chi2_sum'])]]
 
-    rbs = interp.RectBivariateSpline(sorted(np.unique(x)), sorted(np.unique(y)), np.asarray(Z).T, kx=2, ky=2)
-    f = lambda x, y: rbs.ev(x, y)
+        # fig1 = plt.figure()
+        # fig1.canvas.set_window_title(f'{energy} GeV Raw 2D')
+        # x_unq, y_unq = np.unique(x), np.unique(y)
+        # X, Y = np.meshgrid(get_edges(x_unq), get_edges(y_unq))
+        # Z = []
+        # for spread in np.unique(df['spread']):
+        #     Z.append(list(np.log10(df[df['spread'] == spread]['chi2_sum'])))
+        # pcm1 = plt.pcolormesh(X, Y, Z, cmap='jet')
+        # plt.scatter(x, y, color='black', marker='o', s=(72./fig1.dpi)**2)
+        # # plt.scatter(x, y, color='white', s=40)
+        # # plt.scatter(x, y, c=z, s=25, cmap='jet')
+        # plt.xlabel('amp')
+        # plt.ylabel('spread')
+        # fig1.colorbar(pcm1)
+        # fig1.tight_layout()
 
-    print(f(0.1, 1))
+        # rbs = interp.RectBivariateSpline(sorted(np.unique(x)), sorted(np.unique(y)), np.asarray(Z).T, kx=2, ky=2)
+        # f = lambda x, y: rbs.ev(x, y)
+        # print(f(-0.01, -0.1))
 
-    fig2 = plt.figure()
-    x_intp = np.linspace(0, .2, 100)
-    y_intp = np.linspace(0.2, 2.5, 100)
-    X_intp, Y_intp = np.meshgrid(x_intp, y_intp)
-    Z_intp = []
-    for yi in y_intp:
-        Zi_intp = []
-        for xi in x_intp:
-            Zi_intp.append(f(xi, yi))
-        Z_intp.append(Zi_intp)
-    pcm2 = plt.pcolormesh(X_intp, Y_intp, Z_intp, cmap='jet')
-    plt.xlabel('amp')
-    plt.ylabel('spread')
-    fig2.colorbar(pcm2)
-    fig2.tight_layout()
+        f = MyInterp2D(df['amp'], df['spread'], np.log10(df['chi2_sum']))
 
-    fig3 = plt.figure()
-    spreads = np.unique(df['spread'])
-    color = iter(cm.rainbow(np.linspace(0, 1, len(spreads))))
-    for spread in spreads:
-        c = next(color)
-        df_s = df[df['spread'] == spread]
-        print(f'spread {spread}, num: {len(df_s)}')
-        plt.scatter(df_s['amp'], np.log10(df_s['chi2_sum']), color=c, label=f'spread {spread}')
-        zs = []
-        amps = np.linspace(min(df_s['amp']), max(df_s['amp']), 1000)
+        # tcks = interp.bisplrep(x, y, z, kx=5, ky=5)
+        # f = lambda x_ev, y_ev: interp.bisplev(x_ev, y_ev, tcks)
+
+        # f = interp.interp2d(x, y, z)
+
+        x0 = [0.1, 1.0]
+        min_res = minimize(lambda x_coords: f(*x_coords), x0, bounds=[(0, 0.2), (0, None)])
+        print(min_res)
+        bounds = BasinBounds(xmax=[max(x), max(y)], xmin=[min(x), min(y)])
+        bas_res = basinhopping(lambda x_coords: f(*x_coords), x0, accept_test=bounds)
+        print(bas_res)
+        min_amps.append(bas_res.x[0])
+        min_spreads.append(bas_res.x[1])
+
+        fig2 = plt.figure()
+        fig2.canvas.set_window_title(f'{energy} GeV Interpolate 2D')
+        x_intp = np.linspace(min(x), max(x), 100)
+        y_intp = np.linspace(min(y), max(y), 100)
+        X_intp, Y_intp = np.meshgrid(get_edges(x_intp), get_edges(y_intp))
+        Z_intp = []
+        for yi in y_intp:
+            Zi_intp = []
+            for xi in x_intp:
+                Zi_intp.append(f(xi, yi))
+            Z_intp.append(Zi_intp)
+        pcm2 = plt.pcolormesh(X_intp, Y_intp, Z_intp, cmap='jet')
+        plt.scatter(*x0, color='white', marker='s', s=60)
+        plt.scatter(*x0, color='black', marker='s', s=25, label='Initial')
+        plt.scatter(*min_res.x, color='white', marker='*', s=60)
+        plt.scatter(*min_res.x, color='black', marker='*', s=25, label='Local Min')
+        plt.scatter(*bas_res.x, color='white', marker='^', s=60)
+        plt.scatter(*bas_res.x, color='black', marker='^', s=25, label='Basin Min')
+
+        amps = ['025', '035', '045', '175', '225', '25']
         for amp in amps:
-            zs.append(f(amp, spread))
-        plt.plot(amps, zs, color=c)
-    plt.xlabel('amp')
-    plt.ylabel('chi2_sum')
-    plt.legend()
-    fig3.tight_layout()
-
-    fig4 = plt.figure()
-    amps = np.unique(df['amp'])
-    color = iter(cm.rainbow(np.linspace(0, 1, len(amps))))
-    for amp in amps:
-        c = next(color)
-        df_a = df[df['amp'] == amp]
-        print(f'amp {amp}, num: {len(df_a)}')
-        plt.scatter(df_a['spread'], np.log10(df_a['chi2_sum']), color=c, label=f'amp {amp}')
-        zs = []
-        spreads = np.linspace(min(df_a['spread']), max(df_a['spread']), 1000)
+            plt.axvline(float('0.' + amp), color='black', ls=':')
+        spreads = ['225', '275', '325', '375', '5']
         for spread in spreads:
-            zs.append(f(amp, spread))
-        plt.plot(spreads, zs, color=c)
-    plt.xlabel('spread')
-    plt.ylabel('chi2_sum')
-    plt.legend(bbox_to_anchor=(1.05, 1))
-    fig4.tight_layout()
+            plt.axhline(float('0.' + spread) * 10, color='black', ls=':')
+        plt.axhline(float('0.' + spread) * 10, color='black', ls=':', label='Simulation in Progress')
+
+        plt.xlabel('amp')
+        plt.ylabel('spread')
+        plt.legend()
+        fig2.colorbar(pcm2)
+        fig2.tight_layout()
+        plt.subplots_adjust(left=0.084, right=1, bottom=0.096, top=0.986)
+
+        # fig3 = plt.figure()
+        # fig3.canvas.set_window_title(f'{energy} GeV Vs Amp')
+        # spreads = np.unique(df['spread'])
+        # color = iter(cm.rainbow(np.linspace(0, 1, len(spreads))))
+        # for spread in spreads:
+        #     c = next(color)
+        #     df_s = df[df['spread'] == spread]
+        #     plt.scatter(df_s['amp'], np.log10(df_s['chi2_sum']), color=c, label=f'spread {spread}')
+        #     zs = []
+        #     amps = np.linspace(min(df_s['amp']), max(df_s['amp']), 1000)
+        #     for amp in amps:
+        #         zs.append(f(amp, spread))
+        #     plt.plot(amps, zs, color=c)
+        #     f_1d_spread = interp.interp1d(df_s['amp'], np.log10(df_s['chi2_sum']), kind='cubic')
+        #     plt.plot(amps, f_1d_spread(amps), color=c, ls='--', alpha=0.6)
+        # plt.xlabel('amp')
+        # plt.ylabel('chi2_sum')
+        # plt.legend()
+        # fig3.tight_layout()
+        #
+        # fig4 = plt.figure()
+        # fig4.canvas.set_window_title(f'{energy} GeV Vs Spread')
+        # amps = np.unique(df['amp'])
+        # color = iter(cm.rainbow(np.linspace(0, 1, len(amps))))
+        # for amp in amps:
+        #     c = next(color)
+        #     df_a = df[df['amp'] == amp]
+        #     plt.scatter(df_a['spread'], np.log10(df_a['chi2_sum']), color=c, label=f'amp {amp}')
+        #     zs = []
+        #     spreads = np.linspace(min(df_a['spread']), max(df_a['spread']), 1000)
+        #     for spread in spreads:
+        #         zs.append(f(amp, spread))
+        #     plt.plot(spreads, zs, color=c)
+        #     f_1d_amp = interp.interp1d(df_a['spread'], np.log10(df_a['chi2_sum']), kind='cubic')
+        #     plt.plot(spreads, f_1d_amp(spreads), color=c, ls='--', alpha=0.6)
+        # plt.xlabel('spread')
+        # plt.ylabel('chi2_sum')
+        # plt.legend(bbox_to_anchor=(1.05, 1))
+        # fig4.tight_layout()
+
+    fig_mins = plt.figure()
+    plt.grid()
+    plt.scatter(min_amps, min_spreads)
+    plt.xlim((0, 0.2))
+    plt.ylim((0, 4.5))
+    plt.xlabel('amp')
+    plt.ylabel('spread')
+    plt.title('AMPT')
+    for x, y, e in zip(min_amps, min_spreads, energies):
+        plt.annotate(f'{e}', (x, y), textcoords='offset points', xytext=(0, 10), ha='center')
+    fig_mins.tight_layout()
 
     plt.show()
 
