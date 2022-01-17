@@ -36,40 +36,37 @@ def get_edges(centers):
 
 
 class MyInterp2D:
-    def __init__(self, x, y, z, kx=3, ky=3):
+    def __init__(self, x, y, z, kx=3, ky=3, jac=False):
         if len(x) == len(y) == len(z):
-            # x, y, z = [np.array(coord_i) for coord_i in [x, y, z]]
-            # plt.scatter(x, y, c=z, cmap='jet')
-            # plt.colorbar()
-            # print(f'x: {x}\ny: {y}\nz: {z}')
             df = pd.DataFrame({'x': x, 'y': y, 'z': z})
             df = df.sort_values(by=['x', 'y'])
-            # print(f'x: {df["x"]}\ny: {df["y"]}\nz: {df["z"]}')
             x, y = np.sort(pd.unique(df['x'])), np.sort(pd.unique(df['y']))
             z = np.array(df['z']).reshape(x.size, y.size)
-            # print(f'x: {x}\ny: {y}\nz: {z}')
-            # plt.show()
-            # print(df)
-            # print(f'x: {x}\ny: {y}\nz: {z}')
         self.rbs_interp = interp.RectBivariateSpline(x, y, z, kx=kx, ky=ky)
         self.min = np.array([min(x), min(y), min(z.ravel())])
         self.max = np.array([max(x), max(y), max(z.ravel())])
-        # print(f'x: {x}\ny: {y}\nmin: {self.min}\nmax: {self.max}')
-        # f = lambda x, y: rbs.ev(x, y)
+        self.jac = jac
 
     def __call__(self, *coords):
+        z = None
         if len(coords) == 1:
             coords = coords[0]
         if len(coords) == 2:
-            if any(coords[i] > self.max[i] for i in range(2)) or any(coords[i] < self.min[i] for i in range(2)):
-                cent = (self.max + self.min)[:2] / 2  # Get center
-                r_norm = np.sqrt(sum((np.array(coords) - cent)**2)) / np.sqrt(min((self.max[:2] - cent)**2))
-                # print(f'coords: {coords}\nmin: {self.min}\nmax: {self.max}\ncent: {cent} r_norm: {r_norm}')
-                return self.max[2] * 2 * r_norm
-            return self.rbs_interp.ev(*coords)
+            # if any(coords[i] > self.max[i] for i in range(2)) or any(coords[i] < self.min[i] for i in range(2)):
+            #     cent = (self.max + self.min)[:2] / 2  # Get center
+            #     r_norm = np.sqrt(sum((np.array(coords) - cent)**2)) / np.sqrt(min((self.max[:2] - cent)**2))
+            #     # print(f'coords: {coords}\nmin: {self.min}\nmax: {self.max}\ncent: {cent} r_norm: {r_norm}')
+            #     return self.max[2] * 2 * r_norm
+            z = self.rbs_interp.ev(*coords)
+            if self.jac:
+                dx = self.rbs_interp.ev(*coords, dx=1, dy=0)
+                dy = self.rbs_interp.ev(*coords, dx=0, dy=1)
+                z = (z, np.array([dx, dy]))
         else:
             print("Need 2D coords")
             return None
+
+        return z
 
 
 class BasinBounds:
@@ -84,20 +81,20 @@ class BasinBounds:
         return tmax and tmin
 
 
-def rect_func():
-    pass
-
-
 def chi2_data_test():
     base_path = 'D:/Research/Results/Azimuth_Analysis/'
-    chi_df_name = 'chi_df_bes.csv'
+    chi_df_name = 'chi_df_ampt_new.csv'
     df_all = pd.read_csv(base_path + chi_df_name)
     for spread in pd.unique(df_all['spread']):
         print(f'spread {spread}, amps: {sorted(list(pd.unique(df_all[df_all["spread"] == spread]["amp"])))}')
-    df_all = df_all[(df_all['spread'] != 0) & (df_all['spread'] != 4)]  # & (df['spread'] != 0.2) & (df['spread'] != 0.5) &
-            # (df['spread'] != 1)]
+    exclude_spreads = [0, 0.01, 0.1]
+
+    df_all = df_all[~df_all['spread'].isin(exclude_spreads)]
+    # df_all = df_all[(df_all['spread'] != 0) & (df_all['spread'] != 4)]
     # df = df.sort_values(by=['spread', 'amp'])
-    energies = [7]  # , 11, 19, 27, 39, 62]
+    energies = [62]  # [7, 11, 19, 27, 39, 62]
+    x0 = [0.1, 1.0]
+    bounds = ((0, 0.5), (0.2, 1.8))
 
     # a = MyInterp2D(df['amp'], df['spread'], np.log10(df['chi2_sum']))
     # print(a(1, 2))
@@ -114,46 +111,45 @@ def chi2_data_test():
 
         x, y, z = [np.asarray(d) for d in [df['amp'], df['spread'], np.log10(df['chi2_sum'])]]
 
-        # fig1 = plt.figure()
-        # fig1.canvas.set_window_title(f'{energy} GeV Raw 2D')
-        # x_unq, y_unq = np.unique(x), np.unique(y)
-        # X, Y = np.meshgrid(get_edges(x_unq), get_edges(y_unq))
-        # Z = []
-        # for spread in np.unique(df['spread']):
-        #     Z.append(list(np.log10(df[df['spread'] == spread]['chi2_sum'])))
-        # pcm1 = plt.pcolormesh(X, Y, Z, cmap='jet')
-        # plt.scatter(x, y, color='black', marker='o', s=(72./fig1.dpi)**2)
-        # # plt.scatter(x, y, color='white', s=40)
-        # # plt.scatter(x, y, c=z, s=25, cmap='jet')
-        # plt.xlabel('amp')
-        # plt.ylabel('spread')
-        # fig1.colorbar(pcm1)
-        # fig1.tight_layout()
-
-        # rbs = interp.RectBivariateSpline(sorted(np.unique(x)), sorted(np.unique(y)), np.asarray(Z).T, kx=2, ky=2)
-        # f = lambda x, y: rbs.ev(x, y)
-        # print(f(-0.01, -0.1))
+        fig1 = plt.figure()
+        fig1.canvas.set_window_title(f'{energy} GeV Raw 2D')
+        x_unq, y_unq = np.unique(x), np.unique(y)
+        X, Y = np.meshgrid(get_edges(x_unq), get_edges(y_unq))
+        Z = []
+        for spread in np.unique(df['spread']):
+            Z.append(list(np.log10(df[df['spread'] == spread]['chi2_sum'])))
+        pcm1 = plt.pcolormesh(X, Y, Z, cmap='jet')
+        plt.scatter(x, y, color='black', marker='o', s=(72./fig1.dpi)**2)
+        # plt.scatter(x, y, color='white', s=40)
+        # plt.scatter(x, y, c=z, s=25, cmap='jet')
+        plt.xlabel('amp')
+        plt.ylabel('spread')
+        fig1.colorbar(pcm1)
+        fig1.tight_layout()
 
         f = MyInterp2D(df['amp'], df['spread'], np.log10(df['chi2_sum']))
+        f_jac = MyInterp2D(df['amp'], df['spread'], np.log10(df['chi2_sum']), jac=True)
 
         # tcks = interp.bisplrep(x, y, z, kx=5, ky=5)
         # f = lambda x_ev, y_ev: interp.bisplev(x_ev, y_ev, tcks)
 
         # f = interp.interp2d(x, y, z)
 
-        x0 = [0.1, 1.0]
-        min_res = minimize(lambda x_coords: f(*x_coords), x0, bounds=[(0, 0.2), (0, None)])
+        min_res = minimize(lambda x_coords: f(*x_coords), x0, bounds=bounds)
         print(min_res)
-        bounds = BasinBounds(xmax=[max(x), max(y)], xmin=[min(x), min(y)])
-        bas_res = basinhopping(lambda x_coords: f(*x_coords), x0, accept_test=bounds)
+        bas_bnds = BasinBounds(xmax=[max(x), max(y)], xmin=[min(x), min(y)])
+        min_kwargs = {'method': 'L-BFGS-B', 'jac': True, 'bounds': bounds}
+        bas_res = basinhopping(lambda x_coords: f_jac(*x_coords), x0, minimizer_kwargs=min_kwargs, accept_test=bas_bnds)
         print(bas_res)
         min_amps.append(bas_res.x[0])
         min_spreads.append(bas_res.x[1])
 
         fig2 = plt.figure()
         fig2.canvas.set_window_title(f'{energy} GeV Interpolate 2D')
-        x_intp = np.linspace(min(x), max(x), 100)
-        y_intp = np.linspace(min(y), max(y), 100)
+        x_intp = np.linspace(min(x), max(x), 200)
+        y_intp = np.linspace(min(y), max(y), 200)
+        # x_intp = np.linspace(-0.2, 0.4, 200)
+        # y_intp = np.linspace(-1.5, 6, 200)
         X_intp, Y_intp = np.meshgrid(get_edges(x_intp), get_edges(y_intp))
         Z_intp = []
         for yi in y_intp:
@@ -169,13 +165,23 @@ def chi2_data_test():
         plt.scatter(*bas_res.x, color='white', marker='^', s=60)
         plt.scatter(*bas_res.x, color='black', marker='^', s=25, label='Basin Min')
 
-        amps = ['025', '035', '045', '175', '225', '25']
-        for amp in amps:
-            plt.axvline(float('0.' + amp), color='black', ls=':')
-        spreads = ['225', '275', '325', '375', '5']
-        for spread in spreads:
-            plt.axhline(float('0.' + spread) * 10, color='black', ls=':')
-        plt.axhline(float('0.' + spread) * 10, color='black', ls=':', label='Simulation in Progress')
+        plt.axhline(bounds[1][0], ls='--', color='black')
+        plt.axhline(bounds[1][1], ls='--', color='black')
+        plt.axvline(bounds[0][0], ls='--', color='black')
+        plt.axvline(bounds[0][1], ls='--', color='black')
+        plt.axhline(np.pi, ls=':', color='gray')
+
+        # plt.axhline(0.2, ls=':', color='black')
+        # plt.axhline(4.5, ls=':', color='black')
+        # plt.axvline(0.0, ls=':', color='black')
+        # plt.axvline(0.2, ls=':', color='black')
+        # amps = ['025', '035', '045', '175', '225', '25']
+        # for amp in amps:
+        #     plt.axvline(float('0.' + amp), color='black', ls=':')
+        # spreads = ['225', '275', '325', '375', '5']
+        # for spread in spreads:
+        #     plt.axhline(float('0.' + spread) * 10, color='black', ls=':')
+        # plt.axhline(float('0.' + spread) * 10, color='black', ls=':', label='Simulation in Progress')
 
         plt.xlabel('amp')
         plt.ylabel('spread')
@@ -201,7 +207,7 @@ def chi2_data_test():
         #     plt.plot(amps, f_1d_spread(amps), color=c, ls='--', alpha=0.6)
         # plt.xlabel('amp')
         # plt.ylabel('chi2_sum')
-        # plt.legend()
+        # plt.legend(bbox_to_anchor=(1.05, 1))
         # fig3.tight_layout()
         #
         # fig4 = plt.figure()
@@ -227,8 +233,8 @@ def chi2_data_test():
     fig_mins = plt.figure()
     plt.grid()
     plt.scatter(min_amps, min_spreads)
-    plt.xlim((0, 0.2))
-    plt.ylim((0, 4.5))
+    plt.xlim(bounds[0])
+    plt.ylim(bounds[1])
     plt.xlabel('amp')
     plt.ylabel('spread')
     plt.title('AMPT')
