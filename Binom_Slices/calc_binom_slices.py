@@ -11,13 +11,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import os
+
 from multiprocessing import Pool
 import tqdm
+import istarmap  # Needed for tqdm
 
 from Bootstrap_Az_Bin import BootstrapAzBin
 from Measure import Measure
 from pickle_methods import *
-import istarmap  # Needed for tqdm
 
 
 def main():
@@ -29,13 +30,14 @@ def main():
 
 def init_pars():
     pars = {'base_path': 'D:/Research/',  # '/home/dylan/Research/',
-            'csv_path': 'D:/Research/Results/Azimuth_Analysis/binom_slice_cent_sds_df_tests.csv',  # '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df.csv',
-            'csv_append': False,  # If true read dataframe from csv_path and append new datasets to it, else overwrite
+            'csv_path': 'D:/Research/Results/Azimuth_Analysis/binom_slice_cent_sds_df_new.csv',  # '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df.csv',
+            'csv_append': True,  # If true read dataframe from csv_path and append new datasets to it, else overwrite
             'threads': 16,
             'stats': define_stats(['standard deviation']),  # , 'skewness', 'non-excess kurtosis']),
             'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
             'min_events': 100,  # Min number of total events per total_proton. Skip total_proton if fewer
             'min_bs': 100,  # Min number of bootstrap sets of total_proton. Skip if fewer
+            'div_bs': False,  # If true get divide bootstrap values
             }
 
     pars.update({'datasets': define_datasets(pars['base_path'])})
@@ -67,28 +69,30 @@ def define_datasets(base_path):
 
     df = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample'], ['test'])
 
-    # for amp in np.unique(df['amp']):
-    #     df_amp = df[df['amp'] == amp]
-    #     for spread in np.unique(df_amp['spread']):
-    #         entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
-    #                            ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
-    #                            ['flat'], [], [0], [62], [8], all_divs])
-
-    df_tests = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample', 'test'])
-    for amp in np.unique(df_tests['amp']):
-        df_amp = df_tests[df_tests['amp'] == amp]
+    for amp in np.unique(df['amp']):
+        if amp not in ['275', '3', '325', '35', '375', '4', '45', '5']:
+            continue
+        df_amp = df[df['amp'] == amp]
         for spread in np.unique(df_amp['spread']):
-            entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}_test', '_Sim',
-                               ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample', 'test'],
+            entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
+                               ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
                                ['flat'], [], [0], [62], [8], all_divs])
 
-    for amp in np.unique(df['amp']):
-        if amp in np.unique(df_tests['amp']):
-            df_amp = df[df['amp'] == amp]
-            for spread in np.unique(df_amp['spread']):
-                entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
-                                   ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
-                                   ['flat'], ['test'], [0], [62], [8], all_divs])
+    # df_tests = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample', 'test'])
+    # for amp in np.unique(df_tests['amp']):
+    #     df_amp = df_tests[df_tests['amp'] == amp]
+    #     for spread in np.unique(df_amp['spread']):
+    #         entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}_test', '_Sim',
+    #                            ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample', 'test'],
+    #                            ['flat'], [], [0], [62], [8], all_divs])
+    #
+    # for amp in np.unique(df['amp']):
+    #     if amp in np.unique(df_tests['amp']):
+    #         df_amp = df[df['amp'] == amp]
+    #         for spread in np.unique(df_amp['spread']):
+    #             entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
+    #                                ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
+    #                                ['flat'], ['test'], [0], [62], [8], all_divs])
 
     datasets = [dict(zip(entry_names, dset)) for dset in entry_vals]
 
@@ -107,8 +111,10 @@ def define_sys_sets(datasets):
     #             ]
 
     entry_names = ['sys_name', 'default', 'sys_sets']
-    entry_vals = [['ampt_def', {'name': 'ampt_def', 'set_nums': range(60)}, []],
-                  ]
+    entry_vals = [
+        ['ampt_def', {'name': 'ampt_def', 'set_nums': range(60)}, []],
+        ['bes_def', {'name': 'bes_def', 'set_nums': range(60)}, []],
+    ]
     systematic_sets = [dict(zip(entry_names, dset)) for dset in entry_vals]
 
     sys_names = [sset['sys_name'] for sset in systematic_sets]
@@ -217,13 +223,13 @@ def get_dataset_jobs(dataset, pars):
             good = False
         if good:
             new_job = get_set_jobs(dataset, set_dir, {'raw': path + '/', 'mix': path + '_Mix/'}, pars['stats'],
-                                   pars['min_events'], pars['min_bs'])
+                                   pars['min_events'], pars['min_bs'], pars['div_bs'])
             dataset_jobs.extend(new_job)
 
     return dataset_jobs
 
 
-def get_set_jobs(dataset, set_dir, base_paths, stats, min_events, min_bs):
+def get_set_jobs(dataset, set_dir, base_paths, stats, min_events, min_bs, div_bs):
     subset_jobs = []
     for energy in dataset['energies']:
         for div in dataset['divs']:
@@ -242,12 +248,12 @@ def get_set_jobs(dataset, set_dir, base_paths, stats, min_events, min_bs):
                             other_columns['energy'] = 0
                         subset_jobs.append((f'{base_paths["raw"]}{path}', f'{base_paths["mix"]}{path}',
                                             f'{base_paths["raw"]}{info_path}', div, stats, other_columns,
-                                            min_events, min_bs))
+                                            min_events, min_bs, div_bs))
 
     return subset_jobs
 
 
-def read_subset(raw_path, mix_path, info_path, div, stats, other_columns, min_events, min_bs):
+def read_subset(raw_path, mix_path, info_path, div, stats, other_columns, min_events, min_bs, div_bs):
     """
     Read a single raw/mix file pair. Calculate stats with bootstrap or delta errors depending on bootstrap's existence.
     Calculate raw divided by mixed. Return as entries to convert to dataframe.
@@ -259,6 +265,7 @@ def read_subset(raw_path, mix_path, info_path, div, stats, other_columns, min_ev
     :param other_columns: Other columns characterizing this job, to be added to dataframe
     :param min_events: Minimum required events for total_proton dataset to be kept, otherwise don't process
     :param min_bs: Minimum required bootstrap sets for total_proton dataset to be kept
+    :param div_bs: If true get divide bootstraps
     :return:
     """
     df_subset = []
@@ -271,13 +278,19 @@ def read_subset(raw_path, mix_path, info_path, div, stats, other_columns, min_ev
         if total_protons in mix_az_data.get_dist():
             for stat, stat_method in stats.items():
                 other_columns.update({'total_protons': total_protons, 'stat': stat})
-                measures = get_div(raw_az_data, mix_az_data, total_protons, stat_method, min_counts, min_bs)
+                measures = get_div(raw_az_data, mix_az_data, total_protons, stat_method, min_counts, min_bs, div_bs)
+                measures, div_bs_sets = measures[:3], measures[-1]
                 if any(x is None for x in measures):
                     continue
                 for data_type, meas in zip(['raw', 'mix', 'divide'], measures):
                     df_new = {'data_type': data_type, 'val': meas.val, 'err': meas.err}
                     df_new.update(other_columns)
                     df_subset.append(df_new)
+                if div_bs:
+                    for bs_index, div_bs_meas in enumerate(div_bs_sets):
+                        df_new = {'data_type': f'divide_{bs_index}', 'val': div_bs_meas.val, 'err': div_bs_meas.err}
+                        df_new.update(other_columns)
+                        df_subset.append(df_new)
         # else:
         #     print(f'Total_protons {total_protons} exists in raw but not mixed for '
         #           f'{mix_az_data.path}')
@@ -285,7 +298,7 @@ def read_subset(raw_path, mix_path, info_path, div, stats, other_columns, min_ev
     return df_subset
 
 
-def check_subset(raw_path, mix_path, info_path, div, stats, other_columns, min_events, min_bs):
+def check_subset(raw_path, mix_path, info_path, div, stats, other_columns, min_events, min_bs, div_bs):
     """
     Just read files to see if all are able to be read. If not hopefully get print to screen with bad path
     :param raw_path:
@@ -325,7 +338,20 @@ def get_min_counts(info_path, min_events, div):
     return min_counts
 
 
-def get_div(raw_az_data, mix_az_data, total_protons, stat_method, min_counts, min_bs):
+def get_div(raw_az_data, mix_az_data, total_protons, stat_method, min_counts, min_bs, div_bs):
+    """
+    Calculate raw divided by mixed data for given statistic.
+    :param raw_az_data: Raw binning histogram data, default and possibly bootstrap sets
+    :param mix_az_data: Mixed binning histogram data, default and possibly bootstrap sets
+    :param total_protons: Total proton number (bin) to calculate statistics for. Only one per function call
+    :param stat_method: Method for calculating desired statistic on the raw and mixed distributions
+    :param min_counts: Minimum number of counts in a total_protons bin necessary. Otherwise discard bin
+    :param min_bs: Minimum nuber of bootstrap sets necessary. Otherwise discard
+    :param div_bs: If true get divide bootstraps
+    :return: raw, mixed, and divide measures for given statistic on distributions.
+             Also set of partially bootstrapped divided values.
+             Use raw_bs(x)/mix_bs(x) for default, std(raw_bs(x)/mix_bs(y), for all y) as err
+    """
     raw_stat_meas, raw_bs_stats = get_stat(raw_az_data, total_protons, stat_method, min_counts, min_bs)
     mix_stat_meas, mix_bs_stats = get_stat(mix_az_data, total_protons, stat_method, min_counts, min_bs)
 
@@ -334,10 +360,19 @@ def get_div(raw_az_data, mix_az_data, total_protons, stat_method, min_counts, mi
         if raw_bs_stats and mix_bs_stats:
             div_stat_meas.err = np.std([raw / mix if abs(mix) > 0 else float('nan') for raw in raw_bs_stats
                                         for mix in mix_bs_stats])
+            if div_bs:
+                div_stat_bs_list = []
+                for index, raw in enumerate(raw_bs_stats):  # Assume raw_bs_stats and mix_bs_stats same size
+                    div_stat_bs_meas = Measure(raw / mix_bs_stats[index])
+                    div_stat_bs_meas.err = np.std([raw / mix if abs(mix) > 0 else float('nan') for mix in mix_bs_stats])
+                    div_stat_bs_list.append(div_stat_bs_meas)
+            else:
+                div_stat_bs_list = None
     else:
         div_stat_meas = None
+        div_stat_bs_list = None
 
-    return raw_stat_meas, mix_stat_meas, div_stat_meas
+    return raw_stat_meas, mix_stat_meas, div_stat_meas, div_stat_bs_list
 
 
 def get_stat(az_data, total_protons, stat_method, min_counts, min_bs):
@@ -385,40 +420,82 @@ def get_systematics(pars, df):
     # attributes = ['energy', 'div', 'cent', 'total_protons', 'stat', 'data_type']
     # lambda df, att : np.unique(df[att])
     # print(df)
-    for sys_set in pars['sys_sets']:
-        # default
-        df_def = df[df['name'] == sys_set['default']['name']]
-        for energy in np.unique(df_def['energy']):
-            df_energy = df_def[df_def['energy'] == energy]
-            for div in np.unique(df_energy['divs']):
-                df_div = df_energy[df_energy['divs'] == div]
-                for cent in np.unique(df_div['cent']):
-                    df_cent = df_div[df_div['cent'] == cent]
-                    for total_protons in np.unique(df_cent['total_protons']):
-                        df_tps = df_cent[df_cent['total_protons'] == total_protons]
-                        for stat in np.unique(df_tps['stat']):
-                            df_stat = df_tps[df_tps['stat'] == stat]
-                            for data_type in np.unique(df_stat['data_type']):
-                                df_dtype = df_stat[df_stat['data_type'] == data_type]
-                                # Should weigh sd with errors
-                                if len(df_dtype) > 1:
-                                    meases = [Measure(val, err) for val, err in zip(df_dtype['val'], df_dtype['err'])]
-                                    med = np.median(meases)
-                                    new_row = {'val': med.val, 'err': med.err, 'sys': np.std(df_dtype['val'])}
-                                else:
-                                    # For now set sys to 0 if only one set_num. Then don't have issues with NA values
-                                    new_row = {'val': df_dtype['val'].iloc[0], 'err': df_dtype['err'].iloc[0], 'sys': 0}
-                                new_row.update({'name': sys_set['sys_name'], 'energy': energy, 'divs': div,
-                                                'cent': cent, 'total_protons': total_protons, 'stat': stat,
-                                                'data_type': data_type})
-                                if 'sim_' in sys_set['sys_name']:
-                                    amp, spread = get_name_amp_spread(sys_set['sys_name'])
-                                    new_row.update({'amp': amp, 'spread': spread})
-                                else:
-                                    new_row.update({'amp': 0, 'spread': 0})
-                                sys_df.append(new_row)
+
+    jobs = [(df[df['name'] == sys_set['default']['name']], sys_set) for sys_set in pars['sys_sets']]
+    with Pool(pars['threads']) as pool:
+        for sys_set_list in tqdm.tqdm(pool.istarmap(get_sys_set, jobs), total=len(jobs)):
+            sys_df.extend(sys_set_list)
+
+    # for sys_set in pars['sys_sets']:
+    #     # default
+    #     df_def = df[df['name'] == sys_set['default']['name']]
+    #     for energy in np.unique(df_def['energy']):
+    #         df_energy = df_def[df_def['energy'] == energy]
+    #         for div in np.unique(df_energy['divs']):
+    #             df_div = df_energy[df_energy['divs'] == div]
+    #             for cent in np.unique(df_div['cent']):
+    #                 df_cent = df_div[df_div['cent'] == cent]
+    #                 for total_protons in np.unique(df_cent['total_protons']):
+    #                     df_tps = df_cent[df_cent['total_protons'] == total_protons]
+    #                     for stat in np.unique(df_tps['stat']):
+    #                         df_stat = df_tps[df_tps['stat'] == stat]
+    #                         for data_type in np.unique(df_stat['data_type']):
+    #                             df_dtype = df_stat[df_stat['data_type'] == data_type]
+    #                             # Should weigh sd with errors
+    #                             if len(df_dtype) > 1:
+    #                                 meases = [Measure(val, err) for val, err in zip(df_dtype['val'], df_dtype['err'])]
+    #                                 med = np.median(meases)
+    #                                 new_row = {'val': med.val, 'err': med.err, 'sys': np.std(df_dtype['val'])}
+    #                             else:
+    #                                 # For now set sys to 0 if only one set_num. Then don't have issues with NA values
+    #                                 new_row = {'val': df_dtype['val'].iloc[0], 'err': df_dtype['err'].iloc[0], 'sys': 0}
+    #                             new_row.update({'name': sys_set['sys_name'], 'energy': energy, 'divs': div,
+    #                                             'cent': cent, 'total_protons': total_protons, 'stat': stat,
+    #                                             'data_type': data_type})
+    #                             if 'sim_' in sys_set['sys_name']:
+    #                                 amp, spread = get_name_amp_spread(sys_set['sys_name'])
+    #                                 new_row.update({'amp': amp, 'spread': spread})
+    #                             else:
+    #                                 new_row.update({'amp': 0, 'spread': 0})
+    #                             sys_df.append(new_row)
 
     return pd.DataFrame(sys_df)
+
+
+def get_sys_set(df, sys_set):
+    sys_set_list = []
+    df_def = df[df['name'] == sys_set['default']['name']]
+    for energy in np.unique(df_def['energy']):
+        df_energy = df_def[df_def['energy'] == energy]
+        for div in np.unique(df_energy['divs']):
+            df_div = df_energy[df_energy['divs'] == div]
+            for cent in np.unique(df_div['cent']):
+                df_cent = df_div[df_div['cent'] == cent]
+                for total_protons in np.unique(df_cent['total_protons']):
+                    df_tps = df_cent[df_cent['total_protons'] == total_protons]
+                    for stat in np.unique(df_tps['stat']):
+                        df_stat = df_tps[df_tps['stat'] == stat]
+                        for data_type in np.unique(df_stat['data_type']):
+                            df_dtype = df_stat[df_stat['data_type'] == data_type]
+                            # Should weigh sd with errors
+                            if len(df_dtype) > 1:
+                                meases = [Measure(val, err) for val, err in zip(df_dtype['val'], df_dtype['err'])]
+                                med = np.median(meases)
+                                new_row = {'val': med.val, 'err': med.err, 'sys': np.std(df_dtype['val'])}
+                            else:
+                                # For now set sys to 0 if only one set_num. Then don't have issues with NA values
+                                new_row = {'val': df_dtype['val'].iloc[0], 'err': df_dtype['err'].iloc[0], 'sys': 0}
+                            new_row.update({'name': sys_set['sys_name'], 'energy': energy, 'divs': div,
+                                            'cent': cent, 'total_protons': total_protons, 'stat': stat,
+                                            'data_type': data_type})
+                            if 'sim_' in sys_set['sys_name']:
+                                amp, spread = get_name_amp_spread(sys_set['sys_name'])
+                                new_row.update({'amp': amp, 'spread': spread})
+                            else:
+                                new_row.update({'amp': 0, 'spread': 0})
+                            sys_set_list.append(new_row)
+
+    return sys_set_list
 
 
 def get_name_amp_spread(name):
