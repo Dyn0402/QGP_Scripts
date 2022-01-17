@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors
 import matplotlib as mpl
 from mpl_toolkits import mplot3d
+import seaborn as sns
 import pandas as pd
 from scipy.optimize import curve_fit as cf
 from scipy.optimize import minimize
@@ -21,15 +22,21 @@ from scipy.interpolate import interp1d
 from scipy.interpolate import interp2d
 import scipy.interpolate as interp
 from scipy.interpolate import RectBivariateSpline
+from scipy.stats import norm
+
+from multiprocessing import Pool
+import tqdm
+import istarmap  # Needed for tqdm
 
 from DistStats import DistStats
 from Measure import Measure
 
 
 def main():
+    threads = 16
     base_path = 'D:/Research/Results/Azimuth_Analysis/'
-    df_name = 'binom_slice_cent_sds_df_tests.csv'
-    chi_df_name = 'chi_df_bes.csv'
+    df_name = 'binom_slice_cent_sds_df_new.csv'
+    chi_df_name = 'chi_df_ampt_new.csv'
     df_path = base_path + df_name
     # df_path = '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df.csv'
     # df_path = 'D:/Research/Results/Azimuth_Analysis/binom_slice_cent_sds_df.csv'
@@ -37,11 +44,15 @@ def main():
     # df_path = 'C:/Users/Dyn04/Desktop/binom_slice_df.csv'
     # df_path = 'C:/Users/Dylan/Research/Results/Azimuth_Analysis/binom_slice_cent_sds_df.csv'
     sim_sets = []
-    amps = ['04']  # ['01', '02', '03', '04', '05', '06']
-    spreads = ['2', '25']  # ['02', '05', '1', '15', '2', '25', '3', '35', '4', '45']  # ['1']  # ['02', '05', '1', '15', '2', '25']
+    amps = []  # ['2']  # ['01', '02', '03', '04', '05', '06']
+    spreads = []  # ['2', '25', '3', '35']  # ['02', '05', '1', '15', '2', '25', '3', '35', '4', '45']  # ['1']  # ['02', '05', '1', '15', '2', '25']
     for amp in amps:
         for spread in spreads:
             sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}')
+
+    sim_amp_pairs = [('02', '1'), ('07', '225'), ('25', '3'), ('12', '45')]
+    for amp, spread in sim_amp_pairs:
+        sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}')
 
     # spreads.extend(['5', '6'])
     for amp in amps:
@@ -54,8 +65,8 @@ def main():
     exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
     total_protons_plt = 20
     cent_plt = 8
-    energies_plt = [62, 'sim']  # [7, 11, 19, 27, 39, 62]
-    energies_fit = [62]  # , 11, 19, 27, 39, 62]
+    energies_plt = [62, 'sim']  # [7, 11, 19, 27, 39, 62, 'sim']  # [7, 11, 19, 27, 39, 62]
+    energies_fit = [7, 11, 19, 27, 39, 62]  # , 11, 19, 27, 39, 62]
     energy_plt = 62
     data_types_plt = ['divide']
     data_type_plt = 'divide'
@@ -92,15 +103,22 @@ def main():
     chi2_list_all = []
     for energy in energies_fit:
         chi2_sets = []
+        jobs = []
+        print(f'Energy {energy}GeV')
         for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
-            print(f'{energy}GeV {div} bin width')
-            chi2_sets.extend(chi2_vs_protons(df, stat_plot, div, cent_plt, energy, data_type_plt, data_sets_plt))
+            jobs.append((df, stat_plot, div, cent_plt, energy, data_type_plt, data_sets_plt))
+        with Pool(threads) as pool:
+            for chi2_set in tqdm.tqdm(pool.istarmap(chi2_vs_protons, jobs), total=len(jobs)):
+                chi2_sets.extend(chi2_set)
+        # for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
+        #     print(f'{energy}GeV {div} bin width')
+        #     chi2_sets.extend(chi2_vs_protons(df, stat_plot, div, cent_plt, energy, data_type_plt, data_sets_plt))
         data_sim_sets_plt, chi_res_e, chi_list = plot_chi2_protons(pd.DataFrame(chi2_sets), energy, n_sims_plt=4)
         chi2_list_all.extend(chi_list)
         chi_res.extend(chi_res_e)
 
-    # chi2_sets_df = pd.DataFrame(chi2_list_all)
-    # chi2_sets_df.to_csv(base_path + chi_df_name, index=False)
+    chi2_sets_df = pd.DataFrame(chi2_list_all)
+    chi2_sets_df.to_csv(base_path + chi_df_name, index=False)
 
     # chi_res = []
     # chi2_sets_df = pd.read_csv(base_path + chi_df_name)
@@ -109,11 +127,11 @@ def main():
     #     chi_res.extend(chi_res_e)
 
     # plot_chi_sim_pars(pd.DataFrame(chi_res))
-    for data_set, sim_sets_plt in data_sim_sets_plt.items():
-        sets = [data_set] + list(sim_sets_plt)
-        print(sets)
-        for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):
-            stat_vs_protons(df, stat_plot, div, cent_plt, energies_plt, data_types_plt, sets, plot=True, fit=False)
+    # for data_set, sim_sets_plt in data_sim_sets_plt.items():
+    #     sets = [data_set] + list(sim_sets_plt)
+    #     print(sets)
+    #     for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):
+    #         stat_vs_protons(df, stat_plot, div, cent_plt, energies_plt, data_types_plt, sets, plot=True, fit=False)
 
     # stat_vs_divs(df, stat_plot, total_protons_plt, cent_plt, energies_plt, data_types_plt, data_sets_plt,
     #              exclude_divs, plot=True, fit=True)
@@ -148,7 +166,8 @@ def quad_180(x, a, c):
     return a * (x - 180) ** 2 + c
 
 
-def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False, fit=False):
+def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False, fit=False,
+                    hist=False):
     data = []
     for data_type in data_types:
         for data_set in data_sets_plt:
@@ -192,6 +211,16 @@ def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_
                          'slope_err': np.sqrt(np.diag(pcov))[0]})
             if plot:
                 ax.plot(df['total_protons'], line(df['total_protons'], *popt), ls='--', color=c)
+                if hist:
+                    sigs = (df['val'] - line(df['total_protons'], *popt)) / df['err']
+                    fig_hist, ax_hist = plt.subplots()
+                    ax_hist.set_title(f'{lab}')
+                    ax_hist.set_xlabel('Standard Deviations from Linear Fit')
+                    sns.histplot(sigs, stat='density', kde=True)
+                    x_norm = np.linspace(min(sigs), max(sigs), 1000)
+                    ax_hist.plot(x_norm, norm(0, 1).pdf(x_norm), color='red', label='Standard Normal')
+                    ax_hist.legend()
+                    fig_hist.tight_layout()
 
     if plot:
         ax.legend()
