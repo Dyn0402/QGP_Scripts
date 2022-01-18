@@ -8,34 +8,47 @@ Created as QGP_Scripts/DistStats.py
 @author: Dylan Neff, dylan
 """
 
+import numpy as np
+
 from Measure import Measure
 from scipy.special import binom
 import warnings
 
 
 class DistStats:
-    def __init__(self, dist=None, debug=True):
+    """
+    Calculate statistics of input distribution. Try to calculate all raw moments needed in one run through data
+    to be as efficient as possible.
+    """
+    def __init__(self, dist=None, debug=True, unbinned=False):
         """
         Initiate with 1D distribution
         :param dist: Distribution to calculate stats for. dist ~ dictionary{key=x_value, value=counts}
+        :param debug: If true set any warnings to throw error, else leave as warnings
+        :param unbinned: If true expect that dist passed is unbinned data. Else assume it's a binned dictionary
         """
         self.raw_moments = {}
         self.cent_moments = {}
         self.m = {}
         self.total_counts = None
+        self.numpy_threshold = 10  # Length of data at which to use numpy arrays to calculate raw moments
         if debug:
             warnings.filterwarnings('error')
-        if type(dist) == dict:
+        if unbinned:
+            self.dist = dict(zip(dist, np.ones(len(dist), dtype=int)))
+        elif type(dist) == dict:
             self.dist = dist
         else:
             self.dist = dict(zip(range(len(dist)), dist))
 
     def calc_total_counts(self):
+        self.total_counts = np.sum(list(self.dist.values()))
         self.calc_raw_moments(1, 0)
 
     def calc_raw_moments(self, n_min=1, n_max=1):
         """
-        Calculate raw moments of self.dist from n_min to n_max order
+        Calculate raw moments of self.dist from n_min to n_max order.
+        Use numpy approach for dist with more than 10 items, faster.
         :param n_min: Lowest order raw moment to calculate
         :param n_max: Highest order raw moment to calculate
         :return:
@@ -50,11 +63,19 @@ class DistStats:
         for ni in range(n_min, n_max + 1):
             self.raw_moments.update({ni: 0})
 
-        self.total_counts = 0
-        for x, counts in self.dist.items():
-            self.total_counts += counts
-            for ni in range(n_min, n_max + 1):
-                self.raw_moments[ni] += x ** ni * counts
+        if len(self.dist) > self.numpy_threshold:  # Numpy faster for many items
+            vals, counts = np.array(list(self.dist.keys())), np.array(list(self.dist.values()))
+            self.total_counts = np.sum(counts)
+            pows = np.array(range(n_min, n_max + 1))
+            vals = np.tile(vals, (pows.size, 1))
+            res = np.sum((vals.T ** pows).T * counts, axis=1)
+            self.raw_moments.update({p: x for p, x in zip(pows, res)})
+        else:
+            self.total_counts = 0
+            for x, counts in self.dist.items():
+                self.total_counts += counts
+                for ni in range(n_min, n_max + 1):
+                    self.raw_moments[ni] += x ** ni * counts
 
         for ni in range(n_min, n_max + 1):
             try:
@@ -63,19 +84,18 @@ class DistStats:
                 print(f'Warning treated as error for debug:\n'
                       f'raw_moment {ni}: {self.raw_moments[ni]}, total_counts: {self.total_counts}')
 
-    def calc_cent_moments(self, n_min=1, n_max=1):
+    def calc_cent_moments(self, n_max=1):
         """
         Calculate central moments of self.dist from n_min to n_max order from self.raw_moments
-        :param n_min: Lowest order central moment to calculate
         :param n_max: Highest order central moment to calculate
         :return:
         """
-        for ni in range(n_min, n_max + 1):
+        for ni in range(n_max, 0, -1):
             if ni not in self.raw_moments:
-                self.calc_raw_moments(n_min, n_max + 1)
+                self.calc_raw_moments(1, n_max)
                 break
 
-        for ni in range(n_min, n_max + 1):
+        for ni in range(1, n_max + 1):
             self.cent_moments.update({ni: 0})
             for nj in range(0, ni + 1):
                 self.cent_moments[ni] += \
@@ -87,12 +107,30 @@ class DistStats:
             else:
                 self.m.update({ni: self.cent_moments[ni] / self.cent_moments[2] ** (0.5 * ni)})
 
+    def get_raw_moment(self, order):
+        """
+        Get raw moment of distribution, no error estimate
+        :param order: Order of raw moment to return
+        :return: Raw moment with no uncertainty estimate
+        """
+        self.calc_raw_moments(order, order)
+        return self.raw_moments[order]
+
+    def get_central_moment(self, order):
+        """
+        Get central moment of distribution, no error estimate
+        :param order: Order of raw moment to return
+        :return: Raw moment with no uncertainty estimate
+        """
+        self.calc_cent_moments(order)
+        return self.cent_moments[order]
+
     def get_mean(self):
         """
         Get mean of distribution with error from delta theorem
         :return: Mean as a Measure
         """
-        self.calc_cent_moments(1, 2)
+        self.calc_cent_moments(2)
         val = self.raw_moments[1]
         err = (self.cent_moments[2] / self.total_counts) ** 0.5
 
@@ -103,7 +141,7 @@ class DistStats:
         Get standard deviation of distribution with error from delta theorem
         :return: Standard deviation as a Measure
         """
-        self.calc_cent_moments(1, 4)
+        self.calc_cent_moments(4)
         val = self.cent_moments[2] ** 0.5
         err = (self.m[4] - 1) * self.cent_moments[2]
         if err >= 0:
@@ -118,7 +156,7 @@ class DistStats:
         Get skewness of distribution with error from delta theorem
         :return: Skewness as a Measure
         """
-        self.calc_cent_moments(1, 6)
+        self.calc_cent_moments(6)
         m = self.m
         if self.cent_moments[2] == 0:
             val = float('nan')
@@ -138,7 +176,7 @@ class DistStats:
         Get kurtosis of distribution with error from delta theorem
         :return: Kurtosis as a Measure
         """
-        self.calc_cent_moments(1, 8)
+        self.calc_cent_moments(8)
         m = self.m
         if self.cent_moments[2] == 0:
             val = float('nan')
@@ -161,7 +199,7 @@ class DistStats:
         Get kurtosis*variance of distribution with error from delta theorem
         :return: Kurtosis*variance as a Measure
         """
-        self.calc_cent_moments(1, 8)
+        self.calc_cent_moments(8)
         m = self.m
         if self.cent_moments[2] == 0:
             val = float('nan')
@@ -183,7 +221,7 @@ class DistStats:
         :param order: Order of cumulant to calculate
         :return: Cumulant value and error as Measure object
         """
-        self.calc_cent_moments(1, 2*order)
+        self.calc_cent_moments(2*order)
         # Maybe write in bell polynomials later
         cm = self.cent_moments
         n = self.total_counts
@@ -230,7 +268,7 @@ class DistStats:
         :param order: Order of k statistic to calculate
         :return: K statistic value and error as Measure object
         """
-        self.calc_cent_moments(1, 2*order)
+        self.calc_cent_moments(2*order)
         # Maybe try to find analytical formula later
         n = self.total_counts
         cm = self.cent_moments
