@@ -19,7 +19,10 @@ from DistStats import DistStats
 
 
 def main():
+    print('Test 1')
     dist_stats_rand_tests()
+    print('Test 2')
+    dist_stats_rand_tests2()
     return
 
     # compare_results3()
@@ -292,7 +295,7 @@ def dist_stats_test():
 
 
 def dist_stats_rand_tests():
-    num_tests = 100000
+    num_tests = 1000
     num_vals = 100
     dist = sps.uniform(0, 10)
     central_moments = range(1, 10)
@@ -316,6 +319,35 @@ def dist_stats_rand_tests():
                 print(f'\nTest #{i}  Central Moment Order: {cm}\n'
                       f'ds = {ds_moment},  scipy = {scipy_moment},  frac_deviation = {frac_deviation}\n'
                       f'Data: {vals}')
+
+
+def dist_stats_rand_tests2():
+    num_tests = 100
+    num_vals = 70
+    dist = sps.uniform(0, 10)
+    mult_dist = sps.uniform(5, 15)
+    central_moments = range(1, 3)
+    max_deviation = 0.0000001
+
+    for i in range(num_tests):
+        vals = dist.rvs(num_vals)
+        mults = np.array(mult_dist.rvs(num_vals), dtype=int)
+        ds = DistStats(dict(zip(vals, mults)))
+        for cm in reversed(central_moments):
+            ds_moment = ds.get_central_moment(cm)
+            scipy_moment = sps.moment([val for val, mult in zip(vals, mults) for j in range(mult)], moment=cm)
+            if ds_moment + scipy_moment == 0:
+                if ds_moment == scipy_moment:
+                    frac_deviation = 0
+                else:
+                    print('Div zero')
+                    frac_deviation = 1
+            else:
+                frac_deviation = (ds_moment - scipy_moment) / ((ds_moment + scipy_moment) / 2)
+            if frac_deviation > max_deviation:
+                print(f'\nTest #{i}  Central Moment Order: {cm}\n'
+                      f'ds = {ds_moment},  scipy = {scipy_moment},  frac_deviation = {frac_deviation}\n'
+                      f'Data: {vals}\n Mults: {mults}')
 
 
 if __name__ == '__main__':

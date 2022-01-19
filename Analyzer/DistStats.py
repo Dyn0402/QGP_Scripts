@@ -32,18 +32,24 @@ class DistStats:
         self.m = {}
         self.total_counts = None
         self.numpy_threshold = 10  # Length of data at which to use numpy arrays to calculate raw moments
-        if debug:
+        self.debug = debug
+        self.unbinned = unbinned
+        if self.debug:
             warnings.filterwarnings('error')
         if unbinned:
-            self.dist = dict(zip(dist, np.ones(len(dist), dtype=int)))
+            # self.dist = dict(zip(dist, np.ones(len(dist), dtype=int)))
+            self.dist = dist
         elif type(dist) == dict:
             self.dist = dist
         else:
             self.dist = dict(zip(range(len(dist)), dist))
 
     def calc_total_counts(self):
+        """
+        Calculate total number of values in the distribution
+        :return: None
+        """
         self.total_counts = np.sum(list(self.dist.values()))
-        self.calc_raw_moments(1, 0)
 
     def calc_raw_moments(self, n_min=1, n_max=1):
         """
@@ -63,12 +69,19 @@ class DistStats:
         for ni in range(n_min, n_max + 1):
             self.raw_moments.update({ni: 0})
 
-        if len(self.dist) > self.numpy_threshold:  # Numpy faster for many items
-            vals, counts = np.array(list(self.dist.keys())), np.array(list(self.dist.values()))
-            self.total_counts = np.sum(counts)
+        if self.unbinned:
+            vals = np.array(list(self.dist))
+            self.total_counts = vals.size
             pows = np.array(range(n_min, n_max + 1))
             vals = np.tile(vals, (pows.size, 1))
-            res = np.sum((vals.T ** pows).T * counts, axis=1)
+            res = np.sum((vals.T ** pows).T, axis=1)
+            self.raw_moments.update({p: x for p, x in zip(pows, res)})
+        elif len(self.dist) > self.numpy_threshold:  # Numpy faster for many items
+            vals, counts = np.array(list(self.dist.keys())), np.array(list(self.dist.values()))
+            self.total_counts = np.sum(counts.astype(np.longlong))
+            pows = np.array(range(n_min, n_max + 1))
+            vals = np.tile(vals, (pows.size, 1))
+            res = np.sum((vals.T ** pows).T * counts.astype(np.longlong), axis=1)
             self.raw_moments.update({p: x for p, x in zip(pows, res)})
         else:
             self.total_counts = 0
@@ -102,10 +115,29 @@ class DistStats:
                     binom(ni, nj) * (-1) ** (ni - nj) * self.raw_moments[nj] * self.raw_moments[1] ** (ni - nj)
 
         for ni in range(2, n_max + 1):
-            if self.cent_moments[2] == 0:
+            if self.cent_moments[2] <= 0:
                 self.m.update({ni: float('nan')})
+                if self.debug:
+                    print('Variance zero') if self.cent_moments[2] == 0 else print('Variance negative')
+            # if self.cent_moments[2] == 0:
+            #     if self.debug:
+            #         print('Variance zero')
+            #     self.m.update({ni: float('nan')})
+            # elif self.cent_moments[2] < 0:
+            #     if self.debug:
+            #         print('Variance negative')
+            #     self.m.update({ni: float('nan')})
             else:
                 self.m.update({ni: self.cent_moments[ni] / self.cent_moments[2] ** (0.5 * ni)})
+
+    def get_total_counts(self):
+        """
+        Get total number of values in distribution, calculate if not already done
+        :return: Total number of values in distribution
+        """
+        if self.total_counts is None:
+            self.calc_total_counts()
+        return self.total_counts
 
     def get_raw_moment(self, order):
         """
