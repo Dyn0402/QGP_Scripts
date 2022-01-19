@@ -27,11 +27,14 @@ from DistStats import DistStats
 def main():
     mpl.rcParams.update({'figure.max_open_warning': 0})
     threads = 15
-    energies = [7, 11, 19, 27, 39, 62]
-    sets = [(energy, ['default', 'string_melting']) if energy in [7, 11] else (energy, ['string_melting'])
-            for energy in energies]
+    # energies = [7, 11, 19, 27, 39, 62]
+    # sets = [(energy, ['default', 'string_melting']) if energy in [7, 11] else (energy, ['string_melting'])
+    #         for energy in energies]
+    energies = [7]
+    sets = [(energy, ['string_melting']) for energy in energies]
     min_bias_path = f'D:/Research/AMPT_Trees/min_bias/'
-    pdf_out_path = 'D:/Research/Results/Presentations/1-14-22_Ampt_eta/Ampt_eta_dists.pdf'
+    fix_most_cent_path = f'D:/Research/AMPT_Trees/ref_fix_most_central/'
+    pdf_out_path = 'D:/Research/Results/Presentations/1-14-22_Ampt_eta/Ampt_eta_dists_7GeV_eta_fix.pdf'
     tree_name = 'tree'
     track_attributes = ['pid', 'px', 'py', 'pz']
     pids = [2212, -2212, 3122, -3122]
@@ -41,7 +44,7 @@ def main():
     fig_list = []
     for energy, ampt_modes in sets:
         for ampt_mode in ampt_modes:
-            path = f'{min_bias_path}{ampt_mode}/{energy}GeV/'
+            path = f'{fix_most_cent_path}{ampt_mode}/{energy}GeV/'
             eta_hists = {pid: np.zeros(len(bin_edges) - 1) for pid in pids}
 
             jobs = []
