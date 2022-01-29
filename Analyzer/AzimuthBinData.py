@@ -114,6 +114,13 @@ class AzimuthBinData:
     def get_dist(self):
         return self.data
 
+    def get_total_particle_dist(self):
+        total_part_dist = {}
+        for total, bin_dist in self.data.items():
+            total_part_dist.update({total: np.sum(bin_dist)})
+
+        return total_part_dist
+
     def get_max_bin(self):
         if self.max_bin is None:
             self.max_bin = 0
