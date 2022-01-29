@@ -33,10 +33,11 @@ from Measure import Measure
 
 
 def main():
-    threads = 16
+    threads = 15
     base_path = 'D:/Research/Results/Azimuth_Analysis/'
-    df_name = 'binom_slice_cent_sds_df_new.csv'
-    chi_df_name = 'chi_df_ampt_new.csv'
+    # df_name = 'binom_slice_sds_cent8.csv'
+    df_name = 'binom_slice_stats_cent8.csv'
+    chi_df_name = 'chi_df_ampt_sds_cent8.csv'
     df_path = base_path + df_name
     # df_path = '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df.csv'
     # df_path = 'D:/Research/Results/Azimuth_Analysis/binom_slice_cent_sds_df.csv'
@@ -50,7 +51,8 @@ def main():
         for spread in spreads:
             sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}')
 
-    sim_amp_pairs = [('02', '1'), ('07', '225'), ('25', '3'), ('12', '45')]
+    # sim_amp_pairs = [('02', '1'), ('07', '225'), ('25', '3'), ('12', '45')]
+    sim_amp_pairs = [('5', '35'), ('02', '05'), ('015', '1')]
     for amp, spread in sim_amp_pairs:
         sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}')
 
@@ -60,7 +62,7 @@ def main():
             sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}_test')
     y_ranges = {'mean': (0.8, 1.2), 'standard deviation': (0.8, 1.25), 'skewness': (0, 1.25), 'kurtosis': (-3, 2),
                 'non-excess kurtosis': (0.95, 1.025)}
-    stat_plot = 'standard deviation'  # ['standard deviation']  # , 'skewness', 'non-excess kurtosis']
+    stat_plot = 'non-excess kurtosis'  # 'standard deviation'  # ['standard deviation']  # , 'skewness', 'non-excess kurtosis']
     div_plt = 120
     exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
     total_protons_plt = 20
@@ -78,7 +80,7 @@ def main():
     # df_data = df[~df['name'].str.contains('sim_')]
     # df_sim = df[df['name'].str.contains('sim_')]
     df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
-    df = df[df['spread'] != 1.2]
+    # df = df[df['spread'] != 1.2]
 
     # protons_fits = stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, data_types_plt, all_sets_plt,
     #                                plot=False, fit=True)
@@ -105,8 +107,9 @@ def main():
         chi2_sets = []
         jobs = []
         print(f'Energy {energy}GeV')
-        for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
-            jobs.append((df, stat_plot, div, cent_plt, energy, data_type_plt, data_sets_plt))
+        for data_type in data_types_plt:
+            for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
+                jobs.append((df, stat_plot, div, cent_plt, energy, data_type, data_sets_plt))
         with Pool(threads) as pool:
             for chi2_set in tqdm.tqdm(pool.istarmap(chi2_vs_protons, jobs), total=len(jobs)):
                 chi2_sets.extend(chi2_set)
@@ -172,8 +175,13 @@ def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_
     for data_type in data_types:
         for data_set in data_sets_plt:
             for energy in energies:
-                df_set = df[(df['name'] == data_set) & (df['data_type'] == data_type) & (df['divs'] == div) &
-                            (df['cent'] == cent) & (df['stat'] == stat) & (df['energy'] == energy)]
+                if 'data_type' in df:
+                    df = df[df['data_type'] == data_type]
+                if 'cent' in df:
+                    df = df[df['cent'] == cent]
+                if 'stat' in df:
+                    df = df[df['stat'] == stat]
+                df_set = df[(df['name'] == data_set) & (df['divs'] == div) & (df['energy'] == energy)]
                 if len(df_set) == 0:
                     continue
                 if energy == 'sim':
@@ -202,8 +210,9 @@ def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_
             else:
                 ax.errorbar(df['total_protons'], df['val'], df['err'], label=lab,
                             marker='o', ls='', color=c, alpha=0.7)
-                ax.errorbar(df['total_protons'], df['val'], df['sys'], marker='', ls='', elinewidth=3,
-                            color=c, alpha=0.4)
+                if 'sys' in df:
+                    ax.errorbar(df['total_protons'], df['val'], df['sys'], marker='', ls='', elinewidth=3,
+                                color=c, alpha=0.4)
 
         if fit and len(df) > 1:
             popt, pcov = cf(line, df['total_protons'], df['val'], sigma=df['err'], absolute_sigma=True)
@@ -297,33 +306,40 @@ def plot_protons_fits(df):
 
 def chi2_vs_protons(df, stat, div, cent, energy, data_type, data_sets_plt):
     chi2_sets = []
+    df = df[(df['divs'] == div) & ((df['energy'] == energy) | (df['energy'] == 'sim'))]
+    if 'data_type' in df:
+        df = df[df['data_type'] == data_type]
+    if 'cent' in df:
+        df = df[df['cent'] == cent]
+    if 'stat' in df:
+        df = df[df['stat'] == stat]
+
     df_data = df[~df['name'].str.contains('sim_')]
     df_sim = df[df['name'].str.contains('sim_')]
+
     data_sets = np.unique(df_data['name'])
     sim_sets = np.unique(df_sim['name'])
     for data_set in data_sets:
         if data_set not in data_sets_plt:
             continue
-        df_data_set = df_data[(df_data['name'] == data_set) & (df_data['data_type'] == data_type) &
-                              (df_data['divs'] == div) & (df_data['cent'] == cent) & (df_data['stat'] == stat) &
-                              (df_data['energy'] == energy)]
+        df_data_set = df_data[df_data['name'] == data_set]
         df_data_set.sort_values(by=['total_protons'])
-        data_meases = df_data_set.apply(lambda row: Measure(row['val'], row['err']), axis=1)
+        data_vals, data_errs = np.array(df_data_set['val']), np.array(df_data_set['err'])
+
         for sim_set in sim_sets:
-            df_sim_set = df_sim[(df_sim['name'] == sim_set) & (df_sim['data_type'] == data_type) &
-                                (df_sim['divs'] == div) & (df_sim['cent'] == cent) & (df_sim['stat'] == stat) &
-                                (df_sim['energy'] == 'sim')]
+            df_sim_set = df_sim[(df_sim['name'] == sim_set)]
             # Sim should have all possible tproton values, so just filter out those that aren't in data
             df_sim_set = df_sim_set[df_sim_set['total_protons'].isin(df_data_set['total_protons'])]
             df_sim_set.sort_values(by=['total_protons'])
             if list(df_data_set['total_protons']) != list(df_sim_set['total_protons']):
                 print('Data and sim don\'t match total protons!')
-            sim_meases = df_sim_set.apply(lambda row: Measure(row['val'], row['err']), axis=1)
-            diff = np.array(data_meases) - np.array(sim_meases)
-            chi2 = sum([(x.val / x.err) ** 2 for x in diff])
-            chi2_sets.append({'data_name': data_set, 'sim_name': sim_set, 'chi2': chi2, 'n': len(diff), 'divs': div,
-                              'amp': df_sim_set['amp'].iloc[0], 'spread': df_sim_set['spread'].iloc[0],
-                              'energy': energy})
+
+            sim_vals, sim_errs = np.array(df_sim_set['val']), np.array(df_sim_set['err'])
+            chi2 = np.sum((data_vals - sim_vals)**2 / (data_errs**2 + sim_errs**2))
+
+            chi2_sets.append({'data_name': data_set, 'sim_name': sim_set, 'chi2': chi2, 'n': len(data_vals),
+                              'divs': div, 'amp': df_sim_set['amp'].iloc[0], 'spread': df_sim_set['spread'].iloc[0],
+                              'energy': energy, 'data_type': data_type})
 
     return chi2_sets
 

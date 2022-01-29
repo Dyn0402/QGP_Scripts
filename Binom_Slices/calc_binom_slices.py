@@ -30,18 +30,18 @@ def main():
 
 def init_pars():
     pars = {'base_path': 'D:/Research/',  # '/home/dylan/Research/',
-            'csv_path': 'D:/Research/Results/Azimuth_Analysis/binom_slice_sds_cent8.csv',
+            'csv_path': 'D:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8.csv',
             # '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df.csv',
             'csv_append': False,  # If true read dataframe from csv_path and append new datasets to it, else overwrite
-            'threads': 14,
-            'stats': define_stats(['standard deviation']),  # , 'skewness', 'non-excess kurtosis']),
+            'threads': 15,
+            'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
             'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
             'min_events': 100,  # Min number of total events per total_proton. Skip total_proton if fewer
             'min_bs': 100,  # Min number of bootstrap sets of total_proton. Skip if fewer
             'div_bs': 0,  # Number of bootstrap divide values to get
             'save_cent': False,  # Include centrality column in output dataframe
             'save_data_type': True,  # Include data_type column in output dataframe
-            'save_stat': False,  # Include statistic column in output dataframe
+            'save_stat': True,  # Include statistic column in output dataframe
             'save_set_num': False,  # Don't save set num if False. Currently not compatible with set nums!
             'systematics': False,  # If True run/save systematics. Currently not implemented!
             }
@@ -77,16 +77,10 @@ def define_datasets(base_path):
     df = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample'], ['test'])
 
     for amp in np.unique(df['amp']):
-        amps_sq = ['0', '01', '015', '02', '025', '03', '04', '045', '05', '06', '07', '09', '15', '2',
-                   '225', '25', '4', '45', '5']
-        if amp not in amps_sq:
-            continue
         amp_float = float(f'0.{amp}')
         df_amp = df[df['amp'] == amp]
         for spread in np.unique(df_amp['spread']):
             spread_float = float(f'0.{spread}') * 10
-            if spread_float in ['325', '375', '45', '5']:
-                continue
             entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
                                ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
                                ['flat'], [], [0], [62], [8], all_divs])
@@ -546,13 +540,19 @@ def get_sys_set(df, sys_set):
     return sys_set_list
 
 
-def get_name_amp_spread(name):
+def get_name_amp_spread(name, as_type='float'):
     name = name.split('_')
     for x in name:
         if 'amp' == x[:len('amp')]:
-            amp = float(f'0.{x.strip("amp")}')
+            if as_type == 'float':
+                amp = float(f'0.{x.strip("amp")}')
+            else:
+                amp = x.strip('amp')
         if 'spread' == x[:len('spread')]:
-            spread = float(f'0.{x.strip("spread")}') * 10
+            if as_type == 'float':
+                spread = float(f'0.{x.strip("spread")}') * 10
+            else:
+                spread = x.strip('spread')
 
     return amp, spread
 
