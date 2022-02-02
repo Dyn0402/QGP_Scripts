@@ -22,39 +22,45 @@ from Bootstrap_Az_Bin import BootstrapAzBin as Babd
 
 from calc_binom_slices import find_sim_sets, get_name_amp_spread
 
+import pprofile
+
 
 def main():
     # comp_test()
     # bs_test()
-    sim_diff_comp()
+    # sim_diff_comp()
     # chi2_test()
     # chi2_test_all()
-    # sum_chi2()
+    sum_chi2()
     print('donzo')
 
 
 def sum_chi2():
-    weights_path = 'D:/Research/Data_Ampt/default_resample/Ampt_rapid05_resample_norotate_0/62GeV/' \
-                   'ratios_divisions_60_centrality_8_local.txt'
-    total_proton_dist = Abd(path=weights_path).get_total_particle_dist()
-    print(total_proton_dist)
-    tp_sum = float(np.sum(np.array(list(total_proton_dist.values()), dtype=np.longlong)))
-    total_proton_weights = {total_protons: counts / tp_sum for total_protons, counts in total_proton_dist.items()}
-    print(total_proton_weights)
-    chi2_indiv_path = 'D:/Research/Results/Azimuth_Analysis/chi2_all_dist_test.csv'
-    chi2_sum_out_path = 'D:/Research/Results/Azimuth_Analysis/chi2_sum_dist_test.csv'
+    weights_path_pre = 'D:/Research/Data_Ampt/default_resample/Ampt_rapid05_resample_norotate_0/'
+    cent = 8
+    div_weight = 60  # Proton distribution for all divs should be the same
+    chi2_indiv_path = 'D:/Research/Results/Azimuth_Analysis/chi2_all_dist_test4.csv'
+    chi2_sum_out_path = 'D:/Research/Results/Azimuth_Analysis/chi2_sum_dist_test4.csv'
     df = pd.read_csv(chi2_indiv_path)
     sums_df = []
     for energy in pd.unique(df['energy']):
         df_energy = df[df['energy'] == energy]
+        weights_path = f'{weights_path_pre}{energy}GeV/ratios_divisions_{div_weight}_centrality_{cent}_local.txt'
+        total_proton_dist = Abd(path=weights_path).get_total_particle_dist()
+        tp_sum = float(np.sum(np.array(list(total_proton_dist.values()), dtype=np.longlong)))
+        total_proton_weights = {total_protons: counts / tp_sum for total_protons, counts in
+                                total_proton_dist.items()}
         for data_set in pd.unique(df_energy['data_set']):
             df_data_set = df_energy[df_energy['data_set'] == data_set]
             for sim_set in pd.unique(df_data_set['sim_name']):
+                print(sim_set)
                 df_sim_set = df_data_set[df_data_set['sim_name'] == sim_set]
                 chi2_sum = 0
-                for total_protons in pd.unique(df_sim_set['total_protons']):
-                    df_tp_set = df_sim_set[df_sim_set['total_protons'] == total_protons]
-                    chi2_sum += total_proton_weights[total_protons] * np.sum(df_tp_set['chi2_sum'])
+                for div in pd.unique((df_sim_set['divs'])):
+                    df_divs = df_sim_set[df_sim_set['divs'] == div]
+                    for total_protons in pd.unique(df_divs['total_protons']):
+                        df_tp_set = df_divs[df_divs['total_protons'] == total_protons]
+                        chi2_sum += total_proton_weights[total_protons] * np.sum(df_tp_set['chi2_sum'])  # div weights 1
                 amp, spread = get_name_amp_spread(sim_set)
                 sums_df.append({'data_set': data_set, 'sim_name': sim_set, 'amp': amp, 'spread': spread,
                                 'chi2_sum': chi2_sum, 'energy': energy})
@@ -64,65 +70,51 @@ def sum_chi2():
 
 def chi2_test_all():
     base_path = 'D:/Research/'
-    chi2_out_path = 'D:/Research/Results/Azimuth_Analysis/chi2_all_dist_test2.csv'
-    energy = 62
+    chi2_out_path = 'D:/Research/Results/Azimuth_Analysis/chi2_all_dist_test4.csv'
+    # energy = 62
+    energies = [7, 11, 19, 27, 39, 62]
+    sim_energy = 62
     cent = 8
-    divs = [60]  #, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356]
-    threads = 10
+    divs = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356]
+    threads = 15
 
     data_sets = [
-        (base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
-         energy, cent, divs, 'Data_Ampt', 'Data_Ampt_Mix'),
+        # (base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
+        #  energy, cent, divs, 'Data_Ampt', 'Data_Ampt_Mix'),
     ]
+    data_sets.extend([(base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
+                       energy, cent, divs, 'Data_Ampt', 'Data_Ampt_Mix') for energy in energies])
 
     df_sim_sets = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample'], ['test'])
 
     sim_sets = []
 
-    for amp in np.unique(df_sim_sets['amp']):
-        if amp not in ['0']:
-            continue
+    for amp in pd.unique(df_sim_sets['amp']):
+        # if amp not in ['0']:
+        #     continue
         df_amp = df_sim_sets[df_sim_sets['amp'] == amp]
-        for spread in np.unique(df_amp['spread']):
-            if spread not in ['001']:
-                continue
+        for spread in pd.unique(df_amp['spread']):
+            # if spread not in ['001']:
+            #     continue
             sim_sets.append((base_path, f'flat80_anticlmulti_spread{spread}_amp{amp}_resample',
                              f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_0',
-                             energy, cent, divs, 'Data_Sim', 'Data_Sim_Mix'))
+                             sim_energy, cent, divs, 'Data_Sim', 'Data_Sim_Mix'))
+
     chi2_df = []
     for data_set in data_sets:
         div_diffs_data = get_set_all(data_set)
-        jobs = [(sim_set, div_diffs_data, divs, energy) for sim_set in sim_sets]
+        data_energy = data_set[3]
+        # return
+        jobs = [(sim_set, div_diffs_data, divs, data_energy) for sim_set in sim_sets]
         with Pool(threads) as pool:
             for df_subset in tqdm.tqdm(pool.istarmap(run_sim_set, jobs), total=len(jobs)):
                 chi2_df.extend(df_subset)
-
-    # chi2_df = []
-    # for data_set in data_sets:
-    #     div_diffs_data = get_set_all(data_set)
-    #     for sim_set in sim_sets:
-    #         print(sim_set[1])
-    #         div_diffs_sim = get_set_all(sim_set)
-    #         for div in divs:
-    #             for total_protons, (diff_def_data, diff_sds_data) in div_diffs_data[div].items():
-    #                 diff_def_sim, diff_sds_sim = div_diffs_sim[div][total_protons]
-    #
-    #                 data_sim_diff = diff_def_data - diff_def_sim
-    #                 data_sim_diff_err2 = np.power(diff_sds_data, 2) + np.power(diff_sds_sim, 2)
-    #                 chi2 = np.power(data_sim_diff, 2) / data_sim_diff_err2
-    #                 chi2_sum = np.sum(chi2)
-    #                 amp, spread = get_name_amp_spread(sim_set[1], as_type='string')
-    #                 amp_f, spread_f = get_name_amp_spread(sim_set[1], as_type='float')
-    #                 chi2_df.append({'sim_name': f'sim_amp{amp}_spread{spread}', 'chi2_sum': chi2_sum, 'amp': amp_f,
-    #                                 'spread': spread_f, 'data_set': 'ampt_resample_def', 'energy': energy,
-    #                                 'total_protons': total_protons, 'divs': div})
 
     chi2_df = pd.DataFrame(chi2_df)
     chi2_df.to_csv(chi2_out_path, index=False)
 
 
 def run_sim_set(sim_set, div_diffs_data, divs, energy):
-    # print(sim_set[1])
     div_diffs_sim = get_set_all(sim_set)
     chi2_df = []
     for div in divs:
@@ -305,15 +297,17 @@ def bs_test():
 def get_diff(raw_path, mix_path, total_protons):
     raw_def, raw_bss = get_norm_dists(raw_path, total_protons)
     mix_def, mix_bss = get_norm_dists(mix_path, total_protons)
+    raw_bss, mix_bss = np.array(raw_bss), np.array(mix_bss)
 
     # with warnings.catch_warnings():  # Ignore divide by zero warnings when raw=mix=0. From 0 padding
     #     warnings.simplefilter('ignore')
     # ---------------------------------------------------------------------------------------
     diff_def = (raw_def - mix_def)  # / (2 * (raw_def + mix_def))
     # ---------------------------------------------------------------------------------------
-    raw_bs_tile, mix_bs_repeat = np.tile(raw_bss, (len(raw_bss), 1)), np.repeat(mix_bss, len(mix_bss), axis=0)
-    # ---------------------------------------------------------------------------------------
-    bs_diffs = (raw_bs_tile - mix_bs_repeat)  # / (2 * (raw_bs_tile + mix_bs_repeat))
+    bs_diffs = (raw_bss[..., None] - mix_bss.T).transpose(0, 2, 1).reshape(-1, len(raw_bss[0]))
+    # raw_bs_tile, mix_bs_repeat = np.tile(raw_bss, (len(raw_bss), 1)), np.repeat(mix_bss, len(mix_bss), axis=0)
+    # # ---------------------------------------------------------------------------------------
+    # bs_diffs = (raw_bs_tile - mix_bs_repeat)  # / (2 * (raw_bs_tile + mix_bs_repeat))
     # ---------------------------------------------------------------------------------------
     diff_sds = np.std(bs_diffs, axis=0)
     diff_def = np.where((diff_sds == 0) | (np.isnan(diff_sds)), float('nan'), diff_def)
@@ -331,6 +325,8 @@ def get_total_proton_list(raw_def, mix_def, raw_bss, mix_bss, min_bs=100):
 
 
 def get_diff_all(raw_path, mix_path):
+    # prof = pprofile.Profile()
+    # with prof():
     raw_def_tp, raw_bss_tp = get_norm_dists_all(raw_path)
     mix_def_tp, mix_bss_tp = get_norm_dists_all(mix_path)
 
@@ -341,18 +337,28 @@ def get_diff_all(raw_path, mix_path):
     #     warnings.simplefilter('ignore')
     for total_proton in total_protons:
         raw_def, mix_def = raw_def_tp[total_proton], mix_def_tp[total_proton]
-        raw_bss, mix_bss = raw_bss_tp[total_proton], mix_bss_tp[total_proton]
+        # raw_bss, mix_bss = raw_bss_tp[total_proton], mix_bss_tp[total_proton]
+        raw_bss, mix_bss = np.array(raw_bss_tp[total_proton]), np.array(mix_bss_tp[total_proton])
 
         # ---------------------------------------------------------------------------------------
         diff_def = (raw_def - mix_def)  # / (2 * (raw_def + mix_def))
         # ---------------------------------------------------------------------------------------
-        raw_bs_tile, mix_bs_repeat = np.tile(raw_bss, (len(mix_bss), 1)), np.repeat(mix_bss, len(raw_bss), axis=0)
-        # ---------------------------------------------------------------------------------------
-        bs_diffs = (raw_bs_tile - mix_bs_repeat)  # / (2 * (raw_bs_tile + mix_bs_repeat))
+        # bs_diffs = np.array([raw_bs - mix_bs for raw_bs in raw_bss for mix_bs in mix_bss])  # 26s to 17s, slower
+        # print(raw_bss)
+        bs_diffs = (raw_bss[..., None] - mix_bss.T).transpose(0, 2, 1).reshape(-1, len(raw_bss[0]))
+        # bs_diffs = np.broadcast_to(mix_bss.T, (raw_bss.shape[0], mix_bss.shape[1],
+        #                                        mix_bss.shape[0])).transpose(2, 0, 1).reshape(-1, mix_bss.shape[1]) \
+        #            - np.broadcast_to(raw_bss, (mix_bss.shape[0], raw_bss.shape[0],
+        #                                        raw_bss.shape[1])).reshape(-1, mix_bss.shape[1])
+        # raw_bs_tile, mix_bs_repeat = np.tile(raw_bss, (len(mix_bss), 1)), np.repeat(mix_bss, len(raw_bss), axis=0)
+        # # ---------------------------------------------------------------------------------------
+        # bs_diffs = (raw_bs_tile - mix_bs_repeat)  # / (2 * (raw_bs_tile + mix_bs_repeat))
         # ---------------------------------------------------------------------------------------
         diff_sd = np.std(bs_diffs, axis=0)
         diff_def = np.where((diff_sd == 0) | (np.isnan(diff_sd)), float('nan'), diff_def)
         total_proton_data.update({total_proton: (diff_def, diff_sd)})
+    # prof.dump_stats('C:/Users/Dylan/Desktop/get_diff_all_profile_comp2.txt')
+    # prof.print_stats()
 
     return total_proton_data
 

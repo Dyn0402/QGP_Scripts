@@ -86,7 +86,7 @@ def chi2_data_test():
     # chi_df_name = 'chi_df_ampt_skews_cent8.csv'
     energies = [7, 11, 19, 27, 39, 62]
     x0 = [0.1, 1.0]
-    bounds = ((0, 0.5), (0.0, 5.0))
+    bounds = ((0, 1.0), (0.0, 5.0))
     stats = {'Standard Deviation': 'sd', 'Skewness': 'skew', 'Non-excess Kurtosis': 'nek'}
     # chi_df_name = 'chi2_dist_test.csv'
     fig3_data = {}
@@ -316,10 +316,10 @@ def chi2_data_test():
 
 def chi2_data_test2():
     base_path = 'D:/Research/Results/Azimuth_Analysis/'
-    chi_df_name = 'chi2_sum_dist_test.csv'
-    energies = [62]
+    chi_df_name = 'chi2_sum_dist_test4.csv'
+    energies = [7, 11, 19, 27, 39, 62]
     x0 = [0.1, 1.0]
-    bounds = ((0, 0.5), (0.0, 5.0))
+    bounds = ((0, 1.0), (0.0, 5.0))
     # chi_df_name = 'chi2_dist_test.csv'
     df_all = pd.read_csv(base_path + chi_df_name)
     for spread in pd.unique(df_all['spread']):
@@ -348,21 +348,21 @@ def chi2_data_test2():
 
         x, y, z = [np.asarray(d) for d in [df['amp'], df['spread'], np.log10(df['chi2_sum'])]]
 
-        fig1 = plt.figure()
-        fig1.canvas.set_window_title(f'{energy} GeV Raw 2D')
+        # fig1 = plt.figure()
+        # fig1.canvas.set_window_title(f'{energy} GeV Raw 2D')
         x_unq, y_unq = np.unique(x), np.unique(y)
         X, Y = np.meshgrid(get_edges(x_unq), get_edges(y_unq))
         Z = []
         for spread in np.unique(df['spread']):
             Z.append(list(np.log10(df[df['spread'] == spread]['chi2_sum'])))
-        pcm1 = plt.pcolormesh(X, Y, Z, cmap='jet')
-        plt.scatter(x, y, color='black', marker='o', s=(72./fig1.dpi)**2)
-        # plt.scatter(x, y, color='white', s=40)
-        # plt.scatter(x, y, c=z, s=25, cmap='jet')
-        plt.xlabel('amp')
-        plt.ylabel('spread')
-        fig1.colorbar(pcm1)
-        fig1.tight_layout()
+        # pcm1 = plt.pcolormesh(X, Y, Z, cmap='jet')
+        # plt.scatter(x, y, color='black', marker='o', s=(72./fig1.dpi)**2)
+        # # plt.scatter(x, y, color='white', s=40)
+        # # plt.scatter(x, y, c=z, s=25, cmap='jet')
+        # plt.xlabel('amp')
+        # plt.ylabel('spread')
+        # fig1.colorbar(pcm1)
+        # fig1.tight_layout()
 
         fig1_data.update({energy: {'X': X, 'Y': Y, 'Z': Z, 'x': x, 'y': y}})
 
@@ -384,8 +384,8 @@ def chi2_data_test2():
         min_amps.append(bas_res.x[0])
         min_spreads.append(bas_res.x[1])
 
-        fig2 = plt.figure()
-        fig2.canvas.set_window_title(f'{energy} GeV Interpolate 2D')
+        # fig2 = plt.figure()
+        # fig2.canvas.set_window_title(f'{energy} GeV Interpolate 2D')
         x_intp = np.linspace(min(x), max(x), 200)
         y_intp = np.linspace(min(y), max(y), 200)
         # x_intp = np.linspace(-0.2, 0.4, 200)
@@ -397,19 +397,19 @@ def chi2_data_test2():
             for xi in x_intp:
                 Zi_intp.append(f(xi, yi))
             Z_intp.append(Zi_intp)
-        pcm2 = plt.pcolormesh(X_intp, Y_intp, Z_intp, cmap='jet')
-        plt.scatter(*x0, color='white', marker='s', s=60)
-        plt.scatter(*x0, color='black', marker='s', s=25, label='Initial')
-        plt.scatter(*min_res.x, color='white', marker='*', s=60)
-        plt.scatter(*min_res.x, color='black', marker='*', s=25, label='Local Min')
-        plt.scatter(*bas_res.x, color='white', marker='^', s=60)
-        plt.scatter(*bas_res.x, color='black', marker='^', s=25, label='Basin Min')
-
-        plt.axhline(bounds[1][0], ls='--', color='black')
-        plt.axhline(bounds[1][1], ls='--', color='black')
-        plt.axvline(bounds[0][0], ls='--', color='black')
-        plt.axvline(bounds[0][1], ls='--', color='black')
-        plt.axhline(np.pi, ls=':', color='gray')
+        # pcm2 = plt.pcolormesh(X_intp, Y_intp, Z_intp, cmap='jet')
+        # plt.scatter(*x0, color='white', marker='s', s=60)
+        # plt.scatter(*x0, color='black', marker='s', s=25, label='Initial')
+        # plt.scatter(*min_res.x, color='white', marker='*', s=60)
+        # plt.scatter(*min_res.x, color='black', marker='*', s=25, label='Local Min')
+        # plt.scatter(*bas_res.x, color='white', marker='^', s=60)
+        # plt.scatter(*bas_res.x, color='black', marker='^', s=25, label='Basin Min')
+        #
+        # plt.axhline(bounds[1][0], ls='--', color='black')
+        # plt.axhline(bounds[1][1], ls='--', color='black')
+        # plt.axvline(bounds[0][0], ls='--', color='black')
+        # plt.axvline(bounds[0][1], ls='--', color='black')
+        # plt.axhline(np.pi, ls=':', color='gray')
 
         # plt.axhline(0.2, ls=':', color='black')
         # plt.axhline(4.5, ls=':', color='black')
@@ -423,12 +423,12 @@ def chi2_data_test2():
         #     plt.axhline(float('0.' + spread) * 10, color='black', ls=':')
         # plt.axhline(float('0.' + spread) * 10, color='black', ls=':', label='Simulation in Progress')
 
-        plt.xlabel('amp')
-        plt.ylabel('spread')
-        plt.legend()
-        fig2.colorbar(pcm2)
-        fig2.tight_layout()
-        plt.subplots_adjust(left=0.084, right=1, bottom=0.096, top=0.986)
+        # plt.xlabel('amp')
+        # plt.ylabel('spread')
+        # plt.legend()
+        # fig2.colorbar(pcm2)
+        # fig2.tight_layout()
+        # plt.subplots_adjust(left=0.084, right=1, bottom=0.096, top=0.986)
 
         fig2_data.update({energy: {'X': X_intp, 'Y': Y_intp, 'Z': Z_intp, 'basin_min': bas_res.x}})
 

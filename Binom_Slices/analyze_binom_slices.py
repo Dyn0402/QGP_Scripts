@@ -37,7 +37,7 @@ def main():
     base_path = 'D:/Research/Results/Azimuth_Analysis/'
     # df_name = 'binom_slice_sds_cent8.csv'
     df_name = 'binom_slice_stats_cent8.csv'
-    chi_df_name = 'chi_df_ampt_sds_cent8.csv'
+    chi_df_name = 'chi_df_ampt_neks_cent8.csv'
     df_path = base_path + df_name
     # df_path = '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df.csv'
     # df_path = 'D:/Research/Results/Azimuth_Analysis/binom_slice_cent_sds_df.csv'
@@ -97,9 +97,9 @@ def main():
 
     # stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, data_types_plt, data_sets_plt, plot=True, fit=True)
     # stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, ['raw', 'mix'], all_sets_plt, plot=True, fit=False)
-    stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, data_types_plt, all_sets_plt, plot=True, fit=False)
-    plt.show()
-    return
+    # stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, data_types_plt, all_sets_plt, plot=True, fit=False)
+    # plt.show()
+    # return
 
     chi_res = []
     chi2_list_all = []

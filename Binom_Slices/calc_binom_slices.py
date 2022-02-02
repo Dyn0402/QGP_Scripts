@@ -32,8 +32,9 @@ def init_pars():
     pars = {'base_path': 'D:/Research/',  # '/home/dylan/Research/',
             'csv_path': 'D:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8.csv',
             # '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df.csv',
-            'csv_append': False,  # If true read dataframe from csv_path and append new datasets to it, else overwrite
-            'threads': 15,
+            'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
+            'only_new': True,  # If True check csv_path and only run missing datasets, else run all datasets
+            'threads': 14,
             'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
             'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
             'min_events': 100,  # Min number of total events per total_proton. Skip total_proton if fewer
@@ -77,29 +78,13 @@ def define_datasets(base_path):
     df = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample'], ['test'])
 
     for amp in np.unique(df['amp']):
-        amp_float = float(f'0.{amp}')
+        amp_float = float(f'0.{amp}')  # For filtering if needed
         df_amp = df[df['amp'] == amp]
         for spread in np.unique(df_amp['spread']):
-            spread_float = float(f'0.{spread}') * 10
+            spread_float = float(f'0.{spread}') * 10  # For filtering if needed
             entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
                                ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
                                ['flat'], [], [0], [62], [8], all_divs])
-
-    # df_tests = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample', 'test'])
-    # for amp in np.unique(df_tests['amp']):
-    #     df_amp = df_tests[df_tests['amp'] == amp]
-    #     for spread in np.unique(df_amp['spread']):
-    #         entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}_test', '_Sim',
-    #                            ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample', 'test'],
-    #                            ['flat'], [], [0], [62], [8], all_divs])
-    #
-    # for amp in np.unique(df['amp']):
-    #     if amp in np.unique(df_tests['amp']):
-    #         df_amp = df[df['amp'] == amp]
-    #         for spread in np.unique(df_amp['spread']):
-    #             entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
-    #                                ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
-    #                                ['flat'], ['test'], [0], [62], [8], all_divs])
 
     datasets = [dict(zip(entry_names, dset)) for dset in entry_vals]
 
@@ -164,7 +149,7 @@ def define_stats(stats):
     return {stat: stat_methods[stat] for stat in stats}
 
 
-def find_sim_sets(path, include_keys, exclude_keys=[]):
+def find_sim_sets(path, include_keys, exclude_keys=[], print=False):
     df = []
     for file_path in os.listdir(path):
         file_keys = file_path.strip().split('_')
@@ -179,36 +164,49 @@ def find_sim_sets(path, include_keys, exclude_keys=[]):
             df.append(df_i)
 
     df = pd.DataFrame(df)
-    for spread in pd.unique(df['spread']):
-        df_spread = df[df['spread'] == spread]
-        amps = pd.unique(df_spread["amp"])
-        # amps_sq = ['0', '01', '015', '02', '025', '03', '04', '045', '05', '06', '07', '09', '15', '2',
-        #            '225', '25', '4', '45', '5']
-        # amps = [amp for amp in amps if amp in amps_sq]
-        print(f'spread {spread}: {len(amps)} {amps}')
 
-    all_spreads, all_amps = pd.unique(df['spread']), pd.unique(df['amp'])
-    print(f'\n All spreads: \n{all_spreads}\n\nAll amps: \n{all_amps}')
-    all_amps = set(all_amps)
+    if print:
+        for spread in pd.unique(df['spread']):
+            df_spread = df[df['spread'] == spread]
+            amps = pd.unique(df_spread["amp"])
+            # amps_sq = ['0', '01', '015', '02', '025', '03', '04', '045', '05', '06', '07', '09', '15', '2',
+            #            '225', '25', '4', '45', '5']
+            # amps = [amp for amp in amps if amp in amps_sq]
+            print(f'spread {spread}: {len(amps)} {amps}')
 
-    print('\nMissing amps per spread')
-    missing_sets = []
-    for spread in all_spreads:
-        df_spread = df[df['spread'] == spread]
-        amps_spread = set(pd.unique(df_spread['amp']))
-        miss_amps_spread = list(all_amps - amps_spread)
-        print(f'spread {spread}: {len(miss_amps_spread)} {miss_amps_spread}')
-        missing_sets.extend([(f"'{spread}'", f"'{amp}'") for amp in miss_amps_spread])
+        all_spreads, all_amps = pd.unique(df['spread']), pd.unique(df['amp'])
+        print(f'\n All spreads: \n{all_spreads}\n\nAll amps: \n{all_amps}')
+        all_amps = set(all_amps)
 
-    print(f'\nMissing sets: \n{"".join(f"({spread}, {amp}), " for spread, amp in missing_sets)}')
+        print('\nMissing amps per spread')
+        missing_sets = []
+        for spread in all_spreads:
+            df_spread = df[df['spread'] == spread]
+            amps_spread = set(pd.unique(df_spread['amp']))
+            miss_amps_spread = list(all_amps - amps_spread)
+            print(f'spread {spread}: {len(miss_amps_spread)} {miss_amps_spread}')
+            missing_sets.extend([(f"'{spread}'", f"'{amp}'") for amp in miss_amps_spread])
+
+        print(f'\nMissing sets: \n{"".join(f"({spread}, {amp}), " for spread, amp in missing_sets)}')
 
     return df
 
 
 def read_data(pars):
+    if pars['csv_append'] or pars['only_new']:
+        try:
+            df_old = pd.read_csv(pars['csv_path'])
+            old_names = pd.unique(df_old['name'])
+        except FileNotFoundError:
+            df_old, old_names = None, None
+            print(f'{pars["csv_path"]} not found!')
+
     jobs = []
     for dataset in pars['datasets']:
-        print(dataset)
+        if pars['only_new'] and old_names is not None:
+            if dataset['name'] in old_names:
+                continue
+        # print(dataset)
         jobs.extend(get_dataset_jobs(dataset, pars))
 
     if pars['check_only']:  # Just check the files and return
@@ -226,10 +224,9 @@ def read_data(pars):
     if pars['systematics']:
         df = get_systematics(pars, df)
     if pars['csv_append']:
-        try:
-            df_old = pd.read_csv(pars['csv_path'])
+        if df_old is not None:
             df = df.append(df_old, ignore_index=True)
-        except FileNotFoundError:
+        else:
             print(f'{pars["csv_path"]} not found! Skipping read and writing new.')
 
     print(df)
