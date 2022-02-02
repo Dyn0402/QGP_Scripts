@@ -27,7 +27,8 @@ def main():
     # set_name = 'Ampt_rapid05_resample_norotate_'
     set_num = 0
     data_set = '_Ampt'
-    base_path = '/home/dylan/Research/Data'
+    # base_path = '/home/dylan/Research/Data'
+    base_path = 'D:/Research/Data'
     set_path = f'{set_group}/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
     path = f'{base_path}{data_set}/{set_path}'
     path_mix = f'{base_path}{data_set}_Mix/{set_path}'

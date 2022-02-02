@@ -10,11 +10,14 @@ Created as QGP_Scripts/sub_event_poc
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.cm import get_cmap
+import pandas as pd
 import seaborn as sns
 from scipy.stats import poisson
 from scipy.stats import norm
 from scipy.stats import binom
 from scipy.stats import sem
+import os
 from multiprocessing import Pool
 import tqdm
 
@@ -26,19 +29,133 @@ import istarmap
 
 
 def main():
+    # bootstrap_validation()
+    resample_validation()
+    print('donzo')
+
+
+def resample_validation():
     """
-    Simulate binomials and test resampling/bootstrap against known answer
+    Simulate binomials and test resampling values against known answer
     :return:
     """
-    threads = 16
+    seed = 1432
+    threads = 15
     n_tracks = 15
-    n_sample = 3
-    n_events = 10000
+    n_samples = [1, 3, 1440]
+    n_events = np.arange(10, 2000, 10)
+    bin_width = np.deg2rad(120)
+    experiments = 1000
+    # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
+    plot_out_base = 'D:/Research/Resample_POC/Resample_Validation/'
+    plot_out_name = 'test/'
+    plot_out_dir = plot_out_base + plot_out_name
+    try:
+        os.mkdir(plot_out_dir)
+    except FileExistsError:
+        pass
+    show_plot = True
+
+    stats = define_stats(n_tracks, bin_width)
+
+    stats_plt = ['standard deviation', 'skewness', 'non-excess kurtosis']
+
+    write_info_file(plot_out_dir, threads, n_tracks, n_samples, n_events, bin_width, 'resample_validiation',
+                    experiments, stats_plt)
+
+    # jobs = [(n_tracks, n_event, bin_width, n_sample, 0, stats, stats_plt, n_exp, False, plot_out_dir)
+    #         for n_exp in range(experiments) for n_sample in n_samples for n_event in n_events]
+
+    seed_seq = np.random.SeedSequence(seed)
+    plot_data = []
+
+    jobs = [(n_tracks, n_event, bin_width, n_sample, stats, stats_plt, seed, n_exp)
+            for n_exp, seed in enumerate(seed_seq.spawn(experiments)) for n_event in n_events for n_sample in n_samples]
+
+    with Pool(threads) as pool:
+        for exp_stat in tqdm.tqdm(pool.istarmap(run_experiment_no_bs, jobs), total=len(jobs)):
+            n_exp, n_samples_exp, n_events_exp, stat_vals, stat_errs_delta = exp_stat
+            for stat, val in stat_vals.items():
+                plot_data.append({'n_exp': n_exp, 'stat': stat, 'val': val, 'delta_err': stat_errs_delta[stat],
+                                  'n_samples': n_samples_exp, 'n_events': n_events_exp})
+
+
+    # for n_sample in n_samples:
+    #     for n_event in n_events:
+    #         print(f'n_samples = {n_sample}, n_events = {n_event}: ')
+    #         seeds = seed_seq.spawn(experiments)
+    #         jobs = [(n_tracks, n_event, bin_width, n_sample, stats, stats_plt, seed, n_exp, False, plot_out_dir)
+    #                 for n_exp, seed in enumerate(seeds)]
+    #         with Pool(threads) as pool:
+    #             for exp_stat in tqdm.tqdm(pool.istarmap(run_experiment_no_bs, jobs), total=len(jobs)):
+    #                 n_exp, n_samples_exp, n_events_exp, stat_vals, stat_errs_delta = exp_stat
+    #                 for stat, val in stat_vals.items():
+    #                     plot_data.append({'n_exp': n_exp, 'stat': stat, 'val': val, 'delta_err': stat_errs_delta[stat],
+    #                                       'n_samples': n_samples_exp, 'n_events': n_events_exp})
+
+    plot_data = pd.DataFrame(plot_data)
+
+    for stat in stats_plt:
+        color = iter(get_cmap('Set1').colors)
+        stat_df = plot_data[plot_data['stat'] == stat]
+        fig, ax = plt.subplots()
+        fig_del, ax_del = plt.subplots()
+        ax.grid()
+        ax_del.grid()
+        ax.axhline(stats[stat]['true'], ls='--', color='black', label='True Binomial Value')
+        for n_sample in n_samples:
+            c = next(color)
+            nsample_df = stat_df[stat_df['n_samples'] == n_sample]
+            n_events = pd.unique(nsample_df['n_events'])
+            means, sds, sems, deltas, delta_sems = [], [], [], [], []
+            for n_event in n_events:
+                vals = nsample_df[nsample_df['n_events'] == n_event]['val']
+                means.append(np.mean(vals))
+                sds.append(np.std(vals))
+                sems.append(sds[-1] / np.sqrt(vals.size))
+                delts = np.power(vals - stats[stat]['true'], 2)
+                deltas.append(np.sqrt(np.sum(delts)) / vals.size)
+                delta_sems.append(np.std(delts) / np.sqrt((vals.size)))
+            means, sds, sems, deltas, delta_sems = (np.array(x) for x in (means, sds, sems, deltas, delta_sems))
+            ax.plot(n_events, means, label=f'{n_sample} samples', color=c)
+            ax.fill_between(n_events, means - sems, means + sems, color=c, alpha=0.6)
+            ax.fill_between(n_events, means - sds, means + sds, color=c, alpha=0.1)
+            ax_del.plot(n_events, deltas, label=f'{n_sample} samples', color=c)
+            ax_del.fill_between(n_events, deltas - delta_sems, deltas + delta_sems, color=c, alpha=0.5)
+        ax.set_xlabel('Number of Events')
+        ax.legend()
+        ax.set_title(stat)
+        fig.tight_layout()
+        ax_del.set_xlabel('Number of Events')
+        ax_del.legend()
+        ax_del.set_title(f'{stat} Deviations')
+        fig_del.tight_layout()
+
+    if show_plot:
+        plt.show()
+
+
+def bootstrap_validation():
+    """
+    Simulate binomials and test resampling bootstrap uncertainties against known answer
+    :return:
+    """
+    seed = 13434
+    threads = 15
+    n_tracks = 15
+    n_sample = 1440
+    n_events = 400
     bin_width = np.deg2rad(120)
     bootstraps = 250
     experiments = 1000
     # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
-    plot_out_dir = 'D:/Research/Resample_POC/delta_sigmas_nsample1/'
+    plot_out_base = 'D:/Research/Resample_POC/Bootstrap_Validation/'
+    plot_out_name = 'nsample1440_nevent100/'
+    plot_out_dir = plot_out_base + plot_out_name
+    try:
+        os.mkdir(plot_out_dir)
+    except FileExistsError:
+        pass
     show_plot = False
 
     stats = define_stats(n_tracks, bin_width)
@@ -47,8 +164,9 @@ def main():
 
     write_info_file(plot_out_dir, threads, n_tracks, n_sample, n_events, bin_width, bootstraps, experiments, stats_plt)
 
-    jobs = [(n_tracks, n_events, bin_width, n_sample, bootstraps, stats, stats_plt,
-             n_exp, True, plot_out_dir) for n_exp in range(experiments)]
+    seeds = np.random.SeedSequence(seed).spawn(experiments)
+    jobs = [(n_tracks, n_events, bin_width, n_sample, bootstraps, stats, stats_plt, seed,
+             n_exp, True, plot_out_dir) for n_exp, seed in enumerate(seeds)]
 
     exp_stats = []
     with Pool(threads) as pool:
@@ -78,8 +196,6 @@ def main():
     if show_plot:
         plt.show()
 
-    print('donzo')
-
 
 def gen_event(n_tracks):
     return np.random.random(n_tracks) * 2 * np.pi
@@ -90,8 +206,8 @@ def gen_experiment(n_events, n_tracks, rng=np.random.default_rng()):
 
 
 def run_experiment(n_tracks, n_events, bin_width, samples, bootstraps, stats,
-                   stats_plt, n_exp=None, plot=False, out_dir=''):
-    rng = np.random.default_rng()
+                   stats_plt, seed, n_exp=None, plot=False, out_dir=''):
+    rng = np.random.default_rng(seed)
     experiment = gen_experiment(n_events, n_tracks, rng)
     data, data_bs = bin_experiment(experiment, n_tracks, bin_width, samples, bootstraps, rng)
 
@@ -126,6 +242,32 @@ def bin_experiment(experiment, n_tracks, bin_width, samples, bootstraps, rng):
                 bootstrap += hist
 
     return data, data_bs
+
+
+def run_experiment_no_bs(n_tracks, n_events, bin_width, samples, stats,
+                         stats_plt, seed, n_exp=None):
+    rng = np.random.default_rng(seed)
+    experiment = gen_experiment(n_events, n_tracks, rng)
+    data = bin_experiment_no_bs(experiment, n_tracks, bin_width, samples)
+
+    data_stats = DistStats(data)
+    stat_vals = {}
+    stat_errs_delta = {}
+    for stat in stats_plt:
+        meas = stats[stat]['meth'](data_stats)
+        stat_vals.update({stat: meas.val})
+        stat_errs_delta.update({stat: meas.err})
+
+    return n_exp, samples, n_events, stat_vals, stat_errs_delta
+
+
+def bin_experiment_no_bs(experiment, n_tracks, bin_width, samples):
+    data = np.zeros(n_tracks + 1, dtype=int)
+    for event in experiment:
+        hist = get_resamples(event, bin_width, samples)
+        data += hist
+
+    return data
 
 
 def plot_dist(data, n_tracks, bin_width, n_exp, out_dir):
