@@ -28,21 +28,47 @@ import pprofile
 def main():
     # comp_test()
     # bs_test()
-    # sim_diff_comp()
+    sim_diff_comp()
     # chi2_test()
     # chi2_test_all()
-    sum_chi2()
+    # sum_chi2()
     print('donzo')
 
 
 def sum_chi2():
-    weights_path_pre = 'D:/Research/Data_Ampt/default_resample/Ampt_rapid05_resample_norotate_0/'
+    # weights_path_pre = 'D:/Research/Data_Ampt/default_resample/Ampt_rapid05_resample_norotate_0/'
+    weights_path_pre = 'D:/Research/Data/default_resample/rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0/'
     cent = 8
     div_weight = 60  # Proton distribution for all divs should be the same
-    chi2_indiv_path = 'D:/Research/Results/Azimuth_Analysis/chi2_all_dist_test4.csv'
-    chi2_sum_out_path = 'D:/Research/Results/Azimuth_Analysis/chi2_sum_dist_test4.csv'
+    chi2_indiv_path = 'D:/Research/Results/Azimuth_Analysis/chi2_all_dist_bes.csv'
+    chi2_sum_out_path = 'D:/Research/Results/Azimuth_Analysis/chi2_sum_dist_bes.csv'
     df = pd.read_csv(chi2_indiv_path)
     sums_df = []
+
+    # jobs = []
+    # for energy in pd.unique(df['energy']):
+    #     df_energy = df[df['energy'] == energy]
+    #     weights_path = f'{weights_path_pre}{energy}GeV/ratios_divisions_{div_weight}_centrality_{cent}_local.txt'
+    #     total_proton_dist = Abd(path=weights_path).get_total_particle_dist()
+    #     tp_sum = float(np.sum(np.array(list(total_proton_dist.values()), dtype=np.longlong)))
+    #     total_proton_weights = {total_protons: counts / tp_sum for total_protons, counts in
+    #                             total_proton_dist.items()}
+    #     for data_set in pd.unique(df_energy['data_set']):
+    #         df_data_set = df_energy[df_energy['data_set'] == data_set]
+    #         for sim_set in pd.unique(df_data_set['sim_name']):
+    #             print(sim_set)
+    #             df_sim_set = df_data_set[df_data_set['sim_name'] == sim_set]
+    #             chi2_sum = 0
+    #             for div in pd.unique((df_sim_set['divs'])):
+    #                 df_divs = df_sim_set[df_sim_set['divs'] == div]
+    #                 for total_protons in pd.unique(df_divs['total_protons']):
+    #                     df_tp_set = df_divs[df_divs['total_protons'] == total_protons]
+    #                     chi2_sum += total_proton_weights[total_protons] * \
+    #                                 np.sum(df_tp_set['chi2_sum'] / df_tp_set['num_points'])  # div weights 1
+    #             amp, spread = get_name_amp_spread(sim_set)
+    #             sums_df.append({'data_set': data_set, 'sim_name': sim_set, 'amp': amp, 'spread': spread,
+    #                             'chi2_sum': chi2_sum, 'energy': energy})
+
     for energy in pd.unique(df['energy']):
         df_energy = df[df['energy'] == energy]
         weights_path = f'{weights_path_pre}{energy}GeV/ratios_divisions_{div_weight}_centrality_{cent}_local.txt'
@@ -60,7 +86,8 @@ def sum_chi2():
                     df_divs = df_sim_set[df_sim_set['divs'] == div]
                     for total_protons in pd.unique(df_divs['total_protons']):
                         df_tp_set = df_divs[df_divs['total_protons'] == total_protons]
-                        chi2_sum += total_proton_weights[total_protons] * np.sum(df_tp_set['chi2_sum'])  # div weights 1
+                        chi2_sum += total_proton_weights[total_protons] * \
+                                    np.sum(df_tp_set['chi2_sum'] / df_tp_set['num_points'])  # div weights 1
                 amp, spread = get_name_amp_spread(sim_set)
                 sums_df.append({'data_set': data_set, 'sim_name': sim_set, 'amp': amp, 'spread': spread,
                                 'chi2_sum': chi2_sum, 'energy': energy})
@@ -70,7 +97,7 @@ def sum_chi2():
 
 def chi2_test_all():
     base_path = 'D:/Research/'
-    chi2_out_path = 'D:/Research/Results/Azimuth_Analysis/chi2_all_dist_test4.csv'
+    chi2_out_path = 'D:/Research/Results/Azimuth_Analysis/chi2_all_dist_bes.csv'
     # energy = 62
     energies = [7, 11, 19, 27, 39, 62]
     sim_energy = 62
@@ -82,8 +109,10 @@ def chi2_test_all():
         # (base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
         #  energy, cent, divs, 'Data_Ampt', 'Data_Ampt_Mix'),
     ]
-    data_sets.extend([(base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
-                       energy, cent, divs, 'Data_Ampt', 'Data_Ampt_Mix') for energy in energies])
+    # data_sets.extend([(base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
+    #                    energy, cent, divs, 'Data_Ampt', 'Data_Ampt_Mix', 'ampt_resample_def') for energy in energies])
+    data_sets.extend([(base_path, 'default_resample', 'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0',
+                       energy, cent, divs, 'Data', 'Data_Mix', 'bes_resample_def') for energy in energies])
 
     df_sim_sets = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample'], ['test'])
 
@@ -104,8 +133,9 @@ def chi2_test_all():
     for data_set in data_sets:
         div_diffs_data = get_set_all(data_set)
         data_energy = data_set[3]
+        data_name = data_set[-1]
         # return
-        jobs = [(sim_set, div_diffs_data, divs, data_energy) for sim_set in sim_sets]
+        jobs = [(sim_set, div_diffs_data, divs, data_energy, data_name) for sim_set in sim_sets]
         with Pool(threads) as pool:
             for df_subset in tqdm.tqdm(pool.istarmap(run_sim_set, jobs), total=len(jobs)):
                 chi2_df.extend(df_subset)
@@ -114,7 +144,7 @@ def chi2_test_all():
     chi2_df.to_csv(chi2_out_path, index=False)
 
 
-def run_sim_set(sim_set, div_diffs_data, divs, energy):
+def run_sim_set(sim_set, div_diffs_data, divs, energy, data_name):
     div_diffs_sim = get_set_all(sim_set)
     chi2_df = []
     for div in divs:
@@ -129,7 +159,7 @@ def run_sim_set(sim_set, div_diffs_data, divs, energy):
             amp, spread = get_name_amp_spread(sim_set[1], as_type='string')
             amp_f, spread_f = get_name_amp_spread(sim_set[1], as_type='float')
             chi2_df.append({'sim_name': f'sim_amp{amp}_spread{spread}', 'chi2_sum': chi2_sum, 'num_points': num_points,
-                            'amp': amp_f, 'spread': spread_f, 'data_set': 'ampt_resample_def', 'energy': energy,
+                            'amp': amp_f, 'spread': spread_f, 'data_set': data_name, 'energy': energy,
                             'total_protons': total_protons, 'divs': div})
 
     return chi2_df
@@ -200,6 +230,8 @@ def sim_diff_comp():
     data_sets = [
         (base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
          energy, cent, div, total_protons, 'Data_Ampt', 'Data_Ampt_Mix'),
+        (base_path, 'default_resample', 'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0',
+         energy, cent, div, total_protons, 'Data', 'Data_Mix'),
         (base_path, f'flat80_anticlmulti_spread{sim_spread}_amp{sim_amp}_resample',
          f'Sim_spread{sim_spread}_amp{sim_amp}_flat80_anticlmulti_norotate_resample_0',
          energy, cent, div, total_protons, 'Data_Sim', 'Data_Sim_Mix'),

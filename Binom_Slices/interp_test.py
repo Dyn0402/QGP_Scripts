@@ -316,7 +316,8 @@ def chi2_data_test():
 
 def chi2_data_test2():
     base_path = 'D:/Research/Results/Azimuth_Analysis/'
-    chi_df_name = 'chi2_sum_dist_test4.csv'
+    chi_df_name = 'chi2_sum_dist_test5.csv'
+    # chi_df_name = 'chi2_sum_dist_bes.csv'
     energies = [7, 11, 19, 27, 39, 62]
     x0 = [0.1, 1.0]
     bounds = ((0, 1.0), (0.0, 5.0))
@@ -343,6 +344,7 @@ def chi2_data_test2():
     min_amps = []
     min_spreads = []
     for energy in energies:
+        print(energy)
         df = df_all[df_all['energy'] == energy]
         df = df.sort_values(by=['spread', 'amp'])
 
@@ -379,13 +381,13 @@ def chi2_data_test2():
         bas_bnds = BasinBounds(xmax=[max(x), max(y)], xmin=[min(x), min(y)])
         min_kwargs = {'method': 'L-BFGS-B', 'jac': True, 'bounds': bounds}
         bas_res = basinhopping(lambda x_coords: f_jac(*x_coords), x0, minimizer_kwargs=min_kwargs,
-                               accept_test=bas_bnds)
+                               accept_test=bas_bnds, niter=2000, stepsize=1, T=0.2)
         print(bas_res)
         min_amps.append(bas_res.x[0])
         min_spreads.append(bas_res.x[1])
 
-        # fig2 = plt.figure()
-        # fig2.canvas.set_window_title(f'{energy} GeV Interpolate 2D')
+        fig2 = plt.figure()
+        fig2.canvas.set_window_title(f'{energy} GeV Interpolate 2D')
         x_intp = np.linspace(min(x), max(x), 200)
         y_intp = np.linspace(min(y), max(y), 200)
         # x_intp = np.linspace(-0.2, 0.4, 200)
@@ -397,19 +399,19 @@ def chi2_data_test2():
             for xi in x_intp:
                 Zi_intp.append(f(xi, yi))
             Z_intp.append(Zi_intp)
-        # pcm2 = plt.pcolormesh(X_intp, Y_intp, Z_intp, cmap='jet')
-        # plt.scatter(*x0, color='white', marker='s', s=60)
-        # plt.scatter(*x0, color='black', marker='s', s=25, label='Initial')
-        # plt.scatter(*min_res.x, color='white', marker='*', s=60)
-        # plt.scatter(*min_res.x, color='black', marker='*', s=25, label='Local Min')
-        # plt.scatter(*bas_res.x, color='white', marker='^', s=60)
-        # plt.scatter(*bas_res.x, color='black', marker='^', s=25, label='Basin Min')
-        #
-        # plt.axhline(bounds[1][0], ls='--', color='black')
-        # plt.axhline(bounds[1][1], ls='--', color='black')
-        # plt.axvline(bounds[0][0], ls='--', color='black')
-        # plt.axvline(bounds[0][1], ls='--', color='black')
-        # plt.axhline(np.pi, ls=':', color='gray')
+        pcm2 = plt.pcolormesh(X_intp, Y_intp, Z_intp, cmap='jet')
+        plt.scatter(*x0, color='white', marker='s', s=60)
+        plt.scatter(*x0, color='black', marker='s', s=25, label='Initial')
+        plt.scatter(*min_res.x, color='white', marker='*', s=60)
+        plt.scatter(*min_res.x, color='black', marker='*', s=25, label='Local Min')
+        plt.scatter(*bas_res.x, color='white', marker='^', s=60)
+        plt.scatter(*bas_res.x, color='black', marker='^', s=25, label='Basin Min')
+
+        plt.axhline(bounds[1][0], ls='--', color='black')
+        plt.axhline(bounds[1][1], ls='--', color='black')
+        plt.axvline(bounds[0][0], ls='--', color='black')
+        plt.axvline(bounds[0][1], ls='--', color='black')
+        plt.axhline(np.pi, ls=':', color='gray')
 
         # plt.axhline(0.2, ls=':', color='black')
         # plt.axhline(4.5, ls=':', color='black')
@@ -423,12 +425,12 @@ def chi2_data_test2():
         #     plt.axhline(float('0.' + spread) * 10, color='black', ls=':')
         # plt.axhline(float('0.' + spread) * 10, color='black', ls=':', label='Simulation in Progress')
 
-        # plt.xlabel('amp')
-        # plt.ylabel('spread')
-        # plt.legend()
-        # fig2.colorbar(pcm2)
-        # fig2.tight_layout()
-        # plt.subplots_adjust(left=0.084, right=1, bottom=0.096, top=0.986)
+        plt.xlabel('amp')
+        plt.ylabel('spread')
+        plt.legend()
+        fig2.colorbar(pcm2)
+        fig2.tight_layout()
+        plt.subplots_adjust(left=0.084, right=1, bottom=0.096, top=0.986)
 
         fig2_data.update({energy: {'X': X_intp, 'Y': Y_intp, 'Z': Z_intp, 'basin_min': bas_res.x}})
 
@@ -445,7 +447,7 @@ def chi2_data_test2():
             df_s = df[df['spread'] == spread]
             plt.scatter(df_s['amp'], np.log10(df_s['chi2_sum']), color=c, label=f'spread {spread}')
             zs = []
-            amps = np.linspace(min(df_s['amp']), max(df_s['amp']), 1000)
+            amps = np.linspace(min(df_s['amp']), max(df_s['amp']), 10000)
             for amp in amps:
                 zs.append(f(amp, spread))
             plt.plot(amps, zs, color=c)
@@ -466,7 +468,7 @@ def chi2_data_test2():
             df_a = df[df['amp'] == amp]
             plt.scatter(df_a['spread'], np.log10(df_a['chi2_sum']), color=c, label=f'amp {amp}')
             zs = []
-            spreads = np.linspace(min(df_a['spread']), max(df_a['spread']), 1000)
+            spreads = np.linspace(min(df_a['spread']), max(df_a['spread']), 10000)
             for spread in spreads:
                 zs.append(f(amp, spread))
             plt.plot(spreads, zs, color=c)
@@ -478,17 +480,17 @@ def chi2_data_test2():
         plt.legend(bbox_to_anchor=(1.05, 1))
         fig4.tight_layout()
 
-    # fig_mins = plt.figure()
-    # plt.grid()
-    # plt.scatter(min_amps, min_spreads)
-    # plt.xlim(bounds[0])
-    # plt.ylim(bounds[1])
-    # plt.xlabel('amp')
-    # plt.ylabel('spread')
-    # plt.title('AMPT')
-    # for x, y, e in zip(min_amps, min_spreads, energies):
-    #     plt.annotate(f'{e}', (x, y), textcoords='offset points', xytext=(0, 10), ha='center')
-    # fig_mins.tight_layout()
+    fig_mins = plt.figure()
+    plt.grid()
+    plt.scatter(min_amps, min_spreads)
+    plt.xlim(bounds[0])
+    plt.ylim(bounds[1])
+    plt.xlabel('amp')
+    plt.ylabel('spread')
+    plt.title('AMPT')
+    for x, y, e in zip(min_amps, min_spreads, energies):
+        plt.annotate(f'{e}', (x, y), textcoords='offset points', xytext=(0, 10), ha='center')
+    fig_mins.tight_layout()
     # fig3_data.update({stat: [min_amps, min_spreads]})
 
     fig1_all, axes1 = plt.subplots(2, 3, sharex=True, sharey=True, figsize=(16, 8))
