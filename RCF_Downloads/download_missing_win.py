@@ -19,25 +19,30 @@ def main():
 
 
 def download():
-    data_set = 'AMPT_cent_sm'
+    data_set = 'AMPT_Run_mb'
     data_sets = {'BES1': {'remote_path_suf': 'BES1/', 'remote_tree_pref': 'trees/output',
                           'local_path': 'C:/Users/Dylan/Research/', 'local_tree_pref': 'BES1_Trees'},
                  'AMPT_Run': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
-                              'local_path': 'C:/Users/Dylan/Research/', 'local_tree_pref': 'AMPT_Trees/min_bias/default'},
+                              'local_path': 'C:/Users/Dylan/Research/',
+                              'local_tree_pref': 'AMPT_Trees/min_bias/default'},
+                 'AMPT_Run_mb': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
+                                 'local_path': 'D:/Research/', 'local_tree_pref': 'AMPT_Trees/min_bias/string_melting'},
                  'AMPT_Run_mcent_sm': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
-                              'local_path': 'C:/Users/Dylan/Research/', 'local_tree_pref': 'AMPT_Trees/most_central/string_melting'},
+                                       'local_path': 'C:/Users/Dylan/Research/',
+                                       'local_tree_pref': 'AMPT_Trees/most_central/string_melting'},
                  'AMPT_cent_def': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'most_central/default',
-                                   'local_path': 'C:/Users/Dylan/Research/', 'local_tree_pref': 'AMPT_Trees/most_central/default'},
-                 'AMPT_cent_sm': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'most_central/string_melting',
                                    'local_path': 'C:/Users/Dylan/Research/',
-                                   'local_tree_pref': 'AMPT_Trees/most_central/string_melting'}}
+                                   'local_tree_pref': 'AMPT_Trees/most_central/default'},
+                 'AMPT_cent_sm': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'most_central/string_melting',
+                                  'local_path': 'C:/Users/Dylan/Research/',
+                                  'local_tree_pref': 'AMPT_Trees/most_central/string_melting'}}
 
-    energies = [11]  # [7, 11, 15, 19, 27, 39, 62]
+    energies = [7, 11, 19, 27, 39, 62]
     bwlimit = 10  # bandwidth limit per energy in MBPS or None
     size_tolerance = 0.001  # percentage tolerance between remote and local sizes, re-download if different
-    file_delay = 1  # seconds to delay between file download calls
+    file_delay = 0.1  # seconds to delay between file download calls
 
-    remote_path = 'dneff@rftpexp.rhic.bnl.gov:/gpfs01/star/pwg/dneff/data/'
+    remote_path = 'dneff@sftp.sdcc.bnl.gov:/gpfs01/star/pwg/dneff/data/'
 
     remote_path += data_sets[data_set]['remote_path_suf']
     remote_tree_prefix = data_sets[data_set]['remote_tree_pref']
@@ -92,16 +97,16 @@ def download():
                 for file in missing_files[energy]:
                     # files += file + ','
                     start_download(file, energy, remote_path, remote_tree_prefix, local, bwlimit)
-                    sleep(1)
+                    sleep(file_delay)
 
     else:
         print('All files downloaded!')
 
 
 def get_expected_list(energy, remote_path, remote_tree_prefix):
-    stdout, stderr = Popen(['ssh', f'{remote_path.split(":")[0]}', 'ls -l',
-                            f'{remote_path.split(":")[1]}{remote_tree_prefix}/{energy}GeV'],
-                           stdout=PIPE, stderr=PIPE).communicate()
+    cmd = f'echo ls -l|sftp {remote_path.split(":")[0]}:{remote_path.split(":")[1]}{remote_tree_prefix}/{energy}GeV'
+    stdout, stderr = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE).communicate()
+
     files_str = stdout.decode('UTF-8').split('\n')
     files_dict = {}
     for file in files_str:
@@ -127,7 +132,7 @@ def get_expected_list(energy, remote_path, remote_tree_prefix):
 def start_download(file, energy, remote_path, remote_tree_prefix, local, bwlimit=None):
     # files = files[:-1] + r'\}'
     remote = remote_path + remote_tree_prefix + f'/{energy}GeV/{file}'
-    command = 'scp ' + remote + ' ' + local
+    command = 'sftp ' + remote + ' ' + local
     info = f'{energy}GeV, {file} files:'
     print(f'{info} {command}')
     os.system(f'start cmd /c {command}')
