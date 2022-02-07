@@ -45,10 +45,10 @@ def resample_validation():
     n_samples = [1, 3, 1440]
     n_events = np.arange(10, 2000, 10)
     bin_width = np.deg2rad(120)
-    experiments = 1000
+    experiments = 100
     # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
     plot_out_base = 'D:/Research/Resample_POC/Resample_Validation/'
-    plot_out_name = 'test/'
+    plot_out_name = 'test2/'
     plot_out_dir = plot_out_base + plot_out_name
     try:
         os.mkdir(plot_out_dir)
@@ -66,11 +66,11 @@ def resample_validation():
     # jobs = [(n_tracks, n_event, bin_width, n_sample, 0, stats, stats_plt, n_exp, False, plot_out_dir)
     #         for n_exp in range(experiments) for n_sample in n_samples for n_event in n_events]
 
-    seed_seq = np.random.SeedSequence(seed)
+    seeds = iter(np.random.SeedSequence(seed).spawn(experiments * len(n_events) * len(n_samples)))
     plot_data = []
 
-    jobs = [(n_tracks, n_event, bin_width, n_sample, stats, stats_plt, seed, n_exp)
-            for n_exp, seed in enumerate(seed_seq.spawn(experiments)) for n_event in n_events for n_sample in n_samples]
+    jobs = [(n_tracks, n_event, bin_width, n_sample, stats, stats_plt, next(seeds), n_exp)
+            for n_exp in range(experiments) for n_event in n_events for n_sample in n_samples]
 
     with Pool(threads) as pool:
         for exp_stat in tqdm.tqdm(pool.istarmap(run_experiment_no_bs, jobs), total=len(jobs)):
@@ -78,20 +78,6 @@ def resample_validation():
             for stat, val in stat_vals.items():
                 plot_data.append({'n_exp': n_exp, 'stat': stat, 'val': val, 'delta_err': stat_errs_delta[stat],
                                   'n_samples': n_samples_exp, 'n_events': n_events_exp})
-
-
-    # for n_sample in n_samples:
-    #     for n_event in n_events:
-    #         print(f'n_samples = {n_sample}, n_events = {n_event}: ')
-    #         seeds = seed_seq.spawn(experiments)
-    #         jobs = [(n_tracks, n_event, bin_width, n_sample, stats, stats_plt, seed, n_exp, False, plot_out_dir)
-    #                 for n_exp, seed in enumerate(seeds)]
-    #         with Pool(threads) as pool:
-    #             for exp_stat in tqdm.tqdm(pool.istarmap(run_experiment_no_bs, jobs), total=len(jobs)):
-    #                 n_exp, n_samples_exp, n_events_exp, stat_vals, stat_errs_delta = exp_stat
-    #                 for stat, val in stat_vals.items():
-    #                     plot_data.append({'n_exp': n_exp, 'stat': stat, 'val': val, 'delta_err': stat_errs_delta[stat],
-    #                                       'n_samples': n_samples_exp, 'n_events': n_events_exp})
 
     plot_data = pd.DataFrame(plot_data)
 
@@ -114,8 +100,8 @@ def resample_validation():
                 sds.append(np.std(vals))
                 sems.append(sds[-1] / np.sqrt(vals.size))
                 delts = np.power(vals - stats[stat]['true'], 2)
-                deltas.append(np.sqrt(np.sum(delts)) / vals.size)
-                delta_sems.append(np.std(delts) / np.sqrt((vals.size)))
+                deltas.append(np.sum(delts) / vals.size)
+                delta_sems.append(np.std(delts) / np.sqrt(vals.size))
             means, sds, sems, deltas, delta_sems = (np.array(x) for x in (means, sds, sems, deltas, delta_sems))
             ax.plot(n_events, means, label=f'{n_sample} samples', color=c)
             ax.fill_between(n_events, means - sems, means + sems, color=c, alpha=0.6)
@@ -130,6 +116,9 @@ def resample_validation():
         ax_del.legend()
         ax_del.set_title(f'{stat} Deviations')
         fig_del.tight_layout()
+
+        fig.savefig(f'{plot_out_dir}{stat}_Scatter.png', bbox_inches='tight')
+        fig_del.savefig(f'{plot_out_dir}{stat}_Deviations.png', bbox_inches='tight')
 
     if show_plot:
         plt.show()
@@ -147,7 +136,7 @@ def bootstrap_validation():
     n_events = 400
     bin_width = np.deg2rad(120)
     bootstraps = 250
-    experiments = 1000
+    experiments = 100
     # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
     plot_out_base = 'D:/Research/Resample_POC/Bootstrap_Validation/'
     plot_out_name = 'nsample1440_nevent100/'
