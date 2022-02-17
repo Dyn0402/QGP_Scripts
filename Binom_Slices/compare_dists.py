@@ -28,10 +28,10 @@ import pprofile
 def main():
     # comp_test()
     # bs_test()
-    sim_diff_comp()
+    # sim_diff_comp()
     # chi2_test()
-    # chi2_test_all()
-    # sum_chi2()
+    chi2_test_all()
+    sum_chi2()
     print('donzo')
 
 
@@ -100,10 +100,12 @@ def chi2_test_all():
     chi2_out_path = 'D:/Research/Results/Azimuth_Analysis/chi2_all_dist_bes.csv'
     # energy = 62
     energies = [7, 11, 19, 27, 39, 62]
+    # energies = [11]
     sim_energy = 62
     cent = 8
     divs = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356]
-    threads = 15
+    # divs = [60]
+    threads = 1
 
     data_sets = [
         # (base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
@@ -112,28 +114,28 @@ def chi2_test_all():
     # data_sets.extend([(base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
     #                    energy, cent, divs, 'Data_Ampt', 'Data_Ampt_Mix', 'ampt_resample_def') for energy in energies])
     data_sets.extend([(base_path, 'default_resample', 'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0',
-                       energy, cent, divs, 'Data', 'Data_Mix', 'bes_resample_def') for energy in energies])
+                       energy, cent, divs, 'Data', 'Data_Mix', 'bes_resample') for energy in energies])
 
     df_sim_sets = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample'], ['test'])
 
     sim_sets = []
 
     for amp in pd.unique(df_sim_sets['amp']):
-        # if amp not in ['0']:
-        #     continue
+        if amp not in ['015']:
+            continue
         df_amp = df_sim_sets[df_sim_sets['amp'] == amp]
         for spread in pd.unique(df_amp['spread']):
-            # if spread not in ['001']:
-            #     continue
+            if spread not in ['1']:
+                continue
             sim_sets.append((base_path, f'flat80_anticlmulti_spread{spread}_amp{amp}_resample',
                              f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_0',
                              sim_energy, cent, divs, 'Data_Sim', 'Data_Sim_Mix'))
 
     chi2_df = []
     for data_set in data_sets:
+        data_set, data_name = data_set[:-1], data_set[-1]
         div_diffs_data = get_set_all(data_set)
         data_energy = data_set[3]
-        data_name = data_set[-1]
         # return
         jobs = [(sim_set, div_diffs_data, divs, data_energy, data_name) for sim_set in sim_sets]
         with Pool(threads) as pool:
@@ -220,7 +222,7 @@ def chi2_test():
 
 def sim_diff_comp():
     base_path = 'D:/Research/'
-    energy = 62
+    energy = 11
     cent = 8
     div = 60
 
@@ -234,13 +236,13 @@ def sim_diff_comp():
          energy, cent, div, total_protons, 'Data', 'Data_Mix'),
         (base_path, f'flat80_anticlmulti_spread{sim_spread}_amp{sim_amp}_resample',
          f'Sim_spread{sim_spread}_amp{sim_amp}_flat80_anticlmulti_norotate_resample_0',
-         energy, cent, div, total_protons, 'Data_Sim', 'Data_Sim_Mix'),
+         62, cent, div, total_protons, 'Data_Sim', 'Data_Sim_Mix'),
     ]
 
     for data_set in data_sets:
-        base_path, set_group, set_name, energy, cent, div, total_protons, raw_folder, mix_folder = data_set
+        base_path, set_group, set_name, energy_set, cent, div, total_protons, raw_folder, mix_folder = data_set
         file_name = f'ratios_divisions_{div}_centrality_{cent}_local.txt'
-        path_sufx = f'{set_group}/{set_name}/{energy}GeV/{file_name}'
+        path_sufx = f'{set_group}/{set_name}/{energy_set}GeV/{file_name}'
         raw_tp_dist = get_norm_dist(f'{base_path}{raw_folder}/{path_sufx}', total_protons)
         mix_tp_dist = get_norm_dist(f'{base_path}{mix_folder}/{path_sufx}', total_protons)
 
@@ -257,20 +259,40 @@ def sim_diff_comp():
     fig_diff, ax_diff = plt.subplots()
     x = np.arange(total_protons + 1)
 
+    data_sets_diffs = []
     for data_set in data_sets:
         set_name = data_set[2]
         name = set_name[:set_name.find('_', set_name.find('_', set_name.find('_') + 1) + 1)]
         diff_def, diff_sds = get_set(data_set)
+        data_sets_diffs.append({'name': set_name, 'diff_def': diff_def, 'diff_sds': diff_sds})
         ax_diff.fill_between(x, diff_def + diff_sds, diff_def - diff_sds, alpha=0.5, label=name)
         ax_diff.plot(x, diff_def)
     ax_diff.axhline(0, ls='--', color='black')
     ax_diff.set_xlabel('Protons in Bin')
     ax_diff.set_ylabel('Raw - Mix / Avg')
-    ax_diff.text(0.05, 0.3, f'{total_protons} Protons', fontsize='large', transform=ax_diff.transAxes)
+    ax_diff.text(0.75, 0.1, f'{energy}GeV\n{total_protons} Protons\n{div}° Divisions', fontsize='large',
+                 transform=ax_diff.transAxes)
     ax_diff.legend()
     fig_diff.tight_layout()
 
+    chi2_ampt = get_chi2(data_sets_diffs[0]['diff_def'], data_sets_diffs[0]['diff_sds'],
+                         data_sets_diffs[2]['diff_def'], data_sets_diffs[2]['diff_sds'])
+    chi2_bes = get_chi2(data_sets_diffs[1]['diff_def'], data_sets_diffs[1]['diff_sds'],
+                        data_sets_diffs[2]['diff_def'], data_sets_diffs[2]['diff_sds'])
+
+    print(f'BES chi2: {chi2_bes}')
+    print(f'AMPT chi2: {chi2_ampt}')
+
     plt.show()
+
+
+def get_chi2(diff_def_data, diff_sds_data, diff_def_sim, diff_sds_sim):
+    data_sim_diff = diff_def_data - diff_def_sim
+    data_sim_diff_err2 = np.power(diff_sds_data, 2) + np.power(diff_sds_sim, 2)
+    chi2 = np.power(data_sim_diff, 2) / data_sim_diff_err2
+    chi2_sum = np.nansum(chi2)
+
+    return chi2_sum
 
 
 def get_set(set_pars):
@@ -285,6 +307,7 @@ def get_set(set_pars):
 
 def get_set_all(set_pars):
     base_path, set_group, set_name, energy, cent, divs, raw_folder, mix_folder = set_pars
+
     div_data = {}
     for div in divs:
         file_name = f'ratios_divisions_{div}_centrality_{cent}_local.txt'
@@ -443,12 +466,12 @@ def get_norm_dist(path, total_protons):
 
 def get_norm_dists(path, total_protons):
     abin_data = Babd(path=path)
-    def_dist = np.array(abin_data.get_dist()[total_protons])
+    def_dist = np.array(abin_data.get_dist()[total_protons], dtype=np.longlong)
     def_dist_norm = np.pad(def_dist / np.sum(def_dist), (0, total_protons + 1 - def_dist.size))
 
     bs_dists_norm = []
     for bs_dist in abin_data.get_dist_bs():
-        bs_dist = np.array(bs_dist[total_protons])
+        bs_dist = np.array(bs_dist[total_protons], dtype=np.longlong)
         bs_dist_norm = np.pad(bs_dist / np.sum(bs_dist), (0, total_protons + 1 - bs_dist.size))
         bs_dists_norm.append(bs_dist_norm)
 
@@ -460,13 +483,13 @@ def get_norm_dists_all(path):
     def_dist = abin_data.get_dist()
     def_dists_norm = {}
     for total_protons, dist in def_dist.items():
-        dist = np.array(dist)
+        dist = np.array(dist, dtype=np.longlong)
         def_dists_norm.update({total_protons: np.pad(dist / np.sum(dist), (0, total_protons + 1 - dist.size))})
 
     bs_dists_norm = {}
     for bs_dist in abin_data.get_dist_bs():
         for total_protons, dist in bs_dist.items():
-            dist = np.array(dist)
+            dist = np.array(dist, dtype=np.longlong)
             bs_dist_norm = np.pad(dist / np.sum(dist), (0, total_protons + 1 - dist.size))
             if total_protons in bs_dists_norm:
                 bs_dists_norm[total_protons].append(bs_dist_norm)
