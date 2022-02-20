@@ -105,7 +105,7 @@ def chi2_test_all():
     cent = 8
     divs = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356]
     # divs = [60]
-    threads = 1
+    threads = 16
 
     data_sets = [
         # (base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
@@ -121,12 +121,12 @@ def chi2_test_all():
     sim_sets = []
 
     for amp in pd.unique(df_sim_sets['amp']):
-        if amp not in ['015']:
-            continue
+        # if amp not in ['015']:
+        #     continue
         df_amp = df_sim_sets[df_sim_sets['amp'] == amp]
         for spread in pd.unique(df_amp['spread']):
-            if spread not in ['1']:
-                continue
+            # if spread not in ['1']:
+            #     continue
             sim_sets.append((base_path, f'flat80_anticlmulti_spread{spread}_amp{amp}_resample',
                              f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_0',
                              sim_energy, cent, divs, 'Data_Sim', 'Data_Sim_Mix'))
