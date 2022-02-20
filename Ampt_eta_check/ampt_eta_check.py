@@ -37,25 +37,27 @@ def main():
     file_type = 'root'
     test_num = 4
     sets = [(energy, ['string_melting']) for energy in energies]
-    min_bias_path = f'D:/Research/AMPT_Trees/min_bias/'
-    fix_most_cent_path = f'D:/Research/AMPT_Trees/ref_fix{test_num}_most_central/'
-    pdf_out_path = f'D:/Research/Results/Presentations/1-14-22_Ampt_eta/' \
-                   f'Ampt_7GeV_fix_rapidity_{file_type}{test_num}.pdf'
-    pdf_pz_out_path = f'D:/Research/Results/Presentations/1-14-22_Ampt_eta/' \
-                      f'Ampt_7GeV_fix_rapidity_{file_type}{test_num}_pz.pdf'
+    # min_bias_path = f'D:/Research/AMPT_Trees/min_bias/'
+    # fix_most_cent_path = f'D:/Research/AMPT_Trees/ref_fix{test_num}_most_central/'
+    files_path = f'D:/Research/AMPT_Trees/min_bias_old/'
+    out_name = 'Ampt_7GeV_original_eta_minbias'
+    pdf_out_path = f'D:/Research/Results/Presentations/2-15-22_Ampt_eta_asym/' \
+                   f'{out_name}.pdf'
+    pdf_pz_out_path = f'D:/Research/Results/Presentations/2-15-22_Ampt_eta_asym/' \
+                      f'{out_name}_pz.pdf'
     tree_name = 'tree'
     track_attributes = ['pid', 'px', 'py', 'pz']
     pids = [2212, -2212, 3122, -3122]
     particle_pids = {2212: 'proton', -2212: 'anti-proton', 3122: 'lambda', -3122: 'anti-lambda'}
     # particle_masses = {pid: Particle.from_pdgid(pid).mass for pid in pids}
-    bin_edges = np.linspace(-4, 4, 501)
-    fig_x_lim = (-4, 4)
+    bin_edges = np.linspace(-8, 8, 501)
+    fig_x_lim = (-8, 8)
 
     fig_list = []
     fig_pz_list = []
     for energy, ampt_modes in sets:
         for ampt_mode in ampt_modes:
-            path = f'{fix_most_cent_path}{ampt_mode}/{energy}GeV/'
+            path = f'{files_path}{ampt_mode}/{energy}GeV/'
             eta_hists = {pid: np.zeros(len(bin_edges) - 1) for pid in pids}
             pz_hists = {pid: np.zeros(2) for pid in pids}
 
@@ -80,7 +82,7 @@ def main():
                 fig, ax = plt.subplots()
                 ax.grid(zorder=0)
                 ax.bar(bin_centers, eta_hists[pid], bin_widths, align='center', zorder=3)
-                ax.set_xlabel('Rapidity')
+                ax.set_xlabel('Pseudorapidity')
                 ax.set_title(f'AMPT {energy}GeV {ampt_mode}-mode {particle_pids[pid]}s')
                 stats = DistStats(dict(zip(bin_centers, eta_hists[pid])))
                 ax.text(0.55, 0.92, f'mean: {stats.get_mean()}\nskewness: {stats.get_skewness()}',
@@ -101,6 +103,7 @@ def main():
 
     pdf = PdfPages(pdf_out_path)
     for figure in fig_list:
+        # figure.savefig(f'{out_name}_{figure._suptitle.get_text()}.png')
         pdf.savefig(figure)
     pdf.close()
     pdf_pz = PdfPages(pdf_pz_out_path)
@@ -121,7 +124,7 @@ def read_file(root_path, tree_name, track_attributes, pids, bin_edges):
             mass = pid_tracks['pid'] * 0 + Particle.from_pdgid(pid).mass / hepunits.GeV
             pid_tracks = ak.zip({'pid': pid_tracks['pid'], 'px': pid_tracks['px'], 'py': pid_tracks['py'],
                                  'pz': pid_tracks['pz'], 'M': mass}, with_name='Momentum4D')
-            eta_hists.update({pid: np.histogram(ak.ravel(pid_tracks.rapidity), bins=bin_edges)[0]})
+            eta_hists.update({pid: np.histogram(ak.ravel(pid_tracks.eta), bins=bin_edges)[0]})
             pz_hists.update({pid: np.histogram(ak.ravel(pid_tracks.pz), bins=[-8, 0, 8])[0]})
 
     return eta_hists, pz_hists
