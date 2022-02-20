@@ -225,6 +225,55 @@ def animate_resamples3(angles_in, bin_width, samples, gif_path, fps=10):
     return hist
 
 
+def animate_nsamples_resamples3(angles_in, bin_width, samples, gif_path, fps=10):
+    angles = angles_in.copy()
+    if bin_width > 2 * np.pi or bin_width <= 0:
+        print(f'get_resamples bin_width {bin_width} out of range, setting to 2_PI')
+        bin_width = 2 * np.pi
+
+    hists = []
+    for sample in samples:
+        if sample < 0:
+            print(f'get_resamples samples {samples} less than 0, taking absolute value: {samples} --> {abs(samples)}')
+            samples = abs(samples)
+        hist = np.empty(sample, dtype=int)
+        if sample == 0:
+            return hist
+        bin_low = 0
+        bin_high = bin_width
+        dphi = 2 * np.pi / sample
+
+        num_angles = len(angles)
+        for i in range(num_angles):
+            if angles[i] >= 2 * np.pi or angles[i] < 0:
+                print('bad angle range')
+            if angles[i + 1] < angles[i]:
+                print('angles unsorted')
+            angles.append(angles[i] + 2 * np.pi)
+        angles.append(4 * np.pi)  # Last goalpost
+
+        low_index = 0
+        high_index = 0
+        for sample_i in range(sample):
+            while angles[low_index] < bin_low:
+                low_index += 1
+            while angles[high_index] < bin_high:
+                high_index += 1
+            hist[sample_i] = high_index - low_index
+            bin_low += dphi
+            bin_high += dphi
+
+    fig = plt.figure(figsize=(10, 5))
+    ax = plt.subplot(121, projection='polar')
+    ax_hist = plt.subplot(122)
+
+    ani = FuncAnimation(fig, ani_func, frames=samples, interval=1.0 / fps * 1000, repeat_delay=5000, repeat=False,
+                        fargs=(angles[:num_angles], dphi, bin_width, hist, ax, ax_hist))
+    ani.save(gif_path, dpi=100, writer=PillowWriter(fps=fps))
+
+    return hist
+
+
 def plot_binning(angles, bin_low, bin_high, dphi, bin_width, counts, hist):
     fig = plt.figure(figsize=(10, 5))
     ax = plt.subplot(121, projection='polar')
@@ -277,6 +326,35 @@ def ani_func(sample_i, angles, dphi, bin_width, hist, ax, ax_hist):
 
 
 def plot_binning_ani(angles, bin_low, bin_high, bin_width, dphi, counts, hist, ax, ax_hist):
+    ax.clear()
+    ax_hist.clear()
+    ax.vlines(angles, 0, 1, color='red', label='tracks')
+    bw_deg = int(bin_width / np.pi * 180)
+    ax.fill_between(np.linspace(bin_low, bin_high, 1000), 0, 1, alpha=0.5, color='gray', label=f'{bw_deg}° bin')
+    ax.grid(False)
+    ax.set_yticklabels([])
+    ax.set_ylim((0, 1))
+    leg_angle = np.deg2rad(300)
+    ax.legend(loc="upper left", bbox_to_anchor=(.5 + np.cos(leg_angle) / 2, .5 + np.sin(leg_angle) / 2))
+    ax.text(-0.12, -0.05, f'Tracks in \nbin: {counts}', horizontalalignment='left', transform=ax.transAxes, size='large')
+    ax.text(-0.12, 1,
+            f'Samples:  {int(np.pi * 2 / dphi + 0.5)}\nPhi Step:  {dphi / np.pi * 180:.1f}°\nTracks:     {len(angles)}',
+            horizontalalignment='left', transform=ax.transAxes, size='large')
+    ax_hist.hist(hist, bins=np.arange(-0.5, len(angles) + 1.5), color='red', label='new')
+    ax_hist.hist(hist[:-1], bins=np.arange(-0.5, len(angles) + 1.5), color='blue')
+    ax_hist.legend()
+    ax_hist.set_xlabel('Tracks in Bin')
+    plt.tight_layout()
+
+
+def ani_nsamples_func(n_sample, angles, dphi, bin_width, hist, ax, ax_hist):
+    print(n_sample)
+    bin_low = 0
+    bin_high = bin_low + bin_width
+    plot_binning_ani(angles, bin_low, bin_high, bin_width, dphi, hist[sample_i], hist[:sample_i + 1], ax, ax_hist)
+
+
+def plot_binning_nsamples_ani(angles, bin_low, bin_high, bin_width, dphi, counts, hist, ax, ax_hist):
     ax.clear()
     ax_hist.clear()
     ax.vlines(angles, 0, 1, color='red', label='tracks')
