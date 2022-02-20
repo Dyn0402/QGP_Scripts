@@ -29,23 +29,25 @@ def main():
 
 
 def init_pars():
-    pars = {'base_path': 'D:/Research/',  # '/home/dylan/Research/',
-            'csv_path': 'D:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8.csv',
-            # '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df.csv',
-            'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
-            'only_new': True,  # If True check csv_path and only run missing datasets, else run all datasets
-            'threads': 14,
-            'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
-            'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
-            'min_events': 100,  # Min number of total events per total_proton. Skip total_proton if fewer
-            'min_bs': 100,  # Min number of bootstrap sets of total_proton. Skip if fewer
-            'div_bs': 0,  # Number of bootstrap divide values to get
-            'save_cent': False,  # Include centrality column in output dataframe
-            'save_data_type': True,  # Include data_type column in output dataframe
-            'save_stat': True,  # Include statistic column in output dataframe
-            'save_set_num': False,  # Don't save set num if False. Currently not compatible with set nums!
-            'systematics': False,  # If True run/save systematics. Currently not implemented!
-            }
+    pars = {
+        # 'base_path': 'D:/Research/',
+        'base_path': '/home/dylan/Research/',
+        # 'csv_path': 'D:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8.csv',
+        'csv_path': '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df.csv',
+        'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
+        'only_new': True,  # If True check csv_path and only run missing datasets, else run all datasets
+        'threads': 14,
+        'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
+        'check_only': True,  # Don't do any real work, just try to read each file to check for failed reads
+        'min_events': 100,  # Min number of total events per total_proton. Skip total_proton if fewer
+        'min_bs': 100,  # Min number of bootstrap sets of total_proton. Skip if fewer
+        'div_bs': 0,  # Number of bootstrap divide values to get
+        'save_cent': False,  # Include centrality column in output dataframe
+        'save_data_type': True,  # Include data_type column in output dataframe
+        'save_stat': True,  # Include statistic column in output dataframe
+        'save_set_num': False,  # Don't save set num if False. Currently not compatible with set nums!
+        'systematics': False,  # If True run/save systematics. Currently not implemented!
+    }
 
     pars.update({'datasets': define_datasets(pars['base_path'])})
     if pars['systematics']:
@@ -75,7 +77,7 @@ def define_datasets(base_path):
         ['bes_resample_def', '', ['default', 'resample'], [], [], [0], all_energies, [8], all_divs],
     ]
 
-    df = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample'], ['test'])
+    df = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample'], ['test'], True)
 
     for amp in np.unique(df['amp']):
         amp_float = float(f'0.{amp}')  # For filtering if needed
@@ -149,7 +151,7 @@ def define_stats(stats):
     return {stat: stat_methods[stat] for stat in stats}
 
 
-def find_sim_sets(path, include_keys, exclude_keys=[], print=False):
+def find_sim_sets(path, include_keys, exclude_keys=[], print_sets=False):
     df = []
     for file_path in os.listdir(path):
         file_keys = file_path.strip().split('_')
@@ -165,7 +167,7 @@ def find_sim_sets(path, include_keys, exclude_keys=[], print=False):
 
     df = pd.DataFrame(df)
 
-    if print:
+    if print_sets:
         for spread in pd.unique(df['spread']):
             df_spread = df[df['spread'] == spread]
             amps = pd.unique(df_spread["amp"])

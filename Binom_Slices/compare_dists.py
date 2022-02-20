@@ -22,7 +22,7 @@ from Bootstrap_Az_Bin import BootstrapAzBin as Babd
 
 from calc_binom_slices import find_sim_sets, get_name_amp_spread
 
-import pprofile
+# import pprofile
 
 
 def main():
@@ -96,8 +96,10 @@ def sum_chi2():
 
 
 def chi2_test_all():
-    base_path = 'D:/Research/'
-    chi2_out_path = 'D:/Research/Results/Azimuth_Analysis/chi2_all_dist_bes.csv'
+    # base_path = 'D:/Research/'
+    base_path = '/home/dylan/Research/'
+    # chi2_out_path = 'D:/Research/Results/Azimuth_Analysis/chi2_all_dist_bes.csv'
+    chi2_out_path = '/home/dylan/Research/Results/Azimuth_Analysis/chi2_all_dist_bes.csv'
     # energy = 62
     energies = [7, 11, 19, 27, 39, 62]
     # energies = [11]
@@ -111,10 +113,10 @@ def chi2_test_all():
         # (base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
         #  energy, cent, divs, 'Data_Ampt', 'Data_Ampt_Mix'),
     ]
-    # data_sets.extend([(base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
-    #                    energy, cent, divs, 'Data_Ampt', 'Data_Ampt_Mix', 'ampt_resample_def') for energy in energies])
-    data_sets.extend([(base_path, 'default_resample', 'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0',
-                       energy, cent, divs, 'Data', 'Data_Mix', 'bes_resample') for energy in energies])
+    data_sets.extend([(base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
+                       energy, cent, divs, 'Data_Ampt', 'Data_Ampt_Mix', 'ampt_resample_def') for energy in energies])
+    # data_sets.extend([(base_path, 'default_resample', 'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0',
+    #                    energy, cent, divs, 'Data', 'Data_Mix', 'bes_resample') for energy in energies])
 
     df_sim_sets = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample'], ['test'])
 
