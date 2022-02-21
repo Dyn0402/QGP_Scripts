@@ -107,7 +107,7 @@ def chi2_test_all():
     cent = 8
     divs = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356]
     # divs = [60]
-    threads = 16
+    threads = 12
 
     data_sets = [
         # (base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
@@ -140,6 +140,7 @@ def chi2_test_all():
         data_energy = data_set[3]
         # return
         jobs = [(sim_set, div_diffs_data, divs, data_energy, data_name) for sim_set in sim_sets]
+        print(f'Starting {data_name}, {data_energy}GeV')
         with Pool(threads) as pool:
             for df_subset in tqdm.tqdm(pool.istarmap(run_sim_set, jobs), total=len(jobs)):
                 chi2_df.extend(df_subset)
