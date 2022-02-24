@@ -16,6 +16,9 @@ import os
 from datetime import datetime
 from multiprocessing import Pool
 
+import tqdm
+import istarmap  # Needed for tqdm
+
 
 def main():
     # file_writer()
@@ -51,15 +54,16 @@ def macro_caller():
 
 def uproot_finder():
     """ Looks like this runs just as fast as compiled ROOT code, just slow 2-p comparisons """
-    print(f'Start {datetime.now()}\n')
-    vector.register_awkward()
+    start = datetime.now()
+    print(f'Start {start}\n')
 
-    out_file_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_slim_most_central_after.txt'
+    # out_file_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_min_bias_new.txt'
+    out_file_path = 'D:/Research/Ampt_Bad_Event/bad_ampt_events_min_bias_new.txt'
     # out_file_path = '/star/u/dneff/Ampt_Bad_Event/bad_ampt_events_central.txt'
     # path = '/home/dylan/Research/AMPT_Trees/'
-    path = '/media/ucla/Research/AMPT_Trees/slim_most_central/string_melting/7GeV/'
+    path = 'D:/Research/AMPT_Trees/slim_most_central/string_melting/'
     # path = '/gpfs01/star/pwg/dneff/data/AMPT/slim_most_central/string_melting/7GeV/'
-    threads = 10
+    threads = 16
     tree_name = 'tree'
     write_mode = 'a'
     max_eta = 1
@@ -77,10 +81,20 @@ def uproot_finder():
     n_files = len(root_paths)
     print(f'{n_files} files found to be checked.')
 
+    jobs = [(root_path, tree_name, track_attributes, max_eta, ignore_pids, num, n_files) for
+            num, root_path in enumerate(root_paths)]
+
+    jobs_start = datetime.now()
+    print(f'Jobs Start {jobs_start}\n')
+    bad_trees = []
     with Pool(threads) as pool:
-        bad_trees = pool.starmap(check_file,
-                                 [(root_path, tree_name, track_attributes, max_eta, ignore_pids, num, n_files) for
-                                  num, root_path in enumerate(root_paths)])
+        for bad_tree in tqdm.tqdm(pool.istarmap(check_file, jobs), total=len(jobs)):
+            bad_trees.extend(bad_tree)
+
+    # with Pool(threads) as pool:
+    #     bad_trees = pool.starmap(check_file,
+    #                              [(root_path, tree_name, track_attributes, max_eta, ignore_pids, num, n_files) for
+    #                               num, root_path in enumerate(root_paths)])
 
     with open(out_file_path, write_mode) as file:
         for bad_tree in bad_trees:
@@ -89,12 +103,16 @@ def uproot_finder():
                     out_line = ''.join(f'{x}: {y}\t' for x, y in bad_event.items())
                     file.write(f'{out_line}\n')
 
-    print(f'\nEnd {datetime.now()}')
+    end = datetime.now()
+    print(f'\nEnd {end}')
+    print(f'Run time: {end - start}')
+    print(f'Job run time: {end - jobs_start}')
 
 
 def check_file(root_path, tree_name, track_attributes, max_eta, ignore_pids, root_num=-1, root_num_total=-1):
+    vector.register_awkward()
     bad_events = []
-    print(f'{root_num}/{root_num_total} {root_path} :\t{datetime.now()}')
+    # print(f'{root_num}/{root_num_total} {root_path} :\t{datetime.now()}')
     with uproot.open(root_path) as file:
         tracks = file[tree_name].arrays(track_attributes)
         tracks = ak.zip({'pid': tracks['pid'], 'px': tracks['px'], 'py': tracks['py'], 'pz': tracks['pz']},
