@@ -316,8 +316,8 @@ def chi2_data_test():
 
 def chi2_data_test2():
     base_path = 'D:/Research/Results/Azimuth_Analysis/'
-    # chi_df_name = 'chi2_sum_dist_test5.csv'
-    chi_df_name = 'chi2_sum_dist_bes.csv'
+    chi_df_name = 'chi2_sum_dist_ampt_new.csv'
+    # chi_df_name = 'chi2_sum_dist_bes.csv'
     energies = [7, 11, 19, 27, 39, 62]
     x0 = [0.1, 1.0]
     bounds = ((0, 1.0), (0.0, 5.0))

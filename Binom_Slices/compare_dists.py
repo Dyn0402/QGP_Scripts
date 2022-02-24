@@ -22,26 +22,27 @@ from Bootstrap_Az_Bin import BootstrapAzBin as Babd
 
 from calc_binom_slices import find_sim_sets, get_name_amp_spread
 
+
 # import pprofile
 
 
 def main():
     # comp_test()
     # bs_test()
-    # sim_diff_comp()
+    sim_diff_comp()
     # chi2_test()
-    chi2_test_all()
-    sum_chi2()
+    # chi2_test_all()
+    # sum_chi2()
     print('donzo')
 
 
 def sum_chi2():
-    # weights_path_pre = 'D:/Research/Data_Ampt/default_resample/Ampt_rapid05_resample_norotate_0/'
-    weights_path_pre = 'D:/Research/Data/default_resample/rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0/'
+    weights_path_pre = 'D:/Research/Data_Ampt/default_resample/Ampt_rapid05_resample_norotate_0/'
+    # weights_path_pre = 'D:/Research/Data/default_resample/rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0/'
     cent = 8
     div_weight = 60  # Proton distribution for all divs should be the same
-    chi2_indiv_path = 'D:/Research/Results/Azimuth_Analysis/chi2_all_dist_bes.csv'
-    chi2_sum_out_path = 'D:/Research/Results/Azimuth_Analysis/chi2_sum_dist_bes.csv'
+    chi2_indiv_path = 'D:/Research/Results/Azimuth_Analysis/chi2_all_dist_ampt_new.csv'
+    chi2_sum_out_path = 'D:/Research/Results/Azimuth_Analysis/chi2_sum_dist_ampt_new.csv'
     df = pd.read_csv(chi2_indiv_path)
     sums_df = []
 
@@ -225,22 +226,25 @@ def chi2_test():
 
 def sim_diff_comp():
     base_path = 'D:/Research/'
-    energy = 11
+    energy = 62
     cent = 8
     div = 60
 
     total_protons = 21
 
-    sim_amp, sim_spread = '015', '1'
+    # sim_amp, sim_spread = '015', '1'
+    sim_pars = [('015', '1'), ('6', '45'), ('4', '1')]
     data_sets = [
         (base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
          energy, cent, div, total_protons, 'Data_Ampt', 'Data_Ampt_Mix'),
         (base_path, 'default_resample', 'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0',
          energy, cent, div, total_protons, 'Data', 'Data_Mix'),
-        (base_path, f'flat80_anticlmulti_spread{sim_spread}_amp{sim_amp}_resample',
-         f'Sim_spread{sim_spread}_amp{sim_amp}_flat80_anticlmulti_norotate_resample_0',
-         62, cent, div, total_protons, 'Data_Sim', 'Data_Sim_Mix'),
     ]
+
+    for sim_par in sim_pars:
+        data_sets.append((base_path, f'flat80_anticlmulti_spread{sim_par[1]}_amp{sim_par[0]}_resample',
+                          f'Sim_spread{sim_par[1]}_amp{sim_par[0]}_flat80_anticlmulti_norotate_resample_0',
+                          62, cent, div, total_protons, 'Data_Sim', 'Data_Sim_Mix'))
 
     for data_set in data_sets:
         base_path, set_group, set_name, energy_set, cent, div, total_protons, raw_folder, mix_folder = data_set
