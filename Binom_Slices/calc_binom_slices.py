@@ -33,7 +33,7 @@ def init_pars():
         # 'base_path': 'D:/Research/',
         'base_path': '/home/dylan/Research/',
         # 'csv_path': 'D:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8.csv',
-        'csv_path': '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_ampt_new.csv',
+        'csv_path': '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8.csv',
         'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': True,  # If True check csv_path and only run missing datasets, else run all datasets
         'threads': 12,
@@ -73,6 +73,7 @@ def define_datasets(base_path):
     entry_vals = [
         # ['ampt_def', '_Ampt', ['default'], [], ['resample'], range(60), all_energies, all_cents, all_divs],
         ['ampt_resample_def', '_Ampt', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
+        ['ampt_old_resample_def', '_Ampt_Old', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
         # ['bes_def', '', ['default'], [], ['resample'], range(60), all_energies, [8], all_divs],
         ['bes_resample_def', '', ['default', 'resample'], [], [], [0], all_energies, [8], all_divs],
     ]
