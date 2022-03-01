@@ -316,8 +316,8 @@ def chi2_data_test():
 
 def chi2_data_test2():
     base_path = 'D:/Research/Results/Azimuth_Analysis/'
-    chi_df_name = 'chi2_sum_dist_ampt_new.csv'
-    # chi_df_name = 'chi2_sum_dist_bes.csv'
+    # chi_df_name = 'ampt_new_chi2_sum_dist.csv'
+    chi_df_name = 'bes_chi2_sum_dist.csv'
     energies = [7, 11, 19, 27, 39, 62]
     x0 = [0.1, 1.0]
     bounds = ((0, 1.0), (0.0, 5.0))
@@ -411,7 +411,6 @@ def chi2_data_test2():
         plt.axhline(bounds[1][1], ls='--', color='black')
         plt.axvline(bounds[0][0], ls='--', color='black')
         plt.axvline(bounds[0][1], ls='--', color='black')
-        plt.axhline(np.pi, ls=':', color='gray')
 
         # plt.axhline(0.2, ls=':', color='black')
         # plt.axhline(4.5, ls=':', color='black')
