@@ -37,12 +37,15 @@ def main():
 
 
 def sum_chi2():
-    weights_path_pre = 'D:/Research/Data_Ampt_Old/default_resample/Ampt_rapid05_resample_norotate_0/'
+    # weights_path_pre = 'D:/Research/Data_Ampt/default_resample/Ampt_rapid05_resample_norotate_0/'
+    weights_path_pre = '/home/dylan/Research/Data_Ampt/default_resample/Ampt_rapid05_resample_norotate_0/'
     # weights_path_pre = 'D:/Research/Data/default_resample/rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0/'
     cent = 8
     div_weight = 60  # Proton distribution for all divs should be the same
-    chi2_indiv_path = 'D:/Research/Results/Azimuth_Analysis/ampt_old_chi2_all_dist.csv'
-    chi2_sum_out_path = 'D:/Research/Results/Azimuth_Analysis/ampt_old_chi2_sum_dist.csv'
+    # chi2_indiv_path = 'D:/Research/Results/Azimuth_Analysis/chi2_all_dist_ampt_new.csv'
+    chi2_indiv_path = '/home/dylan/Research/Results/Azimuth_Analysis/chi2_all_dist_ampt_new.csv'
+    # chi2_sum_out_path = 'D:/Research/Results/Azimuth_Analysis/chi2_sum_dist_ampt_new.csv'
+    chi2_sum_out_path = '/home/dylan/Research/Results/Azimuth_Analysis/chi2_sum_dist_ampt_new.csv'
     df = pd.read_csv(chi2_indiv_path)
     sums_df = []
 
@@ -97,10 +100,10 @@ def sum_chi2():
 
 
 def chi2_test_all():
-    base_path = 'D:/Research/'
-    # base_path = '/home/dylan/Research/'
-    chi2_out_path = 'D:/Research/Results/Azimuth_Analysis/ampt_old_chi2_all_dist.csv'
-    # chi2_out_path = '/home/dylan/Research/Results/Azimuth_Analysis/ampt_old_chi2_all_dist.csv'
+    # base_path = 'D:/Research/'
+    base_path = '/home/dylan/Research/'
+    # chi2_out_path = 'D:/Research/Results/Azimuth_Analysis/chi2_all_dist_bes.csv'
+    chi2_out_path = '/home/dylan/Research/Results/Azimuth_Analysis/chi2_all_dist_ampt_new.csv'
     # energy = 62
     energies = [7, 11, 19, 27, 39, 62]
     # energies = [11]
@@ -108,15 +111,14 @@ def chi2_test_all():
     cent = 8
     divs = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356]
     # divs = [60]
-    threads = 16
+    threads = 12
 
     data_sets = [
         # (base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
         #  energy, cent, divs, 'Data_Ampt', 'Data_Ampt_Mix'),
     ]
     data_sets.extend([(base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
-                       energy, cent, divs, 'Data_Ampt_Old', 'Data_Ampt_Old_Mix', 'ampt_old_resample_def') for energy in
-                      energies])
+                       energy, cent, divs, 'Data_Ampt', 'Data_Ampt_Mix', 'ampt_resample_def') for energy in energies])
     # data_sets.extend([(base_path, 'default_resample', 'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0',
     #                    energy, cent, divs, 'Data', 'Data_Mix', 'bes_resample') for energy in energies])
 

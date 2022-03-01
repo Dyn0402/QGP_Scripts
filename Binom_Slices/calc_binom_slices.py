@@ -30,15 +30,15 @@ def main():
 
 def init_pars():
     pars = {
-        'base_path': 'D:/Research/',
-        # 'base_path': '/home/dylan/Research/',
-        'csv_path': 'D:/Research/Results/Azimuth_Analysis/ampt_new_binom_stats_stats_cent8.csv',
-        # 'csv_path': '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df.csv',
+        # 'base_path': 'D:/Research/',
+        'base_path': '/home/dylan/Research/',
+        # 'csv_path': 'D:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8.csv',
+        'csv_path': '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8.csv',
         'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': True,  # If True check csv_path and only run missing datasets, else run all datasets
-        'threads': 14,
+        'threads': 12,
         'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
-        'check_only': True,  # Don't do any real work, just try to read each file to check for failed reads
+        'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
         'min_events': 100,  # Min number of total events per total_proton. Skip total_proton if fewer
         'min_bs': 100,  # Min number of bootstrap sets of total_proton. Skip if fewer
         'div_bs': 0,  # Number of bootstrap divide values to get
@@ -73,6 +73,7 @@ def define_datasets(base_path):
     entry_vals = [
         # ['ampt_def', '_Ampt', ['default'], [], ['resample'], range(60), all_energies, all_cents, all_divs],
         ['ampt_resample_def', '_Ampt', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
+        ['ampt_old_resample_def', '_Ampt_Old', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
         # ['bes_def', '', ['default'], [], ['resample'], range(60), all_energies, [8], all_divs],
         ['bes_resample_def', '', ['default', 'resample'], [], [], [0], all_energies, [8], all_divs],
     ]

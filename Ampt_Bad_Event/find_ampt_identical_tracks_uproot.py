@@ -57,13 +57,13 @@ def uproot_finder():
     start = datetime.now()
     print(f'Start {start}\n')
 
-    # out_file_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_min_bias_new.txt'
-    out_file_path = 'D:/Research/Ampt_Bad_Event/bad_ampt_events_min_bias_new.txt'
+    out_file_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_slim_most_central_new.txt'
+    # out_file_path = 'D:/Research/Ampt_Bad_Event/bad_ampt_events_min_bias_new.txt'
     # out_file_path = '/star/u/dneff/Ampt_Bad_Event/bad_ampt_events_central.txt'
-    # path = '/home/dylan/Research/AMPT_Trees/'
-    path = 'D:/Research/AMPT_Trees/slim_most_central/string_melting/'
+    path = '/media/ucla/Research/AMPT_Trees/slim_most_central/string_melting/'
+    # path = 'D:/Research/AMPT_Trees/slim_most_central/string_melting/'
     # path = '/gpfs01/star/pwg/dneff/data/AMPT/slim_most_central/string_melting/7GeV/'
-    threads = 16
+    threads = 10
     tree_name = 'tree'
     write_mode = 'a'
     max_eta = 1
@@ -89,7 +89,7 @@ def uproot_finder():
     bad_trees = []
     with Pool(threads) as pool:
         for bad_tree in tqdm.tqdm(pool.istarmap(check_file, jobs), total=len(jobs)):
-            bad_trees.extend(bad_tree)
+            bad_trees.append(bad_tree)
 
     # with Pool(threads) as pool:
     #     bad_trees = pool.starmap(check_file,
