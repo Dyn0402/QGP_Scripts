@@ -37,12 +37,12 @@ def main():
 
 
 def sum_chi2():
-    weights_path_pre = 'D:/Research/Data_Ampt/default_resample/Ampt_rapid05_resample_norotate_0/'
+    weights_path_pre = 'D:/Research/Data_Ampt_Old/default_resample/Ampt_rapid05_resample_norotate_0/'
     # weights_path_pre = 'D:/Research/Data/default_resample/rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0/'
     cent = 8
     div_weight = 60  # Proton distribution for all divs should be the same
-    chi2_indiv_path = 'D:/Research/Results/Azimuth_Analysis/chi2_all_dist_ampt_new.csv'
-    chi2_sum_out_path = 'D:/Research/Results/Azimuth_Analysis/chi2_sum_dist_ampt_new.csv'
+    chi2_indiv_path = 'D:/Research/Results/Azimuth_Analysis/ampt_old_chi2_all_dist.csv'
+    chi2_sum_out_path = 'D:/Research/Results/Azimuth_Analysis/ampt_old_chi2_sum_dist.csv'
     df = pd.read_csv(chi2_indiv_path)
     sums_df = []
 
@@ -97,10 +97,10 @@ def sum_chi2():
 
 
 def chi2_test_all():
-    # base_path = 'D:/Research/'
-    base_path = '/home/dylan/Research/'
-    # chi2_out_path = 'D:/Research/Results/Azimuth_Analysis/chi2_all_dist_bes.csv'
-    chi2_out_path = '/home/dylan/Research/Results/Azimuth_Analysis/chi2_all_dist_bes.csv'
+    base_path = 'D:/Research/'
+    # base_path = '/home/dylan/Research/'
+    chi2_out_path = 'D:/Research/Results/Azimuth_Analysis/ampt_old_chi2_all_dist.csv'
+    # chi2_out_path = '/home/dylan/Research/Results/Azimuth_Analysis/ampt_old_chi2_all_dist.csv'
     # energy = 62
     energies = [7, 11, 19, 27, 39, 62]
     # energies = [11]
@@ -108,14 +108,15 @@ def chi2_test_all():
     cent = 8
     divs = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356]
     # divs = [60]
-    threads = 12
+    threads = 16
 
     data_sets = [
         # (base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
         #  energy, cent, divs, 'Data_Ampt', 'Data_Ampt_Mix'),
     ]
     data_sets.extend([(base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
-                       energy, cent, divs, 'Data_Ampt', 'Data_Ampt_Mix', 'ampt_resample_def') for energy in energies])
+                       energy, cent, divs, 'Data_Ampt_Old', 'Data_Ampt_Old_Mix', 'ampt_old_resample_def') for energy in
+                      energies])
     # data_sets.extend([(base_path, 'default_resample', 'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0',
     #                    energy, cent, divs, 'Data', 'Data_Mix', 'bes_resample') for energy in energies])
 
@@ -228,67 +229,120 @@ def sim_diff_comp():
     base_path = 'D:/Research/'
     energy = 62
     cent = 8
-    div = 60
+    divs = [120]  # [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356]
+    plot_raw = True
 
-    total_protons = 21
+    total_protons = [4]
 
-    # sim_amp, sim_spread = '015', '1'
-    sim_pars = [('015', '1'), ('6', '45'), ('4', '1')]
-    data_sets = [
-        (base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
-         energy, cent, div, total_protons, 'Data_Ampt', 'Data_Ampt_Mix'),
-        (base_path, 'default_resample', 'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0',
-         energy, cent, div, total_protons, 'Data', 'Data_Mix'),
-    ]
+    sim_pars = [('0125', '08'), ('45', '35')]  # , ('4', '1'), ('6', '45')
 
-    for sim_par in sim_pars:
-        data_sets.append((base_path, f'flat80_anticlmulti_spread{sim_par[1]}_amp{sim_par[0]}_resample',
-                          f'Sim_spread{sim_par[1]}_amp{sim_par[0]}_flat80_anticlmulti_norotate_resample_0',
-                          62, cent, div, total_protons, 'Data_Sim', 'Data_Sim_Mix'))
+    for total_proton in total_protons:
+        chi2s = {}
+        fig_diff_divs, ax_diff_divs = plt.subplots(4, 3, sharex=True, figsize=(14, 8))
+        ax_diff_divs = ax_diff_divs.flat
+        div_index = 0
+        for div in divs:
+            data_sets = [
+                (base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
+                 energy, cent, div, total_proton, 'Data_Ampt', 'Data_Ampt_Mix', 'ampt_new'),
+                (base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
+                 energy, cent, div, total_proton, 'Data_Ampt_Old', 'Data_Ampt_Old_Mix', 'ampt_old'),
+                (base_path, 'default_resample', 'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0',
+                 energy, cent, div, total_proton, 'Data', 'Data_Mix', 'bes'),
+            ]
 
-    for data_set in data_sets:
-        base_path, set_group, set_name, energy_set, cent, div, total_protons, raw_folder, mix_folder = data_set
-        file_name = f'ratios_divisions_{div}_centrality_{cent}_local.txt'
-        path_sufx = f'{set_group}/{set_name}/{energy_set}GeV/{file_name}'
-        raw_tp_dist = get_norm_dist(f'{base_path}{raw_folder}/{path_sufx}', total_protons)
-        mix_tp_dist = get_norm_dist(f'{base_path}{mix_folder}/{path_sufx}', total_protons)
+            sim_sets = []
+            for sim_par in sim_pars:
+                sim_sets.append((base_path, f'flat80_anticlmulti_spread{sim_par[1]}_amp{sim_par[0]}_resample',
+                                 f'Sim_spread{sim_par[1]}_amp{sim_par[0]}_flat80_anticlmulti_norotate_resample_0',
+                                 62, cent, div, total_proton, 'Data_Sim', 'Data_Sim_Mix',
+                                 f'Sim_spread{sim_par[1]}_amp{sim_par[0]}'))
 
-        name = set_name[:set_name.find('_', set_name.find('_', set_name.find('_') + 1) + 1)]
+            for data_set in sim_sets + data_sets:
+                base_path, set_group, set_name, energy_set, cent, div, total_proton, raw_folder, mix_folder, \
+                    name = data_set
+                file_name = f'ratios_divisions_{div}_centrality_{cent}_local.txt'
+                path_sufx = f'{set_group}/{set_name}/{energy_set}GeV/{file_name}'
+                raw_tp_dist = get_norm_dist(f'{base_path}{raw_folder}/{path_sufx}', total_proton)
+                mix_tp_dist = get_norm_dist(f'{base_path}{mix_folder}/{path_sufx}', total_proton)
 
-        fig_comp, ax_comp = plt.subplots()
-        ax_comp.plot(range(raw_tp_dist.size), raw_tp_dist / np.sum(raw_tp_dist), marker='o', alpha=0.7, label='Raw')
-        ax_comp.plot(range(mix_tp_dist.size), mix_tp_dist / np.sum(mix_tp_dist), marker='o', alpha=0.7, label='Mix')
-        ax_comp.set_title(f'{name} {total_protons} Protons')
-        ax_comp.axhline(0, ls='--', color='black', zorder=0)
-        ax_comp.set_xlabel('Protons in Bin')
-        ax_comp.legend()
+                # name = set_name[:set_name.find('_', set_name.find('_', set_name.find('_') + 1) + 1)]
 
-    fig_diff, ax_diff = plt.subplots()
-    x = np.arange(total_protons + 1)
+                if plot_raw:
+                    fig_comp, ax_comp = plt.subplots()
+                    ax_comp.plot(range(raw_tp_dist.size), raw_tp_dist / np.sum(raw_tp_dist), marker='o', alpha=0.7,
+                                 label='Raw')
+                    ax_comp.plot(range(mix_tp_dist.size), mix_tp_dist / np.sum(mix_tp_dist), marker='o', alpha=0.7,
+                                 label='Mix')
+                    ax_comp.set_title(f'{name} {total_proton} Protons, {div} divs')
+                    ax_comp.axhline(0, ls='--', color='black', zorder=0)
+                    ax_comp.set_xlabel('Protons in Bin')
+                    ax_comp.legend()
+                    fig_comp.canvas.manager.set_window_title(f'{name} {total_proton} Protons, {div} divs')
 
-    data_sets_diffs = []
-    for data_set in data_sets:
-        set_name = data_set[2]
-        name = set_name[:set_name.find('_', set_name.find('_', set_name.find('_') + 1) + 1)]
-        diff_def, diff_sds = get_set(data_set)
-        data_sets_diffs.append({'name': set_name, 'diff_def': diff_def, 'diff_sds': diff_sds})
-        ax_diff.fill_between(x, diff_def + diff_sds, diff_def - diff_sds, alpha=0.5, label=name)
-        ax_diff.plot(x, diff_def)
-    ax_diff.axhline(0, ls='--', color='black')
-    ax_diff.set_xlabel('Protons in Bin')
-    ax_diff.set_ylabel('Raw - Mix / Avg')
-    ax_diff.text(0.75, 0.1, f'{energy}GeV\n{total_protons} Protons\n{div}° Divisions', fontsize='large',
-                 transform=ax_diff.transAxes)
-    ax_diff.legend()
-    fig_diff.tight_layout()
+            fig_diff, ax_diff = plt.subplots()
+            x = np.arange(total_proton + 1)
 
-    chi2_ampt = get_chi2(data_sets_diffs[0]['diff_def'], data_sets_diffs[0]['diff_sds'],
-                         data_sets_diffs[2]['diff_def'], data_sets_diffs[2]['diff_sds'])
-    chi2_bes = get_chi2(data_sets_diffs[1]['diff_def'], data_sets_diffs[1]['diff_sds'],
-                        data_sets_diffs[2]['diff_def'], data_sets_diffs[2]['diff_sds'])
+            data_sets_diffs = {}
+            for data_set in sim_sets + data_sets:
+                # set_name = data_set[2]
+                # name = set_name[:set_name.find('_', set_name.find('_', set_name.find('_') + 1) + 1)]
+                data_set, name = data_set[:-1], data_set[-1]
+                diff_def, diff_sds = get_set(data_set)
+                data_sets_diffs.update({name: {'diff_def': diff_def, 'diff_sds': diff_sds}})
+                ax_diff.fill_between(x, diff_def + diff_sds, diff_def - diff_sds, alpha=0.5, label=name)
+                ax_diff.plot(x, diff_def)
+                ax_diff_divs[div_index].fill_between(x, diff_def + diff_sds, diff_def - diff_sds, alpha=0.5, label=name)
+                ax_diff_divs[div_index].plot(x, diff_def)
+                ax_diff_divs[div_index].set_ylim(-0.005, 0.0082)
+            ax_diff.axhline(0, ls='--', color='black')
+            ax_diff.set_xlabel('Protons in Bin')
+            ax_diff.set_ylabel('Raw - Mix')
+            ax_diff.text(0.75, 0.1, f'{energy}GeV\n{total_proton} Protons\n{div}° Divisions', fontsize='large',
+                         transform=ax_diff.transAxes)
+            ax_diff_divs[div_index].axhline(0, ls='--', color='black')
+            if div_index >= 9:
+                ax_diff_divs[div_index].set_xlabel('Protons in Bin')
+            ax_diff_divs[div_index].text(total_proton * 0.4, -0.004, f'{div}° Divisions', fontsize='large')
+            ax_diff.legend()
+            fig_diff.tight_layout()
+            fig_diff.canvas.manager.set_window_title(f'{energy}GeV, {total_proton} Protons, {div}° Divisions')
+            div_index += 1
 
-    print(f'BES chi2: {chi2_bes}')
-    print(f'AMPT chi2: {chi2_ampt}')
+            # chi2s.append([])
+            for data_set in data_sets:
+                for sim_set in sim_sets:
+                    if data_set[-1] not in chi2s:
+                        chi2s.update({data_set[-1]: {}})
+                    if sim_set[-1] not in chi2s[data_set[-1]]:
+                        chi2s[data_set[-1]].update({sim_set[-1]: []})
+                    chi2 = get_chi2(data_sets_diffs[data_set[-1]]['diff_def'], data_sets_diffs[data_set[-1]]['diff_sds'],
+                                    data_sets_diffs[sim_set[-1]]['diff_def'], data_sets_diffs[sim_set[-1]]['diff_sds'])
+                    chi2s[data_set[-1]][sim_set[-1]].append(chi2)
+
+            # chi2_ampt = get_chi2(data_sets_diffs[0]['diff_def'], data_sets_diffs[0]['diff_sds'],
+            #                      data_sets_diffs[2]['diff_def'], data_sets_diffs[2]['diff_sds'])
+            # chi2_bes = get_chi2(data_sets_diffs[1]['diff_def'], data_sets_diffs[1]['diff_sds'],
+            #                     data_sets_diffs[2]['diff_def'], data_sets_diffs[2]['diff_sds'])
+            #
+            # print(f'energy: {energy}, cent: {cent}, div: {div}, total_protons: {total_proton}')
+            # print(f'BES chi2: {chi2_bes}')
+            # print(f'AMPT chi2: {chi2_ampt}')
+        for data_set in data_sets:
+            fig_chi_div, ax_chi_div = plt.subplots()
+            for sim_set in sim_sets:
+                sim_lab = sim_set[-1].replace('Sim_', '').replace('_flat80_anticlmulti_norotate_resample_0', '')
+                ax_chi_div.plot(divs, chi2s[data_set[-1]][sim_set[-1]], marker='o', label=sim_lab)
+            ax_chi_div.set_xlabel('Division Width')
+            ax_chi_div.set_ylabel('Chi_Square')
+            ax_chi_div.set_ylim(bottom=0)
+            ax_chi_div.set_title(data_set[-1])
+            ax_chi_div.legend()
+            fig_chi_div.tight_layout()
+            fig_chi_div.canvas.manager.set_window_title(data_set[-1])
+        fig_diff_divs.canvas.manager.set_window_title(f'{energy}GeV, {total_proton} Protons, All Divisions')
+        fig_diff_divs.tight_layout()
+        fig_diff_divs.subplots_adjust(wspace=0.18, hspace=0.05)
 
     plt.show()
 
@@ -298,6 +352,23 @@ def get_chi2(diff_def_data, diff_sds_data, diff_def_sim, diff_sds_sim):
     data_sim_diff_err2 = np.power(diff_sds_data, 2) + np.power(diff_sds_sim, 2)
     chi2 = np.power(data_sim_diff, 2) / data_sim_diff_err2
     chi2_sum = np.nansum(chi2)
+
+    return chi2_sum
+
+
+def get_chi2_print(diff_def_data, diff_sds_data, diff_def_sim, diff_sds_sim):
+    # print(f'Data_def: {diff_def_data}')
+    # print(f'Sim_def: {diff_def_sim}')
+    # print(f'Data_sds: {diff_sds_data}')
+    # print(f'Sim_sds: {diff_sds_sim}')
+    data_sim_diff = diff_def_data - diff_def_sim
+    # print(f'Data - Sim: {data_sim_diff}')
+    data_sim_diff_err2 = np.power(diff_sds_data, 2) + np.power(diff_sds_sim, 2)
+    # print(f'Data - Sim Err: {data_sim_diff_err2}')
+    chi2 = np.power(data_sim_diff, 2) / data_sim_diff_err2
+    print(f'Chi2: {chi2}')
+    chi2_sum = np.nansum(chi2)
+    print(f'Chi2_sum: {chi2_sum}')
 
     return chi2_sum
 
