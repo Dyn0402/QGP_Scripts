@@ -30,13 +30,13 @@ def main():
 
 def init_pars():
     pars = {
-        # 'base_path': 'D:/Research/',
-        'base_path': '/home/dylan/Research/',
-        # 'csv_path': 'D:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8.csv',
-        'csv_path': '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8.csv',
+        'base_path': 'D:/Research/',
+        # 'base_path': '/home/dylan/Research/',
+        'csv_path': 'D:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_test.csv',
+        # 'csv_path': '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8.csv',
         'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': True,  # If True check csv_path and only run missing datasets, else run all datasets
-        'threads': 12,
+        'threads': 14,
         'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
         'min_events': 100,  # Min number of total events per total_proton. Skip total_proton if fewer
@@ -64,8 +64,8 @@ def define_datasets(base_path):
     :return: list of dictionaries containing parameters for defining datasets
     """
 
-    all_divs = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356]
-    all_energies = [7, 11, 19, 27, 39, 62]
+    all_divs = [120]  # [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356]
+    all_energies = [62]  # [7, 11, 19, 27, 39, 62]
     all_cents = [8]  # [0, 1, 2, 3, 4, 5, 6, 7, 8]
 
     entry_names = ['name', 'base_ext', 'exact_keys', 'contain_keys', 'exclude_keys',
@@ -85,9 +85,9 @@ def define_datasets(base_path):
         df_amp = df[df['amp'] == amp]
         for spread in np.unique(df_amp['spread']):
             spread_float = float(f'0.{spread}') * 10  # For filtering if needed
-            entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
-                               ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
-                               ['flat'], [], [0], [62], [8], all_divs])
+            # entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
+            #                    ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
+            #                    ['flat'], [], [0], [62], [8], all_divs])
 
     datasets = [dict(zip(entry_names, dset)) for dset in entry_vals]
 
