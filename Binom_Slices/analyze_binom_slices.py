@@ -62,7 +62,7 @@ def main():
             sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}_test')
     y_ranges = {'mean': (0.8, 1.2), 'standard deviation': (0.8, 1.25), 'skewness': (0, 1.25), 'kurtosis': (-3, 2),
                 'non-excess kurtosis': (0.95, 1.025)}
-    stat_plot = 'non-excess kurtosis'  # 'standard deviation'  # ['standard deviation']  # , 'skewness', 'non-excess kurtosis']
+    stat_plot = 'standard deviation'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
     div_plt = 120
     exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
     total_protons_plt = 20
@@ -72,7 +72,7 @@ def main():
     energy_plt = 62
     data_types_plt = ['divide']
     data_type_plt = 'divide'
-    data_sets_plt = ['ampt_resample_def']  # ['ampt_resample_def']
+    data_sets_plt = ['ampt_resample_def', 'ampt_old_resample_def', 'bes_resample_def']  # ['ampt_resample_def']
     all_sets_plt = data_sets_plt + sim_sets[:]
 
     df = pd.read_csv(df_path)
@@ -96,7 +96,7 @@ def main():
     # plot_protons_fits_divs(protons_fits, data_sets_plt)
 
     # stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, data_types_plt, data_sets_plt, plot=True, fit=True)
-    # stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, ['raw', 'mix'], all_sets_plt, plot=True, fit=False)
+    stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, ['raw', 'mix'], all_sets_plt, plot=True, fit=False)
     stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, data_types_plt, all_sets_plt, plot=True, fit=False)
     plt.show()
     return
@@ -175,13 +175,14 @@ def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_
     for data_type in data_types:
         for data_set in data_sets_plt:
             for energy in energies:
-                if 'data_type' in df:
-                    df = df[df['data_type'] == data_type]
-                if 'cent' in df:
-                    df = df[df['cent'] == cent]
-                if 'stat' in df:
-                    df = df[df['stat'] == stat]
-                df_set = df[(df['name'] == data_set) & (df['divs'] == div) & (df['energy'] == energy)]
+                df_pre = df
+                if 'data_type' in df_pre:
+                    df_pre = df_pre[df_pre['data_type'] == data_type]
+                if 'cent' in df_pre:
+                    df_pre = df_pre[df_pre['cent'] == cent]
+                if 'stat' in df_pre:
+                    df_pre = df_pre[df_pre['stat'] == stat]
+                df_set = df_pre[(df_pre['name'] == data_set) & (df_pre['divs'] == div) & (df_pre['energy'] == energy)]
                 if len(df_set) == 0:
                     continue
                 if energy == 'sim':
