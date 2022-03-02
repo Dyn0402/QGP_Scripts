@@ -15,11 +15,12 @@ from DistStats import DistStats
 
 
 def main():
-    # base_path = '/home/dylan/Research/Data/default/'
-    base_path = 'D:/Research/Data_Ampt/default_resample/'
-    base_mix_path = 'D:/Research/Data_Ampt_Mix/default_resample/'
-    # set_name = 'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_'
-    set_name = 'Ampt_rapid05_resample_norotate_'
+    base_path = '/home/dylan/Research/Data/default_resample/'
+    # base_path = 'D:/Research/Data_Ampt/default_resample/'
+    base_mix_path = '/home/dylan/Research/Data_Mix/default_resample/'
+    # base_mix_path = 'D:/Research/Data_Ampt_Mix/default_resample/'
+    set_name = 'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_'
+    # set_name = 'Ampt_rapid05_resample_norotate_'
     set_num = 0
     energy = 62
     div = 120
@@ -33,11 +34,11 @@ def main():
     az_data = AzimuthBinData(div=div, path=path)
     az_data_mix = AzimuthBinData(div=div, path=path_mix)
 
-    print_stats(az_data)
+    # print_stats(az_data)
     print_binom_stats(az_data, az_data_mix, total_protons)
 
-    az_data.plot_ratio_dist(show=False)
-    az_data.plot_pull_dist(show=True)
+    # az_data.plot_ratio_dist(show=False)
+    # az_data.plot_pull_dist(show=True)
 
     print('donzo')
 
