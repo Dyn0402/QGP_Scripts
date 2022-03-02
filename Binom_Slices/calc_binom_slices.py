@@ -85,9 +85,9 @@ def define_datasets(base_path):
         df_amp = df[df['amp'] == amp]
         for spread in np.unique(df_amp['spread']):
             spread_float = float(f'0.{spread}') * 10  # For filtering if needed
-            # entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
-            #                    ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
-            #                    ['flat'], [], [0], [62], [8], all_divs])
+            entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
+                               ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
+                               ['flat'], [], [0], [62], [8], all_divs])
 
     datasets = [dict(zip(entry_names, dset)) for dset in entry_vals]
 
