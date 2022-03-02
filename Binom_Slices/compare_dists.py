@@ -231,10 +231,10 @@ def sim_diff_comp():
     base_path = 'D:/Research/'
     energy = 62
     cent = 8
-    divs = [120]  # [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356]
-    plot_raw = True
+    divs = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356]
+    plot_raw = False
 
-    total_protons = [4]
+    total_protons = [21]
 
     sim_pars = [('0125', '08'), ('45', '35')]  # , ('4', '1'), ('6', '45')
 
@@ -245,10 +245,10 @@ def sim_diff_comp():
         div_index = 0
         for div in divs:
             data_sets = [
-                (base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
-                 energy, cent, div, total_proton, 'Data_Ampt', 'Data_Ampt_Mix', 'ampt_new'),
-                (base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
-                 energy, cent, div, total_proton, 'Data_Ampt_Old', 'Data_Ampt_Old_Mix', 'ampt_old'),
+                # (base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
+                #  energy, cent, div, total_proton, 'Data_Ampt', 'Data_Ampt_Mix', 'ampt_new'),
+                # (base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
+                #  energy, cent, div, total_proton, 'Data_Ampt_Old', 'Data_Ampt_Old_Mix', 'ampt_old'),
                 (base_path, 'default_resample', 'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0',
                  energy, cent, div, total_proton, 'Data', 'Data_Mix', 'bes'),
             ]
@@ -342,6 +342,9 @@ def sim_diff_comp():
             ax_chi_div.legend()
             fig_chi_div.tight_layout()
             fig_chi_div.canvas.manager.set_window_title(data_set[-1])
+        for data_set in sim_sets + data_sets:
+            ax_diff_divs[-1].fill_between([], [], [], alpha=0.5, label=data_set[-1])
+        ax_diff_divs[-1].legend()
         fig_diff_divs.canvas.manager.set_window_title(f'{energy}GeV, {total_proton} Protons, All Divisions')
         fig_diff_divs.tight_layout()
         fig_diff_divs.subplots_adjust(wspace=0.18, hspace=0.05)
