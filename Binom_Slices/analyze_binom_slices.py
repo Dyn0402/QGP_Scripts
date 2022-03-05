@@ -36,7 +36,7 @@ def main():
     threads = 15
     base_path = 'D:/Research/Results/Azimuth_Analysis/'
     # df_name = 'binom_slice_sds_cent8.csv'
-    df_name = 'binom_slice_stats_cent8.csv'
+    df_name = 'binom_slice_stats_cent8_no_sim.csv'
     chi_df_name = 'chi_df_ampt_neks_cent8.csv'
     df_path = base_path + df_name
     # df_path = '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df.csv'
@@ -52,7 +52,7 @@ def main():
             sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}')
 
     # sim_amp_pairs = [('02', '1'), ('07', '225'), ('25', '3'), ('12', '45')]
-    sim_amp_pairs = [('5', '35'), ('02', '05'), ('015', '1')]
+    sim_amp_pairs = []  # [('5', '35'), ('02', '05'), ('015', '1')]
     for amp, spread in sim_amp_pairs:
         sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}')
 
@@ -96,8 +96,11 @@ def main():
     # plot_protons_fits_divs(protons_fits, data_sets_plt)
 
     # stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, data_types_plt, data_sets_plt, plot=True, fit=True)
-    stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, ['raw', 'mix'], all_sets_plt, plot=True, fit=False)
+    # stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, ['raw', 'mix'], all_sets_plt, plot=True, fit=False)
     stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, data_types_plt, all_sets_plt, plot=True, fit=False)
+    for energy in [7, 11, 19, 27, 39, 62]:
+        stat_vs_protons_divs(df, stat_plot, [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356], cent_plt, [energy],
+                             data_types_plt, all_sets_plt, plot=True, fit=False)
     plt.show()
     return
 
@@ -239,6 +242,100 @@ def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_
     return pd.DataFrame(fits)
 
 
+def stat_vs_protons_divs(df, stat, divs, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False,
+                         fit=False, hist=False):
+    div_data = []
+    for div in divs:
+        data = []
+        for data_type in data_types:
+            for data_set in data_sets_plt:
+                for energy in energies:
+                    df_pre = df
+                    if 'data_type' in df_pre:
+                        df_pre = df_pre[df_pre['data_type'] == data_type]
+                    if 'cent' in df_pre:
+                        df_pre = df_pre[df_pre['cent'] == cent]
+                    if 'stat' in df_pre:
+                        df_pre = df_pre[df_pre['stat'] == stat]
+                    df_set = df_pre[
+                        (df_pre['name'] == data_set) & (df_pre['divs'] == div) & (df_pre['energy'] == energy)]
+                    if len(df_set) == 0:
+                        continue
+                    if energy == 'sim':
+                        lab = f'{data_set}_{data_type}'
+                    else:
+                        lab = f'{data_set}_{data_type}_{energy}GeV'
+                    df_set = df_set.sort_values(by=['total_protons'])
+                    data.append((df_set, lab, data_set, df_set['amp'].iloc[0], df_set['spread'].iloc[0]))
+        div_data.append(data)
+
+    if plot:
+        fig, ax_divs = plt.subplots(4, 3, sharex=True, sharey=True, figsize=(14, 8))
+        ax_divs = ax_divs.flat
+        # ax.set_title(f'{stat} {div}° Divisions')
+        for ax in ax_divs[-3:]:
+            ax.set_xlabel('Total Protons in Event')
+        for ax in ax_divs:
+            ax.axhline(1, ls='--', color='black')
+            # if y_ranges:
+            #     ax.set_ylim(y_ranges[stat])
+            ax.set_ylim(0.921, 1.019)
+            ax.set_xlim(0, 40)
+
+    fits = []
+    for data, ax, div in zip(div_data, ax_divs[:len(divs)], divs):
+        if plot:
+            color = iter(plt.cm.rainbow(np.linspace(0, 1, len(data))))
+        for df, lab, data_set, amp, spread in data:
+            if plot:
+                c = next(color)
+                ax.text(5, .94, f'{div}°')
+                if 'sim_' in data_set:
+                    ax.fill_between(df['total_protons'], df['val'] - df['err'], df['val'] + df['err'],
+                                    label=lab, color=c, alpha=0.4)
+                else:
+                    ax.errorbar(df['total_protons'], df['val'], df['err'], label=lab,
+                                marker='o', ls='', color=c, alpha=0.7)
+                    if 'sys' in df:
+                        ax.errorbar(df['total_protons'], df['val'], df['sys'], marker='', ls='',
+                                    elinewidth=3, color=c, alpha=0.4)
+
+            if fit and len(df) > 1:
+                popt, pcov = cf(line, df['total_protons'], df['val'], sigma=df['err'], absolute_sigma=True)
+                fits.append({'name': data_set, 'divs': div, 'amp': amp, 'spread': spread, 'slope': popt[0],
+                             'slope_err': np.sqrt(np.diag(pcov))[0]})
+                if plot:
+                    ax.plot(df['total_protons'], line(df['total_protons'], *popt), ls='--', color=c)
+                    if hist:
+                        sigs = (df['val'] - line(df['total_protons'], *popt)) / df['err']
+                        fig_hist, ax_hist = plt.subplots()
+                        ax_hist.set_title(f'{lab}')
+                        ax_hist.set_xlabel('Standard Deviations from Linear Fit')
+                        sns.histplot(sigs, stat='density', kde=True)
+                        x_norm = np.linspace(min(sigs), max(sigs), 1000)
+                        ax_hist.plot(x_norm, norm(0, 1).pdf(x_norm), color='red', label='Standard Normal')
+                        ax_hist.legend()
+                        fig_hist.tight_layout()
+
+    if plot:
+        data, ax, div = div_data[-1], ax_divs[-1], divs[-1]
+        color = iter(plt.cm.rainbow(np.linspace(0, 1, len(data))))
+        for df, lab, data_set, amp, spread in data:
+            c = next(color)
+            if 'sim_' in data_set:
+                ax.fill_between([], [], [], label=lab, color=c, alpha=0.4)
+            else:
+                ax.errorbar([], [], [], label=lab, marker='o', ls='', color=c, alpha=0.7)
+                if 'sys' in df:
+                    ax.errorbar([], [], [], marker='', ls='', elinewidth=3, color=c, alpha=0.4)
+        ax_divs[-1].legend()
+        fig.tight_layout()
+        fig.subplots_adjust(wspace=0.0, hspace=0.0)
+        fig.canvas.manager.set_window_title(f'binom_slices_{energies[0]}GeV_{stat}')
+
+    return pd.DataFrame(fits)
+
+
 def plot_protons_fits_divs(df, data_sets_plt):
     fig, ax = plt.subplots()
     for data_set in data_sets_plt:
@@ -336,7 +433,7 @@ def chi2_vs_protons(df, stat, div, cent, energy, data_type, data_sets_plt):
                 print('Data and sim don\'t match total protons!')
 
             sim_vals, sim_errs = np.array(df_sim_set['val']), np.array(df_sim_set['err'])
-            chi2 = np.sum((data_vals - sim_vals)**2 / (data_errs**2 + sim_errs**2))
+            chi2 = np.sum((data_vals - sim_vals) ** 2 / (data_errs ** 2 + sim_errs ** 2))
 
             chi2_sets.append({'data_name': data_set, 'sim_name': sim_set, 'chi2': chi2, 'n': len(data_vals),
                               'divs': div, 'amp': df_sim_set['amp'].iloc[0], 'spread': df_sim_set['spread'].iloc[0],

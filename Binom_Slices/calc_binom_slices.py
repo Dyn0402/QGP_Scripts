@@ -32,13 +32,13 @@ def main():
 
 def init_pars():
     pars = {
-        # 'base_path': 'D:/Research/',
-        'base_path': '/home/dylan/Research/',
-        # 'csv_path': 'D:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_test.csv',
-        'csv_path': '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_app.csv',
+        'base_path': 'D:/Research/',
+        # 'base_path': '/home/dylan/Research/',
+        'csv_path': 'D:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim.csv',
+        # 'csv_path': '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8.csv',
         'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': True,  # If True check csv_path and only run missing datasets, else run all datasets
-        'threads': 12,
+        'threads': 14,
         'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
         'min_events': 100,  # Min number of total events per total_proton. Skip total_proton if fewer
