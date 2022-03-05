@@ -7,9 +7,11 @@ Created as QGP_Scripts/calc_binom_slices.py
 
 @author: Dylan Neff, Dylan
 """
+
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from pandas.errors import EmptyDataError
 import os
 
 from multiprocessing import Pool
@@ -33,7 +35,7 @@ def init_pars():
         # 'base_path': 'D:/Research/',
         'base_path': '/home/dylan/Research/',
         # 'csv_path': 'D:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_test.csv',
-        'csv_path': '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8.csv',
+        'csv_path': '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_app.csv',
         'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': True,  # If True check csv_path and only run missing datasets, else run all datasets
         'threads': 12,
@@ -72,22 +74,31 @@ def define_datasets(base_path):
                    'set_nums', 'energies', 'cents', 'divs']
     entry_vals = [
         # ['ampt_def', '_Ampt', ['default'], [], ['resample'], range(60), all_energies, all_cents, all_divs],
-        ['ampt_resample_def', '_Ampt', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
-        ['ampt_old_resample_def', '_Ampt_Old', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
+        # ['ampt_resample_def', '_Ampt', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
+        # ['ampt_old_resample_def', '_Ampt_Old', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
+        ['ampt_eff1_resample_def', '_Ampt', ['resample', 'Eff1'], [], [], [0], all_energies, all_cents, all_divs],
+        ['ampt_eff2_resample_def', '_Ampt', ['resample', 'Eff2'], [], [], [0], all_energies, all_cents, all_divs],
+        ['ampt_eff3_resample_def', '_Ampt', ['resample', 'Eff3'], [], [], [0], all_energies, all_cents, all_divs],
+        ['ampt_old_eff1_resample_def', '_Ampt_Old', ['resample', 'Eff1'], [], [], [0], all_energies, all_cents,
+         all_divs],
+        ['ampt_old_eff2_resample_def', '_Ampt_Old', ['resample', 'Eff2'], [], [], [0], all_energies, all_cents,
+         all_divs],
+        ['ampt_old_eff3_resample_def', '_Ampt_Old', ['resample', 'Eff3'], [], [], [0], all_energies, all_cents,
+         all_divs],
         # ['bes_def', '', ['default'], [], ['resample'], range(60), all_energies, [8], all_divs],
-        ['bes_resample_def', '', ['default', 'resample'], [], [], [0], all_energies, [8], all_divs],
+        # ['bes_resample_def', '', ['default', 'resample'], [], [], [0], all_energies, [8], all_divs],
     ]
 
-    df = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample'], ['test'], True)
-
-    for amp in np.unique(df['amp']):
-        amp_float = float(f'0.{amp}')  # For filtering if needed
-        df_amp = df[df['amp'] == amp]
-        for spread in np.unique(df_amp['spread']):
-            spread_float = float(f'0.{spread}') * 10  # For filtering if needed
-            entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
-                               ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
-                               ['flat'], [], [0], [62], [8], all_divs])
+    # df = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample'], ['test'], True)
+    #
+    # for amp in np.unique(df['amp']):
+    #     amp_float = float(f'0.{amp}')  # For filtering if needed
+    #     df_amp = df[df['amp'] == amp]
+    #     for spread in np.unique(df_amp['spread']):
+    #         spread_float = float(f'0.{spread}') * 10  # For filtering if needed
+    #         entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
+    #                            ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
+    #                            ['flat'], [], [0], [62], [8], all_divs])
 
     datasets = [dict(zip(entry_names, dset)) for dset in entry_vals]
 
@@ -200,9 +211,9 @@ def read_data(pars):
         try:
             df_old = pd.read_csv(pars['csv_path'])
             old_names = pd.unique(df_old['name'])
-        except FileNotFoundError:
+        except (FileNotFoundError, EmptyDataError) as e:
             df_old, old_names = None, None
-            print(f'{pars["csv_path"]} not found!')
+            print(f'{pars["csv_path"]} not found! {e}')
 
     jobs = []
     for dataset in pars['datasets']:
