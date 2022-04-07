@@ -29,7 +29,8 @@ from calc_binom_slices import find_sim_sets, get_name_amp_spread
 def main():
     # comp_test()
     # bs_test()
-    sim_diff_comp()
+    # sim_diff_comp()
+    bs_visual()
     # chi2_test()
     # chi2_test_all()
     # sum_chi2()
@@ -348,6 +349,64 @@ def sim_diff_comp():
         fig_diff_divs.canvas.manager.set_window_title(f'{energy}GeV, {total_proton} Protons, All Divisions')
         fig_diff_divs.tight_layout()
         fig_diff_divs.subplots_adjust(wspace=0.18, hspace=0.05)
+
+    plt.show()
+
+
+def bs_visual():
+    base_path = 'D:/Research/'
+    energy = 62
+    cent = 8
+    div = 60
+
+    total_proton = 21
+
+    data_sets = [
+        # (base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
+        #  energy, cent, div, total_proton, 'Data_Ampt', 'Data_Ampt_Mix', 'ampt_new'),
+        # (base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
+        #  energy, cent, div, total_proton, 'Data_Ampt_Old', 'Data_Ampt_Old_Mix', 'ampt_old'),
+        (base_path, 'default_resample', 'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0',
+         energy, cent, div, total_proton, 'Data', 'Data_Mix', 'bes'),
+    ]
+
+    for data_set in data_sets:
+        base_path, set_group, set_name, energy_set, cent, div, total_proton, raw_folder, mix_folder, \
+            name = data_set
+        file_name = f'ratios_divisions_{div}_centrality_{cent}_local.txt'
+        path_sufx = f'{set_group}/{set_name}/{energy_set}GeV/{file_name}'
+        raw_tp_dist, bs_tp_dists = get_norm_dists(f'{base_path}{raw_folder}/{path_sufx}', total_proton)
+        # mix_tp_dist, bs_tp_dists = get_norm_dists(f'{base_path}{mix_folder}/{path_sufx}', total_proton)
+
+        fig_raw, ax_raw = plt.subplots()
+        ax_raw.plot(range(bs_tp_dists[0].size), bs_tp_dists[0] / np.sum(bs_tp_dists[0]), color='black', alpha=0.2,
+                    label=f'{len(bs_tp_dists)} Bootstraps')
+        for bs in bs_tp_dists[1:]:
+            ax_raw.plot(range(bs.size), bs / np.sum(bs), color='black', alpha=0.2)
+        ax_raw.plot(range(raw_tp_dist.size), raw_tp_dist / np.sum(raw_tp_dist), alpha=1, color='green', label='Raw')
+        # ax_comp.plot(range(mix_tp_dist.size), mix_tp_dist / np.sum(mix_tp_dist), marker='o', alpha=0.7,
+        #              label='Mix')
+        ax_raw.set_title(f'{name} {total_proton} Protons, {div} divs')
+        ax_raw.axhline(0, ls='--', color='black', zorder=0)
+        ax_raw.set_xlabel('Protons in Bin')
+        ax_raw.legend()
+        fig_raw.canvas.manager.set_window_title(f'{name} Raw {total_proton} Protons, {div} divs')
+
+        fig_raw_diff, ax_raw_diff = plt.subplots()
+        ax_raw_diff.axhline(0, ls='--', color='green')
+        ax_raw_diff.plot(range(bs_tp_dists[0].size), bs_tp_dists[0] / np.sum(bs_tp_dists[0]) -
+                         raw_tp_dist / np.sum(raw_tp_dist), color='black',
+                         alpha=0.2, label=f'{len(bs_tp_dists)} Bootstraps')
+        for bs in bs_tp_dists:
+            ax_raw_diff.plot(range(bs.size), bs / np.sum(bs) - raw_tp_dist / np.sum(raw_tp_dist), color='black',
+                             alpha=0.2)
+        # ax_comp.plot(range(mix_tp_dist.size), mix_tp_dist / np.sum(mix_tp_dist), marker='o', alpha=0.7,
+        #              label='Mix')
+        ax_raw_diff.set_title(f'{name} {total_proton} Protons, {div} divs')
+        ax_raw_diff.axhline(0, ls='--', color='black', zorder=0)
+        ax_raw_diff.set_xlabel('Protons in Bin')
+        ax_raw_diff.legend()
+        fig_raw_diff.canvas.manager.set_window_title(f'{name} Raw {total_proton} Protons, {div} divs')
 
     plt.show()
 

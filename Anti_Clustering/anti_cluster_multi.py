@@ -118,9 +118,9 @@ def random_tracks():
 
 def clustered_tracks():
     n_tracks = 80
-    sd = 3.3
+    sd = 0.1
     wrap_num = 5
-    cl_amp = -0.2
+    cl_amp = -0.4
     x = np.linspace(0, 2 * np.pi, 1000)
 
     # fig_ind_clust, ax_ind_clust = plt.subplots()
