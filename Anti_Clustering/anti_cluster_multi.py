@@ -117,10 +117,11 @@ def random_tracks():
 
 
 def clustered_tracks():
-    n_tracks = 80
-    sd = 3.3
+    n_tracks = 1
+    sd = np.pi
     wrap_num = 5
-    cl_amp = -0.2
+    wrap_ns = [5]
+    cl_amp = -0.4
     x = np.linspace(0, 2 * np.pi, 1000)
 
     # fig_ind_clust, ax_ind_clust = plt.subplots()
@@ -147,7 +148,7 @@ def clustered_tracks():
 
     fig_aclust, ax_aclust = plt.subplots()
     ax_aclust.set_xlabel('Phi Angle')
-    for wrap_n in [1, 2, 3, 4, 5]:
+    for wrap_n in wrap_ns:
         prob_dist = ClustDist(phis, sd, cl_amp, a=0, b=2 * np.pi, wrap_num=wrap_n)
         ax_aclust.plot(x, prob_dist.pdf(x), label=f'Wrap_num = {wrap_n}')
         print(prob_dist.pdf(x))

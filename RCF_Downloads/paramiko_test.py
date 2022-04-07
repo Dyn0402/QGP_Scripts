@@ -16,13 +16,15 @@ import socket
 import sys
 import getpass
 
-hostname = 'rftpexp.rhic.bnl.gov'
+hostname = 'ssh.sdcc.bnl.gov'
 username = 'dneff'
 rsa_path = 'C:/Users/Dyn04/.ssh/id_rsa'
 port = 22
 
+
 def byte_count(xfer, to_be_xfer):
     print(f'transferred: {((xfer / to_be_xfer) * 100):.2f} %')
+
 
 try:
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
