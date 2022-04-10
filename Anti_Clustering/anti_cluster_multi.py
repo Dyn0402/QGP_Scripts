@@ -119,8 +119,8 @@ def random_tracks():
 
 
 def clustered_tracks():
-    n_tracks = 1
-    sd = np.pi
+    n_tracks = 80
+    sd = 0.1
     wrap_num = 5
     wrap_ns = [5]
     cl_amp = -0.4
