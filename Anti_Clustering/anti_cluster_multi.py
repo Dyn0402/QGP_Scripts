@@ -10,6 +10,7 @@ Created as QGP_Scripts/anti_cluster_multi
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation, PillowWriter
 from scipy.stats import rv_continuous
 from scipy.stats import norm
 from scipy.stats import uniform
@@ -19,7 +20,8 @@ from scipy.interpolate import interp1d
 
 def main():
     # random_tracks()
-    clustered_tracks()
+    # clustered_tracks()
+    clustered_tracks_ani()
     # rv_test()
     print('donzo')
 
@@ -162,6 +164,53 @@ def clustered_tracks():
     fig_aclust.tight_layout()
 
     plt.show()
+
+
+def clustered_tracks_ani():
+    # gif_path = 'D:/Research/Results/Resample_POC/pdf_test.gif'
+    gif_dir = 'C:/Users/Dyn04/Desktop/pdf_test.gif'
+    fps = 2
+    n_tracks = 50
+    sd = 0.4  # np.pi
+    wrap_num = 5
+    cl_amp = -0.4
+    x = np.linspace(0, 2 * np.pi, 1000)
+    gif_path = f'{gif_dir}'
+
+    phis = []
+    prob_dists = [ClustDist(phis, sd, cl_amp, a=0, b=2*np.pi, wrap_num=wrap_num)]
+    y_maxes = []
+    while len(phis) < n_tracks:
+        phis.append(prob_dists[-1].rvs())
+        prob_dists.append(ClustDist(phis, sd, cl_amp, a=0, b=2*np.pi, wrap_num=wrap_num))
+        y_maxes.append(max(prob_dists[-1].pdf(x)))
+    fig = plt.figure(figsize=(10, 5))
+    ax = plt.subplot()
+
+    y_lim = (0, max(y_maxes) * 1.2)
+
+    ani = FuncAnimation(fig, ani_pdf, frames=range(len(phis)), interval=1.0 / fps * 1000, repeat_delay=5000,
+                        repeat=False, fargs=(phis, prob_dists, x, y_lim, {'sd': sd, 'amp': -cl_amp}, ax))
+    ani.save(gif_path, dpi=100, writer=PillowWriter(fps=fps))
+
+
+def ani_pdf(phi_index, phis, prob_dists, x_vals, y_lim, sim_pars, ax):
+    print(phi_index)
+    plot_pdf_ani(phis[:phi_index], prob_dists[phi_index], x_vals, y_lim, sim_pars, ax)
+
+
+def plot_pdf_ani(phis, pdf, x_vals, y_lim, sim_pars, ax):
+    ax.clear()
+    pdf_vals = pdf.pdf(x_vals)
+    ax.plot(x_vals, pdf_vals, label='PDF for next track')
+    ax.vlines(phis[:-1], 0, y_lim[-1] * 0.5, color='black', ls='--', label='Tracks')
+    if len(phis) > 0:
+        ax.axvline(phis[-1], 0, y_lim[-1] * 0.5, color='red', ls='--', label='New Track')
+    ax.set_title(f'Probability Distribution for Track #{len(phis)} amp={sim_pars["amp"]}, spread={sim_pars["sd"]:.2f}')
+    ax.set_xlabel('Phi')
+    ax.set_ylim(y_lim)
+    ax.legend()
+    plt.tight_layout()
 
 
 def rv_test():
