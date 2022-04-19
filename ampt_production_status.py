@@ -17,7 +17,7 @@ from datetime import datetime
 
 def main():
     trees_path = '/gpfs01/star/pwg/dneff/data/AMPT/dylan_run/output/'
-    energies = [7, 11, 19, 27, 39, 62]
+    energies = [7, 11, 19, 27, 39, 62, '2-7TeV_PbPb']
     energies_found = []
     event_time_data = {}
     total_events = []
@@ -26,15 +26,17 @@ def main():
     for energy in energies:
         events = []
         times = []
-        path = f'{trees_path}{energy}GeV/'
+        if type(energy) == int:
+            energy = f'{energy}GeV'
+        path = f'{trees_path}{energy}/'
         files = os.listdir(path)
         if len(files) <= 0:
-            print(f'{len(files)} {energy}GeV trees, skipping energy')
+            print(f'{len(files)} {energy} trees, skipping energy')
             continue
         energies_found.append(energy)
-        print(f'Reading ~{len(files)} {energy}GeV trees...')
+        print(f'Reading ~{len(files)} {energy} trees...')
         path_events_data = get_events(path)
-        print(f'  Getting times for each {energy}GeV tree...')
+        print(f'  Getting times for each {energy} tree...')
         for file in files:
             if '.root' in file:
                 try:
@@ -99,7 +101,7 @@ def plot_event_time_data(data, energies):
     for energy in energies:
         energy_events = get_cumulative(data[energy][1])
         energy_dates = date2num(data[energy][0])
-        plt.plot_date(energy_dates, energy_events, label=f'{energy}GeV', c=colors[energy], fmt='-')
+        plt.plot_date(energy_dates, energy_events, label=f'{energy}', c=colors[energy], fmt='-')
     plt.legend()
 
     plt.show()
