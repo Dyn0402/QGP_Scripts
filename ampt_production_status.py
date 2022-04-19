@@ -10,7 +10,9 @@ Created as QGP_Scripts/ampt_production_status.py
 
 import os
 import subprocess as sp
+import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import cm
 from matplotlib.dates import date2num, DateFormatter, HourLocator
 from datetime import datetime
 
@@ -91,7 +93,8 @@ def plot_event_time_data(data, energies):
     plt.gca().xaxis.set_tick_params(rotation=30, labelsize=10)
 
     plt.figure(2)
-    colors = {7: '#1f77b4', 11: '#ff7f0e', 19: '#2ca02c', 27: '#d62728', 39: '#9467bd', 62: '#8c564b'}
+    # colors = {7: '#1f77b4', 11: '#ff7f0e', 19: '#2ca02c', 27: '#d62728', 39: '#9467bd', 62: '#8c564b'}
+    color = iter(cm.rainbow(np.linspace(0, 1, len(energies))))
     plt.title('AMPT Events Produced by Energy')
     plt.ylabel('Events Produced')
     plt.grid()
@@ -99,9 +102,10 @@ def plot_event_time_data(data, energies):
     plt.gca().xaxis.set_major_formatter(formatter)
     plt.gca().xaxis.set_tick_params(rotation=30, labelsize=10)
     for energy in energies:
+        c = next(color)
         energy_events = get_cumulative(data[energy][1])
         energy_dates = date2num(data[energy][0])
-        plt.plot_date(energy_dates, energy_events, label=f'{energy}', c=colors[energy], fmt='-')
+        plt.plot_date(energy_dates, energy_events, label=f'{energy}', color=c, fmt='-')
     plt.legend()
 
     plt.show()
