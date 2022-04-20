@@ -167,8 +167,8 @@ def clustered_tracks():
 
 
 def clustered_tracks_ani():
-    # gif_path = 'D:/Research/Results/Resample_POC/pdf_test.gif'
-    gif_dir = 'C:/Users/Dyn04/Desktop/pdf_test.gif'
+    gif_dir = 'C:/Users/Dylan/Desktop/pdf_test.gif'
+    # gif_dir = 'C:/Users/Dyn04/Desktop/pdf_test.gif'
     fps = 2
     n_tracks = 50
     sd = 0.4  # np.pi
