@@ -67,17 +67,18 @@ def sim_self_compare():
     amp_fs_comp, comp_names = amp_fs[edge_buffer:-edge_buffer], sim_names[edge_buffer:-edge_buffer]  # skip edges
 
     # comp_amp, comp_cost_def, comp_cost_sd = [], [], []
-    costs_colors = {'Diff2': 'blue', 'Chi2': 'green'}
+    costs_colors = {'Diff2': 'blue', 'Chi2': 'green', 'Diff2_Div': 'red', 'Chi2_Div': 'purple'}
     comp_amp = []
     comp_cost_min_def, comp_cost_min_sd = [{cost: [] for cost in costs_colors.keys()} for i in range(2)]
     for comp_name in comp_names:
         print(f'Comparison Set: {comp_name}')
-        raw_sub_mix_comp, raw_sub_mix_sd_comp, raw_sub_mix_bss_slim_comp = sim_sets[comp_name]
+        raw_sub_mix_comp, raw_sub_mix_sd_comp, raw_sub_mix_bss_slim_comp, raw_div_mix_comp, raw_div_mix_sd_comp, \
+            raw_div_mix_bss_slim_comp = sim_sets[comp_name]
 
         true_amp = get_name_amp_spread(comp_name)[0]
 
         amps, diff2s, chi2s = [], [], []
-        plot_comp = False
+        plot_comp = true_amp == 0.1
         costs = {cost: [] for cost in costs_colors.keys()}
         costs_bss = {cost: [] for cost in costs_colors.keys()}
 
@@ -85,7 +86,8 @@ def sim_self_compare():
             if sim_name == comp_name:
                 continue  # Don't compare to self.
 
-            raw_sub_mix, raw_sub_mix_sd, raw_sub_mix_bss_slim = sim_sets[sim_name]
+            raw_sub_mix, raw_sub_mix_sd, raw_sub_mix_bss_slim, raw_div_mix, raw_div_mix_sd, raw_div_mix_bss_slim = \
+                sim_sets[sim_name]
             amp = get_name_amp_spread(sim_name)[0]
 
             diff = raw_sub_mix_comp - raw_sub_mix
@@ -93,23 +95,41 @@ def sim_self_compare():
             err2 = (raw_sub_mix_sd_comp + raw_sub_mix_sd) ** 2
             chi2 = diff2 / err2
 
-            diff2_bss = []
-            chi2_bss = []
+            diff_div = raw_div_mix_comp - raw_div_mix
+            diff2_div = diff_div ** 2
+            err2_div = (raw_div_mix_sd_comp + raw_div_mix_sd) ** 2
+            chi2_div = diff2_div / err2_div
+
+            diff2_bss, chi2_bss, diff2_div_bss, chi2_div_bss = [], [], [], []
             for i in range(len(raw_sub_mix_bss_slim_comp)):
                 diff_bs = raw_sub_mix_bss_slim_comp[i] - raw_sub_mix_bss_slim[i]
                 diff2_bs = diff_bs ** 2
                 diff2_bss.append(np.sum(diff2_bs))
+
                 chi2_bs = diff2_bs / err2  # Placeholder probably?
                 chi2_bss.append(np.sum(chi2_bs))
 
+                diff_div_bs = raw_div_mix_bss_slim_comp[i] - raw_div_mix_bss_slim[i]
+                diff2_div_bs = diff_div_bs ** 2
+                diff2_div_bss.append(np.nansum(diff2_div_bs))
+
+                chi2_div_bs = diff2_div_bs / err2_div  # Placeholder probably?
+                chi2_div_bss.append(np.nansum(chi2_div_bs))
+
             diff2 = np.sum(diff2)
             chi2 = np.sum(chi2)
+            diff2_div = np.nansum(diff2_div)
+            chi2_div = np.nansum(chi2_div)
 
             amps.append(amp)
             costs['Diff2'].append(diff2)
             costs_bss['Diff2'].append(diff2_bss)
             costs['Chi2'].append(chi2)
             costs_bss['Chi2'].append(chi2_bss)
+            costs['Diff2_Div'].append(diff2_div)
+            costs_bss['Diff2_Div'].append(diff2_div_bss)
+            costs['Chi2_Div'].append(chi2_div)
+            costs_bss['Chi2_Div'].append(chi2_div_bss)
 
         costs_norm, costs_interp, costs_min_res = [{key: [] for key in costs} for i in range(3)]
         # costs_min, costs_sd = [{key: [] for key in costs} for i in range(2)]
@@ -144,7 +164,7 @@ def sim_self_compare():
     space = np.min(np.diff(comp_amp)) / num_costs / 3
     for i, cost in enumerate(comp_cost_min_def.keys()):
         dev_from_true = np.array(comp_cost_min_def[cost]) - comp_amp
-        ax_min_comp_amp.errorbar(comp_amp - space * (i - num_costs / 2 + 0.5), dev_from_true,
+        ax_min_comp_amp.errorbar(comp_amp - space * (i - num_costs / 2 + 0.5), dev_from_true, color=costs_colors[cost],
                                  yerr=comp_cost_min_sd[cost], ls='none', marker='o', label=cost)
     ax_min_comp_amp.set_xlabel('Comparison Amplitude')
     ax_min_comp_amp.set_ylabel('Minimum Value of Cost Interpolation Minus True Value')
@@ -155,7 +175,7 @@ def sim_self_compare():
     fig_diff_sd_cor, ax_diff_sd_cor = plt.subplots()
     for cost in comp_cost_min_def.keys():
         dev_from_true = np.array(comp_cost_min_def[cost]) - comp_amp
-        ax_diff_sd_cor.scatter(abs(dev_from_true), comp_cost_min_sd[cost], label=cost)
+        ax_diff_sd_cor.scatter(abs(dev_from_true), comp_cost_min_sd[cost], color=costs_colors[cost], label=cost)
     ax_diff_sd_cor.set_xlabel('|Deviation| from True Value')
     ax_diff_sd_cor.set_ylabel('Minimum Uncertainty')
     ax_diff_sd_cor.set_title('Correlation Uncertainty vs |Deviation| from True')
@@ -174,16 +194,24 @@ def calc_set(set_pars):
     path_sufx = f'{set_group}/{set_name}/{energy_set}GeV/{file_name}'
     raw_dist, raw_bs_dists = get_norm_dists(f'{base_path}{raw_folder}/{path_sufx}', total_proton)
     mix_dist, mix_bs_dists = get_norm_dists(f'{base_path}{mix_folder}/{path_sufx}', total_proton)
-    raw_sub_mix = raw_dist / np.sum(raw_dist) - mix_dist / np.sum(mix_dist)
-    raw_sub_mix_bss = np.array([raw / np.sum(raw) - mix / np.sum(mix) for raw in raw_bs_dists
-                                for mix in mix_bs_dists])
+    raw_sum, mix_sum = np.sum(raw_dist), np.sum(mix_dist)
+    raw_bs_sums, mix_bs_sums = [np.sum(raw) for raw in raw_bs_dists], [np.sum(mix) for mix in mix_bs_dists]
+    raw_sub_mix = raw_dist / raw_sum - mix_dist / mix_sum
+    raw_sub_mix_bss = np.array([raw / raw_sum_bs - mix / mix_sum_bs for raw, raw_sum_bs in
+                                zip(raw_bs_dists, raw_bs_sums) for mix, mix_sum_bs in zip(mix_bs_dists, mix_bs_sums)])
     raw_sub_mix_sd = np.std(raw_sub_mix_bss)
-    raw_sub_mix_bss_slim = np.array([raw / np.sum(raw) - mix / np.sum(mix) for raw, mix in
-                                     zip(raw_bs_dists, mix_bs_dists)])
+    raw_sub_mix_bss_slim = np.array([raw / raw_sum_bs - mix / mix_sum_bs for raw, raw_sum_bs, mix, mix_sum_bs in
+                                     zip(raw_bs_dists, raw_bs_sums, mix_bs_dists, mix_bs_sums)])
+    raw_div_mix = (raw_dist / raw_sum) / (mix_dist / mix_sum)
+    raw_div_mix_bss = np.array([(raw / raw_sum_bs) / (mix / mix_sum_bs) for raw, raw_sum_bs in
+                                zip(raw_bs_dists, raw_bs_sums) for mix, mix_sum_bs in zip(mix_bs_dists, mix_bs_sums)])
+    raw_div_mix_sd = np.std(raw_div_mix_bss)
+    raw_div_mix_bss_slim = np.array([(raw / raw_sum_bs) / (mix / mix_sum_bs) for raw, raw_sum_bs, mix, mix_sum_bs in
+                                     zip(raw_bs_dists, raw_bs_sums, mix_bs_dists, mix_bs_sums)])
 
     # set_dists = {'raw_sub_mix': raw_sub_mix, 'raw_sub_mix_sd': raw_sub_mix_sd,
     #              'raw_sub_mix_bss_slim': raw_sub_mix_bss_slim}
-    set_dists = [raw_sub_mix, raw_sub_mix_sd, raw_sub_mix_bss_slim]
+    set_dists = [raw_sub_mix, raw_sub_mix_sd, raw_sub_mix_bss_slim, raw_div_mix, raw_div_mix_sd, raw_div_mix_bss_slim]
 
     return set_dists
 
