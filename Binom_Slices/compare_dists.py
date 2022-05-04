@@ -49,11 +49,18 @@ def sum_chi2():
     chi2_sum_out_path = 'F:/Research/Results/Azimuth_Analysis/chi2_sum_dist_ampt_new_bs.csv'
     # chi2_sum_out_path = '/home/dylan/Research/Results/Azimuth_Analysis/chi2_sum_dist_ampt_new.csv'
     threads = 12
-    df = pd.read_csv(chi2_indiv_path)
-    sums_df = []
 
-    print('Setting jobs: ')
-    jobs = []
+    print(f'Reading input csv {chi2_indiv_path}')
+    df = pd.read_csv(chi2_indiv_path)
+
+    if os.path.exists(chi2_sum_out_path):
+        res = input(f'Output file exists {chi2_sum_out_path}\n'
+                    f'Enter "a" to append to dataframe, "o" to overwrite, anything else to quit:\n')
+        if res.lower() == 'a':
+            pass
+        elif res.lower() == 'o':
+            os.remove(chi2_sum_out_path)
+
     for energy in pd.unique(df['energy']):
         df_energy = df[df['energy'] == energy]
         weights_path = f'{weights_path_pre}{energy}GeV/ratios_divisions_{div_weight}_centrality_{cent}_local.txt'
@@ -62,57 +69,28 @@ def sum_chi2():
         total_proton_weights = {total_protons: counts / tp_sum for total_protons, counts in
                                 total_proton_dist.items()}
         for data_set in pd.unique(df_energy['data_set']):
-            print(f' Setting {energy}GeV {data_set}')
+            print(f'{energy}GeV {data_set}')
+            sums_df = []
+            jobs = []
             df_data_set = df_energy[df_energy['data_set'] == data_set]
             for sim_set in pd.unique(df_data_set['sim_name']):
                 df_sim_set = df_data_set[df_data_set['sim_name'] == sim_set]
                 amp, spread = get_name_amp_spread(sim_set)
                 df_entry = {'data_set': data_set, 'sim_name': sim_set, 'energy': energy, 'amp': amp, 'spread': spread}
                 jobs.append((df_sim_set, total_proton_weights, df_entry))
-                sums_df.append(df_entry)
 
-    with Pool(threads) as pool:
-        for df_entry in tqdm.tqdm(pool.istarmap(sum_chi2_set, jobs), total=len(jobs)):
-            sums_df.append(df_entry)
+            with Pool(threads) as pool:
+                for df_entry in tqdm.tqdm(pool.istarmap(sum_chi2_set, jobs), total=len(jobs)):
+                    sums_df.append(df_entry)
 
-    for energy in pd.unique(df['energy']):
-        df_energy = df[df['energy'] == energy]
-        weights_path = f'{weights_path_pre}{energy}GeV/ratios_divisions_{div_weight}_centrality_{cent}_local.txt'
-        total_proton_dist = Abd(path=weights_path).get_total_particle_dist()
-        tp_sum = float(np.sum(np.array(list(total_proton_dist.values()), dtype=np.longlong)))
-        total_proton_weights = {total_protons: counts / tp_sum for total_protons, counts in
-                                total_proton_dist.items()}
-        for data_set in pd.unique(df_energy['data_set']):
-            df_data_set = df_energy[df_energy['data_set'] == data_set]
-            for sim_set in pd.unique(df_data_set['sim_name']):
-                print(sim_set)
-                df_sim_set = df_data_set[df_data_set['sim_name'] == sim_set]
-                chi2_sum, chi2_sum_num = 0, 0
-                chi2_sum_bss, chi2_sum_num_bss = {}, {}
-                for div in pd.unique((df_sim_set['divs'])):
-                    df_divs = df_sim_set[df_sim_set['divs'] == div]
-                    for total_protons in pd.unique(df_divs['total_protons']):
-                        df_tp_set = df_divs[df_divs['total_protons'] == total_protons]
-                        # chi2_sum += total_proton_weights[total_protons] * \
-                        #             np.sum(df_tp_set['chi2_sum'] / df_tp_set['num_points'])  # div weights 1
-                        # div weights are all 1
-                        chi2_sum += total_proton_weights[total_protons] * np.sum(df_tp_set['chi2_avg_def'])
-                        chi2_sum_num += 1
-                        bs_cols = [col for col in df_tp_set if 'chi2_avg_bs' in col]
-                        for col in bs_cols:
-                            if col not in chi2_sum_bss:
-                                chi2_sum_bss.update({col: 0})
-                                chi2_sum_num_bss.update({col: 0})
-                            chi2_sum_bss[col] += total_proton_weights[total_protons] * np.sum(df_tp_set[col])
-                            chi2_sum_num_bss[col] += 1
-                amp, spread = get_name_amp_spread(sim_set)
-                df_entry = {'data_set': data_set, 'sim_name': sim_set, 'energy': energy, 'amp': amp, 'spread': spread,
-                            'chi2_avg': chi2_sum / chi2_sum_num}
-                for col in chi2_sum_bss:
-                    df_entry.update({col: chi2_sum_bss[col] / chi2_sum_num_bss[col]})
-                sums_df.append(df_entry)
-
-    pd.DataFrame(sums_df).to_csv(chi2_sum_out_path, index=False)
+            sums_df = pd.DataFrame(sums_df)
+            try:
+                df_old = pd.read_csv(chi2_sum_out_path)
+                sums_df = sums_df.append(df_old, ignore_index=True)
+            except (FileNotFoundError, EmptyDataError) as e:
+                pass
+            print('Outputting to csv')
+            sums_df.to_csv(chi2_sum_out_path, index=False)
 
 
 def sum_chi2_set(df_sim_set, total_proton_weights, df_entry):
