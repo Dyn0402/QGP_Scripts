@@ -33,7 +33,7 @@ def main():
     # bs_test()
     # sim_diff_comp()
     # chi2_test()
-    # chi2_test_all()
+    chi2_test_all()
     sum_chi2()
     print('donzo')
 
@@ -44,9 +44,9 @@ def sum_chi2():
     # weights_path_pre = 'F:/Research/Data/default_resample/rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0/'
     cent = 8
     div_weight = 60  # Proton distribution for all divs should be the same
-    chi2_indiv_path = 'F:/Research/Results/Azimuth_Analysis/chi2_all_dist_ampt_new_bs.csv'
+    chi2_indiv_path = 'F:/Research/Results/Azimuth_Analysis/bes_chi2_all_dist_bs.csv'
     # chi2_indiv_path = '/home/dylan/Research/Results/Azimuth_Analysis/chi2_all_dist_ampt_new.csv'
-    chi2_sum_out_path = 'F:/Research/Results/Azimuth_Analysis/chi2_sum_dist_ampt_new_bs.csv'
+    chi2_sum_out_path = 'F:/Research/Results/Azimuth_Analysis/bes_chi2_sum_dist_bs.csv'
     # chi2_sum_out_path = '/home/dylan/Research/Results/Azimuth_Analysis/chi2_sum_dist_ampt_new.csv'
     threads = 12
     df = pd.read_csv(chi2_indiv_path)
@@ -146,7 +146,7 @@ def chi2_test_all():
     base_path = 'F:/Research/'
     # base_path = '/home/dylan/Research/'
     # chi2_out_path = 'F:/Research/Results/Azimuth_Analysis/chi2_all_dist_ampt_new_bstest3.csv'
-    chi2_out_path = 'F:/Research/Results/Azimuth_Analysis/chi2_all_dist_ampt_new_bs.csv'
+    chi2_out_path = 'F:/Research/Results/Azimuth_Analysis/bes_chi2_all_dist_bs.csv'
     df_append = True
     # chi2_out_path = '/home/dylan/Research/Results/Azimuth_Analysis/chi2_all_dist_ampt_new.csv'
     # energy = 62
