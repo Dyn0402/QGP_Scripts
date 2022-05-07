@@ -55,7 +55,8 @@ def sum_chi2():
 
     if os.path.exists(chi2_sum_out_path):
         res = input(f'Output file exists {chi2_sum_out_path}\n'
-                    f'Enter "a" to append to dataframe, "o" to overwrite, anything else to quit:\n')
+                    f'Enter "a" to append to dataframe, "o" to overwrite, anything else to'
+                    f' quit:\n')
         if res.lower() == 'a':
             pass
         elif res.lower() == 'o':
