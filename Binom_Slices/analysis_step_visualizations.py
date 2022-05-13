@@ -16,8 +16,8 @@ from compare_dists import get_norm_dists
 
 def main():
     # bs_visual()
-    # full_bs_visual()
-    full_bs_div_visual()
+    full_bs_visual()
+    # full_bs_div_visual()
     print('donzo')
 
 
@@ -529,8 +529,8 @@ def full_bs_div_visual():
     raw_tp_dist_sim, raw_bs_tp_dists_sim = get_norm_dists(f'{base_path}{raw_folder}/{path_sufx}', total_proton)
     mix_tp_dist_sim, mix_bs_tp_dists_sim = get_norm_dists(f'{base_path}{mix_folder}/{path_sufx}', total_proton)
 
-    raw_div_mix_def_sim = raw_tp_dist_sim / np.sum(raw_tp_dist_sim) - mix_tp_dist_sim / np.sum(mix_tp_dist_sim)
-    raw_div_mix_bss_sim = [raw / np.sum(raw) - mix / np.sum(mix) for raw in raw_bs_tp_dists_sim
+    raw_div_mix_def_sim = (raw_tp_dist_sim / np.sum(raw_tp_dist_sim)) / (mix_tp_dist_sim / np.sum(mix_tp_dist_sim))
+    raw_div_mix_bss_sim = [(raw / np.sum(raw)) / (mix / np.sum(mix)) for raw in raw_bs_tp_dists_sim
                            for mix in mix_bs_tp_dists_sim]
     raw_div_mix_sd_sim = np.std(np.array(raw_div_mix_bss_sim), axis=0)
 
@@ -607,16 +607,16 @@ def full_bs_div_visual():
     fig_raw_div_mix_sim_diff2.canvas.manager.set_window_title(f'Raw - Mix BES Sim Diff^2 {name.capitalize()} '
                                                               f'{total_proton} Protons, {div} divs')
 
-    # chi2 = (raw_div_mix_def - raw_div_mix_def_sim) ** 2 / (raw_div_mix_sd ** 2 + raw_div_mix_sd_sim ** 2)
-    # fig_raw_div_mix_sim_chi, ax_raw_div_mix_sim_chi = plt.subplots()
-    # ax_raw_div_mix_sim_chi.axhline(0, ls='--', color='black')
-    # ax_raw_div_mix_sim_chi.plot(range(chi2.size), chi2, color='salmon', marker='o', label='BES - Sim Chi2')
-    # ax_raw_div_mix_sim_chi.legend()
-    # ax_raw_div_mix_sim_chi.set_title(f'Raw - Mix BES Sim Chi2 {name.capitalize()} {total_proton} '
-    #                                  f'Protons, {div} divs')
-    # fig_raw_div_mix_sim_chi.tight_layout()
-    # fig_raw_div_mix_sim_chi.canvas.manager.set_window_title(f'Raw - Mix BES Sim Chi2 {name.capitalize()} '
-    #                                                         f'{total_proton} Protons, {div} divs')
+    chi2 = (raw_div_mix_def - raw_div_mix_def_sim) ** 2 / (raw_div_mix_sd ** 2 + raw_div_mix_sd_sim ** 2)
+    fig_raw_div_mix_sim_chi, ax_raw_div_mix_sim_chi = plt.subplots()
+    ax_raw_div_mix_sim_chi.axhline(0, ls='--', color='black')
+    ax_raw_div_mix_sim_chi.plot(range(chi2.size), chi2, color='salmon', marker='o', label='BES - Sim Chi2')
+    ax_raw_div_mix_sim_chi.legend()
+    ax_raw_div_mix_sim_chi.set_title(f'Raw - Mix BES Sim Chi2 {name.capitalize()} {total_proton} '
+                                     f'Protons, {div} divs')
+    fig_raw_div_mix_sim_chi.tight_layout()
+    fig_raw_div_mix_sim_chi.canvas.manager.set_window_title(f'Raw - Mix BES Sim Chi2 {name.capitalize()} '
+                                                            f'{total_proton} Protons, {div} divs')
 
     fig_weights, ax_weights = plt.subplots()
     plot_set = (('bes_raw', 'blue', raw_tp_dist), ('bes_mix', 'green', mix_tp_dist),
