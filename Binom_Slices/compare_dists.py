@@ -33,22 +33,36 @@ def main():
     # bs_test()
     # sim_diff_comp()
     # chi2_test()
-    chi2_test_all()
-    sum_chi2()
+    # bes_info = ('default_resample', 'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0', 'Data', 'Data_Mix',
+    #             'bes_resample')
+    # chi2_test_all(bes_info, 'F:/Research/Results/Azimuth_Analysis/bes_chi2_all_dist_bs.csv')
+    # sum_chi2('F:/Research/Results/Azimuth_Analysis/bes_chi2_all_dist_bs.csv',
+    #          'F:/Research/Results/Azimuth_Analysis/bes_chi2_sum_dist_bs.csv',
+    #          'F:/Research/Data/default_resample/rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0/'
+    #          )
+    # ampt_old_info = ('default_resample', 'Ampt_rapid05_resample_norotate_0', 'Data_Ampt_Old', 'Data_Ampt_Old_Mix',
+    #                  'ampt_resample_def')
+    # chi2_test_all(ampt_old_info, 'F:/Research/Results/Azimuth_Analysis/ampt_old_chi2_all_dist_bs.csv')
+    sum_chi2('F:/Research/Results/Azimuth_Analysis/ampt_old_chi2_all_dist_bs.csv',
+             'F:/Research/Results/Azimuth_Analysis/ampt_old_chi2_sum_dist_bs.csv',
+             'F:/Research/Data_Ampt/default_resample/Ampt_rapid05_resample_norotate_0/')
     print('donzo')
 
 
-def sum_chi2():
-    weights_path_pre = 'F:/Research/Data_Ampt/default_resample/Ampt_rapid05_resample_norotate_0/'
+def sum_chi2(chi2_indiv_path='F:/Research/Results/Azimuth_Analysis/bes_chi2_all_dist_bs.csv',
+             chi2_sum_out_path='F:/Research/Results/Azimuth_Analysis/bes_chi2_sum_dist_bs.csv',
+             weights_path_pre='F:/Research/Data/default_resample/'
+                              'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0/'):
+    # weights_path_pre = 'F:/Research/Data_Ampt/default_resample/Ampt_rapid05_resample_norotate_0/'
     # weights_path_pre = '/home/dylan/Research/Data_Ampt/default_resample/Ampt_rapid05_resample_norotate_0/'
     # weights_path_pre = 'F:/Research/Data/default_resample/rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0/'
     cent = 8
     div_weight = 60  # Proton distribution for all divs should be the same
-    chi2_indiv_path = 'F:/Research/Results/Azimuth_Analysis/bes_chi2_all_dist_bs.csv'
+    # chi2_indiv_path = 'F:/Research/Results/Azimuth_Analysis/bes_chi2_all_dist_bs.csv'
     # chi2_indiv_path = '/home/dylan/Research/Results/Azimuth_Analysis/chi2_all_dist_ampt_new.csv'
-    chi2_sum_out_path = 'F:/Research/Results/Azimuth_Analysis/bes_chi2_sum_dist_bs.csv'
+    # chi2_sum_out_path = 'F:/Research/Results/Azimuth_Analysis/bes_chi2_sum_dist_bs.csv'
     # chi2_sum_out_path = '/home/dylan/Research/Results/Azimuth_Analysis/chi2_sum_dist_ampt_new.csv'
-    threads = 12
+    threads = 16
 
     print(f'Reading input csv {chi2_indiv_path}')
     df = pd.read_csv(chi2_indiv_path)
@@ -104,14 +118,18 @@ def sum_chi2_set(df_sim_set, total_proton_weights, df_entry):
             # chi2_sum += total_proton_weights[total_protons] * \
             #             np.sum(df_tp_set['chi2_sum'] / df_tp_set['num_points'])  # div weights 1
             # div weights are all 1
-            chi2_sum += total_proton_weights[total_protons] * np.sum(df_tp_set['chi2_avg_def'])
+            if total_protons in total_proton_weights:
+                tp_weight = total_proton_weights[total_protons]
+            else:
+                tp_weight = min(total_proton_weights.values())  # If not in original dist, give min non-zero weight
+            chi2_sum += tp_weight * np.sum(df_tp_set['chi2_avg_def'])
             chi2_sum_num += 1
             bs_cols = [col for col in df_tp_set if 'chi2_avg_bs' in col]
             for col in bs_cols:
                 if col not in chi2_sum_bss:
                     chi2_sum_bss.update({col: 0})
                     chi2_sum_num_bss.update({col: 0})
-                chi2_sum_bss[col] += total_proton_weights[total_protons] * np.sum(df_tp_set[col])
+                chi2_sum_bss[col] += tp_weight * np.sum(df_tp_set[col])
                 chi2_sum_num_bss[col] += 1
     df_entry.update({'chi2_avg': chi2_sum / chi2_sum_num})
     for col in chi2_sum_bss:
@@ -120,12 +138,12 @@ def sum_chi2_set(df_sim_set, total_proton_weights, df_entry):
     return df_entry
 
 
-def chi2_test_all():
+def chi2_test_all(data_set_info, chi2_out_path='F:/Research/Results/Azimuth_Analysis/bes_chi2_all_dist_bs.csv'):
     # base_path = 'F:/Research/'
     base_path = 'F:/Research/'
     # base_path = '/home/dylan/Research/'
     # chi2_out_path = 'F:/Research/Results/Azimuth_Analysis/chi2_all_dist_ampt_new_bstest3.csv'
-    chi2_out_path = 'F:/Research/Results/Azimuth_Analysis/bes_chi2_all_dist_bs.csv'
+    # chi2_out_path = 'F:/Research/Results/Azimuth_Analysis/bes_chi2_all_dist_bs.csv'
     df_append = True
     # chi2_out_path = '/home/dylan/Research/Results/Azimuth_Analysis/chi2_all_dist_ampt_new.csv'
     # energy = 62
@@ -157,8 +175,10 @@ def chi2_test_all():
         # data_sets.extend([(base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
         #                    energy, cent, divs, 'Data_Ampt', 'Data_Ampt_Mix', 'ampt_resample_def')
         #                   for energy in energies])
-        data_sets = [(base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
-                      energy, cent, divs, 'Data_Ampt', 'Data_Ampt_Mix', 'ampt_resample_def')]
+        # data_sets = [(base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
+        #               energy, cent, divs, 'Data_Ampt', 'Data_Ampt_Mix', 'ampt_resample_def')]
+        data_sets = [(base_path, data_set_info[0], data_set_info[1],
+                      energy, cent, divs, data_set_info[2], data_set_info[3], data_set_info[4])]
         # data_sets.extend([(base_path, 'default_resample', 'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0',
         #                    energy, cent, divs, 'Data', 'Data_Mix', 'bes_resample') for energy in energies])
 
