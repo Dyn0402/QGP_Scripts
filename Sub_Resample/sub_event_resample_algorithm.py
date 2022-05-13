@@ -48,7 +48,7 @@ def main():
 
 
 def get_resamples3(angles_in, bin_width, samples):
-    angles = angles_in.copy()
+    angles = list(angles_in.copy())
     if bin_width > 2 * np.pi or bin_width <= 0:
         print(f'get_resamples bin_width {bin_width} out of range, setting to 2_PI')
         bin_width = 2 * np.pi
@@ -58,7 +58,7 @@ def get_resamples3(angles_in, bin_width, samples):
 
     # sort here
 
-    hist = np.empty(samples, dtype=int)
+    hist = np.zeros(samples, dtype=int)  # Changed from "empty" to "zeros", think this is better?
     if samples == 0:
         return hist
     bin_low = 0
