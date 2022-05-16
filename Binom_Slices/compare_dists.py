@@ -51,7 +51,7 @@ def main():
     for ampt_type in ampt_types:
         type_flag = '_Old' if ampt_type == 'old' else ''
         for eff in effs:
-            ampt_set_info = (f'Eff{eff}_resample', f'Ampt_rapid05_resample_norotate_Efficiency{eff}_0',
+            ampt_set_info = (f'Eff{eff}_resample', f'Ampt{type_flag}_rapid05_resample_norotate_Efficiency{eff}_0',
                              f'Data_Ampt{type_flag}', f'Data_Ampt{type_flag}_Mix',
                              f'ampt_{ampt_type}_resample_eff{eff}')
             chi2_test_all(ampt_set_info,
@@ -179,6 +179,20 @@ def chi2_test_all(data_set_info, chi2_out_path='F:/Research/Results/Azimuth_Anal
             print("Don't want to overwrite, exiting.")
             return
 
+    print('Get sim set list')
+    df_sim_sets = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample'], ['test'])
+    sim_sets = []
+    for amp in pd.unique(df_sim_sets['amp']):
+        # if amp not in ['015']:
+        #     continue
+        df_amp = df_sim_sets[df_sim_sets['amp'] == amp]
+        for spread in pd.unique(df_amp['spread']):
+            # if spread not in ['1']:
+            #     continue
+            sim_sets.append((base_path, f'flat80_anticlmulti_spread{spread}_amp{amp}_resample',
+                             f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_0',
+                             sim_energy, cent, divs, 'Data_Sim', 'Data_Sim_Mix'))
+
     # data_sets = [
     #     # (base_path, 'default_resample', 'Ampt_rapid05_resample_norotate_0',
     #     #  energy, cent, divs, 'Data_Ampt', 'Data_Ampt_Mix'),
@@ -194,21 +208,6 @@ def chi2_test_all(data_set_info, chi2_out_path='F:/Research/Results/Azimuth_Anal
                       energy, cent, divs, data_set_info[2], data_set_info[3], data_set_info[4])]
         # data_sets.extend([(base_path, 'default_resample', 'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0',
         #                    energy, cent, divs, 'Data', 'Data_Mix', 'bes_resample') for energy in energies])
-
-        df_sim_sets = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample'], ['test'])
-
-        sim_sets = []
-
-        for amp in pd.unique(df_sim_sets['amp']):
-            # if amp not in ['015']:
-            #     continue
-            df_amp = df_sim_sets[df_sim_sets['amp'] == amp]
-            for spread in pd.unique(df_amp['spread']):
-                # if spread not in ['1']:
-                #     continue
-                sim_sets.append((base_path, f'flat80_anticlmulti_spread{spread}_amp{amp}_resample',
-                                 f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_0',
-                                 sim_energy, cent, divs, 'Data_Sim', 'Data_Sim_Mix'))
 
         chi2_df = []
         for data_set in data_sets:
