@@ -46,8 +46,8 @@ def main():
     # sum_chi2('F:/Research/Results/Azimuth_Analysis/ampt_old_chi2_all_dist_bs.csv',
     #          'F:/Research/Results/Azimuth_Analysis/ampt_old_chi2_sum_dist_bs.csv',
     #          'F:/Research/Data_Ampt/default_resample/Ampt_rapid05_resample_norotate_0/')
-    ampt_types = ['old', 'new']
-    effs = ['1', '2', '3']
+    ampt_types = ['new']
+    effs = ['3', '2', '1']
     for ampt_type in ampt_types:
         type_flag = '_Old' if ampt_type == 'old' else ''
         for eff in effs:
@@ -75,7 +75,7 @@ def sum_chi2(chi2_indiv_path='F:/Research/Results/Azimuth_Analysis/bes_chi2_all_
     # chi2_indiv_path = '/home/dylan/Research/Results/Azimuth_Analysis/chi2_all_dist_ampt_new.csv'
     # chi2_sum_out_path = 'F:/Research/Results/Azimuth_Analysis/bes_chi2_sum_dist_bs.csv'
     # chi2_sum_out_path = '/home/dylan/Research/Results/Azimuth_Analysis/chi2_sum_dist_ampt_new.csv'
-    threads = 12
+    threads = 16
 
     print(f'Reading input csv {chi2_indiv_path}')
     df = pd.read_csv(chi2_indiv_path)
@@ -166,7 +166,7 @@ def chi2_test_all(data_set_info, chi2_out_path='F:/Research/Results/Azimuth_Anal
     cent = 8
     divs = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356]
     # divs = [60]
-    threads = 12
+    threads = 16
 
     if os.path.exists(chi2_out_path):
         res = input(f'File exists {chi2_out_path}\n'
