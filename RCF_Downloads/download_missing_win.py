@@ -19,14 +19,14 @@ def main():
 
 
 def download():
-    data_set = 'AMPT_gang'
+    data_set = 'AMPT_Run_mb'
     data_sets = {'BES1': {'remote_path_suf': 'BES1/', 'remote_tree_pref': 'trees/output',
                           'local_path': 'C:/Users/Dylan/Research/', 'local_tree_pref': 'BES1_Trees'},
                  'AMPT_Run': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
                               'local_path': 'C:/Users/Dylan/Research/',
                               'local_tree_pref': 'AMPT_Trees/min_bias/default'},
                  'AMPT_Run_mb': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
-                                 'local_path': 'D:/Research/', 'local_tree_pref': 'AMPT_Trees/min_bias/string_melting'},
+                                 'local_path': 'F:/Research/', 'local_tree_pref': 'AMPT_Trees/min_bias/string_melting'},
                  'AMPT_Run_mcent_sm': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
                                        'local_path': 'C:/Users/Dylan/Research/',
                                        'local_tree_pref': 'AMPT_Trees/most_central/string_melting'},
@@ -37,7 +37,8 @@ def download():
                                   'local_path': 'C:/Users/Dylan/Research/',
                                   'local_tree_pref': 'AMPT_Trees/most_central/string_melting'},
                  'AMPT_gang': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
-                               'local_path': 'D:/Research/', 'local_tree_pref': 'AMPT_Trees/gang'}}
+                               'local_path': 'F:/Research/', 'local_tree_pref': 'AMPT_Trees/gang'},
+                 }
 
     energies = [7, 11, 19, 27, 39, 62, '2-7TeV_PbPb']
     bwlimit = 10  # bandwidth limit per energy in MBPS or None
@@ -52,6 +53,7 @@ def download():
     local_path = data_sets[data_set]['local_path']
 
     missing_files = {}
+    all_missing = {}
     total_missing = 0
     for energy in energies:
         if type(energy) == int:
@@ -69,6 +71,7 @@ def download():
             else:
                 missing_files[energy].append(file)
         total_missing += len(missing_files[energy])
+        all_missing[energy] = len(missing_files[energy]) == len(expected_files)
         print(f'{energy} missing {len(missing_files[energy])} of {len(expected_files)} files,'
               f' {bad_size_files} of these mismatched size')
 
@@ -96,9 +99,13 @@ def download():
         for energy in energy_list:
             local = local_path + local_tree_prefix + f'/{energy}/'
             if len(missing_files[energy]) > 0:
-                for file in missing_files[energy]:
-                    start_download(file, energy, remote_path, remote_tree_prefix, local, bwlimit)
+                if all_missing[energy]:
+                    start_download_all(energy, remote_path, remote_tree_prefix, local)
                     sleep(file_delay)
+                else:
+                    for file in missing_files[energy]:
+                        start_download(file, energy, remote_path, remote_tree_prefix, local)
+                        sleep(file_delay)
 
     else:
         print('All files downloaded!')
@@ -130,7 +137,7 @@ def get_expected_list(energy, remote_path, remote_tree_prefix):
 #     os.system(f'gnome-terminal -- /bin/sh -c \'echo "{info}"; {command}\'')
 
 
-def start_download(file, energy, remote_path, remote_tree_prefix, local, bwlimit=None):
+def start_download(file, energy, remote_path, remote_tree_prefix, local):
     remote = remote_path + remote_tree_prefix + f'/{energy}/{file}'
     command = 'sftp ' + remote + ' ' + local
     info = f'{energy}, {file} files:'
@@ -138,20 +145,10 @@ def start_download(file, energy, remote_path, remote_tree_prefix, local, bwlimit
     os.system(f'start cmd /c {command}')
 
 
-def start_download_sftp(file, energy, remote_path, remote_tree_prefix, local, bwlimit=None):
-    """
-    Not implemented! Ideally use sftp directly and
-    :param file:
-    :param energy:
-    :param remote_path:
-    :param remote_tree_prefix:
-    :param local:
-    :param bwlimit:
-    :return:
-    """
-    remote = remote_path + remote_tree_prefix + f'/{energy}/{file}'
+def start_download_all(energy, remote_path, remote_tree_prefix, local):
+    remote = remote_path + remote_tree_prefix + f'/{energy}/*'
     command = 'sftp ' + remote + ' ' + local
-    info = f'{energy}, {file} files:'
+    info = f'{energy} all files:'
     print(f'{info} {command}')
     os.system(f'start cmd /c {command}')
 
