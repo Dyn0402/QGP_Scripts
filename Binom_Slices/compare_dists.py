@@ -46,19 +46,32 @@ def main():
     # sum_chi2('F:/Research/Results/Azimuth_Analysis/ampt_old_chi2_all_dist_bs.csv',
     #          'F:/Research/Results/Azimuth_Analysis/ampt_old_chi2_sum_dist_bs.csv',
     #          'F:/Research/Data_Ampt/default_resample/Ampt_rapid05_resample_norotate_0/')
-    ampt_types = ['new']
-    effs = ['3', '2', '1']
-    for ampt_type in ampt_types:
-        type_flag = '_Old' if ampt_type == 'old' else ''
-        for eff in effs:
-            ampt_set_info = (f'Eff{eff}_resample', f'Ampt{type_flag}_rapid05_resample_norotate_Efficiency{eff}_0',
-                             f'Data_Ampt{type_flag}', f'Data_Ampt{type_flag}_Mix',
-                             f'ampt_{ampt_type}_resample_eff{eff}')
-            chi2_test_all(ampt_set_info,
-                          f'F:/Research/Results/Azimuth_Analysis/ampt_{ampt_type}_eff{eff}_chi2_all_dist_bs.csv')
-            sum_chi2(f'F:/Research/Results/Azimuth_Analysis/ampt_{ampt_type}_eff{eff}_chi2_all_dist_bs.csv',
-                     f'F:/Research/Results/Azimuth_Analysis/ampt_{ampt_type}_eff{eff}_chi2_sum_dist_bs.csv',
-                     f'F:/Research/Data_Ampt/Eff{eff}_resample/Ampt_rapid05_resample_norotate_Efficiency{eff}_0/')
+    # ampt_types = ['new']
+    # effs = ['3', '2', '1']
+    # for ampt_type in ampt_types:
+    #     type_flag = '_Old' if ampt_type == 'old' else ''
+    #     for eff in effs:
+    #         ampt_set_info = (f'Eff{eff}_resample', f'Ampt{type_flag}_rapid05_resample_norotate_Efficiency{eff}_0',
+    #                          f'Data_Ampt{type_flag}', f'Data_Ampt{type_flag}_Mix',
+    #                          f'ampt_{ampt_type}_resample_eff{eff}')
+    #         chi2_test_all(ampt_set_info,
+    #                       f'F:/Research/Results/Azimuth_Analysis/ampt_{ampt_type}_eff{eff}_chi2_all_dist_bs.csv')
+    #         sum_chi2(f'F:/Research/Results/Azimuth_Analysis/ampt_{ampt_type}_eff{eff}_chi2_all_dist_bs.csv',
+    #                  f'F:/Research/Results/Azimuth_Analysis/ampt_{ampt_type}_eff{eff}_chi2_sum_dist_bs.csv',
+    #                  f'F:/Research/Data_Ampt/Eff{eff}_resample/Ampt_rapid05_resample_norotate_Efficiency{eff}_0/')
+    spread_amps = (('08', '02'), ('08', '05'), ('05', '02'), ('1', '02'))
+    # spread, amp = '08', '02'
+    for spread, amp in spread_amps:
+        sim_set_info = (f'flat80_anticlmulti_spread{spread}_amp{amp}_resample',
+                        f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_0',
+                        'Data_Sim', 'Data_Sim_Mix', f'sim_sim_comp_s{spread}_a{amp}_resample')
+        chi2_test_all(sim_set_info,
+                      f'F:/Research/Results/Azimuth_Analysis/sim_sim_comp_s{spread}_a{amp}_chi2_all_dist_bs.csv',
+                      energies=[62])
+        sum_chi2(f'F:/Research/Results/Azimuth_Analysis/sim_sim_comp_s{spread}_a{amp}_chi2_all_dist_bs.csv',
+                 f'F:/Research/Results/Azimuth_Analysis/sim_sim_comp_s{spread}_a{amp}_chi2_sum_dist_bs.csv',
+                 f'F:/Research/Data_Sim/flat80_anticlmulti_spread{spread}_amp{amp}_resample/'
+                 f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_0/')
     print('donzo')
 
 
@@ -75,7 +88,7 @@ def sum_chi2(chi2_indiv_path='F:/Research/Results/Azimuth_Analysis/bes_chi2_all_
     # chi2_indiv_path = '/home/dylan/Research/Results/Azimuth_Analysis/chi2_all_dist_ampt_new.csv'
     # chi2_sum_out_path = 'F:/Research/Results/Azimuth_Analysis/bes_chi2_sum_dist_bs.csv'
     # chi2_sum_out_path = '/home/dylan/Research/Results/Azimuth_Analysis/chi2_sum_dist_ampt_new.csv'
-    threads = 16
+    threads = 12
 
     print(f'Reading input csv {chi2_indiv_path}')
     df = pd.read_csv(chi2_indiv_path)
@@ -151,7 +164,8 @@ def sum_chi2_set(df_sim_set, total_proton_weights, df_entry):
     return df_entry
 
 
-def chi2_test_all(data_set_info, chi2_out_path='F:/Research/Results/Azimuth_Analysis/bes_chi2_all_dist_bs.csv'):
+def chi2_test_all(data_set_info, chi2_out_path='F:/Research/Results/Azimuth_Analysis/bes_chi2_all_dist_bs.csv',
+                  energies=None):
     # base_path = 'F:/Research/'
     base_path = 'F:/Research/'
     # base_path = '/home/dylan/Research/'
@@ -160,13 +174,13 @@ def chi2_test_all(data_set_info, chi2_out_path='F:/Research/Results/Azimuth_Anal
     df_append = True
     # chi2_out_path = '/home/dylan/Research/Results/Azimuth_Analysis/chi2_all_dist_ampt_new.csv'
     # energy = 62
-    energies = [7, 11, 19, 27, 39, 62]
+    energies = [7, 11, 19, 27, 39, 62] if energies is None else energies
     # energies = [11]
     sim_energy = 62
     cent = 8
     divs = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356]
     # divs = [60]
-    threads = 16
+    threads = 12
 
     if os.path.exists(chi2_out_path):
         res = input(f'File exists {chi2_out_path}\n'
@@ -212,11 +226,12 @@ def chi2_test_all(data_set_info, chi2_out_path='F:/Research/Results/Azimuth_Anal
         chi2_df = []
         for data_set in data_sets:
             data_set, data_name = data_set[:-1], data_set[-1]
+            print(f'Get {data_name}, {data_energy}GeV distribution')
             div_diffs_data = get_set_all(data_set)
             data_energy = data_set[3]
             # return
             jobs = [(sim_set, div_diffs_data, divs, data_energy, data_name) for sim_set in sim_sets]
-            print(f'Starting {data_name}, {data_energy}GeV')
+            print(f'Starting {data_name}, {data_energy}GeV comparisons')
             with Pool(threads) as pool:
                 for df_subset in tqdm.tqdm(pool.istarmap(run_sim_set, jobs), total=len(jobs)):
                     chi2_df.extend(df_subset)
