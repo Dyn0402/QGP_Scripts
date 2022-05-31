@@ -58,13 +58,13 @@ def uproot_finder():
     print(f'Start {start}\n')
 
     # out_file_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_slim_most_central_new.txt'
-    out_file_path = 'D:/Research/Ampt_Bad_Event/bad_ampt_events_gang2TeV.txt'
+    out_file_path = 'F:/Research/Ampt_Bad_Event/bad_ampt_events_minbias_new.txt'
     # out_file_path = '/star/u/dneff/Ampt_Bad_Event/bad_ampt_events_central.txt'
     # path = '/media/ucla/Research/AMPT_Trees/slim_most_central/string_melting/'
-    path = 'D:/Research/AMPT_Trees/gang/2-7TeV_PbPb/'
+    path = 'F:/Research/AMPT_Trees/min_bias/'
     # path = '/gpfs01/star/pwg/dneff/data/AMPT/slim_most_central/string_melting/7GeV/'
     threads = 14
-    single_events = True
+    single_events = False
     tree_name = 'tree'
     write_mode = 'w'
     max_eta = 1
