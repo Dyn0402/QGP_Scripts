@@ -21,6 +21,11 @@ from sub_event_resample_algorithm import get_resamples3
 
 
 def main():
+    run_dynamic()
+    print('donzo')
+
+
+def run_static():
     phis = np.linspace(0, 2 * np.pi, 25)[:-1]
     # phis = [1, 5]
     sd = 0.01
@@ -37,12 +42,38 @@ def main():
     plot_pdf(pdf, f'Track PDF\n{info_string}')
     plt.show()
 
-    hist = sim_pdf(pdf, events, tracks, bin_width, samples, threads, seed)
+    hist = sim_pdf_static(pdf, events, tracks, bin_width, samples, threads, seed)
     plot_pdf(pdf, f'PDF {info_string}')
     plot_sim(hist, bin_width, f'Protons in Bin Distribution\n{info_string}')
     plt.show()
 
-    print('donzo')
+
+def run_dynamic():
+    phis = np.linspace(0, 2 * np.pi, 25)[:-1]
+    # phis = [1, 5]
+    sd = 0.5
+    cl_amp = 0.5
+    bin_width = np.radians(120)
+    tracks = 25
+    events = 100
+    samples = 1440
+    threads = 12
+    seed = 3
+
+    sim_pars = (cl_amp, sd, 5)
+
+    # sim_event_dynamic_plot(sim_pars, tracks, bin_width, samples, seed)
+    # return
+
+    info_string = f'{int(np.rad2deg(bin_width) + 0.5)}° divisions, {tracks} tracks/event, {events} events, {samples} samples'
+    # pdf = ClustDist(phis, sd, cl_amp, a=0, b=2 * np.pi, wrap_num=5)
+    # plot_pdf(pdf, f'Track PDF\n{info_string}')
+    # plt.show()
+
+    hist = sim_pdf_dynamic(sim_pars, events, tracks, bin_width, samples, threads, seed)
+    # plot_pdf(pdf, f'PDF {info_string}')
+    plot_sim(hist, bin_width, f'Protons in Bin Distribution\n{info_string}')
+    plt.show()
 
 
 def plot_pdf(pdf, title='Pdf'):
@@ -55,21 +86,49 @@ def plot_pdf(pdf, title='Pdf'):
     fig_pdf.canvas.manager.set_window_title(title.replace('\n', '_'))
 
 
-def sim_pdf(pdf, n_events, n_tracks, bin_width, samples, threads=1, seed=42):
+def sim_pdf_static(pdf, n_events, n_tracks, bin_width, samples, threads=1, seed=42):
     hist = np.zeros(n_tracks + 1, dtype=int)
     seeds = iter(np.random.SeedSequence(seed).spawn(n_events))
     jobs = [(pdf, n_tracks, bin_width, samples, next(seeds)) for event_i in range(n_events)]
 
     with Pool(threads) as pool:
-        for hist_i in tqdm.tqdm(pool.istarmap(sim_event, jobs), total=len(jobs)):
+        for hist_i in tqdm.tqdm(pool.istarmap(sim_event_static, jobs), total=len(jobs)):
             hist += hist_i
 
     return hist
 
 
-def sim_event(pdf, n_tracks, bin_width, samples, seed):
+def sim_event_static(pdf, n_tracks, bin_width, samples, seed):
     rng = np.random.default_rng(seed)
     tracks = np.sort(pdf.rvs(size=n_tracks, random_state=rng))
+    hist = get_resamples3(tracks, bin_width, samples)
+    hist = np.histogram(hist, bins=np.arange(-0.5, n_tracks + 1.5, 1))[0]
+
+    return hist
+
+
+def sim_pdf_dynamic(sim_pars, n_events, n_tracks, bin_width, samples, threads=1, seed=42):
+    hist = np.zeros(n_tracks + 1, dtype=int)
+    seeds = iter(np.random.SeedSequence(seed).spawn(n_events))
+    jobs = [(sim_pars, n_tracks, bin_width, samples, next(seeds)) for event_i in range(n_events)]
+
+    with Pool(threads) as pool:
+        for hist_i in tqdm.tqdm(pool.istarmap(sim_event_dynamic, jobs), total=len(jobs)):
+            hist += hist_i
+
+    return hist
+
+
+def sim_event_dynamic(sim_pars, n_tracks, bin_width, samples, seed):
+    rng = np.random.default_rng(seed)
+    cl_amp, sd, wrap_num = sim_pars
+    phis = []
+    prob_dist = ClustDist(phis, sd, cl_amp, a=0, b=2 * np.pi, wrap_num=wrap_num)
+    while len(phis) < n_tracks:
+        prob_dist.random_state = rng
+        phis.append(prob_dist.rvs())
+        prob_dist = ClustDist(phis, sd, cl_amp, a=0, b=2 * np.pi, wrap_num=wrap_num)
+    tracks = np.sort(phis)
     hist = get_resamples3(tracks, bin_width, samples)
     hist = np.histogram(hist, bins=np.arange(-0.5, n_tracks + 1.5, 1))[0]
 
