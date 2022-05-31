@@ -226,9 +226,9 @@ def chi2_test_all(data_set_info, chi2_out_path='F:/Research/Results/Azimuth_Anal
         chi2_df = []
         for data_set in data_sets:
             data_set, data_name = data_set[:-1], data_set[-1]
+            data_energy = data_set[3]
             print(f'Get {data_name}, {data_energy}GeV distribution')
             div_diffs_data = get_set_all(data_set)
-            data_energy = data_set[3]
             # return
             jobs = [(sim_set, div_diffs_data, divs, data_energy, data_name) for sim_set in sim_sets]
             print(f'Starting {data_name}, {data_energy}GeV comparisons')
