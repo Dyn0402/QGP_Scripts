@@ -20,12 +20,15 @@ from scipy.optimize import curve_fit
 def main():
     divs = 120
     cent = 8
-    energy = 7
+    energy = 39
     set_name = 'default/Ampt_rapid05_n1ratios_'
-    set_num = 8
-    path = f'/home/dylan/Research/Data_Ampt/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
-    path_mix = f'/home/dylan/Research/Data_Ampt_Mix/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
-    title_sufx = f'\n7GeV, 0-5% Centrality, {divs}° Bins'
+    set_num = 0
+    # path = f'/home/dylan/Research/Data_Ampt/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
+    # path_mix = f'/home/dylan/Research/Data_Ampt_Mix/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
+    base_path = 'F:/Research/'
+    path = f'{base_path}Data_Ampt_Old/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
+    path_mix = f'{base_path}Data_Ampt_Old_Mix/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
+    title_sufx = f'\n{energy}GeV, 0-5% Centrality, {divs}° Bins'
     data = read_azbin_data(path)
     data_mix = read_azbin_data(path_mix)
     # plot_azbin_data(data, [0, 40], [0, 20], divs)
@@ -33,8 +36,8 @@ def main():
     # plot_azbin_data_trans_proj(data, [0, 20], [0, 40], divs, title_sufx=title_sufx)
     # ratio_transform(data, divs, max_particles=46, title_sufx=title_sufx)
     # diff_transform(data, divs, max_particles=46, title_sufx=title_sufx)
-    pull_transform(data, data_mix, divs, max_particles=78, title_sufx=title_sufx)
-    # plot_binomial(data, 26, divs, title_sufx=title_sufx)
+    # pull_transform(data, data_mix, divs, max_particles=78, title_sufx=title_sufx)
+    plot_binomial(data, 27, divs, title_sufx=title_sufx)
     # plot_data_mixed(data, data_mix, 31, divs, range(10, 26), title_sufx=title_sufx)
     print('donzo')
 
