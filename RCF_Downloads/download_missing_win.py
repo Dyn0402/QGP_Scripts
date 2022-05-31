@@ -41,7 +41,7 @@ def download():
                  }
 
     energies = [7, 11, 19, 27, 39, 62, '2-7TeV_PbPb']
-    bwlimit = 10  # bandwidth limit per energy in MBPS or None
+    bw_limit = 10  # bandwidth limit per energy in MBPS or None
     size_tolerance = 0.001  # percentage tolerance between remote and local sizes, re-download if different
     file_delay = 0.1  # seconds to delay between file download calls
 
@@ -100,7 +100,7 @@ def download():
             local = local_path + local_tree_prefix + f'/{energy}/'
             if len(missing_files[energy]) > 0:
                 if all_missing[energy]:
-                    start_download_all(energy, remote_path, remote_tree_prefix, local)
+                    start_download_all(energy, remote_path, remote_tree_prefix, local, bw_limit)
                     sleep(file_delay)
                 else:
                     for file in missing_files[energy]:
@@ -137,17 +137,19 @@ def get_expected_list(energy, remote_path, remote_tree_prefix):
 #     os.system(f'gnome-terminal -- /bin/sh -c \'echo "{info}"; {command}\'')
 
 
-def start_download(file, energy, remote_path, remote_tree_prefix, local):
+def start_download(file, energy, remote_path, remote_tree_prefix, local, bw_limit=None):
     remote = remote_path + remote_tree_prefix + f'/{energy}/{file}'
-    command = 'sftp ' + remote + ' ' + local
+    bw_limit_str = '' if bw_limit is None else f'-l {int(bw_limit * 1000)} '
+    command = 'sftp ' + bw_limit_str + remote + ' ' + local
     info = f'{energy}, {file} files:'
     print(f'{info} {command}')
     os.system(f'start cmd /c {command}')
 
 
-def start_download_all(energy, remote_path, remote_tree_prefix, local):
+def start_download_all(energy, remote_path, remote_tree_prefix, local, bw_limit=None):
     remote = remote_path + remote_tree_prefix + f'/{energy}/*'
-    command = 'sftp ' + remote + ' ' + local
+    bw_limit_str = '' if bw_limit is None else f'-l {int(bw_limit * 1000)} '
+    command = 'sftp ' + bw_limit_str + remote + ' ' + local
     info = f'{energy} all files:'
     print(f'{info} {command}')
     os.system(f'start cmd /c {command}')
