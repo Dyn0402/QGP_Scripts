@@ -866,15 +866,24 @@ def chi2_sd_slices():
 def chi2_sd_slices_bs():
     base_path = 'F:/Research/Results/Azimuth_Analysis/'
     data_sets = ['bes', 'ampt_new', 'ampt_old']
+    data_sets_colors = dict(zip(data_sets, ['black', 'red', 'green']))
+    data_sets_labels = dict(zip(data_sets, ['STAR', 'AMPT_New', 'AMPT_Old']))
+    # data_sets = ['ampt_new', 'ampt_new_eff1', 'ampt_new_eff2', 'ampt_new_eff3']
+    # data_sets = ['ampt_old', 'ampt_old_eff1', 'ampt_old_eff2', 'ampt_old_eff3']
+    # data_sets = ['ampt_old']
     energies = [7, 11, 19, 27, 39, 62]
+    # energies = [62]
     x0 = [0.1, 1.0]
     bounds = ((0.0001, 0.99), (0.0, 5.0))
     max_physical_spread = 2
+    average_spread_range = (0.5, 1)
     plot = []  # 'indiv_2d', 'group_2d', 'vs_spread_indiv', 'vs_amp_indiv'
-    threads = 15
+    threads = 13
 
     avg_norm_min, avg_norm_min_sd, avg_min, avg_min_sd, baselines, baselines_sd = \
         [{data_set: [] for data_set in data_sets} for i in range(6)]
+    # amp_min_data = []
+    amp_min_data = {data_set: {energy: {} for energy in energies} for data_set in data_sets}
     for data_set in data_sets:
         chi_df_name = f'{data_set}_chi2_sum_dist_bs.csv'
         df_all = pd.read_csv(base_path + chi_df_name)
@@ -922,7 +931,7 @@ def chi2_sd_slices_bs():
             min_spreads.append(bas_res.x[1])
             print('2D minimizations finished')
 
-            if 'group_2d' in plot:
+            if 'group_2d' in plot or 'indiv_2d' in plot:
                 x_intp = np.linspace(min(x), max(x), 200)
                 y_intp = np.linspace(min(y), max(y), 200)
                 X_intp, Y_intp = np.meshgrid(get_edges(x_intp), get_edges(y_intp))
@@ -932,6 +941,8 @@ def chi2_sd_slices_bs():
                     for xi in x_intp:
                         Zi_intp.append(f(xi, yi))
                     Z_intp.append(Zi_intp)
+
+            if 'group_2d' in plot:
                 fig1_data.update({energy: {'X': X, 'Y': Y, 'Z': Z, 'x': x, 'y': y}})
                 fig2_data.update({energy: {'X': X_intp, 'Y': Y_intp, 'Z': Z_intp, 'basin_min': bas_res.x}})
                 for z in [Z, Z_intp]:
@@ -1026,6 +1037,10 @@ def chi2_sd_slices_bs():
             bs_spreads, bs_mins = zip(*sorted(zip(bs_spreads, bs_mins)))
             amp_min_bss_per_spread.append(bs_mins)
             amp_min_sds_per_spread.append(np.nanstd(bs_mins, axis=1))
+            amp_min_data[data_set][energy] = {'spreads': spreads, 'mins': amp_mins_per_spread[-1],
+                                              'mins_sd': amp_min_sds_per_spread[-1]}
+            # amp_min_data.append({'data_set': data_set, 'energy': energy, 'min_sd': amp_min_sds_per_spread[-1],
+            #                      'mins': amp_mins_per_spread[-1], 'spreads': spreads})
 
             if 'vs_spread_indiv' in plot:
                 fig4 = plt.figure()
@@ -1110,12 +1125,17 @@ def chi2_sd_slices_bs():
             # es, am, ame = list(zip(*[(esi, ami, amei) for esi, ami, amei in zip(es, am, ame)
             #                          if esi < max_spread_fit]))
             # es, am, ame = np.array(es), np.array(am), np.array(ame)
-            popt, pcov = curve_fit(amp_spread_param3, es, am, p0=p0, sigma=ame, absolute_sigma=True)
-            print(popt)
-            baselines[data_set].append(popt[3])
-            baselines_sd[data_set].append(np.sqrt(np.diag(pcov))[3])
-            plt.plot(xs, amp_spread_param3(xs, *popt), color=c, ls='--')
-            plt.fill_between(es, am - ame, am + ame, alpha=0.2, color=c)
+            try:
+                popt, pcov = curve_fit(amp_spread_param3, es, am, p0=p0, sigma=ame, absolute_sigma=True)
+                print(popt)
+                baselines[data_set].append(popt[3])
+                baselines_sd[data_set].append(np.sqrt(np.diag(pcov))[3])
+                plt.plot(xs, amp_spread_param3(xs, *popt), color=c, ls='--')
+                plt.fill_between(es, am - ame, am + ame, alpha=0.2, color=c)
+            except RuntimeError:
+                baselines[data_set].append(0)
+                baselines_sd[data_set].append(0)
+                print('Parameterized fit failed')
 
         fig_mins_fit.legend()
         fig_mins_fit.tight_layout()
@@ -1148,11 +1168,18 @@ def chi2_sd_slices_bs():
             energy_mins = np.where(np.array(spreads) < max_physical_spread, energy_mins, float('nan'))
             energy_mins_bss = np.where(np.array(spreads) < max_physical_spread, np.array(energy_mins_bss).T,
                                        float('nan'))
+            energy_mins_avg = np.where((average_spread_range[0] < np.array(spreads)) &
+                                       (np.array(spreads) < average_spread_range[1]),
+                                       energy_mins, float('nan'))
+            energy_mins_avg_bss = np.where((average_spread_range[0] < np.array(spreads)),
+                                           np.array(energy_mins_bss).T, float('nan'))
+            energy_mins_avg_bss = np.where((np.array(spreads) < average_spread_range[1]),
+                                           np.array(energy_mins_avg_bss).T, float('nan'))
             avg_norm_min[data_set].append(np.nanmean(energy_mins / np.array(avgs_per_spread)))
             # avg_norm_min_sd[data_set].append(np.sqrt(np.nanmean(energy_mins_sd ** 2)))
             avg_norm_min_sd[data_set].append(np.nanstd(np.nanmean(energy_mins_bss / np.array(avgs_per_spread), axis=1)))
-            avg_min[data_set].append(np.nanmean(energy_mins))
-            avg_min_sd[data_set].append(np.nanstd(np.nanmean(energy_mins_bss, axis=1)))
+            avg_min[data_set].append(np.nanmean(energy_mins_avg))
+            avg_min_sd[data_set].append(np.nanstd(np.nanmean(energy_mins_avg_bss, axis=1)))
         plt.axhline(1, color='black', ls='--')
         print(energies)
         print(avg_norm_min[data_set])
@@ -1237,7 +1264,7 @@ def chi2_sd_slices_bs():
     plt.axhline(0, color='black', ls='--')
     for data_set in data_sets:
         plt.errorbar(energies, avg_min[data_set], yerr=avg_min_sd[data_set], marker='o', ls='none',
-                     label=data_set.upper())
+                     label=data_sets_labels[data_set], color=data_sets_colors[data_set])
     plt.legend()
     fig_avg_mins.tight_layout()
 
@@ -1254,6 +1281,43 @@ def chi2_sd_slices_bs():
     plt.legend()
     fig_fit_base.tight_layout()
 
+    # amp_min_data = pd.DataFrame(amp_min_data)
+    for energy in energies:
+        fig, ax = plt.subplots()
+        ax.axhline(2, ls='--', color='gray')
+        for data_set in data_sets:
+            # df = amp_min_data[(amp_min_data['energy'] == energy) & (amp_min_data['data_set'] == data_set)]
+            # df = df.sort_values(by=['spreads'])
+            # mins, spreads, mins_sd = list(df['mins']), list(df['min_sd']), list(df['spreads'])
+            mins, mins_sd = amp_min_data[data_set][energy]['mins'], amp_min_data[data_set][energy]['mins_sd'],
+            spreads = amp_min_data[data_set][energy]['spreads']
+            # if len(mins) == 1 and len(spreads) == 1 and len(mins_sd) == 1:
+            #     mins, spreads, mins_sd = mins[0], spreads[0], mins_sd[0]
+            # else:
+            #     print(f'{data_set}, {energy}GeV bad')
+            #     continue
+            # print(df['mins'][0])
+            # print(type(df['mins'][0]))
+            # print(list(df['mins'][0]))
+            # print(df['spreads'][0])
+            # print(type(df['spreads'][0]))
+            # print(list(df['spreads'][0]))
+            print(mins, spreads, mins_sd)
+            # ax.plot(df['mins'][0], df['spreads'][0], label=data_set)
+            # ax.fill_betweenx(df['spreads'][0], df['mins'][0] - df['min_sd'][0], df['mins'][0] + df['min_sd'][0],
+            #                  alpha=0.5)
+            ax.plot(mins, spreads, label=data_set)
+            ax.fill_betweenx(spreads, np.array(mins) - np.array(mins_sd), np.array(mins) + np.array(mins_sd), alpha=0.5)
+        ax.set_ylim((0, 2.5))
+        ax.set_xlim((0, 0.05))
+        ax.grid()
+        ax.set_title(f'{energy}GeV')
+        ax.set_xlabel('amp')
+        ax.set_ylabel('spread')
+        ax.legend()
+        fig.tight_layout()
+        fig.canvas.manager.set_window_title(f'{energy}GeV data set comparison mins')
+
     plt.show()
 
 
@@ -1263,6 +1327,7 @@ def basin_min(f_jac_bss, bs_cols, df_s, min_kwargs, bas_bnds, spread, niter=30, 
         def f_jac_slice_bs(amp_i):
             r = f_jac_bs(amp_i, spread)
             return r[0], r[1][0]
+
         bas_min_amp_bs = basinhopping(f_jac_slice_bs, df_s['amp'][df_s[bs_col].idxmin()], stepsize=stepsize, T=T,
                                       minimizer_kwargs=min_kwargs, accept_test=bas_bnds, niter=niter)
         bs_mins.append(bas_min_amp_bs.x[0])
@@ -1274,7 +1339,7 @@ def trim(xs, x_low, x_high, *ys):
 
 
 def amp_spread_param(x, a, b, c):
-    return c * (b * x**2 + a) / (1 - np.exp(-x))
+    return c * (b * x ** 2 + a) / (1 - np.exp(-x))
 
 
 def amp_spread_param2(x, a, b, c, d, e):
