@@ -58,12 +58,13 @@ def uproot_finder():
     print(f'Start {start}\n')
 
     # out_file_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_slim_most_central_new.txt'
-    out_file_path = 'D:/Research/Ampt_Bad_Event/bad_ampt_events_gang7GeV_check.txt'
+    out_file_path = 'F:/Research/Ampt_Bad_Event/bad_ampt_events_minbias_new.txt'
     # out_file_path = '/star/u/dneff/Ampt_Bad_Event/bad_ampt_events_central.txt'
     # path = '/media/ucla/Research/AMPT_Trees/slim_most_central/string_melting/'
-    path = 'D:/Research/AMPT_Trees/gang/'
+    path = 'F:/Research/AMPT_Trees/min_bias/'
     # path = '/gpfs01/star/pwg/dneff/data/AMPT/slim_most_central/string_melting/7GeV/'
     threads = 14
+    single_events = False
     tree_name = 'tree'
     write_mode = 'w'
     max_eta = 1
@@ -87,8 +88,11 @@ def uproot_finder():
     jobs_start = datetime.now()
     print(f'Jobs Start {jobs_start}\n')
     bad_trees = []
+    func = check_file
+    if single_events:
+        func = check_file_single_events
     with Pool(threads) as pool:
-        for bad_tree in tqdm.tqdm(pool.istarmap(check_file, jobs), total=len(jobs)):
+        for bad_tree in tqdm.tqdm(pool.istarmap(func, jobs), total=len(jobs)):
             bad_trees.append(bad_tree)
 
     # with Pool(threads) as pool:
@@ -128,6 +132,53 @@ def check_file(root_path, tree_name, track_attributes, max_eta, ignore_pids, roo
         if len(num_ident) > 0:
             print(f'{root_path} {datetime.now()}')
             id_tracks = track_a[ident]
+            unique = np.unique(id_tracks[ak.num(id_tracks) > 0].pid, return_counts=True)
+            for event in num_ident:
+                event.update({'path': root_path, 'events': len(tracks), 'unique': unique})
+                print(event)
+                bad_events.append(event)
+
+    return bad_events
+
+
+def check_file_single_events(root_path, tree_name, track_attributes, max_eta, ignore_pids, root_num=-1,
+                             root_num_total=-1):
+    """
+    Not fully implemented! Need to fix last part
+    :param root_path:
+    :param tree_name:
+    :param track_attributes:
+    :param max_eta:
+    :param ignore_pids:
+    :param root_num:
+    :param root_num_total:
+    :return:
+    """
+    vector.register_awkward()
+    bad_events = []
+    # print(f'{root_num}/{root_num_total} {root_path} :\t{datetime.now()}')
+    with uproot.open(root_path) as file:
+        tracks = file[tree_name].arrays(track_attributes)
+        tracks = ak.zip({'pid': tracks['pid'], 'px': tracks['px'], 'py': tracks['py'], 'pz': tracks['pz']},
+                        with_name='Momentum3D')
+        tracks = tracks[abs(tracks.eta) < max_eta]
+        for bad_pid in ignore_pids:
+            tracks = tracks[abs(tracks['pid']) != bad_pid]
+        num_ident = []
+        for event_num, event_tracks in enumerate(tracks):
+            # print(type(event_tracks))
+            # print(type(tracks))
+            # print(event_tracks)
+            track_a, track_b = ak.unzip(ak.combinations(event_tracks, 2, axis=0))
+            ident_p = track_a == track_b  # Check if momenta same
+            ident_pid = ak.where(track_a['pid'] == track_b['pid'], True, False)
+            ident = ident_p * ident_pid
+            ident_sum = ak.sum(ident, axis=0)
+            if ident_sum > 0:
+                num_ident.append({'event_num': event_num, 'num_identical': ident_sum})
+        if len(num_ident) > 0:
+            print(f'{root_path} {datetime.now()}')
+            id_tracks = track_a[ident]  # This doesn't work. Fix
             unique = np.unique(id_tracks[ak.num(id_tracks) > 0].pid, return_counts=True)
             for event in num_ident:
                 event.update({'path': root_path, 'events': len(tracks), 'unique': unique})

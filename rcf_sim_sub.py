@@ -21,6 +21,7 @@ def main():
 
 
 def get_sets():
+    clust_alg = 'anticlfinal'  # 'anticlmulti'
     names = ['set_group', 'set_name']
     sets = [
         # ['flat80_anticlmulti_spread4_amp05_resample', 'Sim_spread4_amp05_flat80_anticlmulti_norotate_resample_'],
@@ -55,31 +56,32 @@ def get_sets():
 
 
     # Rerun all spreads/amps
-    # amps = ['0', '005', '01', '015', '0175', '02', '0225', '025', '03', '035', '04', '045', '05', '06', '07', '08',
-    #         '09', '1', '125', '15', '175', '2', '225', '25', '3', '35', '4', '45', '5']
-    # spreads = ['001', '01', '02', '05', '1', '15', '2', '225', '25', '275', '3', '325', '35', '375', '4', '45', '5']
-    # for amp in amps:
-    #     for spread in spreads:
-    #         sets.append([f'flat80_anticlmulti_spread{spread}_amp{amp}_resample',
-    #                      f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_'])
-
-    # New spreads all amps
     amps = ['0', '005', '01', '0125', '015', '0175', '02', '0225', '025', '03', '035', '04', '045', '05', '06', '07',
             '08', '09', '1', '125', '15', '175', '2', '225', '25', '3', '35', '4', '45', '5', '6', '7', '8', '9', '99']
-    spreads = ['06', '065', '07', '075', '08', '085', '09']
-    for amp in amps:
-        for spread in spreads:
-            sets.append([f'flat80_anticlmulti_spread{spread}_amp{amp}_resample',
-                         f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_'])
-
-    # # New amps all spreads
-    amps = ['0125', '6', '7', '8', '9', '99']
     spreads = ['001', '01', '02', '05', '06', '065', '07', '075', '08', '085', '09', '1', '15', '2', '225', '25',
                '275', '3', '325', '35', '375', '4']  # '45', '5']  # Run 45 and 5 on Old PC
     for amp in amps:
         for spread in spreads:
-            sets.append([f'flat80_anticlmulti_spread{spread}_amp{amp}_resample',
-                         f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_'])
+            sets.append([f'flat80_{clust_alg}_spread{spread}_amp{amp}_resample',
+                         f'Sim_spread{spread}_amp{amp}_flat80_{clust_alg}_norotate_resample_'])
+
+    # # New spreads all amps
+    # amps = ['0', '005', '01', '0125', '015', '0175', '02', '0225', '025', '03', '035', '04', '045', '05', '06', '07',
+    #         '08', '09', '1', '125', '15', '175', '2', '225', '25', '3', '35', '4', '45', '5', '6', '7', '8', '9', '99']
+    # spreads = ['06', '065', '07', '075', '08', '085', '09']
+    # for amp in amps:
+    #     for spread in spreads:
+    #         sets.append([f'flat80_{clust_alg}_spread{spread}_amp{amp}_resample',
+    #                      f'Sim_spread{spread}_amp{amp}_flat80_{clust_alg}_norotate_resample_'])
+    #
+    # # New amps all spreads
+    # amps = ['0125', '6', '7', '8', '9', '99']
+    # spreads = ['001', '01', '02', '05', '06', '065', '07', '075', '08', '085', '09', '1', '15', '2', '225', '25',
+    #            '275', '3', '325', '35', '375', '4']  # '45', '5']  # Run 45 and 5 on Old PC
+    # for amp in amps:
+    #     for spread in spreads:
+    #         sets.append([f'flat80_{clust_alg}_spread{spread}_amp{amp}_resample',
+    #                      f'Sim_spread{spread}_amp{amp}_flat80_{clust_alg}_norotate_resample_'])
 
     # # New amps missed spreads
     # amps = ['275', '3', '325', '35', '375', '4', '45', '5']

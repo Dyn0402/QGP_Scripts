@@ -18,12 +18,12 @@ def main():
     energies = [7, 11, 19, 27, 39, 62]
     divisions = [120]
     centralities = [8]
-    path = {'raw': ['/home/dylan/Research/Data/eta05_n1ratios_dca30/', 'GeV/ratios_divisions_', '_centrality_', '_local.txt'],
-            'mix': ['/home/dylan/Research/Data_Mix/eta05_n1ratios_dca30/', 'GeV/ratios_divisions_', '_centrality_',
+    path = {'raw': ['F:/Research/Data_Ampt_Old/default/Ampt_rapid05_n1ratios_0/', 'GeV/ratios_divisions_', '_centrality_', '_local.txt'],
+            'mix': ['F:/Research/Data_Ampt_Old_Mix/default/Ampt_rapid05_n1ratios_0/', 'GeV/ratios_divisions_', '_centrality_',
                     '_local.txt']}
     colors = {7: 'red', 11: 'blue', 19: 'green', 27: 'cyan', 39: 'magenta', 62: 'black'}
-    cdf_plot = {'energy': 7, 'division': 120, 'centrality': 8, 'total particles': 35}
-    sd_plot = {'energy': 7, 'division': 120, 'centrality': 8}
+    cdf_plot = {'energy': 39, 'division': 120, 'centrality': 8, 'total particles': 35}
+    sd_plot = {'energy': 39, 'division': 120, 'centrality': 8}
     title_sufx = f'\n{sd_plot["energy"]}GeV, 0-5% Centrality, {sd_plot["division"]}° Bins'
 
     data = {'raw': {}, 'mix': {}}
