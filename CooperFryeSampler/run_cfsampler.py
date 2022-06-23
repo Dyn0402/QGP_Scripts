@@ -17,11 +17,11 @@ def main():
     if len(sys.argv) >= 3:
         hypersurface_name = sys.argv[1]
         nevents = sys.argv[2]
-        hypersurface_energy = '7'  # Default to 7GeV
+        hypersurface_energy = 'AuAu.7.7'  # Default to 7GeV
         input_sample_name = 'input.AuAu.7.7.C0-5.EVHRG'  # Default to original 7GeV template
     if len(sys.argv) >= 4:
         hypersurface_energy = sys.argv[3]
-    elif len(sys.argv) >= 5:
+    if len(sys.argv) >= 5:
         input_sample_name = sys.argv[4]
     randomseed = randint(1, 2147483647)
     sampler = {'energy': hypersurface_energy+'_', 'randomseed': randomseed, 'nevents': nevents,
