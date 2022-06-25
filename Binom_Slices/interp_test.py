@@ -1165,16 +1165,17 @@ def chi2_sd_slices_bs():
         plt.title(f'{data_set.upper()} Average Normalized Minimum Amplitude')
         for energy_mins, energy_mins_bss, spreads in \
                 zip(amp_mins_per_spread, amp_min_bss_per_spread, energy_spreads):
-            energy_mins = np.where(np.array(spreads) < max_physical_spread, energy_mins, float('nan'))
-            energy_mins_bss = np.where(np.array(spreads) < max_physical_spread, np.array(energy_mins_bss).T,
-                                       float('nan'))
             energy_mins_avg = np.where((average_spread_range[0] < np.array(spreads)) &
                                        (np.array(spreads) < average_spread_range[1]),
                                        energy_mins, float('nan'))
-            energy_mins_avg_bss = np.where((average_spread_range[0] < np.array(spreads)),
+            energy_mins_avg_bss = np.where((average_spread_range[0] < np.array(spreads)) &
+                                           (np.array(spreads) < average_spread_range[1]),
                                            np.array(energy_mins_bss).T, float('nan'))
-            energy_mins_avg_bss = np.where((np.array(spreads) < average_spread_range[1]),
-                                           np.array(energy_mins_avg_bss).T, float('nan'))
+            # energy_mins_avg_bss = np.where((np.array(spreads) < average_spread_range[1]),
+            #                                np.array(energy_mins_avg_bss).T, float('nan'))
+            energy_mins = np.where(np.array(spreads) < max_physical_spread, energy_mins, float('nan'))
+            energy_mins_bss = np.where(np.array(spreads) < max_physical_spread, np.array(energy_mins_bss).T,
+                                       float('nan'))
             avg_norm_min[data_set].append(np.nanmean(energy_mins / np.array(avgs_per_spread)))
             # avg_norm_min_sd[data_set].append(np.sqrt(np.nanmean(energy_mins_sd ** 2)))
             avg_norm_min_sd[data_set].append(np.nanstd(np.nanmean(energy_mins_bss / np.array(avgs_per_spread), axis=1)))
