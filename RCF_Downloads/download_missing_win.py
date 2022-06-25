@@ -19,7 +19,8 @@ def main():
 
 
 def download():
-    data_set = 'AMPT_Run_mb'
+    # data_set = 'AMPT_cent_sm'
+    data_set = 'CF'
     data_sets = {'BES1': {'remote_path_suf': 'BES1/', 'remote_tree_pref': 'trees/output',
                           'local_path': 'C:/Users/Dylan/Research/', 'local_tree_pref': 'BES1_Trees'},
                  'AMPT_Run': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
@@ -34,14 +35,18 @@ def download():
                                    'local_path': 'C:/Users/Dylan/Research/',
                                    'local_tree_pref': 'AMPT_Trees/most_central/default'},
                  'AMPT_cent_sm': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'most_central/string_melting',
-                                  'local_path': 'C:/Users/Dylan/Research/',
-                                  'local_tree_pref': 'AMPT_Trees/most_central/string_melting'},
+                                  'local_path': 'F:/Research/',
+                                  'local_tree_pref': 'AMPT_Trees/slim_most_central/string_melting'},
                  'AMPT_gang': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
                                'local_path': 'F:/Research/', 'local_tree_pref': 'AMPT_Trees/gang'},
+                 'CF': {'remote_path_suf': 'CooperFrye/', 'remote_tree_pref': 'CooperFrye_protons/output',
+                        'local_path': 'F:/Research/',
+                        'local_tree_pref': 'Cooper_Frye_Trees'},
                  }
 
     energies = [7, 11, 19, 27, 39, 62, '2-7TeV_PbPb']
-    bw_limit = 10  # bandwidth limit per energy in MBPS or None
+    # energies = [11]
+    bw_limit = 12  # bandwidth limit per energy in Mbps or None
     size_tolerance = 0.001  # percentage tolerance between remote and local sizes, re-download if different
     file_delay = 0.1  # seconds to delay between file download calls
 
@@ -64,7 +69,8 @@ def download():
         bad_size_files = 0
         for file, file_size in expected_files.items():
             if os.path.exists(path + file):
-                size_frac = (os.path.getsize(path + file) - file_size) / file_size
+                local_size = os.path.getsize(path + file)
+                size_frac = (local_size - file_size) / file_size if file_size > 0 else 1 if local_size > 0 else 0
                 if abs(size_frac) > size_tolerance:
                     bad_size_files += 1
                     missing_files[energy].append(file)
@@ -76,8 +82,8 @@ def download():
               f' {bad_size_files} of these mismatched size')
 
     if total_missing > 0:
-        res = input(f'\nDownload {total_missing} missing files? Enter yes to download all; energy number to download'
-                    f' a single energy; energy number,number of files to download only first n files for energy;'
+        res = input(f'\nDownload {total_missing} missing files? Enter yes to download all; energy name to download'
+                    f' a single energy; energy name,number of files to download only first n files for energy;'
                     f' or anything else to quit: \n')
         energy_list = []
         if res.strip().lower() in ['yes', 'y']:
@@ -99,13 +105,14 @@ def download():
         for energy in energy_list:
             local = local_path + local_tree_prefix + f'/{energy}/'
             if len(missing_files[energy]) > 0:
-                if all_missing[energy]:
+                if all_missing[energy] and False:
                     start_download_all(energy, remote_path, remote_tree_prefix, local, bw_limit)
                     sleep(file_delay)
                 else:
-                    for file in missing_files[energy]:
-                        start_download(file, energy, remote_path, remote_tree_prefix, local)
-                        sleep(file_delay)
+                    start_download_sftp(missing_files[energy], energy, remote_path, remote_tree_prefix, local, bw_limit)
+                    # for file in missing_files[energy]:
+                    #     start_download(file, energy, remote_path, remote_tree_prefix, local)
+                    #     sleep(file_delay)
 
     else:
         print('All files downloaded!')
@@ -140,7 +147,7 @@ def get_expected_list(energy, remote_path, remote_tree_prefix):
 def start_download(file, energy, remote_path, remote_tree_prefix, local, bw_limit=None):
     remote = remote_path + remote_tree_prefix + f'/{energy}/{file}'
     bw_limit_str = '' if bw_limit is None else f'-l {int(bw_limit * 1000)} '
-    command = 'sftp ' + bw_limit_str + remote + ' ' + local
+    command = 'sftp ' + bw_limit_str + remote + ' ' + local + file
     info = f'{energy}, {file} files:'
     print(f'{info} {command}')
     os.system(f'start cmd /c {command}')
@@ -152,6 +159,22 @@ def start_download_all(energy, remote_path, remote_tree_prefix, local, bw_limit=
     command = 'sftp ' + bw_limit_str + remote + ' ' + local
     info = f'{energy} all files:'
     print(f'{info} {command}')
+    os.system(f'start cmd /c {command}')
+
+
+def start_download_sftp(files, energy, remote_path, remote_tree_prefix, local, bw_limit=None):
+    remote_host, remote_path = remote_path.split(':')
+    file_name = f'{energy}_sftp_file.txt'
+    sftp_gets = [f'get {remote_path}{remote_tree_prefix}/{energy}/{file} {local}{file}\n' for file in files]
+    sftp_gets.insert(0, 'progress\n')  # Show progress of downloads
+    # sftp_gets.append(f'!del {file_name}')  # Delete file when finished since Python not in control after start
+    with open(file_name, 'w') as temp_txt:
+        temp_txt.writelines(sftp_gets)
+    bw_limit_str = '' if bw_limit is None else f'-l {int(bw_limit * 1000)}'
+    command = f'sftp -b {file_name} {bw_limit_str} {remote_host} && timeout 5 /NOBREAK && del {file_name}'
+    info = f'{energy}, {len(files)} files:'
+    print(f'{info} {command}')
+    print('  '.join(sftp_gets))
     os.system(f'start cmd /c {command}')
 
 
