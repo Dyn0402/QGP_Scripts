@@ -19,8 +19,8 @@ def main():
 
 
 def download():
-    data_set = 'AMPT_cent_sm'
-    # data_set = 'CF'
+    # data_set = 'AMPT_mb_sm'
+    data_set = 'CF'
     data_sets = {'BES1': {'remote_path_suf': 'BES1/', 'remote_tree_pref': 'trees/output',
                           'local_path': 'C:/Users/Dylan/Research/', 'local_tree_pref': 'BES1_Trees'},
                  'AMPT_Run': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
