@@ -16,8 +16,10 @@ import shutil
 
 
 def main():
-    bad_file_list_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_gang7GeV.txt'
-    bad_tree_repo = '/home/dylan/Research/Ampt_Bad_Event/'
+    # bad_file_list_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_gang7GeV.txt'
+    # bad_tree_repo = '/home/dylan/Research/Ampt_Bad_Event/'
+    bad_file_list_path = '/media/ucla/Research/Ampt_Bad_Event/bad_ampt_events_min_bias.txt'
+    bad_tree_repo = '/media/ucla/Research/Ampt_Bad_Event/'
     bad_tree_sufx = '_bad'
     fix_tree_sufx = '_fix'
     min_identical = 2
