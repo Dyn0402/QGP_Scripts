@@ -19,7 +19,7 @@ def main():
 
 
 def download():
-    data_set = 'AMPT_mb_sm'
+    data_set = 'AMPT_cent_sm'
     # data_set = 'CF'
     data_sets = {'BES1': {'remote_path_suf': 'BES1/', 'remote_tree_pref': 'trees/output',
                           'local_path': 'C:/Users/Dylan/Research/', 'local_tree_pref': 'BES1_Trees'},
@@ -49,7 +49,7 @@ def download():
 
     energies = [7, 11, 19, 27, 39, 62, '2-7TeV_PbPb']
     # energies = [7]
-    bw_limit = 12  # bandwidth limit per energy in Mbps or None
+    bw_limit = 6  # bandwidth limit per energy in Mbps or None
     size_tolerance = 0.001  # percentage tolerance between remote and local sizes, re-download if different
     file_delay = 0.1  # seconds to delay between file download calls
 
@@ -167,18 +167,27 @@ def start_download_all(energy, remote_path, remote_tree_prefix, local, bw_limit=
 
 def start_download_sftp(files, energy, remote_path, remote_tree_prefix, local, bw_limit=None):
     remote_host, remote_path = remote_path.split(':')
-    file_name = f'{energy}_{remote_tree_prefix.split("/")[0]}_sftp_file.txt'
+    bat_file_name = f'{energy}_{remote_tree_prefix.split("/")[0]}_sftp_file.bat'
+
+    sftp_file_name = f'{energy}_{remote_tree_prefix.split("/")[0]}_sftp_file.txt'
     sftp_gets = [f'get {remote_path}{remote_tree_prefix}/{energy}/{file} {local}{file}\n' for file in files]
     sftp_gets.insert(0, 'progress\n')  # Show progress of downloads
-    # sftp_gets.append(f'!del {file_name}')  # Delete file when finished since Python not in control after start
-    with open(file_name, 'w') as temp_txt:
+    with open(sftp_file_name, 'w') as temp_txt:
         temp_txt.writelines(sftp_gets)
+
     bw_limit_str = '' if bw_limit is None else f'-l {int(bw_limit * 1000)}'
-    command = f'sftp -b {file_name} {bw_limit_str} {remote_host}'  # && timeout 5 /NOBREAK && del {file_name}'
+    command = f'sftp -b {sftp_file_name} {bw_limit_str} {remote_host}'
+
+    with open(bat_file_name, 'w') as temp_bat:  # Need bat file to delete itself and sftp batch
+        temp_bat.write(f'{command}\n')  # Run sftp batch file
+        temp_bat.write(f'del {sftp_file_name}\n')  # Delete sftp batch file
+        temp_bat.write(f'start /b "" cmd /c del {bat_file_name}&exit /b')  # Have bat file delete itself
+
     info = f'{energy}, {len(files)} files:'
     print(f'{info} {command}')
     print('  '.join(sftp_gets))
-    os.system(f'start cmd /c {command}')
+
+    os.system(f'start cmd /c {bat_file_name}')  # Run batch file in new terminal
 
 
 if __name__ == '__main__':
