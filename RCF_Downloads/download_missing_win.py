@@ -19,8 +19,8 @@ def main():
 
 
 def download():
-    # data_set = 'AMPT_cent_sm'
-    data_set = 'CF'
+    data_set = 'AMPT_mb_sm'
+    # data_set = 'CF'
     data_sets = {'BES1': {'remote_path_suf': 'BES1/', 'remote_tree_pref': 'trees/output',
                           'local_path': 'C:/Users/Dylan/Research/', 'local_tree_pref': 'BES1_Trees'},
                  'AMPT_Run': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
@@ -34,9 +34,12 @@ def download():
                  'AMPT_cent_def': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'most_central/default',
                                    'local_path': 'C:/Users/Dylan/Research/',
                                    'local_tree_pref': 'AMPT_Trees/most_central/default'},
-                 'AMPT_cent_sm': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'most_central/string_melting',
+                 'AMPT_cent_sm': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'slim_most_central/string_melting',
                                   'local_path': 'F:/Research/',
                                   'local_tree_pref': 'AMPT_Trees/slim_most_central/string_melting'},
+                 'AMPT_mb_sm': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'min_bias/string_melting',
+                                'local_path': 'F:/Research/',
+                                'local_tree_pref': 'AMPT_Trees/min_bias/string_melting'},
                  'AMPT_gang': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
                                'local_path': 'F:/Research/', 'local_tree_pref': 'AMPT_Trees/gang'},
                  'CF': {'remote_path_suf': 'CooperFrye/', 'remote_tree_pref': 'CooperFrye_protons/output',
@@ -45,7 +48,7 @@ def download():
                  }
 
     energies = [7, 11, 19, 27, 39, 62, '2-7TeV_PbPb']
-    # energies = [11]
+    # energies = [7]
     bw_limit = 12  # bandwidth limit per energy in Mbps or None
     size_tolerance = 0.001  # percentage tolerance between remote and local sizes, re-download if different
     file_delay = 0.1  # seconds to delay between file download calls
@@ -164,14 +167,14 @@ def start_download_all(energy, remote_path, remote_tree_prefix, local, bw_limit=
 
 def start_download_sftp(files, energy, remote_path, remote_tree_prefix, local, bw_limit=None):
     remote_host, remote_path = remote_path.split(':')
-    file_name = f'{energy}_sftp_file.txt'
+    file_name = f'{energy}_{remote_tree_prefix.split("/")[0]}_sftp_file.txt'
     sftp_gets = [f'get {remote_path}{remote_tree_prefix}/{energy}/{file} {local}{file}\n' for file in files]
     sftp_gets.insert(0, 'progress\n')  # Show progress of downloads
     # sftp_gets.append(f'!del {file_name}')  # Delete file when finished since Python not in control after start
     with open(file_name, 'w') as temp_txt:
         temp_txt.writelines(sftp_gets)
     bw_limit_str = '' if bw_limit is None else f'-l {int(bw_limit * 1000)}'
-    command = f'sftp -b {file_name} {bw_limit_str} {remote_host} && timeout 5 /NOBREAK && del {file_name}'
+    command = f'sftp -b {file_name} {bw_limit_str} {remote_host}'  # && timeout 5 /NOBREAK && del {file_name}'
     info = f'{energy}, {len(files)} files:'
     print(f'{info} {command}')
     print('  '.join(sftp_gets))
