@@ -11,6 +11,7 @@
   <SandBox>
     <Package>
       <File>file:/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/find_ampt_identical_tracks_uproot.py</File>
+      <File>file:/star/u/dneff/git/QGP_Scripts/Analyzer/istarmap.py</File>
     </Package>
   </SandBox>
 
