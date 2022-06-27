@@ -16,7 +16,7 @@ import shutil
 def main():
     """Same as remove_bad_event but no actual tree editing so it doesn't have ROOT dependence.
     Used to copy already fixed files into correct directories in RCF."""
-    bad_file_list_path = '/star/u/dneff/Ampt_Bad_Event/bad_ampt_events_minbias.txt'
+    bad_file_list_path = '/star/u/dneff/Ampt_Bad_Event/bad_ampt_events_central.txt'
     # bad_file_list_path = '/star/u/dneff/Ampt_Bad_Event/bad_ampt_events_gang7GeV.txt'
     bad_tree_repo = '/star/u/dneff/Ampt_Bad_Event/'
     bad_tree_sufx = '_bad'
@@ -26,11 +26,13 @@ def main():
     for tree_path, tree in bad_trees.items():
         tree_path = tree_path.replace('/media/ucla/Research/AMPT_Trees', '/gpfs01/star/pwg/dneff/data/AMPT')
         # tree_path = tree_path.replace('D:/Research/AMPT_Trees', '/gpfs01/star/pwg/dneff/data/AMPT')
-        print(tree_path, tree)
         repo_tree_path = move_tree(tree_path, bad_tree_repo, bad_tree_sufx)
+        print(f'{tree_path} moved to {repo_tree_path}')
         fix_tree_path = fix_tree(tree, repo_tree_path, bad_tree_sufx, fix_tree_sufx)
+        print(f'Tree fixed: {fix_tree_path}')
         # fix_tree_path = repo_tree_path.replace(bad_tree_sufx, fix_tree_sufx)
         replace_tree(fix_tree_path, tree_path)
+        print(f'Fixed tree replaced {tree_path}\n')
 
     print('donzo')
 
