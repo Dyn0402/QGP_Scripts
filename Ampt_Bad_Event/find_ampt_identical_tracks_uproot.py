@@ -12,6 +12,7 @@ import numpy as np
 import uproot
 import awkward as ak
 import vector
+import sys
 import os
 from datetime import datetime
 from multiprocessing import Pool
@@ -28,7 +29,10 @@ except ModuleNotFoundError:
 
 def main():
     # file_writer()
-    uproot_finder()
+    if len(sys.argv) == 2:
+        uproot_finder_rcf()
+    else:
+        uproot_finder()
     print('donzo')
 
 
@@ -102,6 +106,74 @@ def uproot_finder():
     with Pool(threads) as pool:
         for bad_tree in tqdm.tqdm(pool.istarmap(func, jobs), total=len(jobs)):
             bad_trees.append(bad_tree)
+
+    # with Pool(threads) as pool:
+    #     bad_trees = pool.starmap(check_file,
+    #                              [(root_path, tree_name, track_attributes, max_eta, ignore_pids, num, n_files) for
+    #                               num, root_path in enumerate(root_paths)])
+
+    with open(out_file_path, write_mode) as file:
+        for bad_tree in bad_trees:
+            for bad_event in bad_tree:
+                if bad_event is not None:
+                    out_line = ''.join(f'{x}: {y}\t' for x, y in bad_event.items())
+                    file.write(f'{out_line}\n')
+
+    end = datetime.now()
+    print(f'\nEnd {end}')
+    print(f'Run time: {end - start}')
+    print(f'Job run time: {end - jobs_start}')
+
+
+def uproot_finder_rcf():
+    """ Looks like this runs just as fast as compiled ROOT code, just slow 2-p comparisons """
+    start = datetime.now()
+    print(f'Start {start}\n')
+
+    # out_file_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_slim_most_central_new.txt'
+    # out_file_path = 'F:/Research/Ampt_Bad_Event/bad_ampt_events_minbias.txt'
+    # out_file_path = '/media/ucla/Research/Ampt_Bad_Event/bad_ampt_events_minbias.txt'
+    out_file_path = '/star/u/dneff/Ampt_Bad_Event/bad_ampt_events_central.txt'
+    # path = '/media/ucla/Research/AMPT_Trees/slim_most_central/string_melting/'
+    # path = 'F:/Research/AMPT_Trees/min_bias/'
+    # path = '/media/ucla/Research/AMPT_Trees/min_bias/'
+    path = '/gpfs01/star/pwg/dneff/data/AMPT/most_central/string_melting/'
+    single_events = False
+    tree_name = 'tree'
+    write_mode = 'w'
+    max_eta = 1
+    ignore_pids = [313, 111]
+    track_attributes = ['pid', 'px', 'py', 'pz']
+
+    root_paths = []
+    for root, dirs, files in os.walk(path):
+        for file_name in files:
+            if '.root' not in file_name:
+                continue
+            root_path = os.path.join(root, file_name)
+            root_paths.append(root_path)
+
+    # n_files = len(root_paths)
+    # print(f'{n_files} files found to be checked.')
+    #
+    # jobs = [(root_path, tree_name, track_attributes, max_eta, ignore_pids, num, n_files) for
+    #         num, root_path in enumerate(root_paths)]
+    #
+    # jobs_start = datetime.now()
+    # print(f'Jobs Start {jobs_start}\n')
+    # bad_trees = []
+    # func = check_file
+    # if single_events:
+    #     func = check_file_single_events
+    # with Pool(threads) as pool:
+    #     for bad_tree in tqdm.tqdm(pool.istarmap(func, jobs), total=len(jobs)):
+    #         bad_trees.append(bad_tree)
+
+    jobs_start = datetime.now()
+    print(f'Jobs Start {jobs_start}\n')
+    bad_trees = []
+    for root_path in root_paths:
+        bad_trees.append(check_file(root_path, tree_name, track_attributes, max_eta, ignore_pids))
 
     # with Pool(threads) as pool:
     #     bad_trees = pool.starmap(check_file,
