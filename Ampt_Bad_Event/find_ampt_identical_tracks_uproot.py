@@ -17,7 +17,13 @@ from datetime import datetime
 from multiprocessing import Pool
 
 import tqdm
-import istarmap  # Needed for tqdm
+try:
+    import istarmap  # Needed for tqdm
+except ModuleNotFoundError:
+    import sys
+    print(f'Python path: {sys.path}')
+    sys.path.append('/star/u/dneff/git/QGP_Scripts/Analyzer')
+    import istarmap
 
 
 def main():
