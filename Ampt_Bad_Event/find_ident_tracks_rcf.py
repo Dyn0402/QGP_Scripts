@@ -37,8 +37,6 @@ def uproot_finder_rcf(root_path_list):
         root_paths = file.readlines()
     root_paths = [root_path.strip() for root_path in root_paths]
 
-    print(root_paths)
-
     jobs_start = datetime.now()
     print(f'Jobs Start {jobs_start}\n')
     bad_trees = []
@@ -51,13 +49,15 @@ def uproot_finder_rcf(root_path_list):
                 if bad_event is not None:
                     out_line = ''.join(f'{x}: {y}\t' for x, y in bad_event.items())
                     file.write(f'{out_line}\n')
-        file.write('\n\nFiles checked:\n')
-        file.writelines('\n'.join(root_path))
+        file.write('\nFiles checked:\n')
+        file.write('\n'.join(root_paths))
 
     end = datetime.now()
     print(f'\nEnd {end}')
     print(f'Run time: {end - start}')
     print(f'Job run time: {end - jobs_start}')
+    print(f'Files run: {len(root_paths)}')
+    print(f'Time per file: {(end - jobs_start) / len(root_paths)}')
 
 
 if __name__ == '__main__':
