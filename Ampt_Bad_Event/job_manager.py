@@ -19,14 +19,14 @@ def main():
     """
     top_path = '/gpfs01/star/pwg/dneff/data/AMPT/most_central/'
     file_list_name = 'root_files.txt'
-    sub_name = 'clean_sub.xml'
-    init_sub(top_path, file_list_name, sub_name)
+    sub_path = '/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/clean_sub.xml'
+    init_sub(top_path, file_list_name, sub_path)
     print('donzo')
 
 
-def init_sub(top_path, file_list_name, sub_name):
+def init_sub(top_path, file_list_name, sub_path):
     gen_file_list(top_path, file_list_name)
-    submit_job(sub_name)
+    submit_job(sub_path)
 
 
 def gen_file_list(top_path, file_list_name):
@@ -35,8 +35,8 @@ def gen_file_list(top_path, file_list_name):
         file_list.writelines('\n'.join(files))
 
 
-def submit_job(sub_name):
-    os.system(f'star-submit {sub_name}')
+def submit_job(sub_path):
+    os.system(f'star-submit {sub_path}')
 
 
 def get_files(path):
