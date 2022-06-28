@@ -172,7 +172,7 @@ def get_files(path):
             root_path = os.path.join(root, file_name)
             root_paths.append(root_path)
 
-    return root_paths[:10]
+    return root_paths[:20]
 
 
 def convert_files(temp_files, real_files):
