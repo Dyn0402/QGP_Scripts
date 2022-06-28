@@ -48,7 +48,7 @@ def init_pars():
         'result_path': '/star/u/dneff/Ampt_Bad_Event/sub/result/',
         'output_combo_path': '/star/u/dneff/Ampt_Bad_Event/sub/result/ampt_bad_events.txt',
         'user': 'dneff',
-        'check_interval': 60,  # seconds
+        'check_interval': 10,  # seconds
 
         'out_split_flag': 'Files checked:\n',
 
@@ -95,7 +95,7 @@ def babysit_jobs(files, pars):
             time.sleep(pars['check_interval'])
 
         files_checked = check_outputs(pars['output_path'], pars['out_split_flag'])
-        files_remaining = set(files) - set(files_checked)
+        files_remaining = list(set(files) - set(files_checked))
         if len(files_remaining) > 0:
             print(f'Resubmitting {len(files_remaining)} missing files')
             submit_jobs(files_remaining, pars['file_list_path'], pars['sub_path'])
@@ -110,9 +110,10 @@ def check_jobs_alive(user='dneff'):
         job_status = os.popen(f'condor_q {user} | tail -4').read()
         job_status = [x for x in job_status.split('\n') if 'Total for query:' in x][0]
         categories = ['completed', 'removed', 'idle', 'running', 'held', 'suspended']
+        alive_categories = ['idle', 'running', 'held', 'suspended']
         job_status = [x.split(';')[-1].strip() for x in job_status.split(',')]
         job_status = {cat: int(x.split()[0].strip()) for x in job_status for cat in categories if cat in x}
-        jobs_alive = sum(job_status.values())
+        jobs_alive = sum([num for cat, num in job_status.items() if cat in alive_categories])
     except ValueError:
         print('Bad condor job read!')
         jobs_alive, job_status = 1, {}
@@ -124,7 +125,7 @@ def check_outputs(output_dir, flag):
     files_checked = []
     for out_file_path in os.listdir(output_dir):
         with open(output_dir + out_file_path, 'r') as out_file:
-            files_checked.append(out_file.read().split(flag)[-1].strip().split('\n'))
+            files_checked.extend(out_file.read().split(flag)[-1].strip().split('\n'))
 
     return files_checked
 
