@@ -23,10 +23,10 @@ def main():
     """
     pars = init_pars()
 
-    files = get_files(pars['top_path'])
-    submit_jobs(files, pars['file_list_path'], pars['sub_path'])
-    babysit_jobs(files, pars)
-    combine_outputs(pars['output_path'], pars['output_combo_path'], pars['out_split_flag'], files)
+    # files = get_files(pars['top_path'])
+    # submit_jobs(files, pars['file_list_path'], pars['sub_path'])
+    # babysit_jobs(files, pars)
+    combine_outputs(pars['output_path'], pars['output_combo_path'], pars['out_split_flag'], files, pars['list_path'])
 
     fix_dataset(pars['output_combo_path'], pars['result_path'],
                 pars['bad_sufx'], pars['fix_sufx'], pars['min_identical'], True)
@@ -46,6 +46,7 @@ def init_pars():
         'sub_path': '/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/clean_sub.xml',
         'output_path': '/star/u/dneff/Ampt_Bad_Event/sub/output/',
         'result_path': '/star/u/dneff/Ampt_Bad_Event/sub/result/',
+        'list_path': '/star/u/dneff/Ampt_Bad_Event/sub/list/',
         'output_combo_path': '/star/u/dneff/Ampt_Bad_Event/sub/result/ampt_bad_events.txt',
         'user': 'dneff',
         'check_interval': 10,  # seconds
@@ -95,7 +96,7 @@ def babysit_jobs(files, pars):
             time.sleep(pars['check_interval'])
 
         files_checked = check_outputs(pars['output_path'], pars['out_split_flag'])
-        files_checked = convert_files(files_checked, files)
+        files_checked = convert_files(files_checked, files, pars['list_path'])
         files_remaining = list(set(files) - set(files_checked))
         print('files_checked:\n', files_checked, '\nfiles:\n', files, '\nfiles_remaining:\n', files_remaining)
         if len(files_remaining) > 0:
@@ -132,12 +133,12 @@ def check_outputs(output_dir, flag):
     return files_checked
 
 
-def combine_outputs(output_path, out_combo_path, flag, real_files):
+def combine_outputs(output_path, out_combo_path, flag, real_files, list_path):
     out_combo_lines = []
     for out_path in os.listdir(output_path):
         with open(output_path + out_path, 'r') as out_file:
             temp_files = out_file.read().split(flag)[0].strip().split('\n')
-            out_combo_lines.extend(convert_files(temp_files, real_files))
+            out_combo_lines.extend(convert_files(temp_files, real_files, list_path))
 
     with open(out_combo_path, 'w') as combo_file:
         combo_file.write('\n'.join(out_combo_lines))
@@ -175,19 +176,44 @@ def get_files(path):
     return root_paths[:20]
 
 
-def convert_files(temp_files, real_files):
+def convert_files(temp_files, real_files, list_path):
     """
-    Just an absolute prayer here that file names are unique even between datasets.
+    A bit complicated but should be reliable unless list files are messed with
     :param temp_files:
     :param real_files:
+    :param list_path:
     :return:
     """
+    list_names = os.listdir(list_path)
+
     return_files = []
     for temp_file in temp_files:
         file_name = temp_file.split('/')[-1]
-        matches = [x for x in real_files if file_name in x]
-        assert(len(matches) == 1)
-        return_files.append(matches[0])
+        job_name = temp_file.split('/')[-3]
+        list_match = [x for x in list_names if job_name in x]
+
+        if len(list_match) == 0:
+            print(f'Can\'t find list for {temp_file}!')
+        elif len(list_match) > 1:
+            print(f'Duplicate lists? : {list_match} for {temp_file}')
+        else:
+            list_match = list_match[0]
+
+        with open(list_path + list_match, 'r') as list_file:
+            list_lines = list_file.readlines()
+        real_path = [line for line in list_lines if file_name in line]
+
+        if len(real_path) == 0:
+            print(f'Can\'t find file {temp_file} in {list_match}!')
+        if len(real_path) > 1:
+            print(f'Duplicate files? : {real_path}')
+        else:
+            real_path = real_path[0]
+
+        return_files.append(real_path)
+        # matches = [x for x in real_files if file_name in x]
+        # assert(len(matches) == 1)
+        # return_files.append(matches[0])
 
     return return_files
 
