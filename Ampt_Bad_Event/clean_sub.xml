@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!DOCTYPE note [
 ]>
-<job maxFilesPerProcess="10">
+<job maxFilesPerProcess="2">
   
   <command>
       /star/u/dneff/Software/anaconda3/bin/python find_ident_tracks_rcf.py $FILELIST
@@ -12,6 +12,7 @@
     <Package>
       <File>file:/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/find_ident_tracks_rcf.py</File>
       <File>file:/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/find_ampt_identical_tracks_uproot.py</File>
+      <File>file:/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/remove_bad_event_rcf.py</File>
       <File>file:/star/u/dneff/Ampt_Bad_Event/sub/root_files.txt</File>
     </Package>
   </SandBox>

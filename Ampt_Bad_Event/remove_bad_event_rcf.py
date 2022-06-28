@@ -8,7 +8,6 @@ Created as QGP_Scripts/remove_bad_event_copy
 @author: Dylan Neff, dylan
 """
 
-import os
 import subprocess as sp
 import shutil
 
@@ -22,17 +21,31 @@ def main():
     bad_tree_sufx = '_bad'
     fix_tree_sufx = '_fix'
     min_identical = 2
+    fix_dataset(bad_file_list_path, bad_tree_repo, bad_tree_sufx, fix_tree_sufx, min_identical, False)
+
+
+def fix_dataset(bad_file_list_path, bad_tree_repo, bad_sufx='_bad', fix_sufx='fix', min_identical=2, test=True):
+    """
+    Fix bad AMPT dataset given bad_file_list_path text file with bad files. For each bad file in list move file to
+    bad_tree_repo directory. There create a new file with all events except bad ones. Move this fixed file back to
+    original directory with original name.
+    :param bad_file_list_path: Path to list of all bad AMPT events and relevant details
+    :param bad_tree_repo: Temporary directory to store bad trees and fix them. Good and bad copies remain here at end
+    :param bad_sufx: Suffix to add to bad tree file to indicate it is tree with bad events
+    :param fix_sufx: Suffix to add to fixed tree file to indicate it is tree copy with bad events removed
+    :param min_identical: Minimum number of identical track pairs needed to consider an event bad
+    :param test: Flag to run test mode where initial file is copied (not moved) and fixed file is not copied back
+    :return:
+    """
     bad_trees = get_bad_event_file(bad_file_list_path, min_identical)
     for tree_path, tree in bad_trees.items():
-        tree_path = tree_path.replace('/media/ucla/Research/AMPT_Trees', '/gpfs01/star/pwg/dneff/data/AMPT')
-        # tree_path = tree_path.replace('D:/Research/AMPT_Trees', '/gpfs01/star/pwg/dneff/data/AMPT')
-        repo_tree_path = move_tree(tree_path, bad_tree_repo, bad_tree_sufx)
+        repo_tree_path = move_tree(tree_path, bad_tree_repo, bad_sufx, test)
         print(f'{tree_path} moved to {repo_tree_path}')
-        fix_tree_path = fix_tree(tree, repo_tree_path, bad_tree_sufx, fix_tree_sufx)
+        fix_tree_path = fix_tree(tree, repo_tree_path, bad_sufx, fix_sufx)
         print(f'Tree fixed: {fix_tree_path}')
-        # fix_tree_path = repo_tree_path.replace(bad_tree_sufx, fix_tree_sufx)
-        replace_tree(fix_tree_path, tree_path)
-        print(f'Fixed tree replaced {tree_path}\n')
+        if not test:
+            replace_tree(fix_tree_path, tree_path)
+            print(f'Fixed tree replaced {tree_path}\n')
 
     print('donzo')
 
@@ -63,12 +76,15 @@ def get_bad_event_file(path, min_identical):
     return bad_trees
 
 
-def move_tree(tree_path, repo_path, sufx):
+def move_tree(tree_path, repo_path, sufx, copy=True):
     tree_name = tree_path.split('/')[-1]
     tree_name = tree_name.split('.')
     tree_name = tree_name[0] + sufx + '.' + tree_name[-1]
     repo_tree_path = repo_path + tree_name
-    shutil.move(tree_path, repo_tree_path)
+    if copy:
+        shutil.copy(tree_path, repo_tree_path)
+    else:
+        shutil.move(tree_path, repo_tree_path)
 
     return repo_tree_path
 

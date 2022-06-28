@@ -10,6 +10,9 @@ Created as QGP_Scripts/job_manager
 
 import os
 import time
+from datetime import datetime
+
+from remove_bad_event_rcf import fix_dataset
 
 
 def main():
@@ -18,19 +21,16 @@ def main():
     Submit jobs to find bad Ampt files and fix them
     :return:
     """
-    # top_path = '/gpfs01/star/pwg/dneff/data/AMPT/most_central/'
-    # file_list_path = '/star/u/dneff/Ampt_Bad_Event/sub/list/root_files.txt'
-    # sub_path = '/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/clean_sub.xml'
-    # output_path = '/star/u/dneff/Ampt_Bad_Event/sub/output/'
-    # user = 'dneff'
-    # check_interval = 60
-
     pars = init_pars()
 
     files = get_files(pars['top_path'])
     submit_job(files, pars['file_list_path'], pars['sub_path'])
     babysit_job(files, pars)
-    combine_outputs(pars[''])
+    combine_outputs(pars['output_path'], pars['output_combo_path'])
+
+    fix_dataset(pars['output_combo_path'], pars['result_path'],
+                pars['bad_sufx'], pars['fix_sufx'], pars['min_identical'], True)
+
     clean_up()
     print('donzo')
 
@@ -45,12 +45,18 @@ def init_pars():
         'file_list_path': '/star/u/dneff/Ampt_Bad_Event/sub/list/root_files.txt',
         'sub_path': '/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/clean_sub.xml',
         'output_path': '/star/u/dneff/Ampt_Bad_Event/sub/output/',
+        'result_path': '/star/u/dneff/Ampt_Bad_Event/sub/result/',
+        'output_combo_path': '/star/u/dneff/Ampt_Bad_Event/sub/result/ampt_bad_events.txt',
         'user': 'dneff',
         'check_interval': 60,  # seconds
 
         'condor_flag_left': ':',
         'condor_flag_right': 'jobs',
         'out_split_flag': 'Files checked:\n',
+
+        'bad_sufx': '_bad',
+        'fix_sufx': '_fix',
+        'min_identical': 2,
     }
 
     return pars
@@ -75,13 +81,19 @@ def babysit_job(files, pars):
     :param pars: Dictionary of parameters
     :return:
     """
+    start = datetime.now()
+    print(f'\nJobs submitted, waiting {pars["check_interval"]}s to check them')
+    time.sleep(pars['check_interval'])
+
     finished = False
     while not finished:
-        while check_jobs_alive(pars['user'], pars['condor_flag_left'], pars['condor_flag_right']):
-            print(f'Jobs alive, waiting {pars["check_interval"]}s to check again')
+        jobs_alive = check_jobs_alive(pars['user'], pars['condor_flag_left'], pars['condor_flag_right'])
+        while jobs_alive > 0:
+            now = datetime.now()
+            print(f' {jobs_alive} jobs alive, waiting {pars["check_interval"]}s to check again. Run time {now - start}')
             time.sleep(pars['check_interval'])
 
-        files_checked = check_outputs(pars['output_dir'], pars['out_split_flag'])
+        files_checked = check_outputs(pars['output_path'], pars['out_split_flag'])
         files_remaining = set(files) - set(files_checked)
         if len(files_remaining) > 0:
             print(f'Resubmitting {len(files_remaining)} missing files')
@@ -98,7 +110,7 @@ def check_jobs_alive(user='dneff', flag_left=':', flag_right='jobs'):
     except ValueError:
         print('Bad read of jobs alive!')
 
-    return jobs_alive > 0
+    return jobs_alive
 
 
 def check_outputs(output_dir, flag):
@@ -120,12 +132,9 @@ def combine_outputs(output_path, out_combo_path, flag):
         combo_file.write('\n'.join(out_combo_lines))
 
 
-def clean_up(output_path, out_combo_path):
+def clean_up():
     if input('Clean up?\n')[0].lower() == 'y':
         os.system('clean.sh')
-        for out_path in os.lisdir(output_path):
-            if out_path != out_combo_path:
-                os.remove(out_path)
 
 
 def write_file_list(files, file_list_path):
@@ -152,7 +161,7 @@ def get_files(path):
             root_path = os.path.join(root, file_name)
             root_paths.append(root_path)
 
-    return root_paths[:100]
+    return root_paths[:10]
 
 
 if __name__ == '__main__':
