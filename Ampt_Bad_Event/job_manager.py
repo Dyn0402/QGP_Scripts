@@ -64,7 +64,7 @@ def submit_job(files, file_list_path, sub_path):
     :param sub_path: Path to submission xml to be star-submit ed
     """
     write_file_list(files, file_list_path)
-    submit_job(sub_path)
+    os.system(f'star-submit {sub_path}')
 
 
 def babysit_job(files, pars):
@@ -136,10 +136,6 @@ def write_file_list(files, file_list_path):
     """
     with open(file_list_path, 'w') as file_list:
         file_list.writelines('\n'.join(files))
-
-
-def submit_job(sub_path):
-    os.system(f'star-submit {sub_path}')
 
 
 def get_files(path):
