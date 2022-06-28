@@ -24,8 +24,8 @@ def main():
     pars = init_pars()
 
     files = get_files(pars['top_path'])
-    submit_job(files, pars['file_list_path'], pars['sub_path'])
-    babysit_job(files, pars)
+    submit_jobs(files, pars['file_list_path'], pars['sub_path'])
+    babysit_jobs(files, pars)
     combine_outputs(pars['output_path'], pars['output_combo_path'])
 
     fix_dataset(pars['output_combo_path'], pars['result_path'],
@@ -62,7 +62,7 @@ def init_pars():
     return pars
 
 
-def submit_job(files, file_list_path, sub_path):
+def submit_jobs(files, file_list_path, sub_path):
     """
     Submit jobs to check files
     :param files: .root files to be checked
@@ -73,7 +73,7 @@ def submit_job(files, file_list_path, sub_path):
     os.system(f'star-submit {sub_path}')
 
 
-def babysit_job(files, pars):
+def babysit_jobs(files, pars):
     """
     Wait for initial submission to finish running and then check output to see if all files
     have been checked. If so exit, else resubmit job for missing files.
@@ -87,30 +87,37 @@ def babysit_job(files, pars):
 
     finished = False
     while not finished:
-        jobs_alive = check_jobs_alive(pars['user'], pars['condor_flag_left'], pars['condor_flag_right'])
+        jobs_alive, job_status = check_jobs_alive(pars['user'], pars['condor_flag_left'], pars['condor_flag_right'])
         while jobs_alive > 0:
+            jobs_alive, job_status = check_jobs_alive(pars['user'], pars['condor_flag_left'], pars['condor_flag_right'])
             now = datetime.now()
-            print(f' {jobs_alive} jobs alive, waiting {pars["check_interval"]}s to check again. Run time {now - start}')
+            print(f' {jobs_alive} jobs alive, waiting {pars["check_interval"]}s to check again.')
+            print(f'  Run time {now - start}  ' + ', '.join([f'{num} {cat}' for cat, num in job_status.items()]))
             time.sleep(pars['check_interval'])
 
         files_checked = check_outputs(pars['output_path'], pars['out_split_flag'])
         files_remaining = set(files) - set(files_checked)
         if len(files_remaining) > 0:
             print(f'Resubmitting {len(files_remaining)} missing files')
-            submit_job(files_remaining, pars['file_list_path'], pars['sub_path'])
+            submit_jobs(files_remaining, pars['file_list_path'], pars['sub_path'])
             time.sleep(pars['check_interval'] * 4)  # Wait a while to let submission go through before checking condor
         else:
             finished = True
 
 
 def check_jobs_alive(user='dneff', flag_left=':', flag_right='jobs'):
-    job_status = os.popen(f'condor_q {user} | tail -4').read()
     try:
-        jobs_alive = int(job_status[job_status.find(flag_left) + len(flag_left):job_status.find(flag_right)].strip())
+        job_status = os.popen(f'condor_q {user} | tail -4').read()
+        job_status.split('\n')
+        job_status = [x for x in job_status.split('\n') if 'Total for query:' in x][0]
+        categories = ['completed', 'removed', 'idle', 'running', 'held', 'suspended']
+        job_status = {cat: int(x.strip(cat).strip) for cat in categories for x in job_status if cat in x}
+        jobs_alive = sum(job_status.values())
     except ValueError:
-        print('Bad read of jobs alive!')
+        print('Bad condor job read!')
+        jobs_alive, job_status = 1, {}
 
-    return jobs_alive
+    return jobs_alive, job_status
 
 
 def check_outputs(output_dir, flag):
