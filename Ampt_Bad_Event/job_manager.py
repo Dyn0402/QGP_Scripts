@@ -26,7 +26,7 @@ def main():
     files = get_files(pars['top_path'])
     submit_jobs(files, pars['file_list_path'], pars['sub_path'])
     babysit_jobs(files, pars)
-    combine_outputs(pars['output_path'], pars['output_combo_path'], pars['out_split_flag'])
+    combine_outputs(pars['output_path'], pars['output_combo_path'], pars['out_split_flag'], files)
 
     fix_dataset(pars['output_combo_path'], pars['result_path'],
                 pars['bad_sufx'], pars['fix_sufx'], pars['min_identical'], True)
@@ -95,6 +95,7 @@ def babysit_jobs(files, pars):
             time.sleep(pars['check_interval'])
 
         files_checked = check_outputs(pars['output_path'], pars['out_split_flag'])
+        files_checked = convert_files(files_checked, files)
         files_remaining = list(set(files) - set(files_checked))
         print('files_checked:\n', files_checked, '\nfiles:\n', files, '\nfiles_remaining:\n', files_remaining)
         if len(files_remaining) > 0:
@@ -131,11 +132,12 @@ def check_outputs(output_dir, flag):
     return files_checked
 
 
-def combine_outputs(output_path, out_combo_path, flag):
+def combine_outputs(output_path, out_combo_path, flag, real_files):
     out_combo_lines = []
     for out_path in os.listdir(output_path):
         with open(output_path + out_path, 'r') as out_file:
-            out_combo_lines.extend(out_file.read().split(flag)[0].strip().split('\n'))
+            temp_files = out_file.read().split(flag)[0].strip().split('\n')
+            out_combo_lines.extend(convert_files(temp_files, real_files))
 
     with open(out_combo_path, 'w') as combo_file:
         combo_file.write('\n'.join(out_combo_lines))
@@ -171,6 +173,23 @@ def get_files(path):
             root_paths.append(root_path)
 
     return root_paths[:10]
+
+
+def convert_files(temp_files, real_files):
+    """
+    Just an absolute prayer here that file names are unique even between datasets.
+    :param temp_files:
+    :param real_files:
+    :return:
+    """
+    return_files = []
+    for temp_file in temp_files:
+        file_name = temp_file.split('/')[-1]
+        matches = [x for x in real_files if file_name in x]
+        assert(len(matches) == 1)
+        return_files.append(matches[0])
+
+    return return_files
 
 
 if __name__ == '__main__':
