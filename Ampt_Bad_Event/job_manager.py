@@ -23,7 +23,7 @@ def main():
     """
     pars = init_pars()
 
-    # files = get_files(pars['top_path'])
+    files = get_files(pars['top_path'])
     # submit_jobs(files, pars['file_list_path'], pars['sub_path'])
     # babysit_jobs(files, pars)
     combine_outputs(pars['output_path'], pars['output_combo_path'], pars['out_split_flag'], files, pars['list_path'])
