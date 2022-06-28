@@ -123,7 +123,7 @@ def check_jobs_alive(user='dneff', flag_left=':', flag_right='jobs'):
 def check_outputs(output_dir, flag):
     files_checked = []
     for out_file_path in os.listdir(output_dir):
-        with open(out_file_path, 'r') as out_file:
+        with open(output_dir + out_file_path, 'r') as out_file:
             files_checked.append(out_file.read().split(flag)[-1].strip().split('\n'))
 
     return files_checked
@@ -132,7 +132,7 @@ def check_outputs(output_dir, flag):
 def combine_outputs(output_path, out_combo_path, flag):
     out_combo_lines = []
     for out_path in os.listdir(output_path):
-        with open(out_path, 'r') as out_file:
+        with open(output_path + out_path, 'r') as out_file:
             out_combo_lines.append(out_file.read().split(flag)[0].strip().split('\n'))
 
     with open(out_combo_path, 'r') as combo_file:
