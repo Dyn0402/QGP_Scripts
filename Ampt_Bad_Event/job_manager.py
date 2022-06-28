@@ -23,9 +23,9 @@ def main():
     """
     pars = init_pars()
 
-    # files = get_files(pars['top_path'])
-    # submit_jobs(files, pars['file_list_path'], pars['sub_path'])
-    # babysit_jobs(files, pars)
+    files = get_files(pars['top_path'])
+    submit_jobs(files, pars['file_list_path'], pars['sub_path'])
+    babysit_jobs(files, pars)
     combine_outputs(pars['output_path'], pars['output_combo_path'], pars['out_split_flag'])
 
     fix_dataset(pars['output_combo_path'], pars['result_path'],
@@ -96,6 +96,7 @@ def babysit_jobs(files, pars):
 
         files_checked = check_outputs(pars['output_path'], pars['out_split_flag'])
         files_remaining = list(set(files) - set(files_checked))
+        print('files_checked:\n', files_checked, '\nfiles:\n', files, '\nfiles_remaining:\n', files_remaining)
         if len(files_remaining) > 0:
             print(f'\n\nResubmitting {len(files_remaining)} missing files\n')
             submit_jobs(files_remaining, pars['file_list_path'], pars['sub_path'])
