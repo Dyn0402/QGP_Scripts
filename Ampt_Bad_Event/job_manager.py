@@ -134,7 +134,7 @@ def combine_outputs(output_path, out_combo_path, flag):
     out_combo_lines = []
     for out_path in os.listdir(output_path):
         with open(output_path + out_path, 'r') as out_file:
-            out_combo_lines.append(out_file.read().split(flag)[0].strip().split('\n'))
+            out_combo_lines.extend(out_file.read().split(flag)[0].strip().split('\n'))
 
     with open(out_combo_path, 'w') as combo_file:
         combo_file.write('\n'.join(out_combo_lines))

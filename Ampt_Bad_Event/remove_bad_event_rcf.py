@@ -63,7 +63,7 @@ def get_bad_event_file(path, min_identical):
                     bad_event.update({item[0]: int(item[-1])})
                 except ValueError:
                     bad_event.update({item[0]: item[-1]})
-            if bad_event['num_identical'] >= min_identical:
+            if 'num_identical' in bad_event and bad_event['num_identical'] >= min_identical:
                 bad_events.append(bad_event)
 
     bad_trees = {}
