@@ -110,8 +110,8 @@ def check_jobs_alive(user='dneff'):
         job_status = os.popen(f'condor_q {user} | tail -4').read()
         job_status = [x for x in job_status.split('\n') if 'Total for query:' in x][0]
         categories = ['completed', 'removed', 'idle', 'running', 'held', 'suspended']
-        job_status = {cat: int(x.strip(cat).strip().split(' ')[-1].strip()) for cat in categories
-                      for x in job_status.split(',') if cat in x}
+        job_status = [x.split(';')[-1].strip() for x in job_status.split(',')]
+        job_status = {cat: int(x.split()[0].strip()) for x in job_status for cat in categories if cat in x}
         jobs_alive = sum(job_status.values())
     except ValueError:
         print('Bad condor job read!')
