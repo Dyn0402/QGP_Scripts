@@ -137,8 +137,19 @@ def combine_outputs(output_path, out_combo_path, flag, real_files, list_path):
     out_combo_lines = []
     for out_path in os.listdir(output_path):
         with open(output_path + out_path, 'r') as out_file:
-            temp_files = out_file.read().split(flag)[0].strip().split('\n')
-            out_combo_lines.extend(convert_files(temp_files, real_files, list_path))
+            out_read = out_file.read()
+        bad_events = out_read.split(flag)[0].strip().split('\n')
+        for event in bad_events:
+            for element in event.split('\t'):
+                if 'path: ' in element:
+                    temp_path = element.strip('path: ')
+                    real_path = convert_files([temp_path], real_files, list_path)[0]
+            out_combo_lines.append(event.replace(temp_path, real_path))
+
+            # temp_files = [x for x in event.split('\t') if 'path: ' in x for event in bad_events]
+            # temp_files = [x for x in temp_files]
+            # temp_files = 1
+            # out_combo_lines.extend(convert_files(temp_files, real_files, list_path))
 
     with open(out_combo_path, 'w') as combo_file:
         combo_file.write('\n'.join(out_combo_lines))
