@@ -140,11 +140,10 @@ def combine_outputs(output_path, out_combo_path, flag, real_files, list_path):
             out_read = out_file.read()
         bad_events = out_read.split(flag)[0].strip().split('\n')
         for event in bad_events:
-            for element in event.split('\t'):
-                if 'path: ' in element:
-                    temp_path = element.strip('path: ')
-                    real_path = convert_files([temp_path], real_files, list_path)[0]
-            out_combo_lines.append(event.replace(temp_path, real_path))
+            temp_path = [x.strip('path: ') for x in event.split('\t') if 'path: ' in x]
+            if len(temp_path) == 1:
+                real_path = convert_files(temp_path, real_files, list_path)[0]
+                out_combo_lines.append(event.replace(temp_path, real_path))
 
             # temp_files = [x for x in event.split('\t') if 'path: ' in x for event in bad_events]
             # temp_files = [x for x in temp_files]
