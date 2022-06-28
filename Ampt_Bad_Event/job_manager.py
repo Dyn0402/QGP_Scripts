@@ -50,8 +50,6 @@ def init_pars():
         'user': 'dneff',
         'check_interval': 60,  # seconds
 
-        'condor_flag_left': ':',
-        'condor_flag_right': 'jobs',
         'out_split_flag': 'Files checked:\n',
 
         'bad_sufx': '_bad',
@@ -87,12 +85,13 @@ def babysit_jobs(files, pars):
 
     finished = False
     while not finished:
-        jobs_alive, job_status = check_jobs_alive(pars['user'], pars['condor_flag_left'], pars['condor_flag_right'])
-        while jobs_alive > 0:
-            jobs_alive, job_status = check_jobs_alive(pars['user'], pars['condor_flag_left'], pars['condor_flag_right'])
+        while True:
+            jobs_alive, job_status = check_jobs_alive(pars['user'])
             now = datetime.now()
             print(f' {jobs_alive} jobs alive, waiting {pars["check_interval"]}s to check again.')
             print(f'  Run time {now - start}  ' + ', '.join([f'{num} {cat}' for cat, num in job_status.items()]))
+            if jobs_alive <= 0:
+                break
             time.sleep(pars['check_interval'])
 
         files_checked = check_outputs(pars['output_path'], pars['out_split_flag'])
@@ -100,18 +99,19 @@ def babysit_jobs(files, pars):
         if len(files_remaining) > 0:
             print(f'Resubmitting {len(files_remaining)} missing files')
             submit_jobs(files_remaining, pars['file_list_path'], pars['sub_path'])
-            time.sleep(pars['check_interval'] * 4)  # Wait a while to let submission go through before checking condor
+            print(f'\nJobs resubmitted, waiting {pars["check_interval"]}s to check them')
+            time.sleep(pars['check_interval'])
         else:
             finished = True
 
 
-def check_jobs_alive(user='dneff', flag_left=':', flag_right='jobs'):
+def check_jobs_alive(user='dneff'):
     try:
         job_status = os.popen(f'condor_q {user} | tail -4').read()
-        job_status.split('\n')
         job_status = [x for x in job_status.split('\n') if 'Total for query:' in x][0]
         categories = ['completed', 'removed', 'idle', 'running', 'held', 'suspended']
-        job_status = {cat: int(x.strip(cat).strip) for cat in categories for x in job_status if cat in x}
+        job_status = {cat: int(x.strip(cat).strip().split(' ')[-1].strip()) for cat in categories
+                      for x in job_status.split(',') if cat in x}
         jobs_alive = sum(job_status.values())
     except ValueError:
         print('Bad condor job read!')
