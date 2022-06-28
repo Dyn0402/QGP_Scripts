@@ -18,20 +18,20 @@ def main():
     :return:
     """
     top_path = '/gpfs01/star/pwg/dneff/data/AMPT/most_central/'
-    file_list_name = 'root_files.txt'
+    file_list_path = '/star/u/dneff/Ampt_Bad_Event/sub/list/root_files.txt'
     sub_path = '/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/clean_sub.xml'
-    init_sub(top_path, file_list_name, sub_path)
+    init_sub(top_path, file_list_path, sub_path)
     print('donzo')
 
 
-def init_sub(top_path, file_list_name, sub_path):
-    gen_file_list(top_path, file_list_name)
+def init_sub(top_path, file_list_path, sub_path):
+    gen_file_list(top_path, file_list_path)
     submit_job(sub_path)
 
 
-def gen_file_list(top_path, file_list_name):
+def gen_file_list(top_path, file_list_path):
     files = get_files(top_path)
-    with open(file_list_name, 'w') as file_list:
+    with open(file_list_path, 'w') as file_list:
         file_list.writelines('\n'.join(files))
 
 

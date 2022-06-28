@@ -16,11 +16,11 @@
     </Package>
   </SandBox>
 
-  <input URL="filelist:./root_files.txt" />
+  <input URL="filelist:/star/u/dneff/Ampt_Bad_Event/sub/list/root_files.txt" />
 
   <stderr URL="file:/star/u/dneff/Ampt_Bad_Event/sub/log/err_$JOBID.err"></stderr>
   <stdout URL="file:/star/u/dneff/Ampt_Bad_Event/sub/log/log_$JOBID.out" />
-  <output fromScratch="*.txt" toURL="/star/u/dneff/Ampt_Bad_Event/sub/output/out_$JOBID.txt" />
+  <output fromScratch="out.txt" toURL="/star/u/dneff/Ampt_Bad_Event/sub/output/out_$JOBID.txt" />
  
   <Generator>
     <Location>/star/u/dneff/Ampt_Bad_Event/sub/log/</Location>
