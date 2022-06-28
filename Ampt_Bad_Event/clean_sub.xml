@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE note [
+]>
+<job maxFilesPerProcess="100">
+  
+  <command>
+      /star/u/dneff/Software/anaconda3/bin/python find_ident_tracks_rcf.py $FILELIST
+  </command>
+
+  
+  <SandBox>
+    <Package>
+      <File>file:/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/find_ident_tracks_rcf.py</File>
+      <File>file:/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/find_ampt_identical_tracks_uproot.py</File>
+      <File>file:/star/u/dneff/Ampt_Bad_Event/sub/root_files.txt</File>
+    </Package>
+  </SandBox>
+
+  <input URL="filelist:./root_files.txt" />
+
+  <stderr URL="file:/star/u/dneff/Ampt_Bad_Event/sub/log/err_$JOBID.err"></stderr>
+  <stdout URL="file:/star/u/dneff/Ampt_Bad_Event/sub/log/log_$JOBID.out" />
+  <output fromScratch="*.txt" toURL="/star/u/dneff/Ampt_Bad_Event/sub/output/out_$JOBID.txt" />
+ 
+  <Generator>
+    <Location>/star/u/dneff/Ampt_Bad_Event/sub/log/</Location>
+    <ScriptLocation>/star/u/dneff/Ampt_Bad_Event/sub/script/</ScriptLocation>
+    <ListLocation>/star/u/dneff/Ampt_Bad_Event/sub/list/</ListLocation>
+  </Generator>
+  
+</job>
