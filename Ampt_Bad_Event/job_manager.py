@@ -23,9 +23,9 @@ def main():
     """
     pars = init_pars()
 
-    files = get_files(pars['top_path'])
-    submit_jobs(files, pars['file_list_path'], pars['sub_path'])
-    babysit_jobs(files, pars)
+    # files = get_files(pars['top_path'])
+    # submit_jobs(files, pars['file_list_path'], pars['sub_path'])
+    # babysit_jobs(files, pars)
     combine_outputs(pars['output_path'], pars['output_combo_path'])
 
     fix_dataset(pars['output_combo_path'], pars['result_path'],
@@ -88,8 +88,8 @@ def babysit_jobs(files, pars):
         while True:
             jobs_alive, job_status = check_jobs_alive(pars['user'])
             now = datetime.now()
-            print(f' {jobs_alive} jobs alive, waiting {pars["check_interval"]}s to check again.')
-            print(f'  Run time {now - start}  ' + ', '.join([f'{num} {cat}' for cat, num in job_status.items()]))
+            print(f' {now - start} run time, waiting {pars["check_interval"]}s to check again.')
+            print(f'  {jobs_alive} jobs alive:  ' + ', '.join([f'{num} {cat}' for cat, num in job_status.items()]))
             if jobs_alive <= 0:
                 break
             time.sleep(pars['check_interval'])
@@ -97,7 +97,7 @@ def babysit_jobs(files, pars):
         files_checked = check_outputs(pars['output_path'], pars['out_split_flag'])
         files_remaining = list(set(files) - set(files_checked))
         if len(files_remaining) > 0:
-            print(f'Resubmitting {len(files_remaining)} missing files')
+            print(f'\n\nResubmitting {len(files_remaining)} missing files\n')
             submit_jobs(files_remaining, pars['file_list_path'], pars['sub_path'])
             print(f'\nJobs resubmitted, waiting {pars["check_interval"]}s to check them')
             time.sleep(pars['check_interval'])
