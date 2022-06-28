@@ -34,7 +34,10 @@ def uproot_finder_rcf(root_path_list):
     track_attributes = ['pid', 'px', 'py', 'pz']
 
     with open(root_path_list, 'r') as file:
-        root_paths = file.read().strip().split('\n')
+        root_paths = file.readlines()
+    root_paths = [root_path.strip() for root_path in root_paths]
+
+    print(root_paths)
 
     jobs_start = datetime.now()
     print(f'Jobs Start {jobs_start}\n')
