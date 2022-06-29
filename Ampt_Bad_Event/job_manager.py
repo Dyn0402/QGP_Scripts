@@ -24,8 +24,8 @@ def main():
     pars = init_pars()
 
     files = get_files(pars['top_path'])
-    # submit_jobs(files, pars['file_list_path'], pars['sub_path'])
-    # babysit_jobs(files, pars)
+    submit_jobs(files, pars['file_list_path'], pars['sub_path'])
+    babysit_jobs(files, pars)
     combine_outputs(pars['output_path'], pars['output_combo_path'], pars['out_split_flag'], files, pars['list_path'])
 
     fix_dataset(pars['output_combo_path'], pars['result_path'],
@@ -47,6 +47,7 @@ def init_pars():
         'output_path': '/star/u/dneff/Ampt_Bad_Event/sub/output/',
         'result_path': '/star/u/dneff/Ampt_Bad_Event/sub/result/',
         'list_path': '/star/u/dneff/Ampt_Bad_Event/sub/list/',
+        'log_path': '/star/u/dneff/Ampt_Bad_Event/sub/log/',
         'output_combo_path': '/star/u/dneff/Ampt_Bad_Event/sub/result/ampt_bad_events.txt',
         'user': 'dneff',
         'check_interval': 10,  # seconds
@@ -93,6 +94,11 @@ def babysit_jobs(files, pars):
             print(f'  {jobs_alive} jobs alive:  ' + ', '.join([f'{num} {cat}' for cat, num in job_status.items()]))
             if jobs_alive <= 0:
                 break
+            terminated_jobs = check_terminated(pars['log_path'])
+            if len(terminated_jobs) > 0:
+                terminated_files = get_job_files(terminated_jobs, pars['list_path'])
+                print(f'\n\nResubmitting {len(terminated_files)} terminated files\n')
+                submit_jobs(terminated_files, pars['file_list_path'], pars['sub_path'])
             time.sleep(pars['check_interval'])
 
         files_checked = check_outputs(pars['output_path'], pars['out_split_flag'])
@@ -221,6 +227,29 @@ def convert_files(temp_files, real_files, list_path):
         # return_files.append(matches[0])
 
     return return_files
+
+
+def check_terminated(log_path):
+    terminated_jobs = []
+    for log_name in os.listdir(log_path):
+        if log_name[-4:] == '.err':
+            with open(log_path + log_name, 'r') as err_file:
+                if 'Terminated' in err_file.readlines()[0]:
+                    terminated_jobs.append(log_name.strip('.err').strip('err_'))
+
+    return terminated_jobs
+
+
+def get_job_files(jobs, list_path):
+    list_names = os.listdir(list_path)
+    files = []
+    for job in jobs:
+        for list_name in list_names:
+            if job in list_name:
+                with open(list_path + list_name, 'r') as list_file:
+                    files.extend(list_file.read().strip().split('\n'))
+
+    return files
 
 
 if __name__ == '__main__':
