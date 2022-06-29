@@ -33,6 +33,7 @@ def main():
     # bs_test()
     # sim_diff_comp()
     # chi2_test()
+
     # bes_info = ('default_resample', 'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0', 'Data', 'Data_Mix',
     #             'bes_resample')
     # chi2_test_all(bes_info, 'F:/Research/Results/Azimuth_Analysis/bes_chi2_all_dist_bs.csv')
@@ -40,12 +41,14 @@ def main():
     #          'F:/Research/Results/Azimuth_Analysis/bes_chi2_sum_dist_bs.csv',
     #          'F:/Research/Data/default_resample/rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0/'
     #          )
+
     # ampt_old_info = ('default_resample', 'Ampt_rapid05_resample_norotate_0', 'Data_Ampt_Old', 'Data_Ampt_Old_Mix',
     #                  'ampt_resample_def')
     # chi2_test_all(ampt_old_info, 'F:/Research/Results/Azimuth_Analysis/ampt_old_chi2_all_dist_bs.csv')
     # sum_chi2('F:/Research/Results/Azimuth_Analysis/ampt_old_chi2_all_dist_bs.csv',
     #          'F:/Research/Results/Azimuth_Analysis/ampt_old_chi2_sum_dist_bs.csv',
     #          'F:/Research/Data_Ampt/default_resample/Ampt_rapid05_resample_norotate_0/')
+
     # ampt_types = ['new']
     # effs = ['3', '2', '1']
     # for ampt_type in ampt_types:
@@ -59,19 +62,27 @@ def main():
     #         sum_chi2(f'F:/Research/Results/Azimuth_Analysis/ampt_{ampt_type}_eff{eff}_chi2_all_dist_bs.csv',
     #                  f'F:/Research/Results/Azimuth_Analysis/ampt_{ampt_type}_eff{eff}_chi2_sum_dist_bs.csv',
     #                  f'F:/Research/Data_Ampt/Eff{eff}_resample/Ampt_rapid05_resample_norotate_Efficiency{eff}_0/')
-    spread_amps = (('08', '02'), ('08', '05'), ('05', '02'), ('1', '02'))
-    # spread, amp = '08', '02'
-    for spread, amp in spread_amps:
-        sim_set_info = (f'flat80_anticlmulti_spread{spread}_amp{amp}_resample',
-                        f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_0',
-                        'Data_Sim', 'Data_Sim_Mix', f'sim_sim_comp_s{spread}_a{amp}_resample')
-        chi2_test_all(sim_set_info,
-                      f'F:/Research/Results/Azimuth_Analysis/sim_sim_comp_s{spread}_a{amp}_chi2_all_dist_bs.csv',
-                      energies=[62])
-        sum_chi2(f'F:/Research/Results/Azimuth_Analysis/sim_sim_comp_s{spread}_a{amp}_chi2_all_dist_bs.csv',
-                 f'F:/Research/Results/Azimuth_Analysis/sim_sim_comp_s{spread}_a{amp}_chi2_sum_dist_bs.csv',
-                 f'F:/Research/Data_Sim/flat80_anticlmulti_spread{spread}_amp{amp}_resample/'
-                 f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_0/')
+
+    cfev_info = ('default_resample', 'CF_rapid05_resample_norotate_0', 'Data_CFEV', 'Data_CFEV_Mix', 'cfev_resample')
+    chi2_test_all(cfev_info, 'F:/Research/Results/Azimuth_Analysis/bes_chi2_all_dist_bs.csv')
+    sum_chi2('F:/Research/Results/Azimuth_Analysis/bes_chi2_all_dist_bs.csv',
+             'F:/Research/Results/Azimuth_Analysis/bes_chi2_sum_dist_bs.csv',
+             'F:/Research/Data/default_resample/rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0/'
+             )
+
+    # spread_amps = (('08', '02'), ('08', '05'), ('05', '02'), ('1', '02'))
+    # # spread, amp = '08', '02'
+    # for spread, amp in spread_amps:
+    #     sim_set_info = (f'flat80_anticlmulti_spread{spread}_amp{amp}_resample',
+    #                     f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_0',
+    #                     'Data_Sim', 'Data_Sim_Mix', f'sim_sim_comp_s{spread}_a{amp}_resample')
+    #     chi2_test_all(sim_set_info,
+    #                   f'F:/Research/Results/Azimuth_Analysis/sim_sim_comp_s{spread}_a{amp}_chi2_all_dist_bs.csv',
+    #                   energies=[62])
+    #     sum_chi2(f'F:/Research/Results/Azimuth_Analysis/sim_sim_comp_s{spread}_a{amp}_chi2_all_dist_bs.csv',
+    #              f'F:/Research/Results/Azimuth_Analysis/sim_sim_comp_s{spread}_a{amp}_chi2_sum_dist_bs.csv',
+    #              f'F:/Research/Data_Sim/flat80_anticlmulti_spread{spread}_amp{amp}_resample/'
+    #              f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_0/')
     print('donzo')
 
 
