@@ -4,13 +4,14 @@
 <job simulateSubmission="false" nProcesses="1">
   
   <command>
-      /star/u/dneff/Software/python3/Python-3.7.3/python find_ampt_identical_tracks_uproot.py
+      /star/u/dneff/Software/anaconda3/bin/python find_ampt_identical_tracks_uproot.py 1
   </command>
 
   
   <SandBox>
     <Package>
       <File>file:/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/find_ampt_identical_tracks_uproot.py</File>
+      <File>file:/star/u/dneff/git/QGP_Scripts/Analyzer/istarmap.py</File>
     </Package>
   </SandBox>
 
