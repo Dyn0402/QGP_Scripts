@@ -33,11 +33,6 @@ def uproot_finder_rcf(root_path_list):
     ignore_pids = [313, 111]
     track_attributes = ['pid', 'px', 'py', 'pz']
 
-    print('Path of file list passed in: ', root_path_list)
-    print('Content of root_files.txt: ')
-    with open('root_files.txt', 'r') as file:
-        print(file.read())
-
     with open(root_path_list, 'r') as file:
         root_paths = file.readlines()
     root_paths = [root_path.strip() for root_path in root_paths]

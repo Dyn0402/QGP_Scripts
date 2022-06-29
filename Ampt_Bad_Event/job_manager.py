@@ -234,7 +234,8 @@ def check_terminated(log_path):
     for log_name in os.listdir(log_path):
         if log_name[-4:] == '.err':
             with open(log_path + log_name, 'r') as err_file:
-                if 'Terminated' in err_file.readlines()[0]:
+                err_lines = err_file.readlines()
+                if len(err_lines) > 0 and 'Terminated' in err_lines[0]:
                     terminated_jobs.append(log_name.strip('.err').strip('err_'))
 
     return terminated_jobs
