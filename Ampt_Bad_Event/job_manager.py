@@ -51,7 +51,7 @@ def init_pars():
         'term_log_path': '/star/u/dneff/Ampt_Bad_Event/sub/log/resubed_terms/',
         'output_combo_path': '/star/u/dneff/Ampt_Bad_Event/sub/result/ampt_bad_events.txt',
         'user': 'dneff',
-        'check_interval': 10,  # seconds
+        'check_interval': 120,  # seconds
 
         'out_split_flag': 'Files checked:\n',
 
@@ -186,7 +186,7 @@ def get_files(path):
             root_path = os.path.join(root, file_name)
             root_paths.append(root_path)
 
-    return root_paths[:20]
+    return root_paths
 
 
 def convert_files(temp_files, real_files, list_path):

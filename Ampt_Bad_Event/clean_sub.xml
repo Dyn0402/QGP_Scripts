@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!DOCTYPE note [
 ]>
-<job maxFilesPerProcess="2" filesPerHour="25">
+<job filesPerHour="100">
   
   <command>
       /star/u/dneff/Software/anaconda3/bin/python find_ident_tracks_rcf.py $FILELIST
