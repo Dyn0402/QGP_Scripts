@@ -248,7 +248,7 @@ def move_log_files(jobs, log_path, move_path):
     for job in jobs:
         for log_name in log_names:
             if job in log_name:
-                os.reaname(log_path + log_name, move_path + log_name)
+                os.rename(log_path + log_name, move_path + log_name)
 
 
 def get_job_files(jobs, list_path):
