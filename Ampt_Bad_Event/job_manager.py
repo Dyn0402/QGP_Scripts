@@ -48,6 +48,7 @@ def init_pars():
         'result_path': '/star/u/dneff/Ampt_Bad_Event/sub/result/',
         'list_path': '/star/u/dneff/Ampt_Bad_Event/sub/list/',
         'log_path': '/star/u/dneff/Ampt_Bad_Event/sub/log/',
+        'term_log_path': '/star/u/dneff/Ampt_Bad_Event/sub/log/resubed_terms/',
         'output_combo_path': '/star/u/dneff/Ampt_Bad_Event/sub/result/ampt_bad_events.txt',
         'user': 'dneff',
         'check_interval': 10,  # seconds
@@ -99,6 +100,7 @@ def babysit_jobs(files, pars):
                 terminated_files = get_job_files(terminated_jobs, pars['list_path'])
                 print(f'\n\nResubmitting {len(terminated_files)} terminated files\n')
                 submit_jobs(terminated_files, pars['file_list_path'], pars['sub_path'])
+                move_log_files(terminated_jobs, pars['log_path'], pars['term_log_path'])
             time.sleep(pars['check_interval'])
 
         files_checked = check_outputs(pars['output_path'], pars['out_split_flag'])
@@ -239,6 +241,14 @@ def check_terminated(log_path):
                     terminated_jobs.append(log_name.strip('.err').strip('err_'))
 
     return terminated_jobs
+
+
+def move_log_files(jobs, log_path, move_path):
+    log_names = os.listdir(log_path)
+    for job in jobs:
+        for log_name in log_names:
+            if job in log_name:
+                os.reaname(log_path + log_name, move_path + log_name)
 
 
 def get_job_files(jobs, list_path):
