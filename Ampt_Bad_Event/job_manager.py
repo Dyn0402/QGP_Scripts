@@ -98,7 +98,7 @@ def babysit_jobs(files, pars):
             terminated_jobs = check_terminated(pars['log_path'])
             if len(terminated_jobs) > 0:
                 terminated_files = get_job_files(terminated_jobs, pars['list_path'])
-                print(f'\n\nResubmitting {len(terminated_files)} terminated files\n')
+                print(f'\n\nResubmitting {len(terminated_files)} files from terminated jobs {terminated_jobs}\n')
                 submit_jobs(terminated_files, pars['file_list_path'], pars['sub_path'])
                 move_log_files(terminated_jobs, pars['log_path'], pars['term_log_path'])
             time.sleep(pars['check_interval'])
@@ -203,7 +203,7 @@ def convert_files(temp_files, real_files, list_path):
     for temp_file in temp_files:
         file_name = temp_file.split('/')[-1]
         job_name = temp_file.split('/')[-3]
-        list_match = [x for x in list_names if job_name in x]
+        list_match = [x for x in list_names if job_name + '.' in x]  # without '.', job aaa2 grabs aaa21, aaa22, etc
 
         if len(list_match) == 0:
             print(f'Can\'t find list for {temp_file}!')
@@ -259,7 +259,7 @@ def get_job_files(jobs, list_path):
     files = []
     for job in jobs:
         for list_name in list_names:
-            if job in list_name:
+            if job + '.' in list_name:  # without '.', job aaa2 grabs aaa21, aaa22, etc
                 with open(list_path + list_name, 'r') as list_file:
                     files.extend(list_file.read().strip().split('\n'))
 
