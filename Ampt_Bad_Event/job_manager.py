@@ -91,14 +91,15 @@ def babysit_jobs(files, pars):
         while True:
             jobs_alive, job_status = check_jobs_alive(pars['user'])
             now = datetime.now()
-            print(f' {now - start} run time, waiting {pars["check_interval"]}s to check again.')
+            print(f' {now} | run time: {now - start}  Waiting {pars["check_interval"]}s to check again.')
             print(f'  {jobs_alive} jobs alive:  ' + ', '.join([f'{num} {cat}' for cat, num in job_status.items()]))
             if jobs_alive <= 0:
                 break
             terminated_jobs = check_terminated(pars['log_path'])
             if len(terminated_jobs) > 0:
                 terminated_files = get_job_files(terminated_jobs, pars['list_path'])
-                print(f'\n\nResubmitting {len(terminated_files)} files from terminated jobs {terminated_jobs}\n')
+                print(f'\n\nResubmitting {len(terminated_files)} files from {len(terminated_jobs)} terminated jobs '
+                      f'{terminated_jobs}\n')
                 submit_jobs(terminated_files, pars['file_list_path'], pars['sub_path'])
                 move_log_files(terminated_jobs, pars['log_path'], pars['term_log_path'])
             time.sleep(pars['check_interval'])

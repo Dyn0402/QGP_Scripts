@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!DOCTYPE note [
 ]>
-<job filesPerHour="100" maxFilesPerProcess="1000">
+<job filesPerHour="80" maxFilesPerProcess="200">
   
   <command>
       /star/u/dneff/Software/anaconda3/bin/python find_ident_tracks_rcf.py $FILELIST
   </command>
 
-  
   <SandBox>
     <Package>
       <File>file:/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/find_ident_tracks_rcf.py</File>
@@ -18,10 +17,21 @@
 
   <input URL="filelist:/star/u/dneff/Ampt_Bad_Event/sub/list/root_files.txt" />
 
+  <ResourceUsage>
+    <Memory>
+      <MinMemory>5000</MinMemory>
+      <MaxMemory>8000</MaxMemory>
+    </Memory>
+    <StorageSpace>
+      <MinStorageSpace>5000</MinStorageSpace>
+      <MaxStorageSpace>8000</MaxStorageSpace>
+    </StorageSpace>
+  </ResourceUsage>
+
   <stderr URL="file:/star/u/dneff/Ampt_Bad_Event/sub/log/err_$JOBID.err"></stderr>
   <stdout URL="file:/star/u/dneff/Ampt_Bad_Event/sub/log/log_$JOBID.out" />
   <output fromScratch="out.txt" toURL="/star/u/dneff/Ampt_Bad_Event/sub/output/out_$JOBID.txt" />
- 
+
   <Generator>
     <Location>/star/u/dneff/Ampt_Bad_Event/sub/log/</Location>
     <ScriptLocation>/star/u/dneff/Ampt_Bad_Event/sub/script/</ScriptLocation>
