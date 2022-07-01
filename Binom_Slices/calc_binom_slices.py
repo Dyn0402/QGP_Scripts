@@ -32,11 +32,11 @@ def main():
 
 def init_pars():
     pars = {
-        # 'base_path': 'F:/Research/',
-        'base_path': '/media/ucla/Research/',
+        'base_path': 'F:/Research/',
+        # 'base_path': '/media/ucla/Research/',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_cfev.csv',
-        # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_ampt_eff.csv',
-        'csv_path': '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_cfev.csv',
+        'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim.csv',
+        # 'csv_path': '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim.csv',
         'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': True,  # If True check csv_path and only run missing datasets, else run all datasets
         'threads': 12,
