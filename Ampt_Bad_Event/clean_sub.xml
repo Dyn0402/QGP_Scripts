@@ -23,8 +23,8 @@
       <MaxMemory>2000</MaxMemory>
     </Memory>
     <StorageSpace>
-      <MinStorageSpace>5000</MinStorageSpace>
-      <MaxStorageSpace>9000</MaxStorageSpace>
+      <MinStorage>5000</MinStorage>
+      <MaxStorage>9000</MaxStorage>
     </StorageSpace>
   </ResourceUsage>
 
