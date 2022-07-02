@@ -107,8 +107,11 @@ def babysit_jobs(files, pars):
         files_checked = check_outputs(pars['output_path'], pars['out_split_flag'])
         files_checked = convert_files(files_checked, files, pars['list_path'])
         files_remaining = list(set(files) - set(files_checked))
-        print('files_checked:\n', files_checked, '\nfiles:\n', files, '\nfiles_remaining:\n', files_remaining)
+        print('files_checked:  ', len(files_checked), '\nfiles expected:  ', len(files),
+              '\nfiles_remaining:  ', len(files_remaining))
         if len(files_remaining) > 0:
+            print(f'First 5 files_checked:\n{files_checked[:5]}\nFirst 5 files expected:\n{files[:5]}\n'
+                  f'First 5 files_remaining:\n{files_remaining[:5]}')
             print(f'\n\nResubmitting {len(files_remaining)} missing files\n')
             submit_jobs(files_remaining, pars['file_list_path'], pars['sub_path'])
             print(f'\nJobs resubmitted, waiting {pars["check_interval"]}s to check them')
@@ -137,7 +140,9 @@ def check_outputs(output_dir, flag):
     files_checked = []
     for out_file_path in os.listdir(output_dir):
         with open(output_dir + out_file_path, 'r') as out_file:
-            files_checked.extend(out_file.read().split(flag)[-1].strip().split('\n'))
+            new_files = out_file.read().split(flag)[-1].strip().split('\n')
+            new_files = [x.strip() for x in new_files]
+            files_checked.extend(new_files)
 
     return files_checked
 
@@ -190,11 +195,10 @@ def get_files(path):
     return root_paths
 
 
-def convert_files(temp_files, real_files, list_path):
+def convert_files(temp_files, list_path):
     """
     A bit complicated but should be reliable unless list files are messed with
     :param temp_files:
-    :param real_files:
     :param list_path:
     :return:
     """
@@ -202,7 +206,7 @@ def convert_files(temp_files, real_files, list_path):
 
     return_files = []
     for temp_file in temp_files:
-        file_name = temp_file.split('/')[-1]
+        file_name = temp_file.split('/')[-1].strip()
         job_name = temp_file.split('/')[-3]
         list_match = [x for x in list_names if job_name + '.' in x]  # without '.', job aaa2 grabs aaa21, aaa22, etc
 
@@ -215,7 +219,7 @@ def convert_files(temp_files, real_files, list_path):
 
         with open(list_path + list_match, 'r') as list_file:
             list_lines = list_file.readlines()
-        real_path = [line for line in list_lines if file_name in line]
+        real_path = [line.strip() for line in list_lines if file_name in line]
 
         if len(real_path) == 0:
             print(f'Can\'t find file {temp_file} in {list_match}!')
