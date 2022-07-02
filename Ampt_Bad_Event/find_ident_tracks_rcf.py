@@ -11,7 +11,7 @@ Created as QGP_Scripts/find_ident_tracks_rcf
 import sys
 from datetime import datetime
 
-from find_ampt_identical_tracks_uproot import check_file
+from find_ampt_identical_tracks_uproot import check_file_chunks
 
 
 def main():
@@ -31,6 +31,7 @@ def uproot_finder_rcf(root_path_list):
     write_mode = 'w'
     max_eta = 1
     ignore_pids = [313, 111]
+    max_track_combos = 1e7  # Max number of track combinations for a chunk of events. Needed to keep memory from blowing
     track_attributes = ['pid', 'px', 'py', 'pz']
 
     with open(root_path_list, 'r') as file:
@@ -41,7 +42,8 @@ def uproot_finder_rcf(root_path_list):
     print(f'Jobs Start {jobs_start}\n')
     bad_trees = []
     for root_path in root_paths:
-        bad_trees.append(check_file(root_path, tree_name, track_attributes, max_eta, ignore_pids))
+        bad_trees.append(check_file_chunks(root_path, tree_name, track_attributes, max_eta, ignore_pids,
+                                           max_track_combos))
 
     with open(out_file_path, write_mode) as file:
         for bad_tree in bad_trees:

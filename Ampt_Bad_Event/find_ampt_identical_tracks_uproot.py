@@ -278,19 +278,7 @@ def check_file(root_path, tree_name, track_attributes, max_eta, ignore_pids, roo
     return bad_events
 
 
-def check_file_single_events(root_path, tree_name, track_attributes, max_eta, ignore_pids, root_num=-1,
-                             root_num_total=-1):
-    """
-    Not fully implemented! Need to fix last part
-    :param root_path:
-    :param tree_name:
-    :param track_attributes:
-    :param max_eta:
-    :param ignore_pids:
-    :param root_num:
-    :param root_num_total:
-    :return:
-    """
+def check_file_chunks(root_path, tree_name, track_attributes, max_eta, ignore_pids, max_track_combos):
     vector.register_awkward()
     bad_events = []
     # print(f'{root_num}/{root_num_total} {root_path} :\t{datetime.now()}')
@@ -301,28 +289,100 @@ def check_file_single_events(root_path, tree_name, track_attributes, max_eta, ig
         tracks = tracks[abs(tracks.eta) < max_eta]
         for bad_pid in ignore_pids:
             tracks = tracks[abs(tracks['pid']) != bad_pid]
-        num_ident = []
-        for event_num, event_tracks in enumerate(tracks):
-            # print(type(event_tracks))
-            # print(type(tracks))
-            # print(event_tracks)
-            track_a, track_b = ak.unzip(ak.combinations(event_tracks, 2, axis=0))
+
+        track_combos = [len(x)**2 for x in tracks]
+        event_chunk_slices = get_event_chunk_indices(track_combos, max_track_combos)
+        for event_slice in event_chunk_slices:
+            tracks_chunk = tracks[event_slice]
+            track_a, track_b = ak.unzip(ak.combinations(tracks_chunk, 2))
             ident_p = track_a == track_b  # Check if momenta same
             ident_pid = ak.where(track_a['pid'] == track_b['pid'], True, False)
             ident = ident_p * ident_pid
-            ident_sum = ak.sum(ident, axis=0)
-            if ident_sum > 0:
-                num_ident.append({'event_num': event_num, 'num_identical': ident_sum})
-        if len(num_ident) > 0:
-            print(f'{root_path} {datetime.now()}')
-            id_tracks = track_a[ident]  # This doesn't work. Fix
-            unique = np.unique(id_tracks[ak.num(id_tracks) > 0].pid, return_counts=True)
-            for event in num_ident:
-                event.update({'path': root_path, 'events': len(tracks), 'unique': unique})
-                print(event)
-                bad_events.append(event)
+            num_ident = [{'event_num': x + 1 + event_slice.start, 'num_identical': y}
+                         for x, y in enumerate(ak.sum(ident, axis=1)) if y > 0]
+            if len(num_ident) > 0:
+                print(f'{root_path} {datetime.now()}')
+                id_tracks = track_a[ident]
+                unique = np.unique(id_tracks[ak.num(id_tracks) > 0].pid, return_counts=True)
+                for event in num_ident:
+                    event.update({'path': root_path, 'events': len(tracks), 'unique': unique})
+                    print(event)
+                    bad_events.append(event)
 
     return bad_events
+
+
+# def check_file_chunks(root_path, tree_name, track_attributes, max_eta, ignore_pids, max_tracks):
+#     """
+#     Pass
+#     :param root_path:
+#     :param tree_name:
+#     :param track_attributes:
+#     :param max_eta:
+#     :param ignore_pids:
+#     :param root_num:
+#     :param root_num_total:
+#     :return:
+#     """
+#     vector.register_awkward()
+#     bad_events = []
+#     # print(f'{root_num}/{root_num_total} {root_path} :\t{datetime.now()}')
+#     with uproot.open(root_path) as file:
+#         tracks = file[tree_name].arrays(track_attributes)
+#         tracks = ak.zip({'pid': tracks['pid'], 'px': tracks['px'], 'py': tracks['py'], 'pz': tracks['pz']},
+#                         with_name='Momentum3D')
+#         tracks = tracks[abs(tracks.eta) < max_eta]
+#         for bad_pid in ignore_pids:
+#             tracks = tracks[abs(tracks['pid']) != bad_pid]
+#         num_ident = []
+#         for event_num, event_tracks in enumerate(tracks):
+#             # print(type(event_tracks))
+#             # print(type(tracks))
+#             # print(event_tracks)
+#             track_a, track_b = ak.unzip(ak.combinations(event_tracks, 2, axis=0))
+#             ident_p = track_a == track_b  # Check if momenta same
+#             ident_pid = ak.where(track_a['pid'] == track_b['pid'], True, False)
+#             ident = ident_p * ident_pid
+#             ident_sum = ak.sum(ident, axis=0)
+#             if ident_sum > 0:
+#                 num_ident.append({'event_num': event_num, 'num_identical': ident_sum})
+#         if len(num_ident) > 0:
+#             print(f'{root_path} {datetime.now()}')
+#             id_tracks = track_a[ident]  # This doesn't work. Fix
+#             unique = np.unique(id_tracks[ak.num(id_tracks) > 0].pid, return_counts=True)
+#             for event in num_ident:
+#                 event.update({'path': root_path, 'events': len(tracks), 'unique': unique})
+#                 print(event)
+#                 bad_events.append(event)
+#
+#     return bad_events
+
+
+def get_event_chunk_indices(track_counts, max_tracks):
+    """
+    Get indices to split input track_counts array into chunks no larger than max_tracks.
+    Group these events together such that the sum of counts for each chunk is no larger than max_tracks.
+    If a single event exceeds max_tracks, chunk that event on its own.
+    :param track_counts: Array of track counts per event
+    :param max_tracks: Max number of tracks for each chunk
+    :return: Slices for each chunk of events
+    """
+    slices = []
+    event_low, event_high = 0, 0
+    while event_high < len(track_counts):
+        tracks = 0
+        while tracks < max_tracks:
+            tracks += track_counts[event_high]
+            event_high += 1
+            if event_high >= len(track_counts):
+                event_high += 1
+                break
+        if event_high - 1 > event_low:  # Only decrement if single event doesn't have more counts than max
+            event_high -= 1
+        slices.append(slice(event_low, event_high))
+        event_low = event_high
+
+    return slices
 
 
 if __name__ == '__main__':

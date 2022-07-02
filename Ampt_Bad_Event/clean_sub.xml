@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!DOCTYPE note [
 ]>
-<job filesPerHour="80" maxFilesPerProcess="200">
+<job filesPerHour="50" maxFilesPerProcess="200">
   
   <command>
       /star/u/dneff/Software/anaconda3/bin/python find_ident_tracks_rcf.py $FILELIST
@@ -19,12 +19,12 @@
 
   <ResourceUsage>
     <Memory>
-      <MinMemory>5000</MinMemory>
-      <MaxMemory>8000</MaxMemory>
+      <MinMemory>1000</MinMemory>
+      <MaxMemory>2000</MaxMemory>
     </Memory>
     <StorageSpace>
       <MinStorageSpace>5000</MinStorageSpace>
-      <MaxStorageSpace>8000</MaxStorageSpace>
+      <MaxStorageSpace>9000</MaxStorageSpace>
     </StorageSpace>
   </ResourceUsage>
 
