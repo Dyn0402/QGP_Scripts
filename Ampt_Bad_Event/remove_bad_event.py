@@ -23,26 +23,14 @@ def main():
     bad_tree_sufx = '_bad'
     fix_tree_sufx = '_fix'
     min_identical = 2
-    fix_dataset(bad_file_list_path, bad_tree_repo, bad_tree_sufx, fix_tree_sufx, min_identical)
-    # bad_trees = get_bad_event_file(bad_file_list_path, min_identical)
-    # num_trees = len(bad_trees)
-    # for tree_num, (tree_path, tree) in enumerate(bad_trees.items()):
-    #     # tree_path = tree_path.replace('/media/ucla/Research/AMPT_Trees', '/gpfs01/star/pwg/dneff/data/AMPT')
-    #     print(f'\n\n Tree {tree_num + 1}/{num_trees}')
-    #     tree_path = tree_path.replace('/gpfs01/star/pwg/dneff/data/AMPT/most_central',
-    #                                   '/media/ucla/Research/AMPT_Trees/slim_most_central')
-    #     tree_path = tree_path.replace('.root', '_protons.root')
-    #     # tree_path = tree_path.replace('D:/Research', '/media/ucla/Research')
-    #     print(tree_path, tree)
-    #     repo_tree_path = move_tree(tree_path, bad_tree_repo, bad_tree_sufx)
-    #     fix_tree_path = fix_tree(tree, repo_tree_path, bad_tree_sufx, fix_tree_sufx)
-    #     replace_tree(fix_tree_path, tree_path)
+    fix_dataset(bad_file_list_path, bad_tree_repo, bad_tree_sufx, fix_tree_sufx, min_identical, test=False,
+                replace_text=True)
 
     print('donzo')
 
 
 def fix_dataset(bad_file_list_path, bad_tree_repo, bad_sufx='_bad', fix_sufx='fix', min_identical=2, test=True,
-                fix_method='fix_tree.cpp'):
+                fix_method='fix_tree.cpp', replace_text=False):
     """
     Fix bad AMPT dataset given bad_file_list_path text file with bad files. For each bad file in list move file to
     bad_tree_repo directory. There create a new file with all events except bad ones. Move this fixed file back to
@@ -54,12 +42,19 @@ def fix_dataset(bad_file_list_path, bad_tree_repo, bad_sufx='_bad', fix_sufx='fi
     :param min_identical: Minimum number of identical track pairs needed to consider an event bad
     :param test: Flag to run test mode where initial file is copied (not moved) and fixed file is not copied back
     :param fix_method: Determines how to fix trees. If 'pyroot' use pyroot (need import), else call fix_tree.cpp
+    :param replace_text: If true run whatever text replacement is hard-coded in. Used to adjust paths on the fly.
     :return:
     """
     bad_trees = get_bad_event_file(bad_file_list_path, min_identical)
     num_trees = len(bad_trees)
     for tree_num, (tree_path, tree) in enumerate(bad_trees.items()):
         print(f'\n\n Tree {tree_num + 1}/{num_trees}')
+        if replace_text:
+            # tree_path = tree_path.replace('/gpfs01/star/pwg/dneff/data/AMPT/most_central',
+            #                               '/media/ucla/Research/AMPT_Trees/slim_most_central')
+            tree_path = tree_path.replace('/most_central',
+                                          '/slim_most_central')
+            tree_path = tree_path.replace('.root', '_protons.root')
         repo_tree_path = move_tree(tree_path, bad_tree_repo, bad_sufx, test)
         print(f'{tree_path} moved to {repo_tree_path}')
         if fix_method.lower() == 'pyroot':
