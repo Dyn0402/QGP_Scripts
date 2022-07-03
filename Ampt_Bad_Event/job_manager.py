@@ -12,7 +12,7 @@ import os
 import time
 from datetime import datetime
 
-from remove_bad_event_rcf import fix_dataset
+from remove_bad_event import fix_dataset
 
 
 def main():
