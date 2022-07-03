@@ -12,14 +12,17 @@ import subprocess as sp
 import shutil
 
 if __name__ == '__main__':
-    import ROOT
+    pass
+    # import ROOT
 
 
 def main():
     # bad_file_list_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_gang7GeV.txt'
     # bad_tree_repo = '/home/dylan/Research/Ampt_Bad_Event/'
-    bad_file_list_path = '/media/ucla/Research/Ampt_Bad_Event/bad_ampt_events_most_central.txt'
+    bad_file_list_path = '/media/ucla/Research/Ampt_Bad_Event/bad_ampt_events_minbias.txt'
     bad_tree_repo = '/media/ucla/Research/Ampt_Bad_Event/'
+    # bad_file_list_path = 'F:/Research/Ampt_Bad_Event/bad_ampt_events_most_central_finish.txt'
+    # bad_tree_repo = 'F:/Research/Ampt_Bad_Event/'
     bad_tree_sufx = '_bad'
     fix_tree_sufx = '_fix'
     min_identical = 2
@@ -29,7 +32,7 @@ def main():
     print('donzo')
 
 
-def fix_dataset(bad_file_list_path, bad_tree_repo, bad_sufx='_bad', fix_sufx='fix', min_identical=2, test=True,
+def fix_dataset(bad_file_list_path, bad_tree_repo, bad_sufx='_bad', fix_sufx='_fix', min_identical=2, test=True,
                 fix_method='fix_tree.cpp', replace_text=False):
     """
     Fix bad AMPT dataset given bad_file_list_path text file with bad files. For each bad file in list move file to
@@ -50,10 +53,10 @@ def fix_dataset(bad_file_list_path, bad_tree_repo, bad_sufx='_bad', fix_sufx='fi
     for tree_num, (tree_path, tree) in enumerate(bad_trees.items()):
         print(f'\n\n Tree {tree_num + 1}/{num_trees}')
         if replace_text:
-            # tree_path = tree_path.replace('/gpfs01/star/pwg/dneff/data/AMPT/most_central',
-            #                               '/media/ucla/Research/AMPT_Trees/slim_most_central')
-            tree_path = tree_path.replace('/most_central',
-                                          '/slim_most_central')
+            tree_path = tree_path.replace('/gpfs01/star/pwg/dneff/data/AMPT/most_central',
+                                          'F:/Research/AMPT_Trees/slim_most_central')
+            # tree_path = tree_path.replace('/most_central',
+            #                               '/slim_most_central')
             tree_path = tree_path.replace('.root', '_protons.root')
         repo_tree_path = move_tree(tree_path, bad_tree_repo, bad_sufx, test)
         print(f'{tree_path} moved to {repo_tree_path}')
