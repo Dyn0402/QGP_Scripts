@@ -26,7 +26,7 @@ def main():
     files = get_files(pars['top_path'])
     submit_jobs(files, pars['file_list_path'], pars['sub_path'])
     babysit_jobs(files, pars)
-    combine_outputs(pars['output_path'], pars['output_combo_path'], pars['out_split_flag'], files, pars['list_path'])
+    combine_outputs(pars['output_path'], pars['output_combo_path'], pars['out_split_flag'], pars['list_path'])
 
     fix_dataset(pars['output_combo_path'], pars['result_path'],
                 pars['bad_sufx'], pars['fix_sufx'], pars['min_identical'], True)
@@ -105,7 +105,7 @@ def babysit_jobs(files, pars):
             time.sleep(pars['check_interval'])
 
         files_checked = check_outputs(pars['output_path'], pars['out_split_flag'])
-        files_checked = convert_files(files_checked, files, pars['list_path'])
+        files_checked = convert_files(files_checked, pars['list_path'])
         files_remaining = list(set(files) - set(files_checked))
         print('files_checked:  ', len(files_checked), '\nfiles expected:  ', len(files),
               '\nfiles_remaining:  ', len(files_remaining))
@@ -147,7 +147,7 @@ def check_outputs(output_dir, flag):
     return files_checked
 
 
-def combine_outputs(output_path, out_combo_path, flag, real_files, list_path):
+def combine_outputs(output_path, out_combo_path, flag, list_path):
     out_combo_lines = []
     for out_path in os.listdir(output_path):
         with open(output_path + out_path, 'r') as out_file:
@@ -156,7 +156,7 @@ def combine_outputs(output_path, out_combo_path, flag, real_files, list_path):
         for event in bad_events:
             temp_path = [x.strip('path: ') for x in event.split('\t') if 'path: ' in x]
             if len(temp_path) == 1:
-                real_path = convert_files(temp_path, real_files, list_path)[0]
+                real_path = convert_files(temp_path, list_path)[0]
                 out_combo_lines.append(event.replace(temp_path[0], real_path))
 
     with open(out_combo_path, 'w') as combo_file:
