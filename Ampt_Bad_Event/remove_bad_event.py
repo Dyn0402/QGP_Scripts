@@ -27,7 +27,7 @@ def main():
     fix_tree_sufx = '_fix'
     min_identical = 2
     fix_dataset(bad_file_list_path, bad_tree_repo, bad_tree_sufx, fix_tree_sufx, min_identical, test=False,
-                replace_text=True)
+                replace_text=False)
 
     print('donzo')
 
