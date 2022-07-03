@@ -40,7 +40,7 @@ def fix_dataset(bad_file_list_path, bad_tree_repo, bad_sufx='_bad', fix_sufx='fi
     bad_trees = get_bad_event_file(bad_file_list_path, min_identical)
     num_trees = len(bad_trees)
     for tree_num, (tree_path, tree) in enumerate(bad_trees.items()):
-        print(f'\n\n Tree {tree_num}/{num_trees}')
+        print(f'\n\n Tree {tree_num + 1}/{num_trees}')
         repo_tree_path = move_tree(tree_path, bad_tree_repo, bad_sufx, test)
         print(f'{tree_path} moved to {repo_tree_path}')
         fix_tree_path = fix_tree(tree, repo_tree_path, bad_sufx, fix_sufx)

@@ -28,8 +28,10 @@ def main():
     babysit_jobs(files, pars)
     combine_outputs(pars['output_path'], pars['output_combo_path'], pars['out_split_flag'], pars['list_path'])
 
-    fix_dataset(pars['output_combo_path'], pars['result_path'],
-                pars['bad_sufx'], pars['fix_sufx'], pars['min_identical'], True)
+    res = input('Fix dataset? ')
+    if len(res) > 0 and res[0].lower() == 'y':
+        fix_dataset(pars['output_combo_path'], pars['result_path'],
+                    pars['bad_sufx'], pars['fix_sufx'], pars['min_identical'], True)
 
     clean_up()
     print('donzo')
