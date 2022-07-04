@@ -14,7 +14,7 @@ import awkward as ak
 import vector
 import uproot
 
-from find_ampt_identical_tracks_uproot import get_event_chunk_indices, check_file_chunks
+from find_ident_tracks import get_event_chunk_indices, check_file_chunks
 
 
 def main():

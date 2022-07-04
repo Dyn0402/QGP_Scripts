@@ -4,7 +4,7 @@
 <job filesPerHour="50" maxFilesPerProcess="200">
   
   <command>
-      /star/u/dneff/Software/anaconda3/bin/python find_ident_tracks_rcf.py $FILELIST
+      /star/u/dneff/Software/anaconda3/bin/python find_ident_tracks.py $FILELIST
   </command>
 
   <SandBox>
