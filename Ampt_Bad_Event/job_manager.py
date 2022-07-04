@@ -43,7 +43,7 @@ def init_pars():
     :return: Dictionay containing all parameters
     """
     pars = {
-        'top_path': '/gpfs01/star/pwg/dneff/data/AMPT/most_central/',
+        'top_path': '/gpfs01/star/pwg/dneff/data/AMPT/min_bias/',
         'file_list_path': '/star/u/dneff/Ampt_Bad_Event/sub/list/root_files.txt',
         'sub_path': '/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/clean_sub.xml',
         'output_path': '/star/u/dneff/Ampt_Bad_Event/sub/output/',
