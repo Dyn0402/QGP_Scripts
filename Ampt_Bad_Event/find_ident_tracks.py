@@ -19,7 +19,10 @@ from multiprocessing import Pool
 
 import tqdm
 if __name__ == '__main__':
-    import istarmap  # Needed for tqdm, not for rcf
+    try:
+        import istarmap  # Needed for tqdm, not for rcf
+    except ModuleNotFoundError:
+        pass
 # try:
 #     import istarmap  # Needed for tqdm
 # except ModuleNotFoundError:

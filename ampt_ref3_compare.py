@@ -28,8 +28,8 @@ def main():
     mid_path = '/min_bias/string_melting/'
     energies = [7]
     tree_name = 'tree'
-    tree_attribute = 'refmult3'
-    bins = np.arange(-0.5, 500.5, 1)
+    tree_attribute = 'refmult'
+    bins = np.arange(-0.5, 430.5, 1)
     threads = 6
 
     ampt_version_dists = {}
@@ -53,6 +53,7 @@ def main():
             #         ref3_dist = np.append(ref3_dist, file_ref3)
             ampt_version_dists.update({v_name: np.histogram(ref3_dist, bins=bins)})
             ax.hist(ref3_dist, bins=bins, density=True, histtype='step', alpha=0.8, label=v_name)
+        ax.set_yscale('log')
         ax.legend()
         fig.tight_layout()
 

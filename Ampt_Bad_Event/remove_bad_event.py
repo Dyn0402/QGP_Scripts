@@ -11,10 +11,6 @@ Created as QGP_Scripts/remove_bad_event
 import subprocess as sp
 import shutil
 
-if __name__ == '__main__':
-    pass
-    # import ROOT
-
 
 def main():
     # bad_file_list_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_gang7GeV.txt'
