@@ -167,7 +167,7 @@ def combine_outputs(output_path, out_combo_path, flag, list_path):
 
 def clean_up():
     if input('Clean up?\n')[0].lower() == 'y':
-        os.system('clean.sh')
+        os.system('/star/u/dneff/Ampt_Bad_Event/sub/clean.sh')
 
 
 def write_file_list(files, file_list_path):
