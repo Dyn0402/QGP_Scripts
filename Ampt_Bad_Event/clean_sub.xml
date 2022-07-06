@@ -9,9 +9,8 @@
 
   <SandBox>
     <Package>
-      <File>file:/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/find_ident_tracks_rcf.py</File>
-      <File>file:/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/find_ampt_identical_tracks_uproot.py</File>
-      <File>file:/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/remove_bad_event_rcf.py</File>
+      <File>file:/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/find_ident_tracks.py</File>
+      <File>file:/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/remove_bad_event.py</File>
     </Package>
   </SandBox>
 
