@@ -83,11 +83,14 @@ def main():
     data_type_plt = 'divide'
     # data_sets_plt = ['ampt_eff1_resample_def', 'ampt_eff2_resample_def', 'ampt_eff3_resample_def']  # ['ampt_resample_def', 'ampt_old_resample_def', 'bes_resample_def']  # ['ampt_resample_def']
     # data_sets_plt = ['ampt_old_eff1_resample_def', 'ampt_old_eff2_resample_def', 'ampt_old_eff3_resample_def']
-    data_sets_plt = ['bes_resample_def', 'ampt_resample_def', 'ampt_old_resample_def', 'cf_resample_def',
-                     'cfev_resample_def']
-    # data_sets_plt = []
-    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'green', 'blue', 'purple']))
-    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT_New', 'AMPT_Old', 'MUSIC+FIST', 'MUSIC+FIST+EV']))
+    # data_sets_plt = ['bes_resample_def', 'ampt_baryon_first_resample_def', 'ampt_meson_first_resample_def',
+    #                  'ampt_new_coal_resample_def', 'cf_resample_def', 'cfev_resample_def']
+    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'green', 'salmon', 'blue', 'purple']))
+    # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT_Baryon_First', 'AMPT_Meson_First', 'AMPT_New_Coalescence',
+    #                                             'MUSIC+FIST', 'MUSIC+FIST+EV']))
+    data_sets_plt = ['ampt_meson_first_resample_def', 'cf_resample_def', 'cfev_resample_def']
+    data_sets_colors = dict(zip(data_sets_plt, ['red', 'blue', 'green']))
+    data_sets_labels = dict(zip(data_sets_plt, ['AMPT', 'MUSIC+FIST', 'MUSIC+FIST+EV']))
     # data_sets_labels = dict(zip(sim_sets, ['Repulsive Amp=0.2 Spread=1', 'Repulsive Amp=0.5 Spread=1',
     #                                        'Repulsive Amp=0.2 Spread=0.5', 'Repulsive Amp=0.5 Spread=0.5',
     #                                        'Attractive Amp=0.1 Spread=1', 'Attractive Amp=0.5 Spread=1',
@@ -120,7 +123,7 @@ def main():
     # stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, ['raw', 'mix'], all_sets_plt, plot=True, fit=False)
     # stat_vs_protons(df, stat_plot, div_plt, cent_plt, [39], data_types_plt, all_sets_plt, plot=True, fit=False,
     #                 data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
-    stat_vs_protons(df, stat_plot, div_plt, cent_plt, [19], data_types_plt, all_sets_plt, plot=True, fit=False,
+    stat_vs_protons(df, stat_plot, div_plt, cent_plt, [39], data_types_plt, all_sets_plt, plot=True, fit=False,
                     data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
     # stat_vs_protons_energies(df, stat_plot, [120], cent_plt, [7, 11, 19, 27, 39, 62], data_types_plt, all_sets_plt,
     #                          plot=False, fit=True, plot_fit=True, data_sets_colors=data_sets_colors,
