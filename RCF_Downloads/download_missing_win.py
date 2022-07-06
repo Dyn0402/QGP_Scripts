@@ -20,7 +20,7 @@ def main():
 
 def download():
     # data_set = 'AMPT_mb_sm'
-    data_set = 'CF'
+    data_set = 'CF_b342'
     data_sets = {'BES1': {'remote_path_suf': 'BES1/', 'remote_tree_pref': 'trees/output',
                           'local_path': 'C:/Users/Dylan/Research/', 'local_tree_pref': 'BES1_Trees'},
                  'AMPT_Run': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
@@ -43,13 +43,14 @@ def download():
                  'AMPT_gang': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
                                'local_path': 'F:/Research/', 'local_tree_pref': 'AMPT_Trees/gang'},
                  'CF': {'remote_path_suf': 'CooperFrye/', 'remote_tree_pref': 'CooperFrye_protons/output',
-                        'local_path': 'F:/Research/',
-                        'local_tree_pref': 'Cooper_Frye_Trees'},
+                        'local_path': 'F:/Research/', 'local_tree_pref': 'Cooper_Frye_Trees'},
+                 'CF_b342': {'remote_path_suf': 'CooperFrye/', 'remote_tree_pref': 'CooperFrye_b342_protons/output',
+                             'local_path': 'F:/Research/', 'local_tree_pref': 'Cooper_Frye_Trees_b342'},
                  }
 
     energies = [7, 11, 19, 27, 39, 62, '2-7TeV_PbPb']
     # energies = [7]
-    bw_limit = 6  # bandwidth limit per energy in Mbps or None
+    bw_limit = None  # bandwidth limit per energy in Mbps or None
     size_tolerance = 0.001  # percentage tolerance between remote and local sizes, re-download if different
     file_delay = 0.1  # seconds to delay between file download calls
 
