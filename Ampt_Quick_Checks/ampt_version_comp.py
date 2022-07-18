@@ -51,8 +51,8 @@ def main():
     bins = np.linspace(-0.1, 25, 200)
     density = True
     y_log = False
-    num_files = 10  # None for all
-    threads = 6
+    num_files = None  # None for all
+    threads = 8
 
     ampt_version_dists = {}
 
