@@ -15,7 +15,13 @@ import uproot
 
 from multiprocessing import Pool
 import tqdm
-import istarmap
+try:
+    import istarmap
+except ModuleNotFoundError:
+    try:
+        from ..Analyzer import istarmap
+    except ModuleNotFoundError:
+        print('Can\'t find istarmap!')
 
 
 def main():
