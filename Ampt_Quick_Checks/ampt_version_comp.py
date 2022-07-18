@@ -19,7 +19,10 @@ try:
     import istarmap
 except ModuleNotFoundError:
     try:
-        from ..Analyzer import istarmap
+        import sys
+        import os
+        sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Analyzer'))
+        import istarmap
     except ModuleNotFoundError:
         print('Can\'t find istarmap!')
 
