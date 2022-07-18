@@ -20,6 +20,7 @@ def main():
 
 def download():
     # data_set = 'AMPT_mb_sm'
+    # data_set = 'CF'
     data_set = 'CF_b342'
     data_sets = {'BES1': {'remote_path_suf': 'BES1/', 'remote_tree_pref': 'trees/output',
                           'local_path': 'C:/Users/Dylan/Research/', 'local_tree_pref': 'BES1_Trees'},
@@ -43,14 +44,14 @@ def download():
                  'AMPT_gang': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
                                'local_path': 'F:/Research/', 'local_tree_pref': 'AMPT_Trees/gang'},
                  'CF': {'remote_path_suf': 'CooperFrye/', 'remote_tree_pref': 'CooperFrye_protons/output',
-                        'local_path': 'F:/Research/', 'local_tree_pref': 'Cooper_Frye_Trees'},
+                        'local_path': 'F:/Research/', 'local_tree_pref': 'Cooper_Frye_EV_Trees'},
                  'CF_b342': {'remote_path_suf': 'CooperFrye/', 'remote_tree_pref': 'CooperFrye_b342_protons/output',
-                             'local_path': 'F:/Research/', 'local_tree_pref': 'Cooper_Frye_Trees_b342'},
+                             'local_path': 'F:/Research/', 'local_tree_pref': 'Cooper_Frye_EVb342_Trees'},
                  }
 
-    energies = [7, 11, 19, 27, 39, 62, '2-7TeV_PbPb']
-    # energies = [7]
-    bw_limit = None  # bandwidth limit per energy in Mbps or None
+    energies = [7, 11, 19, 27, 39, 62]  # , '2-7TeV_PbPb']
+    # energies = [62]
+    bw_limit = 20  # bandwidth limit per energy in Mbps or None
     size_tolerance = 0.001  # percentage tolerance between remote and local sizes, re-download if different
     file_delay = 0.1  # seconds to delay between file download calls
 
@@ -61,30 +62,38 @@ def download():
     local_tree_prefix = data_sets[data_set]['local_tree_pref']
     local_path = data_sets[data_set]['local_path']
 
-    missing_files = {}
+    missing_files, bad_size_files = {}, {}
     all_missing = {}
     total_missing = 0
     for energy in energies:
         if type(energy) == int:
             energy = f'{energy}GeV'
         missing_files.update({energy: []})
+        bad_size_files.update({energy: []})
         expected_files = get_expected_list(energy, remote_path, remote_tree_prefix)
         path = local_path + local_tree_prefix + f'/{energy}/'
-        bad_size_files = 0
         for file, file_size in expected_files.items():
             if os.path.exists(path + file):
                 local_size = os.path.getsize(path + file)
                 size_frac = (local_size - file_size) / file_size if file_size > 0 else 1 if local_size > 0 else 0
                 if abs(size_frac) > size_tolerance:
-                    bad_size_files += 1
+                    bad_size_files[energy].append(path + file)
                     missing_files[energy].append(file)
             else:
                 missing_files[energy].append(file)
         total_missing += len(missing_files[energy])
         all_missing[energy] = len(missing_files[energy]) == len(expected_files)
         print(f'{energy} missing {len(missing_files[energy])} of {len(expected_files)} files,'
-              f' {bad_size_files} of these mismatched size')
+              f' {len(bad_size_files[energy])} of these mismatched size')
 
+    num_bad_files = sum([len(bad_files_energy) for bad_files_energy in bad_size_files.values()])
+    if num_bad_files > 0:
+        res = input(f'Delete {num_bad_files} bad size files?\n')
+        if res.strip().lower()[0] in ['yes', 'y']:
+            for bad_energy_files in bad_size_files.values():
+                for bad_file in bad_energy_files:
+                    # os.system(f'DEL {bad_file}')  # If files say they're busy, this should skip recycle
+                    os.remove(bad_file)  # Seemed to have issues with files being busy. If so use above line
     if total_missing > 0:
         res = input(f'\nDownload {total_missing} missing files? Enter yes to download all; energy name to download'
                     f' a single energy; energy name,number of files to download only first n files for energy;'
