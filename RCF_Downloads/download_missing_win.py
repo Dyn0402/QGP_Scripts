@@ -21,7 +21,7 @@ def main():
 def download():
     # data_set = 'AMPT_mb_sm'
     # data_set = 'CF'
-    data_set = 'CF_b342'
+    data_set = 'CF_b342_lin'
     data_sets = {'BES1': {'remote_path_suf': 'BES1/', 'remote_tree_pref': 'trees/output',
                           'local_path': 'C:/Users/Dylan/Research/', 'local_tree_pref': 'BES1_Trees'},
                  'AMPT_Run': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
@@ -47,6 +47,10 @@ def download():
                         'local_path': 'F:/Research/', 'local_tree_pref': 'Cooper_Frye_EV_Trees'},
                  'CF_b342': {'remote_path_suf': 'CooperFrye/', 'remote_tree_pref': 'CooperFrye_b342_protons/output',
                              'local_path': 'F:/Research/', 'local_tree_pref': 'Cooper_Frye_EVb342_Trees'},
+                 'CF_lin': {'remote_path_suf': 'CooperFrye/', 'remote_tree_pref': 'CooperFrye_protons/output',
+                            'local_path': '/media/ucla/Research/', 'local_tree_pref': 'Cooper_Frye_EV_Trees'},
+                 'CF_b342_lin': {'remote_path_suf': 'CooperFrye/', 'remote_tree_pref': 'CooperFrye_b342_protons/output',
+                                 'local_path': '/media/ucla/Research/', 'local_tree_pref': 'Cooper_Frye_EVb342_Trees'},
                  }
 
     energies = [7, 11, 19, 27, 39, 62]  # , '2-7TeV_PbPb']
