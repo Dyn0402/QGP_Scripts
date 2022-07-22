@@ -31,37 +31,43 @@ except ModuleNotFoundError:
 
 
 def main():
-    # base_path = 'D:/Transfer/Research/'
-    # out_path = ''
-    # ampt_version_paths = {
-    #     'Baryon_First': 'AMPT_Trees_Baryon_First',
-    #     'New_Coalescence': 'AMPT_Trees',
-    #     'Meson_First': 'AMPT_Trees_Meson_First'
-    # }
-    # mid_path = '/min_bias/string_melting/'
-    base_path = '/gpfs01/star/pwg/dneff/data/AMPT/'
-    out_dir = '/star/u/dneff/ampt_version_comp/'
+    base_path = 'F:/Research/'
+    out_dir = 'F:/Research/Results/Presentations/7-20-22/'
     ampt_version_paths = {
-        'Baryon_First': 'min_bias_baryon_first',
-        'New_Coalescence': 'min_bias',
-        'Meson_First': 'min_bias_meson_first'
+        'Baryon_First': 'AMPT_Trees_Baryon_First',
+        'New_Coalescence': 'AMPT_Trees',
+        'Meson_First': 'AMPT_Trees_Meson_First'
     }
-    mid_path = '/string_melting/'
-    energies = [7]
+    mid_path = '/min_bias/string_melting/'
+    # base_path = '/gpfs01/star/pwg/dneff/data/AMPT/'
+    # out_dir = '/star/u/dneff/ampt_version_comp/'
+    # ampt_version_paths = {
+    #     'Baryon_First': 'min_bias_baryon_first',
+    #     'New_Coalescence': 'min_bias',
+    #     'Meson_First': 'min_bias_meson_first'
+    # }
+    # mid_path = '/string_melting/'
+    energies = [7, 11, 19, 27, 39, 62]
+    # energies = [7]
 
     num_files = None  # None for all
-    threads = 8
+    threads = 16
 
     tree_name = 'tree'
-    tree_attribute = 'imp'
 
     # job_func = read_file_att
+    # tree_attribute = 'refmult'
     # job_pars = [tree_name, tree_attribute]
-    # bins = np.arange(-0.5, 430.5, 1)
+    # # bins = np.linspace(-0.1, 25, 200)  # b
+    # # bins = np.arange(-0.5, 920.5, 1)  # ref3
+    # bins = np.arange(-0.5, 500.5, 1)  # ref
 
     job_func = read_file_protons
-    job_pars = [tree_name, tree_attribute, 2212, 5, 0.5]
-    bins = np.linspace(-0.1, 25, 200)
+    eta_max = None
+    b_max = 5
+    job_pars = [tree_name, ['pid', 'px', 'py', 'pz'], 2212, b_max, eta_max]
+    tree_attribute = f'proton_dist_etamax{eta_max}_bmax{b_max}'  # Just used for file name in this case
+    bins = np.arange(-0.5, 300.5, 1)
 
     density = True
     y_log = False
@@ -73,7 +79,7 @@ def main():
         ax.set_title(f'{energy}GeV {tree_attribute}')
         fig.canvas.manager.set_window_title(f'{energy}GeV {tree_attribute}')
         for v_name, v_path in ampt_version_paths.items():
-            print(f'Starting {v_name}')
+            print(f'Starting {energy}GeV {v_name}')
             dist = np.array([])
             path = f'{base_path}{v_path}{mid_path}{energy}GeV/'
             jobs = [(f'{path}{root_name}', *job_pars) for root_name in os.listdir(path)[:num_files]]
@@ -88,7 +94,7 @@ def main():
         ax.legend()
         fig.tight_layout()
 
-    fig.savefig(f'{out_dir}ampt_{tree_attribute}_version_comp.png')
+        fig.savefig(f'{out_dir}ampt_{tree_attribute}_version_comp_{energy}GeV.png')
     plt.show()
     print('donzo')
 
