@@ -83,14 +83,23 @@ def main():
     data_type_plt = 'divide'
     # data_sets_plt = ['ampt_eff1_resample_def', 'ampt_eff2_resample_def', 'ampt_eff3_resample_def']  # ['ampt_resample_def', 'ampt_old_resample_def', 'bes_resample_def']  # ['ampt_resample_def']
     # data_sets_plt = ['ampt_old_eff1_resample_def', 'ampt_old_eff2_resample_def', 'ampt_old_eff3_resample_def']
-    # data_sets_plt = ['bes_resample_def', 'ampt_baryon_first_resample_def', 'ampt_meson_first_resample_def',
-    #                  'ampt_new_coal_resample_def', 'cf_resample_def', 'cfev_resample_def']
-    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'green', 'salmon', 'blue', 'purple']))
-    # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT_Baryon_First', 'AMPT_Meson_First', 'AMPT_New_Coalescence',
-    #                                             'MUSIC+FIST', 'MUSIC+FIST+EV']))
-    data_sets_plt = ['ampt_meson_first_resample_def', 'cf_resample_def', 'cfev_resample_def']
-    data_sets_colors = dict(zip(data_sets_plt, ['red', 'blue', 'green']))
-    data_sets_labels = dict(zip(data_sets_plt, ['AMPT', 'MUSIC+FIST', 'MUSIC+FIST+EV']))
+
+    data_sets_plt = ['bes_resample_def', 'ampt_baryon_first_resample_def', 'ampt_meson_first_resample_def',
+                     'ampt_new_coal_resample_def', 'cf_resample_def', 'cfev_resample_def', 'cfevb342_resample_def']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'green', 'salmon', 'blue', 'purple', 'olive']))
+    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT_Baryon_First', 'AMPT_Meson_First', 'AMPT_New_Coalescence',
+                                                'MUSIC+FIST', 'MUSIC+FIST+EV', 'MUSIC+FIST+EVb342']))
+
+    # data_sets_plt = ['ampt_meson_first_resample_def', 'cf_resample_def', 'cfev_resample_def', 'cfevb342_resample_def']
+    # data_sets_colors = dict(zip(data_sets_plt, ['red', 'blue', 'green', 'purple']))
+    # data_sets_labels = dict(zip(data_sets_plt, ['AMPT', 'MUSIC+FIST', 'MUSIC+FIST+EV', 'MUSIC+FIST+EVb342']))
+
+    # data_sets_plt = ['bes_resample_def',
+    #                  'ampt_new_coal_resample_def', 'cf_resample_def', 'cfev_resample_def', 'cfevb342_resample_def']
+    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'salmon', 'blue', 'purple', 'olive']))
+    # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT_New_Coalescence',
+    #                                             'MUSIC+FIST', 'MUSIC+FIST+EV', 'MUSIC+FIST+EVb342']))
+
     # data_sets_labels = dict(zip(sim_sets, ['Repulsive Amp=0.2 Spread=1', 'Repulsive Amp=0.5 Spread=1',
     #                                        'Repulsive Amp=0.2 Spread=0.5', 'Repulsive Amp=0.5 Spread=0.5',
     #                                        'Attractive Amp=0.1 Spread=1', 'Attractive Amp=0.5 Spread=1',
@@ -597,8 +606,10 @@ def plot_protons_fits_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
     ax_int.set_ylabel('Intercept')
     ax_int.set_xlabel('Energy (GeV)')
     ax_int.grid()
-    ax_slope.legend()
-    ax_int.legend()
+    legend_slope = ax_slope.legend()
+    legend_slope.get_frame().set_alpha(0)
+    legend_int = ax_int.legend()
+    legend_int.get_frame().set_alpha(0)
     fig_slope.tight_layout()
     fig_int.tight_layout()
 
