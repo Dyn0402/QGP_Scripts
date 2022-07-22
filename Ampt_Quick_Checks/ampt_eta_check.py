@@ -29,21 +29,21 @@ from DistStats import DistStats
 
 def main():
     mpl.rcParams.update({'figure.max_open_warning': 0})
-    threads = 15
+    threads = 16
     # energies = [7, 11, 19, 27, 39, 62]
     # sets = [(energy, ['default', 'string_melting']) if energy in [7, 11] else (energy, ['string_melting'])
     #         for energy in energies]
-    energies = [7]
+    energies = [7, 11, 19, 27, 39, 62]
     file_type = 'root'
     test_num = 4
     sets = [(energy, ['string_melting']) for energy in energies]
     # min_bias_path = f'D:/Research/AMPT_Trees/min_bias/'
     # fix_most_cent_path = f'D:/Research/AMPT_Trees/ref_fix{test_num}_most_central/'
-    files_path = f'D:/Research/AMPT_Trees/min_bias_old/'
-    out_name = 'Ampt_7GeV_original_eta_minbias'
-    pdf_out_path = f'D:/Research/Results/Presentations/2-15-22_Ampt_eta_asym/' \
+    files_path = f'F:/Research/AMPT_Trees_Baryon_First/min_bias/'
+    out_name = 'Ampt_baryon_first_eta_minbias'
+    pdf_out_path = f'F:/Research/Results/Presentations/7-20-22/' \
                    f'{out_name}.pdf'
-    pdf_pz_out_path = f'D:/Research/Results/Presentations/2-15-22_Ampt_eta_asym/' \
+    pdf_pz_out_path = f'F:/Research/Results/Presentations/7-20-22/' \
                       f'{out_name}_pz.pdf'
     tree_name = 'tree'
     track_attributes = ['pid', 'px', 'py', 'pz']
@@ -118,14 +118,20 @@ def read_file(root_path, tree_name, track_attributes, pids, bin_edges):
     eta_hists = {}
     pz_hists = {}
     with uproot.open(root_path) as file:
+        # print(root_path)
         tracks = file[tree_name].arrays(track_attributes)
         for pid in pids:
             pid_tracks = tracks[tracks.pid == pid]
             mass = pid_tracks['pid'] * 0 + Particle.from_pdgid(pid).mass / hepunits.GeV
             pid_tracks = ak.zip({'pid': pid_tracks['pid'], 'px': pid_tracks['px'], 'py': pid_tracks['py'],
                                  'pz': pid_tracks['pz'], 'M': mass}, with_name='Momentum4D')
-            eta_hists.update({pid: np.histogram(ak.ravel(pid_tracks.eta), bins=bin_edges)[0]})
-            pz_hists.update({pid: np.histogram(ak.ravel(pid_tracks.pz), bins=[-8, 0, 8])[0]})
+            # print(ak.ravel(pid_tracks.pz))
+            eta_hists.update({pid: np.histogram(ak.to_numpy(ak.ravel(pid_tracks.eta)), bins=bin_edges)[0]})
+            # print(ak.ravel(pid_tracks.pz))
+            # print(type(ak.ravel(pid_tracks.pz)))
+            # print(ak.to_numpy(ak.ravel(pid_tracks.pz)))
+            # print(np.histogram(ak.to_numpy(ak.ravel(pid_tracks.pz)), bins=[-8, 0, 8]))
+            pz_hists.update({pid: np.histogram(ak.to_numpy(ak.ravel(pid_tracks.pz)), bins=[-8, 0, 8])[0]})
 
     return eta_hists, pz_hists
 
