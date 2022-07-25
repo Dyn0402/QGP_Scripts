@@ -15,27 +15,46 @@ import uproot
 
 from ampt_production_status import plot_event_time_data
 
+from multiprocessing import Pool
+import tqdm
+try:
+    import istarmap
+except ModuleNotFoundError:
+    try:
+        import sys
+        import os
+        sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Analyzer'))
+        import istarmap
+    except ModuleNotFoundError:
+        print('Can\'t find istarmap!')
+
 
 def main():
     trees_path = '/gpfs01/star/pwg/dneff/data/AMPT/dylan_run/output/'
     out_path = '/star/u/dneff/'
     energies = [7, 11, 19, 27, 39, 62, '2-7TeV_PbPb']
+    threads = 8
+
     energies_found = []
     event_time_data = {}
     total_events = []
     total_times = []
+
     print()
     for energy in energies:
         if type(energy) == int:
             energy = f'{energy}GeV'
         path = f'{trees_path}{energy}/'
+        if not os.path.exists(path):
+            print(f'{path} doesn\'t exist, skipping energy')
+            continue
         files = os.listdir(path)
         if len(files) <= 0:
             print(f'{len(files)} {energy} trees, skipping energy')
             continue
         energies_found.append(energy)
         print(f'Reading ~{len(files)} {energy} trees...')
-        events, times = get_events(path)
+        events, times = get_events(path, threads)
         times, events = zip(*sorted(zip(times, events)))
         event_time_data.update({energy: [list(times), list(events)]})
 
@@ -50,15 +69,23 @@ def main():
     print('donzo')
 
 
-def get_events(path):
+def get_events(path, threads=1):
     events, times = [], []
-    for file_name in os.listdir(path):
-        if '.root' in file_name:
-            with uproot.open(path + file_name) as file:
-                events.append(len(file['tree'].arrays('event')['event']))
-                times.append(datetime.fromtimestamp(os.path.getmtime(path + file_name)))
+
+    jobs = [file_name for file_name in os.listdir(path) if '.root' in file_name]
+    with Pool(threads) as pool:
+        for num_events, time in tqdm.tqdm(pool.istarmap(get_events_file, jobs), total=len(jobs)):
+            events.append(num_events)
+            times.append(time)
 
     return events, times
+
+
+def get_events_file(path):
+    with uproot.open(path) as file:
+        num_events = len(file['tree'].arrays('event')['event'])
+        time = datetime.fromtimestamp(os.path.getmtime(path))
+    return num_events, time
 
 
 if __name__ == '__main__':
