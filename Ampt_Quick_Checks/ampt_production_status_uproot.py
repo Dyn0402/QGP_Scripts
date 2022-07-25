@@ -53,9 +53,10 @@ def main():
 def get_events(path):
     events, times = [], []
     for file_name in os.listdir(path):
-        with uproot.open(path) as file:
-            events.append(len(file['tree'].arrays('event')['event']))
-            times.append(datetime.fromtimestamp(os.path.getmtime(path + file_name)))
+        if '.root' in file_name:
+            with uproot.open(path + file_name) as file:
+                events.append(len(file['tree'].arrays('event')['event']))
+                times.append(datetime.fromtimestamp(os.path.getmtime(path + file_name)))
 
     return events, times
 
