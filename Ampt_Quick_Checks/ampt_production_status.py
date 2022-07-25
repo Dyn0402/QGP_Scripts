@@ -76,7 +76,7 @@ def get_events(path):
     return event_file_data
 
 
-def plot_event_time_data(data, energies):
+def plot_event_time_data(data, energies, save_path=None):
     formatter = DateFormatter('%a %-I%p')
     loc = HourLocator(interval=12)
 
@@ -91,6 +91,8 @@ def plot_event_time_data(data, energies):
     plt.gca().xaxis.set_major_locator(loc)
     plt.gca().xaxis.set_major_formatter(formatter)
     plt.gca().xaxis.set_tick_params(rotation=30, labelsize=10)
+    if save_path is not None:
+        plt.savefig(f'{save_path}ampt_energies_production.png')
 
     plt.figure(2)
     # colors = {7: '#1f77b4', 11: '#ff7f0e', 19: '#2ca02c', 27: '#d62728', 39: '#9467bd', 62: '#8c564b'}
@@ -107,6 +109,9 @@ def plot_event_time_data(data, energies):
         energy_dates = date2num(data[energy][0])
         plt.plot_date(energy_dates, energy_events, label=f'{energy}', color=c, fmt='-')
     plt.legend()
+
+    if save_path is not None:
+        plt.savefig(f'{save_path}ampt_total_production.png')
 
     plt.show()
 
