@@ -72,7 +72,7 @@ def main():
 def get_events(path, threads=1):
     events, times = [], []
 
-    jobs = [(file_name,) for file_name in os.listdir(path) if '.root' in file_name]
+    jobs = [(path + file_name,) for file_name in os.listdir(path) if '.root' in file_name]
     with Pool(threads) as pool:
         for num_events, time in tqdm.tqdm(pool.istarmap(get_events_file, jobs), total=len(jobs)):
             events.append(num_events)
