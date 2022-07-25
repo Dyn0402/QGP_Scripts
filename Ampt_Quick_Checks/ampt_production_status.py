@@ -92,7 +92,7 @@ def plot_event_time_data(data, energies, save_path=None):
     plt.gca().xaxis.set_major_formatter(formatter)
     plt.gca().xaxis.set_tick_params(rotation=30, labelsize=10)
     if save_path is not None:
-        plt.savefig(f'{save_path}ampt_energies_production.png')
+        plt.savefig(f'{save_path}ampt_total_production.png')
 
     plt.figure(2)
     # colors = {7: '#1f77b4', 11: '#ff7f0e', 19: '#2ca02c', 27: '#d62728', 39: '#9467bd', 62: '#8c564b'}
@@ -111,7 +111,7 @@ def plot_event_time_data(data, energies, save_path=None):
     plt.legend()
 
     if save_path is not None:
-        plt.savefig(f'{save_path}ampt_total_production.png')
+        plt.savefig(f'{save_path}ampt_energies_production.png')
 
     plt.show()
 
