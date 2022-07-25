@@ -18,6 +18,7 @@ from ampt_production_status import plot_event_time_data
 
 def main():
     trees_path = '/gpfs01/star/pwg/dneff/data/AMPT/dylan_run/output/'
+    out_path = '/star/u/dneff/'
     energies = [7, 11, 19, 27, 39, 62, '2-7TeV_PbPb']
     energies_found = []
     event_time_data = {}
@@ -44,7 +45,7 @@ def main():
     total_times, total_events = zip(*sorted(zip(total_times, total_events)))
     event_time_data.update({'total': [list(total_times), list(total_events)]})
 
-    plot_event_time_data(event_time_data, energies_found)
+    plot_event_time_data(event_time_data, energies_found, out_path)
 
     print('donzo')
 
