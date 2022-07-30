@@ -38,7 +38,8 @@ def main():
     else:
         print('No input root files! Doing other things.')
         # file_writer()
-        uproot_finder()
+        # uproot_finder()
+        uproot_finder_rcf('C:/Users/Dylan/Desktop/list.txt')
     print('donzo')
 
 
@@ -370,22 +371,48 @@ def check_file_chunks(root_path, tree_name, track_attributes, max_eta, ignore_pi
 
         track_combos = [len(x)**2 for x in tracks]
         event_chunk_slices = get_event_chunk_indices(track_combos, max_track_combos)
+        print(f'Track combos: {track_combos}')
+        print(f'Event chunk slices: {event_chunk_slices}')
         for event_slice in event_chunk_slices:
             tracks_chunk = tracks[event_slice]
-            track_a, track_b = ak.unzip(ak.combinations(tracks_chunk, 2))
-            ident_p = track_a == track_b  # Check if momenta same
-            ident_pid = ak.where(track_a['pid'] == track_b['pid'], True, False)
-            ident = ident_p * ident_pid
-            num_ident = [{'event_num': x + 1 + event_slice.start, 'num_identical': y}
-                         for x, y in enumerate(ak.sum(ident, axis=1)) if y > 0]
-            if len(num_ident) > 0:
-                print(f'{root_path} {datetime.now()}')
-                id_tracks = track_a[ident]
-                unique = np.unique(id_tracks[ak.num(id_tracks) > 0].pid, return_counts=True)
-                for event in num_ident:
-                    event.update({'path': root_path, 'events': len(tracks), 'unique': unique})
+            print(len(tracks_chunk))
+            if len(tracks_chunk) == 1:  # Event too big, run slow for low memeory
+                num_ident = 0
+                uniques = ([], [])
+                for index_a, track_a in enumerate(tracks_chunk[0][:10]):
+                    ident_p = tracks_chunk[0][index_a] == tracks_chunk[0]  # Check if momenta same
+                    ident_pid = ak.where(tracks_chunk[0][index_a]['pid'] == tracks_chunk[0]['pid'], True, False)
+                    ident = ident_p * ident_pid
+                    num_ident += sum(ident)
+                    id_tracks = tracks_chunk[0][ident]
+                    unique = np.unique(id_tracks.pid, return_counts=True)
+                    for index in range(len(unique[0])):
+                        if unique[0][index] in uniques[0]:
+                            uniques[1][index] += unique[1][index]
+                        else:
+                            uniques[0].append(unique[0])
+                            uniques[1].append(unique[1])
+                    print(f'index {index_a}, track {track_a}, unique: {unique}')
+                if num_ident > 0:
+                    event = {'event_num': event_slice.start + 1, 'num_identical': num_ident, 'path': root_path,
+                             'events': len(tracks), 'unique': uniques}
                     print(event)
                     bad_events.append(event)
+            else:
+                track_a, track_b = ak.unzip(ak.combinations(tracks_chunk, 2))
+                ident_p = track_a == track_b  # Check if momenta same
+                ident_pid = ak.where(track_a['pid'] == track_b['pid'], True, False)
+                ident = ident_p * ident_pid
+                num_ident = [{'event_num': x + 1 + event_slice.start, 'num_identical': y}
+                             for x, y in enumerate(ak.sum(ident, axis=1)) if y > 0]
+                if len(num_ident) > 0:
+                    print(f'{root_path} {datetime.now()}')
+                    id_tracks = track_a[ident]
+                    unique = np.unique(id_tracks[ak.num(id_tracks) > 0].pid, return_counts=True)
+                    for event in num_ident:
+                        event.update({'path': root_path, 'events': len(tracks), 'unique': unique})
+                        print(event)
+                        bad_events.append(event)
 
     return bad_events
 
@@ -449,14 +476,16 @@ def get_event_chunk_indices(track_counts, max_tracks):
     event_low, event_high = 0, 0
     while event_high < len(track_counts):
         tracks = 0
-        while tracks < max_tracks:
+        while True:
             tracks += track_counts[event_high]
+            if tracks >= max_tracks:
+                break
             event_high += 1
             if event_high >= len(track_counts):
                 event_high += 1
                 break
-        if event_high - 1 > event_low:  # Only decrement if single event doesn't have more counts than max
-            event_high -= 1
+        if event_high == event_low:  # If single event, increment
+            event_high += 1
         slices.append(slice(event_low, event_high))
         event_low = event_high
 
