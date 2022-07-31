@@ -38,8 +38,8 @@ def main():
     else:
         print('No input root files! Doing other things.')
         # file_writer()
-        # uproot_finder()
-        uproot_finder_rcf('C:/Users/Dylan/Desktop/list.txt')
+        uproot_finder()
+        # uproot_finder_rcf('C:/Users/Dylan/Desktop/list.txt')
     print('donzo')
 
 
@@ -104,14 +104,14 @@ def uproot_finder():
     print(f'Start {start}\n')
 
     # out_file_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_slim_most_central_new.txt'
-    # out_file_path = 'F:/Research/Ampt_Bad_Event/bad_ampt_events_minbias.txt'
-    out_file_path = '/media/ucla/Research/Ampt_Bad_Event/bad_ampt_events_slim_min_bias_test.txt'
+    out_file_path = 'F:/Research/Ampt_Bad_Event/bad_ampt_events_min_bias_test1.txt'
+    # out_file_path = '/media/ucla/Research/Ampt_Bad_Event/bad_ampt_events_min_bias_test1.txt'
     # out_file_path = '/star/u/dneff/Ampt_Bad_Event/bad_ampt_events_central.txt'
     # path = '/media/ucla/Research/AMPT_Trees/slim_most_central/string_melting/'
-    # path = 'F:/Research/AMPT_Trees/min_bias/'
-    path = '/media/ucla/Research/AMPT_Trees/min_bias/'
+    path = 'F:/Research/AMPT_Trees/min_bias/'
+    # path = '/media/ucla/Research/AMPT_Trees/min_bias/'
     # path = '/gpfs01/star/pwg/dneff/data/AMPT/most_central/string_melting/'
-    threads = 12
+    threads = 16
     event_chunks = True
     max_track_combos = 1e7  # Max number of track combinations for a chunk of events. Needed to keep memory from blowing
     tree_name = 'tree'
@@ -202,133 +202,6 @@ def uproot_finder_rcf(root_path_list):
     print(f'Time per file: {(end - jobs_start) / len(root_paths)}')
 
 
-# def uproot_finder_rcf():
-#     """ Looks like this runs just as fast as compiled ROOT code, just slow 2-p comparisons """
-#     start = datetime.now()
-#     print(f'Start {start}\n')
-#
-#     # out_file_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_slim_most_central_new.txt'
-#     # out_file_path = 'F:/Research/Ampt_Bad_Event/bad_ampt_events_minbias.txt'
-#     # out_file_path = '/media/ucla/Research/Ampt_Bad_Event/bad_ampt_events_minbias.txt'
-#     out_file_path = '/star/u/dneff/Ampt_Bad_Event/bad_ampt_events_central.txt'
-#     # path = '/media/ucla/Research/AMPT_Trees/slim_most_central/string_melting/'
-#     # path = 'F:/Research/AMPT_Trees/min_bias/'
-#     # path = '/media/ucla/Research/AMPT_Trees/min_bias/'
-#     path = '/gpfs01/star/pwg/dneff/data/AMPT/most_central/string_melting/'
-#     single_events = False
-#     tree_name = 'tree'
-#     write_mode = 'w'
-#     max_eta = 1
-#     ignore_pids = [313, 111]
-#     track_attributes = ['pid', 'px', 'py', 'pz']
-#
-#     root_paths = []
-#     for root, dirs, files in os.walk(path):
-#         for file_name in files:
-#             if '.root' not in file_name:
-#                 continue
-#             root_path = os.path.join(root, file_name)
-#             root_paths.append(root_path)
-#
-#     # n_files = len(root_paths)
-#     # print(f'{n_files} files found to be checked.')
-#     #
-#     # jobs = [(root_path, tree_name, track_attributes, max_eta, ignore_pids, num, n_files) for
-#     #         num, root_path in enumerate(root_paths)]
-#     #
-#     # jobs_start = datetime.now()
-#     # print(f'Jobs Start {jobs_start}\n')
-#     # bad_trees = []
-#     # func = check_file
-#     # if single_events:
-#     #     func = check_file_single_events
-#     # with Pool(threads) as pool:
-#     #     for bad_tree in tqdm.tqdm(pool.istarmap(func, jobs), total=len(jobs)):
-#     #         bad_trees.append(bad_tree)
-#
-#     jobs_start = datetime.now()
-#     print(f'Jobs Start {jobs_start}\n')
-#     bad_trees = []
-#     for root_path in root_paths:
-#         bad_trees.append(check_file(root_path, tree_name, track_attributes, max_eta, ignore_pids))
-#
-#     # with Pool(threads) as pool:
-#     #     bad_trees = pool.starmap(check_file,
-#     #                              [(root_path, tree_name, track_attributes, max_eta, ignore_pids, num, n_files) for
-#     #                               num, root_path in enumerate(root_paths)])
-#
-#     with open(out_file_path, write_mode) as file:
-#         for bad_tree in bad_trees:
-#             for bad_event in bad_tree:
-#                 if bad_event is not None:
-#                     out_line = ''.join(f'{x}: {y}\t' for x, y in bad_event.items())
-#                     file.write(f'{out_line}\n')
-#
-#     end = datetime.now()
-#     print(f'\nEnd {end}')
-#     print(f'Run time: {end - start}')
-#     print(f'Job run time: {end - jobs_start}')
-#
-#
-# def uproot_finder_rcf2(root_paths):
-#     """ Looks like this runs just as fast as compiled ROOT code, just slow 2-p comparisons """
-#     start = datetime.now()
-#     print(f'Start {start}\n')
-#
-#     # out_file_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_slim_most_central_new.txt'
-#     # out_file_path = 'F:/Research/Ampt_Bad_Event/bad_ampt_events_minbias.txt'
-#     # out_file_path = '/media/ucla/Research/Ampt_Bad_Event/bad_ampt_events_minbias.txt'
-#     out_file_path = 'bad_ampt_events_central.txt'
-#     # path = '/media/ucla/Research/AMPT_Trees/slim_most_central/string_melting/'
-#     # path = 'F:/Research/AMPT_Trees/min_bias/'
-#     # path = '/media/ucla/Research/AMPT_Trees/min_bias/'
-#     single_events = False
-#     tree_name = 'tree'
-#     write_mode = 'w'
-#     max_eta = 1
-#     ignore_pids = [313, 111]
-#     track_attributes = ['pid', 'px', 'py', 'pz']
-#
-#     # n_files = len(root_paths)
-#     # print(f'{n_files} files found to be checked.')
-#     #
-#     # jobs = [(root_path, tree_name, track_attributes, max_eta, ignore_pids, num, n_files) for
-#     #         num, root_path in enumerate(root_paths)]
-#     #
-#     # jobs_start = datetime.now()
-#     # print(f'Jobs Start {jobs_start}\n')
-#     # bad_trees = []
-#     # func = check_file
-#     # if single_events:
-#     #     func = check_file_single_events
-#     # with Pool(threads) as pool:
-#     #     for bad_tree in tqdm.tqdm(pool.istarmap(func, jobs), total=len(jobs)):
-#     #         bad_trees.append(bad_tree)
-#
-#     jobs_start = datetime.now()
-#     print(f'Jobs Start {jobs_start}\n')
-#     bad_trees = []
-#     for root_path in root_paths:
-#         bad_trees.append(check_file(root_path, tree_name, track_attributes, max_eta, ignore_pids))
-#
-#     # with Pool(threads) as pool:
-#     #     bad_trees = pool.starmap(check_file,
-#     #                              [(root_path, tree_name, track_attributes, max_eta, ignore_pids, num, n_files) for
-#     #                               num, root_path in enumerate(root_paths)])
-#
-#     with open(out_file_path, write_mode) as file:
-#         for bad_tree in bad_trees:
-#             for bad_event in bad_tree:
-#                 if bad_event is not None:
-#                     out_line = ''.join(f'{x}: {y}\t' for x, y in bad_event.items())
-#                     file.write(f'{out_line}\n')
-#
-#     end = datetime.now()
-#     print(f'\nEnd {end}')
-#     print(f'Run time: {end - start}')
-#     print(f'Job run time: {end - jobs_start}')
-
-
 def check_file(root_path, tree_name, track_attributes, max_eta, ignore_pids):
     vector.register_awkward()
     bad_events = []
@@ -371,17 +244,15 @@ def check_file_chunks(root_path, tree_name, track_attributes, max_eta, ignore_pi
 
         track_combos = [len(x)**2 for x in tracks]
         event_chunk_slices = get_event_chunk_indices(track_combos, max_track_combos)
-        print(f'Track combos: {track_combos}')
-        print(f'Event chunk slices: {event_chunk_slices}')
         for event_slice in event_chunk_slices:
             tracks_chunk = tracks[event_slice]
-            print(len(tracks_chunk))
-            if len(tracks_chunk) == 1:  # Event too big, run slow for low memeory
+            if len(tracks_chunk) == 1 and len(tracks_chunk[0]) > max_track_combos:  # Big event, run slow for memeory
                 num_ident = 0
                 uniques = ([], [])
-                for index_a, track_a in enumerate(tracks_chunk[0][:10]):
-                    ident_p = tracks_chunk[0][index_a] == tracks_chunk[0]  # Check if momenta same
-                    ident_pid = ak.where(tracks_chunk[0][index_a]['pid'] == tracks_chunk[0]['pid'], True, False)
+                for index_a, track_a in enumerate(tracks_chunk[0]):
+                    track_chunk_b = tracks_chunk[0][index_a + 1:]
+                    ident_p = tracks_chunk[0][index_a] == track_chunk_b  # Check if momenta same
+                    ident_pid = ak.where(tracks_chunk[0][index_a]['pid'] == track_chunk_b['pid'], True, False)
                     ident = ident_p * ident_pid
                     num_ident += sum(ident)
                     id_tracks = tracks_chunk[0][ident]
@@ -392,8 +263,8 @@ def check_file_chunks(root_path, tree_name, track_attributes, max_eta, ignore_pi
                         else:
                             uniques[0].append(unique[0])
                             uniques[1].append(unique[1])
-                    print(f'index {index_a}, track {track_a}, unique: {unique}')
                 if num_ident > 0:
+                    print(f'{root_path} {datetime.now()}')
                     event = {'event_num': event_slice.start + 1, 'num_identical': num_ident, 'path': root_path,
                              'events': len(tracks), 'unique': uniques}
                     print(event)

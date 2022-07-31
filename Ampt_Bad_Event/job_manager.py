@@ -28,10 +28,13 @@ def main():
     babysit_jobs(files, pars)
     combine_outputs(pars['output_path'], pars['output_combo_path'], pars['out_split_flag'], pars['list_path'])
 
-    res = input('Fix dataset? ')
+    res = input('Fix dataset?  ')
     if len(res) > 0 and res[0].lower() == 'y':
-        fix_dataset(pars['output_combo_path'], pars['result_path'],
+        cwd = os.getcwd()
+        os.chdir(pars['fix_tree_cpp_dir'])
+        fix_dataset(pars['output_combo_path'], pars['bad_repo_path'],
                     pars['bad_sufx'], pars['fix_sufx'], pars['min_identical'], True)
+        os.chdir(cwd)
 
     clean_up()
     print('donzo')
@@ -43,7 +46,7 @@ def init_pars():
     :return: Dictionay containing all parameters
     """
     pars = {
-        'top_path': '/gpfs01/star/pwg/dneff/data/AMPT/min_bias/',
+        'top_path': '/gpfs01/star/pwg/dneff/data/AMPT/most_central/',
         'file_list_path': '/star/u/dneff/Ampt_Bad_Event/sub/list/root_files.txt',
         'sub_path': '/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/clean_sub.xml',
         'output_path': '/star/u/dneff/Ampt_Bad_Event/sub/output/',
@@ -52,6 +55,8 @@ def init_pars():
         'log_path': '/star/u/dneff/Ampt_Bad_Event/sub/log/',
         'term_log_path': '/star/u/dneff/Ampt_Bad_Event/sub/log/resubed_terms/',
         'output_combo_path': '/star/u/dneff/Ampt_Bad_Event/sub/result/ampt_bad_events.txt',
+        'fix_tree_cpp_dir': '/star/u/dneff/git/QGP_Scripts/Ampt_Bad_event/',
+        'bad_repo_path': '/gpfs01/star/pwg/dneff/data/AMPT/bad_events/run_dir/',
         'user': 'dneff',
         'check_interval': 120,  # seconds
 
@@ -166,7 +171,7 @@ def combine_outputs(output_path, out_combo_path, flag, list_path):
 
 
 def clean_up():
-    if input('Clean up?\n')[0].lower() == 'y':
+    if input('Clean up?  ')[0].lower() == 'y':
         os.system('/star/u/dneff/Ampt_Bad_Event/sub/clean.sh')
 
 
