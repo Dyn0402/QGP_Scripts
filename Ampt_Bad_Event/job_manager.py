@@ -24,7 +24,9 @@ def main():
     pars = init_pars()
 
     files = get_files(pars['top_path'])
-    submit_jobs(files, pars['file_list_path'], pars['sub_path'])
+    res = input('Submit initial jobs before check?  ')
+    if len(res) > 0 and res[0].lower() == 'y':
+        submit_jobs(files, pars['file_list_path'], pars['sub_path'])
     babysit_jobs(files, pars)
     combine_outputs(pars['output_path'], pars['output_combo_path'], pars['out_split_flag'], pars['list_path'])
 
@@ -165,6 +167,8 @@ def combine_outputs(output_path, out_combo_path, flag, list_path):
             if len(temp_path) == 1:
                 real_path = convert_files(temp_path, list_path)[0]
                 out_combo_lines.append(event.replace(temp_path[0], real_path))
+
+    out_combo_lines = [*set(out_combo_lines)]  # Remove duplicates
 
     with open(out_combo_path, 'w') as combo_file:
         combo_file.write('\n'.join(out_combo_lines))
