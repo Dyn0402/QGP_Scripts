@@ -57,7 +57,7 @@ def init_pars():
         'log_path': '/star/u/dneff/Ampt_Bad_Event/sub/log/',
         'term_log_path': '/star/u/dneff/Ampt_Bad_Event/sub/log/resubed_terms/',
         'output_combo_path': '/star/u/dneff/Ampt_Bad_Event/sub/result/ampt_bad_events.txt',
-        'fix_tree_cpp_dir': '/star/u/dneff/git/QGP_Scripts/Ampt_Bad_event/',
+        'fix_tree_cpp_dir': '/star/u/dneff/git/QGP_Scripts/Ampt_Bad_Event/',
         'bad_repo_path': '/gpfs01/star/pwg/dneff/data/AMPT/bad_events/run_dir/',
         'user': 'dneff',
         'check_interval': 120,  # seconds
