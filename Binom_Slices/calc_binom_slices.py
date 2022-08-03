@@ -68,8 +68,8 @@ def define_datasets(base_path):
     """
 
     all_divs = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356]
-    # all_energies = [7, 11, 19, 27, 39, 62]
-    all_energies = [7]
+    all_energies = [7, 11, 19, 27, 39, 62]
+    # all_energies = [7]
     all_cents = [8]  # [0, 1, 2, 3, 4, 5, 6, 7, 8]
 
     entry_names = ['name', 'base_ext', 'exact_keys', 'contain_keys', 'exclude_keys',
@@ -77,6 +77,7 @@ def define_datasets(base_path):
     entry_vals = [
         # ['ampt_def', '_Ampt', ['default'], [], ['resample'], range(60), all_energies, all_cents, all_divs],
         # ['ampt_new_coal_resample_def', '_Ampt', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
+        ['ampt_baryon_first_resample_def', '_Ampt', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
         # ['ampt_old_resample_def', '_Ampt_Old', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
         # ['ampt_eff1_resample_def', '_Ampt', ['resample', 'Eff1'], [], [], [0], all_energies, all_cents, all_divs],
         # ['ampt_eff2_resample_def', '_Ampt', ['resample', 'Eff2'], [], [], [0], all_energies, all_cents, all_divs],
@@ -90,8 +91,8 @@ def define_datasets(base_path):
         # ['bes_def', '', ['default'], [], ['resample'], range(60), all_energies, [8], all_divs],
         # ['bes_resample_def', '', ['default', 'resample'], [], [], [0], all_energies, [8], all_divs],
         # ['cf_resample_def', '_CF', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
-        ['cfev_resample_def', '_CFEV', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
-        ['cfevb342_resample_def', '_CFEVb342', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
+        # ['cfev_resample_def', '_CFEV', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
+        # ['cfevb342_resample_def', '_CFEVb342', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
     ]
 
     # # Anti-clustering

@@ -19,9 +19,9 @@ def main():
 
 
 def download():
-    # data_set = 'AMPT_mb_sm'
+    data_set = 'AMPT_mb_sm'
     # data_set = 'CF'
-    data_set = 'CF_b342_lin'
+    # data_set = 'CF_b342_lin'
     data_sets = {'BES1': {'remote_path_suf': 'BES1/', 'remote_tree_pref': 'trees/output',
                           'local_path': 'C:/Users/Dylan/Research/', 'local_tree_pref': 'BES1_Trees'},
                  'AMPT_Run': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',
@@ -55,7 +55,7 @@ def download():
 
     energies = [7, 11, 19, 27, 39, 62]  # , '2-7TeV_PbPb']
     # energies = [62]
-    bw_limit = 20  # bandwidth limit per energy in Mbps or None
+    bw_limit = 10  # bandwidth limit per energy in Mbps or None
     size_tolerance = 0.001  # percentage tolerance between remote and local sizes, re-download if different
     file_delay = 0.1  # seconds to delay between file download calls
 
