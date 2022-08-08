@@ -39,11 +39,11 @@ def main():
     sets = [(energy, ['string_melting']) for energy in energies]
     # min_bias_path = f'D:/Research/AMPT_Trees/min_bias/'
     # fix_most_cent_path = f'D:/Research/AMPT_Trees/ref_fix{test_num}_most_central/'
-    files_path = f'F:/Research/AMPT_Trees_Baryon_First/min_bias/'
-    out_name = 'Ampt_baryon_first_eta_minbias'
-    pdf_out_path = f'F:/Research/Results/Presentations/7-20-22/' \
+    files_path = f'F:/Research/AMPT_Trees/min_bias/'
+    out_name = 'Ampt_baryon_first_fix_eta_minbias'
+    pdf_out_path = f'F:/Research/Results/Presentations/7-26-22/' \
                    f'{out_name}.pdf'
-    pdf_pz_out_path = f'F:/Research/Results/Presentations/7-20-22/' \
+    pdf_pz_out_path = f'F:/Research/Results/Presentations/7-26-22/' \
                       f'{out_name}_pz.pdf'
     tree_name = 'tree'
     track_attributes = ['pid', 'px', 'py', 'pz']

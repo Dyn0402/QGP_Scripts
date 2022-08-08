@@ -35,7 +35,7 @@ def main():
         cwd = os.getcwd()
         os.chdir(pars['fix_tree_cpp_dir'])
         fix_dataset(pars['output_combo_path'], pars['bad_repo_path'],
-                    pars['bad_sufx'], pars['fix_sufx'], pars['min_identical'], True)
+                    pars['bad_sufx'], pars['fix_sufx'], pars['min_identical'], False)
         os.chdir(cwd)
 
     clean_up()

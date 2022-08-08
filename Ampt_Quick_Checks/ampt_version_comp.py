@@ -32,11 +32,12 @@ except ModuleNotFoundError:
 
 def main():
     base_path = 'F:/Research/'
-    out_dir = 'F:/Research/Results/Presentations/7-20-22/'
+    out_dir = 'F:/Research/Results/Presentations/7-26-22/'
     ampt_version_paths = {
         'Baryon_First': 'AMPT_Trees_Baryon_First',
-        'New_Coalescence': 'AMPT_Trees',
-        'Meson_First': 'AMPT_Trees_Meson_First'
+        'Baryon_First_Fix': 'AMPT_Trees',
+        'New_Coalescence': 'AMPT_Trees_New_Coalescence',
+        'Meson_First': 'AMPT_Trees_Meson_First',
     }
     mid_path = '/min_bias/string_melting/'
     # base_path = '/gpfs01/star/pwg/dneff/data/AMPT/'
@@ -55,22 +56,22 @@ def main():
 
     tree_name = 'tree'
 
-    # job_func = read_file_att
-    # tree_attribute = 'refmult'
-    # job_pars = [tree_name, tree_attribute]
-    # # bins = np.linspace(-0.1, 25, 200)  # b
-    # # bins = np.arange(-0.5, 920.5, 1)  # ref3
-    # bins = np.arange(-0.5, 500.5, 1)  # ref
+    job_func = read_file_att
+    tree_attribute = 'refmult'
+    job_pars = [tree_name, tree_attribute]
+    # bins = np.linspace(-0.1, 25, 200)  # b
+    # bins = np.arange(-0.5, 920.5, 1)  # ref3
+    bins = np.arange(-0.5, 500.5, 1)  # ref
 
-    job_func = read_file_protons
-    eta_max = None
-    b_max = 5
-    job_pars = [tree_name, ['pid', 'px', 'py', 'pz'], 2212, b_max, eta_max]
-    tree_attribute = f'proton_dist_etamax{eta_max}_bmax{b_max}'  # Just used for file name in this case
-    bins = np.arange(-0.5, 300.5, 1)
+    # job_func = read_file_protons
+    # eta_max = None
+    # b_max = 5
+    # job_pars = [tree_name, ['pid', 'px', 'py', 'pz'], 2212, b_max, eta_max]
+    # tree_attribute = f'proton_dist_etamax{eta_max}_bmax{b_max}'  # Just used for file name in this case
+    # bins = np.arange(-0.5, 300.5, 1)
 
     density = True
-    y_log = False
+    y_log = True
 
     ampt_version_dists = {}
 

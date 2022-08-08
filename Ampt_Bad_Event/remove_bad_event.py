@@ -15,15 +15,15 @@ import shutil
 def main():
     # bad_file_list_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_gang7GeV.txt'
     # bad_tree_repo = '/home/dylan/Research/Ampt_Bad_Event/'
-    bad_file_list_path = '/media/ucla/Research/Ampt_Bad_Event/bad_ampt_events_minbias.txt'
-    bad_tree_repo = '/media/ucla/Research/Ampt_Bad_Event/'
-    # bad_file_list_path = 'F:/Research/Ampt_Bad_Event/bad_ampt_events_most_central_finish.txt'
-    # bad_tree_repo = 'F:/Research/Ampt_Bad_Event/'
+    # bad_file_list_path = '/media/ucla/Research/Ampt_Bad_Event/bad_ampt_events_minbias.txt'
+    # bad_tree_repo = '/media/ucla/Research/Ampt_Bad_Event/'
+    bad_file_list_path = 'F:/Research/Ampt_Bad_Event/bad_ampt_events_min_bias2.txt'
+    bad_tree_repo = 'F:/Research/Ampt_Bad_Event/'
     bad_tree_sufx = '_bad'
     fix_tree_sufx = '_fix'
     min_identical = 2
     fix_dataset(bad_file_list_path, bad_tree_repo, bad_tree_sufx, fix_tree_sufx, min_identical, test=False,
-                replace_text=False)
+                fix_method='fix_tree.cpp', replace_text=False)
 
     print('donzo')
 
@@ -95,7 +95,7 @@ def get_bad_event_file(path, min_identical):
 
 
 def move_tree(tree_path, repo_path, sufx, copy=True):
-    tree_name = tree_path.split('/')[-1]
+    tree_name = tree_path.split('/')[-1].split('\\')[-1]
     tree_name = tree_name.split('.')
     tree_name = tree_name[0] + sufx + '.' + tree_name[-1]
     repo_tree_path = repo_path + tree_name

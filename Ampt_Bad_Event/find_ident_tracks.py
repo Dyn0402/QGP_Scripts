@@ -104,7 +104,7 @@ def uproot_finder():
     print(f'Start {start}\n')
 
     # out_file_path = '/home/dylan/Research/Ampt_Bad_Event/bad_ampt_events_slim_most_central_new.txt'
-    out_file_path = 'F:/Research/Ampt_Bad_Event/bad_ampt_events_min_bias_test1.txt'
+    out_file_path = 'F:/Research/Ampt_Bad_Event/bad_ampt_events_min_bias2.txt'
     # out_file_path = '/media/ucla/Research/Ampt_Bad_Event/bad_ampt_events_min_bias_test1.txt'
     # out_file_path = '/star/u/dneff/Ampt_Bad_Event/bad_ampt_events_central.txt'
     # path = '/media/ucla/Research/AMPT_Trees/slim_most_central/string_melting/'
