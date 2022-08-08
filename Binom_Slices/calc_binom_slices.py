@@ -38,7 +38,7 @@ def init_pars():
         'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim.csv',
         # 'csv_path': '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim.csv',
         'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
-        'only_new': False,  # If True check csv_path and only run missing datasets, else run all datasets
+        'only_new': True,  # If True check csv_path and only run missing datasets, else run all datasets
         'threads': 16,
         'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
@@ -77,7 +77,7 @@ def define_datasets(base_path):
     entry_vals = [
         # ['ampt_def', '_Ampt', ['default'], [], ['resample'], range(60), all_energies, all_cents, all_divs],
         # ['ampt_new_coal_resample_def', '_Ampt', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
-        ['ampt_baryon_first_resample_def', '_Ampt', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
+        ['ampt_baryon_first_fix_resample_def', '_Ampt', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
         # ['ampt_old_resample_def', '_Ampt_Old', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
         # ['ampt_eff1_resample_def', '_Ampt', ['resample', 'Eff1'], [], [], [0], all_energies, all_cents, all_divs],
         # ['ampt_eff2_resample_def', '_Ampt', ['resample', 'Eff2'], [], [], [0], all_energies, all_cents, all_divs],

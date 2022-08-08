@@ -45,10 +45,10 @@ def resample_validation():
     n_samples = [1, 3, 1440]
     n_events = np.arange(10, 2000, 10)
     bin_width = np.deg2rad(120)
-    experiments = 100
+    experiments = 10
     # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
-    plot_out_base = 'D:/Research/Resample_POC/Resample_Validation/'
-    plot_out_name = 'test2/'
+    plot_out_base = 'F:/Research/Resample_POC/Resample_Validation/'
+    plot_out_name = 'test3/'
     plot_out_dir = plot_out_base + plot_out_name
     try:
         os.mkdir(plot_out_dir)
