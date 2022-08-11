@@ -32,7 +32,6 @@ class Pars:
         self.data_sets = ['bes', 'ampt_new_coal', 'cfev']
         self.data_sets_colors = dict(zip(self.data_sets, ['black', 'red', 'blue']))
         self.data_sets_labels = dict(zip(self.data_sets, ['STAR', 'AMPT', 'MUSIC+FIST EV']))
-        self.data_sets_colors = dict(zip(self.data_sets, ['MUSIC+FIST EV']))
         self.energies = [7, 11, 19, 27, 39, 62]
         self.x0 = [0.1, 1.0]
         self.bounds = ((0.0001, 0.99), (0.0, 5.0))
@@ -85,7 +84,7 @@ def chi2_sd_slices_bs():
         plot_mins_vs_energy(data_set, pars, energies_data)
 
         if 'group_2d' in pars.plot:
-            plot_2d_group(energies_data)
+            plot_2d_group(data_set, energies_data)
 
     plot_avg_norm_mins(pars, datasets_data)
     plot_avg_mins(pars, datasets_data)
@@ -554,9 +553,9 @@ def plot_mins_vs_energy(data_set, pars, energies_data):
     fig_mins_vs_e.tight_layout()
 
 
-def plot_2d_group(energies_data):
+def plot_2d_group(data_set, energies_data):
     fig1_all, axes1 = plt.subplots(2, 3, sharex=True, sharey=True, figsize=(16, 8))
-    fig1_all.canvas.manager.set_window_title(f'Raw 2D Chi2')
+    fig1_all.canvas.manager.set_window_title(f'Raw 2D Chi2 {data_set}')
     axes1 = np.ravel(axes1)
     for i, energy in enumerate(energies_data.fig1_data):
         cbar = axes1[i].pcolormesh(energies_data.fig1_data[energy]['X'], energies_data.fig1_data[energy]['Y'],
@@ -573,7 +572,7 @@ def plot_2d_group(energies_data):
     fig1_all.subplots_adjust(top=0.99, bottom=0.06, left=0.04, right=0.99, wspace=0.04, hspace=0.03)
 
     fig2_all, axes2 = plt.subplots(2, 3, sharex=True, sharey=True, figsize=(16, 8))
-    fig2_all.canvas.manager.set_window_title(f'Interpolated 2D Chi2')
+    fig2_all.canvas.manager.set_window_title(f'Interpolated 2D Chi2 {data_set}')
     axes2 = np.ravel(axes2)
     for i, energy in enumerate(energies_data.fig2_data):
         cbar = axes2[i].pcolormesh(energies_data.fig2_data[energy]['X'], energies_data.fig2_data[energy]['Y'],
@@ -636,7 +635,8 @@ def plot_fit_base(pars, datasets_data):
     plt.axhline(0, color='black', ls='--')
     for data_set in pars.data_sets:
         plt.errorbar(datasets_data.energies[data_set], datasets_data.baselines[data_set],
-                     yerr=datasets_data.baselines_sd[data_set], marker='o', ls='none', label=data_set.upper())
+                     yerr=datasets_data.baselines_sd[data_set], marker='o', ls='none',
+                     label=pars.data_sets_labels[data_set])
     plt.legend()
     fig_fit_base.tight_layout()
 
@@ -672,7 +672,7 @@ def plot_comp_mins(pars, datasets_data):
             # ax.plot(df['mins'][0], df['spreads'][0], label=data_set)
             # ax.fill_betweenx(df['spreads'][0], df['mins'][0] - df['min_sd'][0], df['mins'][0] + df['min_sd'][0],
             #                  alpha=0.5)
-            ax.plot(mins, spreads, label=data_set)
+            ax.plot(mins, spreads, label=pars.data_sets_labels[data_set])
             ax.fill_betweenx(spreads, np.array(mins) - np.array(mins_sd), np.array(mins) + np.array(mins_sd), alpha=0.5)
         ax.set_ylim((0, 2.5))
         ax.set_xlim((0, 0.05))
