@@ -30,7 +30,8 @@ import istarmap
 
 def main():
     # bootstrap_validation()
-    resample_validation()
+    # resample_validation()
+    resample_with_nsamples()
     print('donzo')
 
 
@@ -45,7 +46,7 @@ def resample_validation():
     n_samples = [1, 3, 1440]
     n_events = np.arange(10, 2000, 10)
     bin_width = np.deg2rad(120)
-    experiments = 10
+    experiments = 100
     # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
     plot_out_base = 'F:/Research/Resample_POC/Resample_Validation/'
     plot_out_name = 'test3/'
@@ -137,8 +138,8 @@ def resample_with_nsamples():
     bin_width = np.deg2rad(120)
     experiments = 100
     # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
-    plot_out_base = 'D:/Research/Resample_POC/Resample_Validation/'
-    plot_out_name = 'test2/'
+    plot_out_base = 'F:/Research/Resample_POC/Resample_Validation/'
+    plot_out_name = 'test3_vs_nsample/'
     plot_out_dir = plot_out_base + plot_out_name
     try:
         os.mkdir(plot_out_dir)
@@ -228,8 +229,8 @@ def bootstrap_validation():
     bootstraps = 250
     experiments = 100
     # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
-    plot_out_base = 'D:/Research/Resample_POC/Bootstrap_Validation/'
-    plot_out_name = 'nsample1440_nevent100/'
+    plot_out_base = 'F:/Research/Resample_POC/Bootstrap_Validation/'
+    plot_out_name = 'nsample1440_nevent100_new/'
     plot_out_dir = plot_out_base + plot_out_name
     try:
         os.mkdir(plot_out_dir)
