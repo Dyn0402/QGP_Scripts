@@ -31,7 +31,8 @@ import istarmap
 def main():
     # bootstrap_validation()
     # resample_validation()
-    resample_with_nsamples()
+    # resample_with_nsamples()
+    comp_dists()
     print('donzo')
 
 
@@ -41,15 +42,16 @@ def resample_validation():
     :return:
     """
     seed = 1432
-    threads = 15
+    threads = 7
     n_tracks = 15
     n_samples = [1, 3, 1440]
     n_events = np.arange(10, 2000, 10)
     bin_width = np.deg2rad(120)
-    experiments = 100
+    experiments = 10
     # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
-    plot_out_base = 'F:/Research/Resample_POC/Resample_Validation/'
-    plot_out_name = 'test3/'
+    # plot_out_base = 'F:/Research/Resample_POC/Resample_Validation/'
+    plot_out_base = 'D:/Transfer/Research/Resample_POC/Resample_Validation/'
+    plot_out_name = 'test4/'
     plot_out_dir = plot_out_base + plot_out_name
     try:
         os.mkdir(plot_out_dir)
@@ -277,6 +279,59 @@ def bootstrap_validation():
         plt.show()
 
 
+def comp_dists():
+    seed = 1432
+    n_tracks = 15
+    n_samples = 1
+    n_events_sim = np.arange(1, 1e5, 100)
+    n_events_dist_plot = np.array([1e2, 1e3, 1e5], dtype=int)
+    bin_width = np.deg2rad(120)
+    plot_out_base = 'D:/Transfer/Research/Resample_POC/Visualizations/'
+    plot_out_name = 'test2/'
+    plot_out_dir = plot_out_base + plot_out_name
+    try:
+        os.mkdir(plot_out_dir)
+    except FileExistsError:
+        pass
+    show_plot = True
+    rng = np.random.default_rng(seed)  # Same string of number for all n_events! I want it like this here but be aware
+
+    fig, axs = plt.subplots(len(n_events_dist_plot), 1, sharex=True)
+    event_axes = dict(zip(n_events_dist_plot, axs))
+    plt.subplots_adjust(hspace=0)
+
+    for n_event in n_events_sim:
+        experiment = gen_experiment(n_event, n_tracks, rng)
+        hist = bin_experiment_no_bs(experiment, n_tracks, bin_width, n_samples)
+        data_stats = DistStats(hist)
+        stat_vals = {}
+        stat_errs_delta = {}
+        # for stat in stats_plt:
+        #     meas = stats[stat]['meth'](data_stats)
+        #     stat_vals.update({stat: meas.val})
+        #     stat_errs_delta.update({stat: meas.err})
+
+        if n_event in n_events_dist_plot:
+            ax = event_axes[n_event]
+            x = range(len(hist))
+            sns.histplot(x=x, weights=hist, discrete=True, kde=False, label='Simulation', ax=ax)
+            scatter = ax.scatter(x, np.sum(hist) * binom.pmf(x, n_tracks, bin_width / (2 * np.pi)), color='red',
+                                 marker='_', zorder=4)
+            if ax == axs[0]:
+                scatter.set_label('Binomial')
+                ax.legend()
+            ax.text(0.7, 0.1, f'{n_event} Events', fontsize=12, transform=ax.transAxes)
+            if ax == axs[-1]:
+                ax.set_xlabel('Particles in Bin')
+    fig.tight_layout()
+
+    if plot_out_dir is not None:
+        plt.savefig(f'{plot_out_dir}dists_vs_binom_with_nevents.png')
+
+    if show_plot:
+        plt.show()
+
+
 def gen_event(n_tracks):
     return np.random.random(n_tracks) * 2 * np.pi
 
@@ -350,7 +405,7 @@ def bin_experiment_no_bs(experiment, n_tracks, bin_width, samples):
     return data
 
 
-def plot_dist(data, n_tracks, bin_width, n_exp, out_dir):
+def plot_dist(data, n_tracks, bin_width, n_exp, out_dir=None):
     x = range(len(data))
     sns.displot(x=x, weights=data, discrete=True, kde=False, label='Simulation')
     plt.scatter(x, np.sum(data) * binom.pmf(x, n_tracks, bin_width / (2 * np.pi)), color='red', label='Binomial',
@@ -358,8 +413,9 @@ def plot_dist(data, n_tracks, bin_width, n_exp, out_dir):
     plt.title(f'Experiment #{n_exp} Distribution')
     plt.xlabel('Particles in Bin')
     plt.legend()
-    plt.savefig(f'{out_dir}Experiment_{n_exp}_dist.png', bbox_inches='tight')
-    plt.close()
+    if out_dir is not None:
+        plt.savefig(f'{out_dir}Experiment_{n_exp}_dist.png', bbox_inches='tight')
+        plt.close()
 
 
 def plot_bootstraps(bs_list, stat, exp_val, exp_err, binom_val, n_exp, out_dir):
