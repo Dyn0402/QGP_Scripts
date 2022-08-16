@@ -283,33 +283,40 @@ def comp_dists():
     seed = 1432
     n_tracks = 15
     n_samples = 1
-    n_events_sim = np.arange(1, 1e5, 100)
+    n_events_sim = np.arange(100, 1e5 + 1, 1000, dtype=int)
     n_events_dist_plot = np.array([1e2, 1e3, 1e5], dtype=int)
     bin_width = np.deg2rad(120)
+    stat_plt = 'standard deviation'
     plot_out_base = 'D:/Transfer/Research/Resample_POC/Visualizations/'
-    plot_out_name = 'test2/'
+    plot_out_name = 'test3/'
     plot_out_dir = plot_out_base + plot_out_name
     try:
         os.mkdir(plot_out_dir)
     except FileExistsError:
         pass
     show_plot = True
+
+    stats = define_stats(n_tracks, bin_width)
+
     rng = np.random.default_rng(seed)  # Same string of number for all n_events! I want it like this here but be aware
 
     fig, axs = plt.subplots(len(n_events_dist_plot), 1, sharex=True)
     event_axes = dict(zip(n_events_dist_plot, axs))
     plt.subplots_adjust(hspace=0)
 
+    fig_stat, ax_stat = plt.subplots()
+    stat_vals, stat_errs = [], []
+    ax_stat.set_xlabel('Number of Events')
+    ax_stat.set_ylabel(stat_plt)
+
     for n_event in n_events_sim:
+        print(n_event)
         experiment = gen_experiment(n_event, n_tracks, rng)
         hist = bin_experiment_no_bs(experiment, n_tracks, bin_width, n_samples)
         data_stats = DistStats(hist)
-        stat_vals = {}
-        stat_errs_delta = {}
-        # for stat in stats_plt:
-        #     meas = stats[stat]['meth'](data_stats)
-        #     stat_vals.update({stat: meas.val})
-        #     stat_errs_delta.update({stat: meas.err})
+        stat_meas = stats[stat_plt]['meth'](data_stats)
+        stat_vals.append(stat_meas.val)
+        stat_errs.append(stat_meas.err)
 
         if n_event in n_events_dist_plot:
             ax = event_axes[n_event]
@@ -325,8 +332,14 @@ def comp_dists():
                 ax.set_xlabel('Particles in Bin')
     fig.tight_layout()
 
+    ax_stat.axhline(stats[stat_plt]['true'], ls='--', color='red', label='Binomial')
+    ax_stat.errorbar(n_events_sim, stat_vals, yerr=stat_errs, ls='none', marker='o', label='Simulation')
+    ax_stat.legend()
+    fig_stat.tight_layout()
+
     if plot_out_dir is not None:
-        plt.savefig(f'{plot_out_dir}dists_vs_binom_with_nevents.png')
+        fig.savefig(f'{plot_out_dir}dists_vs_binom_with_nevents.png')
+        fig_stat.savefig(f'{plot_out_dir}sd_vs_events.png')
 
     if show_plot:
         plt.show()
