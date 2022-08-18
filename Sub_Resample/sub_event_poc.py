@@ -287,7 +287,7 @@ def comp_dists():
     n_events_dist_plot = np.array([1e2, 1e3, 1e5], dtype=int)
     bin_width = np.deg2rad(120)
     stat_plt = 'standard deviation'
-    plot_out_base = 'D:/Transfer/Research/Resample_POC/Visualizations/'
+    plot_out_base = 'E:/Transfer/Research/Resample_POC/Visualizations/'
     plot_out_name = 'test3/'
     plot_out_dir = plot_out_base + plot_out_name
     try:
@@ -305,9 +305,17 @@ def comp_dists():
     plt.subplots_adjust(hspace=0)
 
     fig_stat, ax_stat = plt.subplots()
-    stat_vals, stat_errs = [], []
+    stat_vals, stat_errs, stat_meases = [], [], []
     ax_stat.set_xlabel('Number of Events')
     ax_stat.set_ylabel(stat_plt)
+
+    fig_dev, ax_dev = plt.subplots()
+    ax_dev.set_xlabel('Number of Events')
+    ax_dev.set_ylabel(f'{stat_plt} deviation from binomial')
+
+    fig_dev_abs, ax_dev_abs = plt.subplots()
+    ax_dev_abs.set_xlabel('Number of Events')
+    ax_dev_abs.set_ylabel(f'{stat_plt} abs deviation from binomial')
 
     for n_event in n_events_sim:
         print(n_event)
@@ -315,6 +323,7 @@ def comp_dists():
         hist = bin_experiment_no_bs(experiment, n_tracks, bin_width, n_samples)
         data_stats = DistStats(hist)
         stat_meas = stats[stat_plt]['meth'](data_stats)
+        stat_meases.append(stat_meas)
         stat_vals.append(stat_meas.val)
         stat_errs.append(stat_meas.err)
 
@@ -330,6 +339,18 @@ def comp_dists():
             ax.text(0.7, 0.1, f'{n_event} Events', fontsize=12, transform=ax.transAxes)
             if ax == axs[-1]:
                 ax.set_xlabel('Particles in Bin')
+
+    devs = np.power(np.array(stat_vals) - stats[stat_plt]['true'], 2)
+    devs_err = np.power(np.array(stat_meases) - stats[stat_plt]['true'], 2)
+    devs_err = [x.err for x in devs_err]
+    devs_abs = np.abs(np.array(stat_vals) - stats[stat_plt]['true'])
+
+    ax_dev.axhline(0, color='black')
+    ax_dev_abs.axhline(0, color='black')
+
+    ax_dev.errorbar(n_events_sim, devs, yerr=devs_err, marker='o', ls='none')
+    ax_dev_abs.errorbar(n_events_sim, devs_abs, yerr=stat_errs, marker='o', ls='none')
+
     fig.tight_layout()
 
     ax_stat.axhline(stats[stat_plt]['true'], ls='--', color='red', label='Binomial')
