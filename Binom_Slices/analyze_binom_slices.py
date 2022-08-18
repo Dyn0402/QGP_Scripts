@@ -597,20 +597,20 @@ def plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels):
     fig_curve_energy, ax_curve_energy = plt.subplots()
     ax_curve_energy.set_xlabel('Energy (GeV)')
     ax_curve_energy.set_ylabel('Curvature')
-    ax_curve_energy.ax_hline(0, ls='--', color='gray')
+    ax_curve_energy.axhline(0)
     fig_curve_energy.canvas.manager.set_window_title('Slope Curvature vs Energy')
 
     fig_base_energy, ax_base_energy = plt.subplots()
     ax_base_energy.set_xlabel('Energy (GeV)')
     ax_base_energy.set_ylabel('Baseline')
-    ax_base_energy.ax_hline(0, ls='--', color='gray')
+    ax_base_energy.axhline(0)
     fig_base_energy.canvas.manager.set_window_title('Slope Baseline vs Energy')
 
     fig_base_curve, ax_base_curve = plt.subplots()
     ax_base_curve.set_xlabel('Curvature')
     ax_base_curve.set_ylabel('Baseline')
-    ax_base_curve.ax_vline(0, ls='--', color='gray')
-    ax_base_curve.ax_hline(0, ls='--', color='gray')
+    ax_base_curve.axvline(0)
+    ax_base_curve.axhline(0)
     fig_base_curve.canvas.manager.set_window_title('Slope Baseline vs Curvature')
 
     colors = ['black', 'red', 'blue', 'green', 'purple', 'orange']
@@ -637,6 +637,10 @@ def plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels):
     ax_curve_energy.legend()
     ax_base_energy.legend()
     ax_base_curve.legend()
+
+    fig_base_curve.tight_layout()
+    fig_base_energy.tight_layout()
+    fig_curve_energy.tight_layout()
 
 
 def plot_protons_fits_sim(df):
