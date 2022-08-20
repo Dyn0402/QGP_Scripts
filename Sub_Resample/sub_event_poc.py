@@ -280,7 +280,8 @@ def bootstrap_validation():
 
 
 def comp_dists():
-    seed = 1432
+    threads = 14
+    seed_0 = 1432
     n_tracks = 15
     n_samples = 1
     n_events_sim = np.arange(100, 1e5 + 1, 1000, dtype=int)
@@ -298,69 +299,86 @@ def comp_dists():
 
     stats = define_stats(n_tracks, bin_width)
 
-    rng = np.random.default_rng(seed)  # Same string of number for all n_events! I want it like this here but be aware
+    n_events_sim = np.array(sorted([*set(list(n_events_sim) + list(n_events_dist_plot))]))
 
-    fig, axs = plt.subplots(len(n_events_dist_plot), 1, sharex=True)
-    event_axes = dict(zip(n_events_dist_plot, axs))
-    plt.subplots_adjust(hspace=0)
+    # Same string of number for all experiments! I want it like this here to show filling of one experiment but be aware
+    seeds_repeat = [seed_0 for n_event in n_events_sim]
+    # Independent and uncorrlated seeds for each experiment
+    seeds_indep = iter(np.random.SeedSequence(seed_0).spawn(len(n_events_sim)))
 
-    fig_stat, ax_stat = plt.subplots()
-    stat_vals, stat_errs, stat_meases = [], [], []
-    ax_stat.set_xlabel('Number of Events')
-    ax_stat.set_ylabel(stat_plt)
+    for seeds, exp_name in zip([seeds_repeat, seeds_indep], ['Single_Exp', 'Independent_Exps']):
+        print(f'Starting {exp_name}')
+        fig, axs = plt.subplots(len(n_events_dist_plot), 1, sharex=True)
+        event_axes = dict(zip(n_events_dist_plot, axs))
+        plt.subplots_adjust(hspace=0)
 
-    fig_dev, ax_dev = plt.subplots()
-    ax_dev.set_xlabel('Number of Events')
-    ax_dev.set_ylabel(f'{stat_plt} deviation from binomial')
+        fig_stat, ax_stat = plt.subplots()
+        ax_stat.set_xlabel('Number of Events')
+        ax_stat.set_ylabel(stat_plt)
 
-    fig_dev_abs, ax_dev_abs = plt.subplots()
-    ax_dev_abs.set_xlabel('Number of Events')
-    ax_dev_abs.set_ylabel(f'{stat_plt} abs deviation from binomial')
+        # fig_dev, ax_dev = plt.subplots()
+        # ax_dev.set_xlabel('Number of Events')
+        # ax_dev.set_ylabel(f'{stat_plt} deviation from binomial')
 
-    for n_event in n_events_sim:
-        print(n_event)
-        experiment = gen_experiment(n_event, n_tracks, rng)
-        hist = bin_experiment_no_bs(experiment, n_tracks, bin_width, n_samples)
-        data_stats = DistStats(hist)
-        stat_meas = stats[stat_plt]['meth'](data_stats)
-        stat_meases.append(stat_meas)
-        stat_vals.append(stat_meas.val)
-        stat_errs.append(stat_meas.err)
+        fig_dev_abs, ax_dev_abs = plt.subplots()
+        ax_dev_abs.set_xlabel('Number of Events')
+        ax_dev_abs.set_ylabel(r'$|\sigma_{data} - \sigma_{binomial}|$')
 
-        if n_event in n_events_dist_plot:
-            ax = event_axes[n_event]
-            x = range(len(hist))
-            sns.histplot(x=x, weights=hist, discrete=True, kde=False, label='Simulation', ax=ax)
-            scatter = ax.scatter(x, np.sum(hist) * binom.pmf(x, n_tracks, bin_width / (2 * np.pi)), color='red',
-                                 marker='_', zorder=4)
-            if ax == axs[0]:
-                scatter.set_label('Binomial')
-                ax.legend()
-            ax.text(0.7, 0.1, f'{n_event} Events', fontsize=12, transform=ax.transAxes)
-            if ax == axs[-1]:
-                ax.set_xlabel('Particles in Bin')
+        jobs = []
+        for n_event, seed in zip(n_events_sim, seeds):
+            jobs.append((n_tracks, n_event, bin_width, n_samples, stats, [stat_plt], seed))
 
-    devs = np.power(np.array(stat_vals) - stats[stat_plt]['true'], 2)
-    devs_err = np.power(np.array(stat_meases) - stats[stat_plt]['true'], 2)
-    devs_err = [x.err for x in devs_err]
-    devs_abs = np.abs(np.array(stat_vals) - stats[stat_plt]['true'])
+            if n_event in n_events_dist_plot:
+                rng = np.random.default_rng(seed)
+                experiment = gen_experiment(n_event, n_tracks, rng)
+                hist = bin_experiment_no_bs(experiment, n_tracks, bin_width, n_samples)
+                ax = event_axes[n_event]
+                x = range(len(hist))
+                sns.histplot(x=x, weights=hist, discrete=True, kde=False, label='Simulation', ax=ax)
+                scatter = ax.scatter(x, np.sum(hist) * binom.pmf(x, n_tracks, bin_width / (2 * np.pi)), color='red',
+                                     marker='_', zorder=4)
+                if ax == axs[0]:
+                    scatter.set_label('Binomial')
+                    ax.legend()
+                ax.text(0.7, 0.1, f'{n_event} Events', fontsize=12, transform=ax.transAxes)
+                if ax == axs[-1]:
+                    ax.set_xlabel('Particles in Bin')
 
-    ax_dev.axhline(0, color='black')
-    ax_dev_abs.axhline(0, color='black')
+        stat_vals, stat_errs, stat_meases = [], [], []
+        with Pool(threads) as pool:
+            for n_exp, samples, n_events, stats_vals, stats_errs_delta in \
+                    tqdm.tqdm(pool.istarmap(run_experiment_no_bs, jobs), total=len(jobs)):
+                stat_meases.append(Measure(stats_vals[stat_plt], stats_errs_delta[stat_plt]))
+                stat_vals.append(stats_vals[stat_plt])
+                stat_errs.append(stats_errs_delta[stat_plt])
 
-    ax_dev.errorbar(n_events_sim, devs, yerr=devs_err, marker='o', ls='none')
-    ax_dev_abs.errorbar(n_events_sim, devs_abs, yerr=stat_errs, marker='o', ls='none')
+        devs = np.power(np.array(stat_vals) - stats[stat_plt]['true'], 2)
+        devs_err = np.power(np.array(stat_meases) - stats[stat_plt]['true'], 2)
+        devs_err = [x.err for x in devs_err]
+        devs_abs = np.abs(np.array(stat_vals) - stats[stat_plt]['true'])
 
-    fig.tight_layout()
+        # ax_dev.axhline(0, color='black')
+        ax_dev_abs.axhline(0, color='black')
 
-    ax_stat.axhline(stats[stat_plt]['true'], ls='--', color='red', label='Binomial')
-    ax_stat.errorbar(n_events_sim, stat_vals, yerr=stat_errs, ls='none', marker='o', label='Simulation')
-    ax_stat.legend()
-    fig_stat.tight_layout()
+        # ax_dev.errorbar(n_events_sim, devs, yerr=devs_err, marker='o', ls='none')
+        ax_dev_abs.errorbar(n_events_sim, devs_abs, yerr=stat_errs, marker='o', ls='none')
 
-    if plot_out_dir is not None:
-        fig.savefig(f'{plot_out_dir}dists_vs_binom_with_nevents.png')
-        fig_stat.savefig(f'{plot_out_dir}sd_vs_events.png')
+        ax_stat.axhline(stats[stat_plt]['true'], ls='--', color='red', label='Binomial')
+        ax_stat.errorbar(n_events_sim, stat_vals, yerr=stat_errs, ls='none', marker='o', label='Simulation')
+        ax_stat.legend()
+
+        fig_names = {
+            fig: f'dists_vs_binom_with_nevents_{exp_name}',
+            fig_stat: f'sd_vs_events_{exp_name}',
+            # fig_dev: f'sd_dev2_vs_events_{exp_name}',
+            fig_dev_abs: f'sd_devabs_vs_events_{exp_name}',
+        }
+
+        for fig_obj, fig_name in fig_names.items():
+            fig_obj.canvas.manager.set_window_title(fig_name)
+            fig_obj.tight_layout()
+            if plot_out_dir is not None:
+                fig_obj.savefig(f'{plot_out_dir}{fig_name}.png')
 
     if show_plot:
         plt.show()
