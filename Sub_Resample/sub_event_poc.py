@@ -32,7 +32,8 @@ def main():
     # bootstrap_validation()
     # resample_validation()
     # resample_with_nsamples()
-    comp_dists()
+    # correlated_dists()
+    multiple_exps_dist()
     print('donzo')
 
 
@@ -279,7 +280,7 @@ def bootstrap_validation():
         plt.show()
 
 
-def comp_dists():
+def correlated_dists():
     threads = 14
     seed_0 = 1432
     n_tracks = 15
@@ -379,6 +380,88 @@ def comp_dists():
             fig_obj.tight_layout()
             if plot_out_dir is not None:
                 fig_obj.savefig(f'{plot_out_dir}{fig_name}.png')
+
+    if show_plot:
+        plt.show()
+
+
+def multiple_exps_dist():
+    threads = 8
+    seed_0 = 1432
+    n_tracks = 15
+    n_samples = 1
+    n_events = np.array([100, 1e3, 1e5], dtype=int)
+    n_experiments = 10
+    bin_width = np.deg2rad(120)
+    stat_plt = 'standard deviation'
+    plot_out_base = 'D:/Transfer/Research/Resample_POC/Visualizations/'
+    plot_out_name = 'test4/'
+    plot_out_dir = plot_out_base + plot_out_name
+    try:
+        os.mkdir(plot_out_dir)
+    except FileExistsError:
+        pass
+    show_plot = True
+
+    stats = define_stats(n_tracks, bin_width)
+
+    # Independent and uncorrlated seeds for each experiment
+    seeds = iter(np.random.SeedSequence(seed_0).spawn(n_experiments * len(n_events)))
+
+    # print(f'Starting {exp_name}')
+    fig, axs = plt.subplots(len(n_events), 1, sharex=True)
+    event_axes = dict(zip(n_events, axs))
+    plt.subplots_adjust(hspace=0)
+
+    fig_abs, axs_abs = plt.subplots(len(n_events), 1, sharex=True)
+    event_axes_abs = dict(zip(n_events, axs_abs))
+    plt.subplots_adjust(hspace=0)
+
+    jobs = [(n_tracks, n_event, bin_width, n_samples, stats, [stat_plt], next(seeds), n_exp)
+            for n_exp in range(n_experiments) for n_event in n_events]
+
+    # run_experiment_no_bs(*jobs[0])
+
+    stat_vals = {n_event: [] for n_event in n_events}
+    with Pool(threads) as pool:
+        for n_exp, n_sample, n_event, stats_vals, stats_errs_delta in \
+                tqdm.tqdm(pool.istarmap(run_experiment_no_bs, jobs), total=len(jobs)):
+            stat_vals[n_event].append(stats_vals[stat_plt])
+
+    for n_event in n_events:
+        ax = event_axes[n_event]
+        sns.histplot(x=stat_vals[n_event], kde=False, label='Simulation', ax=ax)
+        mean = np.mean(stat_vals[n_event])
+        sd = np.std(stat_vals[n_event])
+        sem = sd / np.sqrt(n_experiments)
+        ax.axvline(stats[stat_plt]['true'], ls='--', color='red', label='Binomial')
+        ax.axvline(mean, color='gray', label='mean')
+        ax.axvspan(mean - sd, mean + sd, color='gray', alpha=0.3, label='Standard Deviation')
+        ax.axvspan(mean - sem, mean + sem, color='gray', alpha=0.5, label='Error on the Mean')
+        if ax == axs[-1]:
+            ax.legend(loc='upper left')
+        ax.text(0.75, 0.35, f'{n_event} Events', fontsize=12, transform=ax.transAxes)
+        if ax == axs[-1]:
+            ax.set_xlabel('Particles in Bin')
+
+        ax = event_axes_abs[n_event]
+        abs_vals = abs(np.array(stat_vals[n_event]) - stats[stat_plt]['true'])
+        sns.histplot(x=abs_vals, kde=False, label='Simulation', ax=ax)
+        mean = np.mean(abs_vals)
+        sd = np.std(abs_vals)
+        sem = sd / np.sqrt(n_experiments)
+        ax.axvline(0)
+        ax.axvline(mean, color='gray', label='mean')
+        ax.axvspan(mean - sd, mean + sd, color='gray', alpha=0.3, label='Standard Deviation')
+        ax.axvspan(mean - sem, mean + sem, color='gray', alpha=0.5, label='Error on the Mean')
+        if ax == axs[-1]:
+            ax.legend(loc='upper left')
+        ax.text(0.75, 0.35, f'{n_event} Events', fontsize=12, transform=ax.transAxes)
+        if ax == axs[-1]:
+            ax.set_xlabel('Particles in Bin')
+
+    fig.tight_layout()
+    fig_abs.tight_layout()
 
     if show_plot:
         plt.show()
