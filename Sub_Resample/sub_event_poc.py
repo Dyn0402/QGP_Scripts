@@ -30,10 +30,10 @@ import istarmap
 
 def main():
     # bootstrap_validation()
-    # resample_validation()
+    resample_validation()
     # resample_with_nsamples()
     # correlated_dists()
-    multiple_exps_dist()
+    # multiple_exps_dist()
     print('donzo')
 
 
@@ -45,8 +45,9 @@ def resample_validation():
     seed = 1432
     threads = 7
     n_tracks = 15
-    n_samples = [1, 3, 1440]
-    n_events = np.arange(10, 2000, 10)
+    # n_samples = [1, 3, 1440]
+    n_samples = [1]
+    n_events = np.arange(100, 2000, 10)
     bin_width = np.deg2rad(120)
     experiments = 10
     # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
@@ -62,7 +63,8 @@ def resample_validation():
 
     stats = define_stats(n_tracks, bin_width)
 
-    stats_plt = ['standard deviation', 'skewness', 'non-excess kurtosis']
+    # stats_plt = ['standard deviation', 'skewness', 'non-excess kurtosis']
+    stats_plt = ['standard deviation']
 
     write_info_file(plot_out_dir, threads, n_tracks, n_samples, n_events, bin_width, 'resample_validiation',
                     experiments, stats_plt)
@@ -93,18 +95,21 @@ def resample_validation():
         ax.grid()
         ax_del.grid()
         ax.axhline(stats[stat]['true'], ls='--', color='black', label='True Binomial Value')
+        ax_del.axhline(0, color='black')
         for n_sample in n_samples:
             c = next(color)
             nsample_df = stat_df[stat_df['n_samples'] == n_sample]
             n_events = pd.unique(nsample_df['n_events'])
-            means, sds, sems, deltas, delta_sems = [], [], [], [], []
+            means, sds, sems, deltas, delta_sems, delta_sds = [], [], [], [], [], []
             for n_event in n_events:
                 vals = nsample_df[nsample_df['n_events'] == n_event]['val']
                 means.append(np.mean(vals))
                 sds.append(np.std(vals))
                 sems.append(sds[-1] / np.sqrt(vals.size))
-                delts = np.power(vals - stats[stat]['true'], 2)
+                # delts = np.power(vals - stats[stat]['true'], 2)
+                delts = np.abs(vals - stats[stat]['true'])
                 deltas.append(np.sum(delts) / vals.size)
+                delta_sds.append(np.std(delts))
                 delta_sems.append(np.std(delts) / np.sqrt(vals.size))
             means, sds, sems, deltas, delta_sems = (np.array(x) for x in (means, sds, sems, deltas, delta_sems))
             ax.plot(n_events, means, label=f'{n_sample} samples', color=c)
@@ -112,7 +117,9 @@ def resample_validation():
             ax.fill_between(n_events, means - sds, means + sds, color=c, alpha=0.1)
             ax_del.plot(n_events, deltas, label=f'{n_sample} samples', color=c)
             ax_del.fill_between(n_events, deltas - delta_sems, deltas + delta_sems, color=c, alpha=0.5)
+            ax_del.fill_between(n_events, deltas - delta_sds, deltas + delta_sds, color=c, alpha=0.1)
         ax.set_xlabel('Number of Events')
+        # ax.set_ylabel('')
         ax.legend()
         ax.set_title(stat)
         fig.tight_layout()
@@ -440,9 +447,8 @@ def multiple_exps_dist():
         ax.axvspan(mean - sem, mean + sem, color='gray', alpha=0.5, label='Error on the Mean')
         if ax == axs[-1]:
             ax.legend(loc='upper left')
+            ax.set_xlabel('Standard Deviation of Distribution')
         ax.text(0.75, 0.35, f'{n_event} Events', fontsize=12, transform=ax.transAxes)
-        if ax == axs[-1]:
-            ax.set_xlabel('Particles in Bin')
 
         ax = event_axes_abs[n_event]
         abs_vals = abs(np.array(stat_vals[n_event]) - stats[stat_plt]['true'])
@@ -450,18 +456,22 @@ def multiple_exps_dist():
         mean = np.mean(abs_vals)
         sd = np.std(abs_vals)
         sem = sd / np.sqrt(n_experiments)
-        ax.axvline(0)
+        ax.axvline(0, color='black')
         ax.axvline(mean, color='gray', label='mean')
         ax.axvspan(mean - sd, mean + sd, color='gray', alpha=0.3, label='Standard Deviation')
         ax.axvspan(mean - sem, mean + sem, color='gray', alpha=0.5, label='Error on the Mean')
-        if ax == axs[-1]:
-            ax.legend(loc='upper left')
-        ax.text(0.75, 0.35, f'{n_event} Events', fontsize=12, transform=ax.transAxes)
-        if ax == axs[-1]:
-            ax.set_xlabel('Particles in Bin')
+        if ax == axs_abs[-1]:
+            ax.legend(loc='upper right')
+            ax.set_xlabel(r'$|\sigma - \sigma_{binom}|$')
+            ax.text(0.3, 0.35, f'{n_event} Events', fontsize=12, transform=ax.transAxes)
+        else:
+            ax.text(0.75, 0.35, f'{n_event} Events', fontsize=12, transform=ax.transAxes)
 
     fig.tight_layout()
     fig_abs.tight_layout()
+
+    fig.savefig(f'{plot_out_dir}nexperiment_sd_dists.png')
+    fig_abs.savefig(f'{plot_out_dir}nexperiment_absdev_dists.png')
 
     if show_plot:
         plt.show()
