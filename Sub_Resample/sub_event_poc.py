@@ -18,6 +18,7 @@ from scipy.stats import norm
 from scipy.stats import binom
 from scipy.stats import sem
 import os
+from itertools import product
 from multiprocessing import Pool
 import tqdm
 
@@ -29,11 +30,11 @@ import istarmap
 
 
 def main():
-    # bootstrap_validation()
     resample_validation()
     # resample_with_nsamples()
     # correlated_dists()
     # multiple_exps_dist()
+    # bootstrap_validation()
     print('donzo')
 
 
@@ -43,16 +44,17 @@ def resample_validation():
     :return:
     """
     seed = 1432
-    threads = 7
-    n_tracks = 15
+    threads = 15
+    n_tracks = [15]
     # n_samples = [1, 3, 1440]
-    n_samples = [1]
+    n_samples = [1, 360, 1440, 7200]
     n_events = np.arange(100, 2000, 10)
-    bin_width = np.deg2rad(120)
+    bin_widths = np.deg2rad([60, 120, 180])
+    print(bin_widths)
     experiments = 10
     # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
     # plot_out_base = 'F:/Research/Resample_POC/Resample_Validation/'
-    plot_out_base = 'D:/Transfer/Research/Resample_POC/Resample_Validation/'
+    plot_out_base = 'E:/Transfer/Research/Resample_POC/Resample_Validation/'
     plot_out_name = 'test4/'
     plot_out_dir = plot_out_base + plot_out_name
     try:
@@ -61,32 +63,174 @@ def resample_validation():
         pass
     show_plot = True
 
-    stats = define_stats(n_tracks, bin_width)
+    stats = {bin_width: {n_track: define_stats(n_tracks, bin_width) for n_track in n_tracks} for bin_width in bin_widths}
 
     # stats_plt = ['standard deviation', 'skewness', 'non-excess kurtosis']
     stats_plt = ['standard deviation']
 
-    write_info_file(plot_out_dir, threads, n_tracks, n_samples, n_events, bin_width, 'resample_validiation',
+    write_info_file(plot_out_dir, threads, n_tracks, n_samples, n_events, bin_widths, 'resample_validiation',
                     experiments, stats_plt)
 
-    # jobs = [(n_tracks, n_event, bin_width, n_sample, 0, stats, stats_plt, n_exp, False, plot_out_dir)
-    #         for n_exp in range(experiments) for n_sample in n_samples for n_event in n_events]
-
-    seeds = iter(np.random.SeedSequence(seed).spawn(experiments * len(n_events) * len(n_samples)))
+    num_indep_exps = experiments * len(n_events) * len(n_samples) * len(n_tracks) * len(bin_widths)
+    seeds = iter(np.random.SeedSequence(seed).spawn(num_indep_exps))
     plot_data = []
 
-    jobs = [(n_tracks, n_event, bin_width, n_sample, stats, stats_plt, next(seeds), n_exp)
-            for n_exp in range(experiments) for n_event in n_events for n_sample in n_samples]
+    jobs = [(n_track, n_event, bin_width, n_sample, stats[bin_width], stats_plt, next(seeds), n_exp)
+            for n_exp in range(experiments) for n_event in n_events for n_sample in n_samples
+            for bin_width in bin_widths for n_track in n_tracks]
 
     with Pool(threads) as pool:
         for exp_stat in tqdm.tqdm(pool.istarmap(run_experiment_no_bs, jobs), total=len(jobs)):
-            n_exp, n_samples_exp, n_events_exp, stat_vals, stat_errs_delta = exp_stat
+            n_exp, n_samples_exp, n_events_exp, bin_width, n_track, stat_vals, stat_errs_delta = exp_stat
             for stat, val in stat_vals.items():
-                plot_data.append({'n_exp': n_exp, 'stat': stat, 'val': val, 'delta_err': stat_errs_delta[stat],
-                                  'n_samples': n_samples_exp, 'n_events': n_events_exp})
+                plot_data.append({'stat': stat, 'n_exp': n_exp, 'n_samples': n_samples_exp, 'n_events': n_events_exp,
+                                  'n_tracks': n_track, 'bin_width': bin_width, 'val': val,
+                                  'delta_err': stat_errs_delta[stat],
+                                  })
 
     plot_data = pd.DataFrame(plot_data)
 
+    plot_vs_nevents(plot_data, stats_plt, stats, 'n_samples', plot_out_dir)
+
+    if show_plot:
+        plt.show()
+
+
+def plot_vs_nevents(plot_data, stats_plt, stats, indep_var, plot_out_dir):
+    for stat in stats_plt:
+        color = iter(get_cmap('Set1').colors)
+        color_binom = iter(get_cmap('tab20b').colors)
+        stat_df = plot_data[plot_data['stat'] == stat]
+        fig, ax = plt.subplots()
+        fig_del, ax_del = plt.subplots()
+        ax.grid()
+        ax_del.grid()
+        ax_del.axhline(0, color='black')
+
+        # Assume here a square lattice
+        # indep_var = 'n_events'
+        indep_vals = pd.unique(plot_data[indep_var])
+
+        var_string_consts = {
+            'n_tracks': {'x-label': 'Number of Tracks', 'legend': ' tracks'},
+            'bin_width': {'x-label': 'Azimuthal Partition Width', 'legend': '° width'},
+            'n_events': {'x-label': 'Number of Events', 'legend': ' events'},
+            'n_samples': {'x-label': 'Number of Samples', 'legend': ' samples'}}
+
+        set_vars = var_string_consts.keys()
+
+        set_vars.remove(indep_var)
+        uniques = [pd.unique(stat_df[var]) for var in set_vars]
+        set_combos = product(*uniques.values())
+
+        if indep_var != 'bin_width:':
+            for bin_width in zip(set_vars, uniques)['bin_width']:
+                label = f'{np.rad2deg(bin_width)}° Binomial Value'
+                c = next(color_binom)
+                ax.axhline(stats[bin_width][stat]['true'], ls='--', color=c, label=label)
+
+        for set_var_vals in set_combos:
+            set_var_vals = zip(set_vars, set_var_vals)
+            set_df = stat_df
+            for var, var_val in set_var_vals.items():
+                set_df = set_df[set_df[var] == var_val]
+
+            c = next(color)
+            means, sds, sems, deltas, delta_sems, delta_sds = [], [], [], [], [], []
+            for indep_val in indep_vals:
+                vals = set_df[set_df[indep_var] == indep_val]['val']
+                means.append(np.mean(vals))
+                sds.append(np.std(vals))
+                sems.append(sds[-1] / np.sqrt(vals.size))
+                # delts = np.power(vals - stats[stat]['true'], 2)
+                binom_val = stats[set_var_vals['bin_width']][stat]['true'] if indep_var != 'bin_width' \
+                    else stats[indep_val][stat]['true']
+                delts = np.abs(vals - binom_val)
+                deltas.append(np.sum(delts) / vals.size)
+                delta_sds.append(np.std(delts))
+                delta_sems.append(np.std(delts) / np.sqrt(vals.size))
+            means, sds, sems, deltas, delta_sems = (np.array(x) for x in (means, sds, sems, deltas, delta_sems))
+
+            label = []
+            for var in set_vars:
+                if len(uniques[var]) > 1:
+                    val = set_var_vals[var] if var != 'bin_width' else np.rad2deg(set_var_vals[var])
+                    label.append(f'{val}{var_string_consts[var]["legend"]}')
+            label = ', '.join(label)
+            ax.plot(indep_vals, means, label=label, color=c)
+            ax.fill_between(indep_vals, means - sems, means + sems, color=c, alpha=0.6)
+            ax.fill_between(indep_vals, means - sds, means + sds, color=c, alpha=0.1)
+            ax_del.plot(indep_vals, deltas, label=label, color=c)
+            ax_del.fill_between(indep_vals, deltas - delta_sems, deltas + delta_sems, color=c, alpha=0.5)
+            ax_del.fill_between(indep_vals, deltas - delta_sds, deltas + delta_sds, color=c, alpha=0.1)
+        ax.set_xlabel(var_string_consts[var]['x-label'])
+        # ax.set_ylabel('')
+        ax.legend()
+        ax.set_title(stat)
+        ax_del.set_xlabel(var_string_consts[var]['x-label'])
+        ax_del.legend()
+        ax_del.set_title(f'{stat} Deviations vs {var_string_consts[var]["x-label"]}')
+
+        fig_names = {
+            fig: f'{stat}_vs_nevents',
+            fig_del: f'{stat}_absdev_vs_nevents',
+        }
+
+        for fig_obj, fig_name in fig_names.items():
+            fig_obj.tight_layout()
+            fig_obj.canvas.manager.set_window_title(fig_name)
+            fig_obj.savefig(f'{plot_out_dir}{fig_name}.png', bbox_inches='tight')
+
+        # for n_sample in n_samples:
+        #     nsample_df = stat_df[stat_df['n_samples'] == n_sample]
+        #     bin_widths = pd.unique(nsample_df['bin_width'])
+        #     for bin_width in bin_widths:
+        #         binwidth_df = nsample_df[nsample_df['bin_width'] == bin_width]
+        #         n_tracks = pd.unique(binwidth_df['n_tracks'])
+        #         for n_track in n_tracks:
+        #             ntracks_df = binwidth_df[binwidth_df['n_tracks'] == n_track]
+        #             n_events = pd.unique(ntracks_df['n_events'])
+        #
+        #             c = next(color)
+        #             means, sds, sems, deltas, delta_sems, delta_sds = [], [], [], [], [], []
+        #             for n_event in n_events:
+        #                 vals = binwidth_df[binwidth_df['n_events'] == n_event]['val']
+        #                 means.append(np.mean(vals))
+        #                 sds.append(np.std(vals))
+        #                 sems.append(sds[-1] / np.sqrt(vals.size))
+        #                 # delts = np.power(vals - stats[stat]['true'], 2)
+        #                 delts = np.abs(vals - stats[stat]['true'])
+        #                 deltas.append(np.sum(delts) / vals.size)
+        #                 delta_sds.append(np.std(delts))
+        #                 delta_sems.append(np.std(delts) / np.sqrt(vals.size))
+        #             means, sds, sems, deltas, delta_sems = (np.array(x) for x in (means, sds, sems, deltas, delta_sems))
+        #             label = ', '.join([zip([n_samples, bin_width, n_track], [len()])])
+        #             ax.plot(n_events, means, label=f'{n_sample} samples', color=c)
+        #             ax.fill_between(n_events, means - sems, means + sems, color=c, alpha=0.6)
+        #             ax.fill_between(n_events, means - sds, means + sds, color=c, alpha=0.1)
+        #             ax_del.plot(n_events, deltas, label=f'{n_sample} samples', color=c)
+        #             ax_del.fill_between(n_events, deltas - delta_sems, deltas + delta_sems, color=c, alpha=0.5)
+        #             ax_del.fill_between(n_events, deltas - delta_sds, deltas + delta_sds, color=c, alpha=0.1)
+        # ax.set_xlabel('Number of Events')
+        # # ax.set_ylabel('')
+        # ax.legend()
+        # ax.set_title(stat)
+        # ax_del.set_xlabel('Number of Events')
+        # ax_del.legend()
+        # ax_del.set_title(f'{stat} Deviations vs Number of Events')
+        #
+        # fig_names = {
+        #     fig: f'{stat}_vs_nevents',
+        #     fig_del: f'{stat}_absdev_vs_nevents',
+        # }
+        #
+        # for fig_obj, fig_name in fig_names.items():
+        #     fig_obj.tight_layout()
+        #     fig_obj.canvas.manager.set_window_title(fig_name)
+        #     fig_obj.savefig(f'{plot_out_dir}{fig_name}.png', bbox_inches='tight')
+
+
+def plot_vs_nsamples(plot_data, stats_plt, stats, n_events, plot_out_dir):
     for stat in stats_plt:
         color = iter(get_cmap('Set1').colors)
         stat_df = plot_data[plot_data['stat'] == stat]
@@ -96,13 +240,13 @@ def resample_validation():
         ax_del.grid()
         ax.axhline(stats[stat]['true'], ls='--', color='black', label='True Binomial Value')
         ax_del.axhline(0, color='black')
-        for n_sample in n_samples:
+        for n_event in n_events:
             c = next(color)
-            nsample_df = stat_df[stat_df['n_samples'] == n_sample]
-            n_events = pd.unique(nsample_df['n_events'])
+            nevent_df = stat_df[stat_df['n_events'] == n_event]
+            n_samples = pd.unique(nevent_df['n_samples'])
             means, sds, sems, deltas, delta_sems, delta_sds = [], [], [], [], [], []
-            for n_event in n_events:
-                vals = nsample_df[nsample_df['n_events'] == n_event]['val']
+            for n_sample in n_samples:
+                vals = nevent_df[nevent_df['n_samples'] == n_sample]['val']
                 means.append(np.mean(vals))
                 sds.append(np.std(vals))
                 sems.append(sds[-1] / np.sqrt(vals.size))
@@ -112,27 +256,29 @@ def resample_validation():
                 delta_sds.append(np.std(delts))
                 delta_sems.append(np.std(delts) / np.sqrt(vals.size))
             means, sds, sems, deltas, delta_sems = (np.array(x) for x in (means, sds, sems, deltas, delta_sems))
-            ax.plot(n_events, means, label=f'{n_sample} samples', color=c)
+            ax.plot(n_events, means, label=f'{n_events} events', color=c)
             ax.fill_between(n_events, means - sems, means + sems, color=c, alpha=0.6)
             ax.fill_between(n_events, means - sds, means + sds, color=c, alpha=0.1)
-            ax_del.plot(n_events, deltas, label=f'{n_sample} samples', color=c)
+            ax_del.plot(n_events, deltas, label=f'{n_event} events', color=c)
             ax_del.fill_between(n_events, deltas - delta_sems, deltas + delta_sems, color=c, alpha=0.5)
             ax_del.fill_between(n_events, deltas - delta_sds, deltas + delta_sds, color=c, alpha=0.1)
-        ax.set_xlabel('Number of Events')
+        ax.set_xlabel('Number of Samples')
         # ax.set_ylabel('')
         ax.legend()
         ax.set_title(stat)
-        fig.tight_layout()
-        ax_del.set_xlabel('Number of Events')
+        ax_del.set_xlabel('Number of Samples')
         ax_del.legend()
-        ax_del.set_title(f'{stat} Deviations')
-        fig_del.tight_layout()
+        ax_del.set_title(f'{stat} Deviations vs Number of Samples')
 
-        fig.savefig(f'{plot_out_dir}{stat}_Scatter.png', bbox_inches='tight')
-        fig_del.savefig(f'{plot_out_dir}{stat}_Deviations.png', bbox_inches='tight')
+        fig_names = {
+            fig: f'{stat}_vs_nsamples',
+            fig_del: f'{stat}_absdev_vs_nsamples',
+        }
 
-    if show_plot:
-        plt.show()
+        for fig_obj, fig_name in fig_names.items():
+            fig_obj.tight_layout()
+            fig_obj.canvas.manager.set_window_title(fig_name)
+            fig_obj.savefig(f'{plot_out_dir}{fig_name}.png', bbox_inches='tight')
 
 
 def resample_with_nsamples():
@@ -175,7 +321,7 @@ def resample_with_nsamples():
 
     with Pool(threads) as pool:
         for exp_stat in tqdm.tqdm(pool.istarmap(run_experiment_no_bs, jobs), total=len(jobs)):
-            n_exp, n_samples_exp, n_events_exp, stat_vals, stat_errs_delta = exp_stat
+            n_exp, n_samples_exp, n_events_exp, bin_width, n_track, stat_vals, stat_errs_delta = exp_stat
             for stat, val in stat_vals.items():
                 plot_data.append({'n_exp': n_exp, 'stat': stat, 'val': val, 'delta_err': stat_errs_delta[stat],
                                   'n_samples': n_samples_exp, 'n_events': n_events_exp})
@@ -354,7 +500,7 @@ def correlated_dists():
 
         stat_vals, stat_errs, stat_meases = [], [], []
         with Pool(threads) as pool:
-            for n_exp, samples, n_events, stats_vals, stats_errs_delta in \
+            for n_exp, samples, n_events, bin_width, n_track, stats_vals, stats_errs_delta in \
                     tqdm.tqdm(pool.istarmap(run_experiment_no_bs, jobs), total=len(jobs)):
                 stat_meases.append(Measure(stats_vals[stat_plt], stats_errs_delta[stat_plt]))
                 stat_vals.append(stats_vals[stat_plt])
@@ -393,15 +539,15 @@ def correlated_dists():
 
 
 def multiple_exps_dist():
-    threads = 8
+    threads = 15
     seed_0 = 1432
     n_tracks = 15
     n_samples = 1
     n_events = np.array([100, 1e3, 1e5], dtype=int)
-    n_experiments = 10
+    n_experiments = 300
     bin_width = np.deg2rad(120)
     stat_plt = 'standard deviation'
-    plot_out_base = 'D:/Transfer/Research/Resample_POC/Visualizations/'
+    plot_out_base = 'E:/Transfer/Research/Resample_POC/Visualizations/'
     plot_out_name = 'test4/'
     plot_out_dir = plot_out_base + plot_out_name
     try:
@@ -427,11 +573,9 @@ def multiple_exps_dist():
     jobs = [(n_tracks, n_event, bin_width, n_samples, stats, [stat_plt], next(seeds), n_exp)
             for n_exp in range(n_experiments) for n_event in n_events]
 
-    # run_experiment_no_bs(*jobs[0])
-
     stat_vals = {n_event: [] for n_event in n_events}
     with Pool(threads) as pool:
-        for n_exp, n_sample, n_event, stats_vals, stats_errs_delta in \
+        for n_exp, n_sample, n_event, bin_width, n_track, stats_vals, stats_errs_delta in \
                 tqdm.tqdm(pool.istarmap(run_experiment_no_bs, jobs), total=len(jobs)):
             stat_vals[n_event].append(stats_vals[stat_plt])
 
@@ -440,11 +584,11 @@ def multiple_exps_dist():
         sns.histplot(x=stat_vals[n_event], kde=False, label='Simulation', ax=ax)
         mean = np.mean(stat_vals[n_event])
         sd = np.std(stat_vals[n_event])
-        sem = sd / np.sqrt(n_experiments)
+        semean = sd / np.sqrt(n_experiments)
         ax.axvline(stats[stat_plt]['true'], ls='--', color='red', label='Binomial')
-        ax.axvline(mean, color='gray', label='mean')
-        ax.axvspan(mean - sd, mean + sd, color='gray', alpha=0.3, label='Standard Deviation')
-        ax.axvspan(mean - sem, mean + sem, color='gray', alpha=0.5, label='Error on the Mean')
+        ax.axvline(mean, color='black', label='mean', ls=':')
+        ax.axvspan(mean - sd, mean + sd, color='gray', alpha=0.1, label='Standard Deviation')
+        ax.axvspan(mean - semean, mean + semean, color='gray', alpha=0.6, label='Error on the Mean')
         if ax == axs[-1]:
             ax.legend(loc='upper left')
             ax.set_xlabel('Standard Deviation of Distribution')
@@ -455,11 +599,11 @@ def multiple_exps_dist():
         sns.histplot(x=abs_vals, kde=False, label='Simulation', ax=ax)
         mean = np.mean(abs_vals)
         sd = np.std(abs_vals)
-        sem = sd / np.sqrt(n_experiments)
+        semean = sd / np.sqrt(n_experiments)
         ax.axvline(0, color='black')
-        ax.axvline(mean, color='gray', label='mean')
-        ax.axvspan(mean - sd, mean + sd, color='gray', alpha=0.3, label='Standard Deviation')
-        ax.axvspan(mean - sem, mean + sem, color='gray', alpha=0.5, label='Error on the Mean')
+        ax.axvline(mean, color='black', label='mean', ls=':')
+        ax.axvspan(mean - sd, mean + sd, color='gray', alpha=0.1, label='Standard Deviation')
+        ax.axvspan(mean - semean, mean + semean, color='gray', alpha=0.6, label='Error on the Mean')
         if ax == axs_abs[-1]:
             ax.legend(loc='upper right')
             ax.set_xlabel(r'$|\sigma - \sigma_{binom}|$')
@@ -538,7 +682,7 @@ def run_experiment_no_bs(n_tracks, n_events, bin_width, samples, stats,
         stat_vals.update({stat: meas.val})
         stat_errs_delta.update({stat: meas.err})
 
-    return n_exp, samples, n_events, stat_vals, stat_errs_delta
+    return n_exp, samples, n_events, bin_width, n_tracks, stat_vals, stat_errs_delta
 
 
 def bin_experiment_no_bs(experiment, n_tracks, bin_width, samples):
@@ -678,13 +822,14 @@ def define_stats(n_tracks, bin_width):
     return stats
 
 
-def write_info_file(plot_out_dir, threads, n_tracks, n_sample, n_events, bin_width, bootstraps, experiments, stats_plt):
+def write_info_file(plot_out_dir, threads, n_tracks, n_sample, n_events, bin_widths, bootstraps, experiments,
+                    stats_plt):
     with open(plot_out_dir + 'info.txt', 'w') as file:
         file.write(f'threads: {threads}\n')
         file.write(f'n_tracks: {n_tracks}\n')
         file.write(f'n_sample: {n_sample}\n')
         file.write(f'n_events: {n_events}\n')
-        file.write(f'bin_width: {bin_width}\n')
+        file.write(f'bin_widths: {bin_widths}\n')
         file.write(f'bootstraps: {bootstraps}\n')
         file.write(f'experiments: {experiments}\n')
         file.write('stats: ')
