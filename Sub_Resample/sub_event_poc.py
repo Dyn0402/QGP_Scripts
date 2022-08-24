@@ -44,17 +44,18 @@ def resample_validation():
     :return:
     """
     seed = 1432
-    threads = 15
+    threads = 7
     n_tracks = [15]
     # n_samples = [1, 3, 1440]
-    n_samples = [1, 360, 1440, 7200]
-    n_events = np.arange(100, 2000, 10)
+    # n_samples = [1, 360]
+    n_samples = [1, 3, 10]
+    # n_events = np.arange(100, 2000, 10)
+    n_events = [250, 1000]
     bin_widths = np.deg2rad([60, 120, 180])
-    print(bin_widths)
     experiments = 10
     # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
     # plot_out_base = 'F:/Research/Resample_POC/Resample_Validation/'
-    plot_out_base = 'E:/Transfer/Research/Resample_POC/Resample_Validation/'
+    plot_out_base = 'D:/Transfer/Research/Resample_POC/Resample_Validation/'
     plot_out_name = 'test4/'
     plot_out_dir = plot_out_base + plot_out_name
     try:
@@ -63,7 +64,8 @@ def resample_validation():
         pass
     show_plot = True
 
-    stats = {bin_width: {n_track: define_stats(n_tracks, bin_width) for n_track in n_tracks} for bin_width in bin_widths}
+    stats = {bin_width: {n_track: define_stats(n_track, bin_width) for n_track in n_tracks}
+             for bin_width in bin_widths}
 
     # stats_plt = ['standard deviation', 'skewness', 'non-excess kurtosis']
     stats_plt = ['standard deviation']
@@ -75,7 +77,7 @@ def resample_validation():
     seeds = iter(np.random.SeedSequence(seed).spawn(num_indep_exps))
     plot_data = []
 
-    jobs = [(n_track, n_event, bin_width, n_sample, stats[bin_width], stats_plt, next(seeds), n_exp)
+    jobs = [(n_track, n_event, bin_width, n_sample, stats[bin_width][n_track], stats_plt, next(seeds), n_exp)
             for n_exp in range(experiments) for n_event in n_events for n_sample in n_samples
             for bin_width in bin_widths for n_track in n_tracks]
 
@@ -90,16 +92,17 @@ def resample_validation():
 
     plot_data = pd.DataFrame(plot_data)
 
-    plot_vs_nevents(plot_data, stats_plt, stats, 'n_samples', plot_out_dir)
+    plot_vs_indep_var(plot_data, stats_plt, stats, 'n_samples', plot_out_dir)
+    plot_vs_indep_var(plot_data, stats_plt, stats, 'bin_width', plot_out_dir)
 
     if show_plot:
         plt.show()
 
 
-def plot_vs_nevents(plot_data, stats_plt, stats, indep_var, plot_out_dir):
+def plot_vs_indep_var(plot_data, stats_plt, stats, indep_var, plot_out_dir):
     for stat in stats_plt:
         color = iter(get_cmap('Set1').colors)
-        color_binom = iter(get_cmap('tab20b').colors)
+        # color_binom = iter(get_cmap('tab20b').colors)
         stat_df = plot_data[plot_data['stat'] == stat]
         fig, ax = plt.subplots()
         fig_del, ax_del = plt.subplots()
@@ -107,9 +110,7 @@ def plot_vs_nevents(plot_data, stats_plt, stats, indep_var, plot_out_dir):
         ax_del.grid()
         ax_del.axhline(0, color='black')
 
-        # Assume here a square lattice
-        # indep_var = 'n_events'
-        indep_vals = pd.unique(plot_data[indep_var])
+        indep_vals = pd.unique(plot_data[indep_var])  # Assume here a square lattice
 
         var_string_consts = {
             'n_tracks': {'x-label': 'Number of Tracks', 'legend': ' tracks'},
@@ -117,20 +118,47 @@ def plot_vs_nevents(plot_data, stats_plt, stats, indep_var, plot_out_dir):
             'n_events': {'x-label': 'Number of Events', 'legend': ' events'},
             'n_samples': {'x-label': 'Number of Samples', 'legend': ' samples'}}
 
-        set_vars = var_string_consts.keys()
+        set_vars = list(var_string_consts.keys())
 
         set_vars.remove(indep_var)
-        uniques = [pd.unique(stat_df[var]) for var in set_vars]
+        uniques = {var: pd.unique(stat_df[var]) for var in set_vars}
         set_combos = product(*uniques.values())
 
-        if indep_var != 'bin_width:':
-            for bin_width in zip(set_vars, uniques)['bin_width']:
-                label = f'{np.rad2deg(bin_width)}° Binomial Value'
-                c = next(color_binom)
-                ax.axhline(stats[bin_width][stat]['true'], ls='--', color=c, label=label)
+        binom_val_label = False
+        if indep_var == 'bin_width':
+            for n_track in uniques['n_tracks']:
+                binom_vals = []
+                for bin_width in indep_vals:
+                    binom_vals.append(stats[bin_width][n_track][stat]['true'])
+                if not binom_val_label:
+                    ax.plot(indep_vals, binom_vals, ls='--', color='black', label='Binomial Value')
+                    binom_val_label = True
+                else:
+                    ax.plot(indep_vals, binom_vals, ls='--', color='black')
+        elif indep_var == 'n_tracks':
+            for bin_width in uniques['bin_width']:
+                binom_vals = []
+                for n_track in indep_vals:
+                    binom_vals.append(stats[bin_width][n_track][stat]['true'])
+                    if not binom_val_label:
+                        ax.plot(indep_vals, binom_vals, ls='--', color='black', label='Binomial Value')
+                        binom_val_label = True
+                    else:
+                        ax.plot(indep_vals, binom_vals, ls='--', color='black')
+        else:
+            for bin_width in uniques['bin_width']:
+                for n_track in uniques['n_tracks']:
+                    # label = f'{n_track} track, {round(np.rad2deg(bin_width))}° Binomial Value'
+                    # c = next(color_binom)
+                    if not binom_val_label:
+                        ax.axhline(stats[bin_width][n_track][stat]['true'], ls='--', color='black',
+                                   label='Binomial Value')
+                        binom_val_label = True
+                    else:
+                        ax.axhline(stats[bin_width][n_track][stat]['true'], ls='--', color='black')
 
         for set_var_vals in set_combos:
-            set_var_vals = zip(set_vars, set_var_vals)
+            set_var_vals = dict(zip(set_vars, set_var_vals))
             set_df = stat_df
             for var, var_val in set_var_vals.items():
                 set_df = set_df[set_df[var] == var_val]
@@ -143,8 +171,12 @@ def plot_vs_nevents(plot_data, stats_plt, stats, indep_var, plot_out_dir):
                 sds.append(np.std(vals))
                 sems.append(sds[-1] / np.sqrt(vals.size))
                 # delts = np.power(vals - stats[stat]['true'], 2)
-                binom_val = stats[set_var_vals['bin_width']][stat]['true'] if indep_var != 'bin_width' \
-                    else stats[indep_val][stat]['true']
+                if indep_var == 'bin_width':
+                    binom_val = stats[indep_val][set_var_vals['n_tracks']][stat]['true']
+                elif indep_var == 'n_tracks':
+                    binom_val = stats[set_var_vals['bin_width']][indep_val][stat]['true']
+                else:
+                    binom_val = stats[set_var_vals['bin_width']][set_var_vals['n_tracks']][stat]['true']
                 delts = np.abs(vals - binom_val)
                 deltas.append(np.sum(delts) / vals.size)
                 delta_sds.append(np.std(delts))
@@ -154,7 +186,7 @@ def plot_vs_nevents(plot_data, stats_plt, stats, indep_var, plot_out_dir):
             label = []
             for var in set_vars:
                 if len(uniques[var]) > 1:
-                    val = set_var_vals[var] if var != 'bin_width' else np.rad2deg(set_var_vals[var])
+                    val = set_var_vals[var] if var != 'bin_width' else round(np.rad2deg(set_var_vals[var]))
                     label.append(f'{val}{var_string_consts[var]["legend"]}')
             label = ', '.join(label)
             ax.plot(indep_vals, means, label=label, color=c)
@@ -163,212 +195,32 @@ def plot_vs_nevents(plot_data, stats_plt, stats, indep_var, plot_out_dir):
             ax_del.plot(indep_vals, deltas, label=label, color=c)
             ax_del.fill_between(indep_vals, deltas - delta_sems, deltas + delta_sems, color=c, alpha=0.5)
             ax_del.fill_between(indep_vals, deltas - delta_sds, deltas + delta_sds, color=c, alpha=0.1)
-        ax.set_xlabel(var_string_consts[var]['x-label'])
+        ax.set_xlabel(var_string_consts[indep_var]['x-label'])
         # ax.set_ylabel('')
         ax.legend()
-        ax.set_title(stat)
-        ax_del.set_xlabel(var_string_consts[var]['x-label'])
+        ax_del.set_xlabel(var_string_consts[indep_var]['x-label'])
         ax_del.legend()
-        ax_del.set_title(f'{stat} Deviations vs {var_string_consts[var]["x-label"]}')
+
+        title = f'{stat.title()} vs {var_string_consts[indep_var]["x-label"]}'
+        title_del = f'{stat.title()} Deviations vs {var_string_consts[indep_var]["x-label"]}'
+        title_extra = ', '.join([f'{val}{var_string_consts[var]["legend"]}' for var, vals in uniques.items()
+                                 if len(vals) == 1])
+        if title_extra != '':
+            title += f'\n{title_extra}'
+            title_del += f'\n{title_extra}'
+
+        ax.set_title(title)
+        ax_del.set_title(title_del)
 
         fig_names = {
-            fig: f'{stat}_vs_nevents',
-            fig_del: f'{stat}_absdev_vs_nevents',
+            fig: f'{stat}_vs_{indep_var.replace("_", "")}',
+            fig_del: f'{stat}_absdev_vs_{indep_var.replace("_", "")}',
         }
 
         for fig_obj, fig_name in fig_names.items():
             fig_obj.tight_layout()
             fig_obj.canvas.manager.set_window_title(fig_name)
             fig_obj.savefig(f'{plot_out_dir}{fig_name}.png', bbox_inches='tight')
-
-        # for n_sample in n_samples:
-        #     nsample_df = stat_df[stat_df['n_samples'] == n_sample]
-        #     bin_widths = pd.unique(nsample_df['bin_width'])
-        #     for bin_width in bin_widths:
-        #         binwidth_df = nsample_df[nsample_df['bin_width'] == bin_width]
-        #         n_tracks = pd.unique(binwidth_df['n_tracks'])
-        #         for n_track in n_tracks:
-        #             ntracks_df = binwidth_df[binwidth_df['n_tracks'] == n_track]
-        #             n_events = pd.unique(ntracks_df['n_events'])
-        #
-        #             c = next(color)
-        #             means, sds, sems, deltas, delta_sems, delta_sds = [], [], [], [], [], []
-        #             for n_event in n_events:
-        #                 vals = binwidth_df[binwidth_df['n_events'] == n_event]['val']
-        #                 means.append(np.mean(vals))
-        #                 sds.append(np.std(vals))
-        #                 sems.append(sds[-1] / np.sqrt(vals.size))
-        #                 # delts = np.power(vals - stats[stat]['true'], 2)
-        #                 delts = np.abs(vals - stats[stat]['true'])
-        #                 deltas.append(np.sum(delts) / vals.size)
-        #                 delta_sds.append(np.std(delts))
-        #                 delta_sems.append(np.std(delts) / np.sqrt(vals.size))
-        #             means, sds, sems, deltas, delta_sems = (np.array(x) for x in (means, sds, sems, deltas, delta_sems))
-        #             label = ', '.join([zip([n_samples, bin_width, n_track], [len()])])
-        #             ax.plot(n_events, means, label=f'{n_sample} samples', color=c)
-        #             ax.fill_between(n_events, means - sems, means + sems, color=c, alpha=0.6)
-        #             ax.fill_between(n_events, means - sds, means + sds, color=c, alpha=0.1)
-        #             ax_del.plot(n_events, deltas, label=f'{n_sample} samples', color=c)
-        #             ax_del.fill_between(n_events, deltas - delta_sems, deltas + delta_sems, color=c, alpha=0.5)
-        #             ax_del.fill_between(n_events, deltas - delta_sds, deltas + delta_sds, color=c, alpha=0.1)
-        # ax.set_xlabel('Number of Events')
-        # # ax.set_ylabel('')
-        # ax.legend()
-        # ax.set_title(stat)
-        # ax_del.set_xlabel('Number of Events')
-        # ax_del.legend()
-        # ax_del.set_title(f'{stat} Deviations vs Number of Events')
-        #
-        # fig_names = {
-        #     fig: f'{stat}_vs_nevents',
-        #     fig_del: f'{stat}_absdev_vs_nevents',
-        # }
-        #
-        # for fig_obj, fig_name in fig_names.items():
-        #     fig_obj.tight_layout()
-        #     fig_obj.canvas.manager.set_window_title(fig_name)
-        #     fig_obj.savefig(f'{plot_out_dir}{fig_name}.png', bbox_inches='tight')
-
-
-def plot_vs_nsamples(plot_data, stats_plt, stats, n_events, plot_out_dir):
-    for stat in stats_plt:
-        color = iter(get_cmap('Set1').colors)
-        stat_df = plot_data[plot_data['stat'] == stat]
-        fig, ax = plt.subplots()
-        fig_del, ax_del = plt.subplots()
-        ax.grid()
-        ax_del.grid()
-        ax.axhline(stats[stat]['true'], ls='--', color='black', label='True Binomial Value')
-        ax_del.axhline(0, color='black')
-        for n_event in n_events:
-            c = next(color)
-            nevent_df = stat_df[stat_df['n_events'] == n_event]
-            n_samples = pd.unique(nevent_df['n_samples'])
-            means, sds, sems, deltas, delta_sems, delta_sds = [], [], [], [], [], []
-            for n_sample in n_samples:
-                vals = nevent_df[nevent_df['n_samples'] == n_sample]['val']
-                means.append(np.mean(vals))
-                sds.append(np.std(vals))
-                sems.append(sds[-1] / np.sqrt(vals.size))
-                # delts = np.power(vals - stats[stat]['true'], 2)
-                delts = np.abs(vals - stats[stat]['true'])
-                deltas.append(np.sum(delts) / vals.size)
-                delta_sds.append(np.std(delts))
-                delta_sems.append(np.std(delts) / np.sqrt(vals.size))
-            means, sds, sems, deltas, delta_sems = (np.array(x) for x in (means, sds, sems, deltas, delta_sems))
-            ax.plot(n_events, means, label=f'{n_events} events', color=c)
-            ax.fill_between(n_events, means - sems, means + sems, color=c, alpha=0.6)
-            ax.fill_between(n_events, means - sds, means + sds, color=c, alpha=0.1)
-            ax_del.plot(n_events, deltas, label=f'{n_event} events', color=c)
-            ax_del.fill_between(n_events, deltas - delta_sems, deltas + delta_sems, color=c, alpha=0.5)
-            ax_del.fill_between(n_events, deltas - delta_sds, deltas + delta_sds, color=c, alpha=0.1)
-        ax.set_xlabel('Number of Samples')
-        # ax.set_ylabel('')
-        ax.legend()
-        ax.set_title(stat)
-        ax_del.set_xlabel('Number of Samples')
-        ax_del.legend()
-        ax_del.set_title(f'{stat} Deviations vs Number of Samples')
-
-        fig_names = {
-            fig: f'{stat}_vs_nsamples',
-            fig_del: f'{stat}_absdev_vs_nsamples',
-        }
-
-        for fig_obj, fig_name in fig_names.items():
-            fig_obj.tight_layout()
-            fig_obj.canvas.manager.set_window_title(fig_name)
-            fig_obj.savefig(f'{plot_out_dir}{fig_name}.png', bbox_inches='tight')
-
-
-def resample_with_nsamples():
-    """
-    Simulate binomials and show convergence for single event as n_samples -> inf
-    :return:
-    """
-    seed = 1432
-    threads = 15
-    n_tracks = 15
-    n_samples = [1, 3, 1440]
-    n_events = np.arange(10, 2000, 10)
-    bin_width = np.deg2rad(120)
-    experiments = 100
-    # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
-    plot_out_base = 'F:/Research/Resample_POC/Resample_Validation/'
-    plot_out_name = 'test3_vs_nsample/'
-    plot_out_dir = plot_out_base + plot_out_name
-    try:
-        os.mkdir(plot_out_dir)
-    except FileExistsError:
-        pass
-    show_plot = True
-
-    stats = define_stats(n_tracks, bin_width)
-
-    stats_plt = ['standard deviation', 'skewness', 'non-excess kurtosis']
-
-    write_info_file(plot_out_dir, threads, n_tracks, n_samples, n_events, bin_width, 'resample_validiation',
-                    experiments, stats_plt)
-
-    # jobs = [(n_tracks, n_event, bin_width, n_sample, 0, stats, stats_plt, n_exp, False, plot_out_dir)
-    #         for n_exp in range(experiments) for n_sample in n_samples for n_event in n_events]
-
-    seeds = iter(np.random.SeedSequence(seed).spawn(experiments * len(n_events) * len(n_samples)))
-    plot_data = []
-
-    jobs = [(n_tracks, n_event, bin_width, n_sample, stats, stats_plt, next(seeds), n_exp)
-            for n_exp in range(experiments) for n_event in n_events for n_sample in n_samples]
-
-    with Pool(threads) as pool:
-        for exp_stat in tqdm.tqdm(pool.istarmap(run_experiment_no_bs, jobs), total=len(jobs)):
-            n_exp, n_samples_exp, n_events_exp, bin_width, n_track, stat_vals, stat_errs_delta = exp_stat
-            for stat, val in stat_vals.items():
-                plot_data.append({'n_exp': n_exp, 'stat': stat, 'val': val, 'delta_err': stat_errs_delta[stat],
-                                  'n_samples': n_samples_exp, 'n_events': n_events_exp})
-
-    plot_data = pd.DataFrame(plot_data)
-
-    for stat in stats_plt:
-        color = iter(get_cmap('Set1').colors)
-        stat_df = plot_data[plot_data['stat'] == stat]
-        fig, ax = plt.subplots()
-        fig_del, ax_del = plt.subplots()
-        ax.grid()
-        ax_del.grid()
-        ax.axhline(stats[stat]['true'], ls='--', color='black', label='True Binomial Value')
-        for n_sample in n_samples:
-            c = next(color)
-            nsample_df = stat_df[stat_df['n_samples'] == n_sample]
-            n_events = pd.unique(nsample_df['n_events'])
-            means, sds, sems, deltas, delta_sems = [], [], [], [], []
-            for n_event in n_events:
-                vals = nsample_df[nsample_df['n_events'] == n_event]['val']
-                means.append(np.mean(vals))
-                sds.append(np.std(vals))
-                sems.append(sds[-1] / np.sqrt(vals.size))
-                delts = np.power(vals - stats[stat]['true'], 2)
-                deltas.append(np.sum(delts) / vals.size)
-                delta_sems.append(np.std(delts) / np.sqrt(vals.size))
-            means, sds, sems, deltas, delta_sems = (np.array(x) for x in (means, sds, sems, deltas, delta_sems))
-            ax.plot(n_events, means, label=f'{n_sample} samples', color=c)
-            ax.fill_between(n_events, means - sems, means + sems, color=c, alpha=0.6)
-            ax.fill_between(n_events, means - sds, means + sds, color=c, alpha=0.1)
-            ax_del.plot(n_events, deltas, label=f'{n_sample} samples', color=c)
-            ax_del.fill_between(n_events, deltas - delta_sems, deltas + delta_sems, color=c, alpha=0.5)
-        ax.set_xlabel('Number of Events')
-        ax.legend()
-        ax.set_title(stat)
-        fig.tight_layout()
-        ax_del.set_xlabel('Number of Events')
-        ax_del.legend()
-        ax_del.set_title(f'{stat} Deviations')
-        fig_del.tight_layout()
-
-        fig.savefig(f'{plot_out_dir}{stat}_Scatter.png', bbox_inches='tight')
-        fig_del.savefig(f'{plot_out_dir}{stat}_Deviations.png', bbox_inches='tight')
-
-    if show_plot:
-        plt.show()
 
 
 def bootstrap_validation():
