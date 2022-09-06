@@ -48,16 +48,21 @@ def resample_validation():
     n_tracks = [15]
     # n_samples = [1, 3, 1440]
     # n_samples = [1, 360]
-    n_samples = [1, 3, 10]
+    # n_samples = np.array([1, 2, 3, 4, 5, 6, 7] + list(np.arange(10, 5000, 50)))
+    n_samples = np.arange(1, 20, 1)
     # n_events = np.arange(100, 2000, 10)
-    n_events = [250, 1000]
-    bin_widths = np.deg2rad([60, 120, 180])
-    experiments = 10
+    n_events = [250]
+    bin_widths = np.deg2rad([60, 120, 240, 300])
+    experiments = 1000
     # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
     # plot_out_base = 'F:/Research/Resample_POC/Resample_Validation/'
-    plot_out_base = 'D:/Transfer/Research/Resample_POC/Resample_Validation/'
-    plot_out_name = 'test4/'
+    # plot_out_base = 'D:/Transfer/Research/Resample_POC/Resample_Validation/'
+    plot_out_base = 'C:/Users/Dyn04/Desktop/Resample_POC/Resample_Validation/'
+    # plot_out_name = 'vs_nsamplesto5k_bws_ntrack15_nevent250/'
+    # plot_out_name = 'vs_nsamplesto20_isobws_ntrack15_nevent250/'
+    plot_out_name = 'rotate_test/'
     plot_out_dir = plot_out_base + plot_out_name
+    plot_sds = False
     try:
         os.mkdir(plot_out_dir)
     except FileExistsError:
@@ -68,6 +73,7 @@ def resample_validation():
              for bin_width in bin_widths}
 
     # stats_plt = ['standard deviation', 'skewness', 'non-excess kurtosis']
+    # stats_plt = ['skewness', 'non-excess kurtosis']
     stats_plt = ['standard deviation']
 
     write_info_file(plot_out_dir, threads, n_tracks, n_samples, n_events, bin_widths, 'resample_validiation',
@@ -92,23 +98,27 @@ def resample_validation():
 
     plot_data = pd.DataFrame(plot_data)
 
-    plot_vs_indep_var(plot_data, stats_plt, stats, 'n_samples', plot_out_dir)
-    plot_vs_indep_var(plot_data, stats_plt, stats, 'bin_width', plot_out_dir)
+    plot_vs_indep_var(plot_data, stats_plt, stats, 'n_samples', plot_out_dir, plot_sds)
+    # plot_vs_indep_var(plot_data, stats_plt, stats, 'bin_width', plot_out_dir, plot_sds)
 
     if show_plot:
         plt.show()
 
 
-def plot_vs_indep_var(plot_data, stats_plt, stats, indep_var, plot_out_dir):
+def plot_vs_indep_var(plot_data, stats_plt, stats, indep_var, plot_out_dir, plot_sd=True):
     for stat in stats_plt:
         color = iter(get_cmap('Set1').colors)
         # color_binom = iter(get_cmap('tab20b').colors)
         stat_df = plot_data[plot_data['stat'] == stat]
         fig, ax = plt.subplots()
         fig_del, ax_del = plt.subplots()
+        fig_del_norm, ax_del_norm = plt.subplots()
         ax.grid()
         ax_del.grid()
+        ax_del_norm.grid()
         ax_del.axhline(0, color='black')
+        ax_del_norm.axhline(0, color='black')
+        ax_del_norm.axhline(1, color='black')
 
         indep_vals = pd.unique(plot_data[indep_var])  # Assume here a square lattice
 
@@ -178,9 +188,15 @@ def plot_vs_indep_var(plot_data, stats_plt, stats, indep_var, plot_out_dir):
                 else:
                     binom_val = stats[set_var_vals['bin_width']][set_var_vals['n_tracks']][stat]['true']
                 delts = np.abs(vals - binom_val)
-                deltas.append(np.sum(delts) / vals.size)
+                # fig_deltas, ax_deltas = plt.subplots()
+                # ax_deltas.set_title(f'{indep_var} = {indep_val} {set_var_vals}')
+                # fig_deltas.canvas.manager.set_window_title(f'{indep_var} = {indep_val} {set_var_vals}')
+                # sns.histplot(delts)
+                # delta_sems.append(get_bs_sem(delts))  # Looks to be about equivalent to s/root(n)
+                deltas.append(np.mean(delts))
                 delta_sds.append(np.std(delts))
                 delta_sems.append(np.std(delts) / np.sqrt(vals.size))
+                # print(f'{indep_val}: {delta_sds[-1]}')
             means, sds, sems, deltas, delta_sems = (np.array(x) for x in (means, sds, sems, deltas, delta_sems))
 
             label = []
@@ -191,30 +207,48 @@ def plot_vs_indep_var(plot_data, stats_plt, stats, indep_var, plot_out_dir):
             label = ', '.join(label)
             ax.plot(indep_vals, means, label=label, color=c)
             ax.fill_between(indep_vals, means - sems, means + sems, color=c, alpha=0.6)
-            ax.fill_between(indep_vals, means - sds, means + sds, color=c, alpha=0.1)
+
             ax_del.plot(indep_vals, deltas, label=label, color=c)
             ax_del.fill_between(indep_vals, deltas - delta_sems, deltas + delta_sems, color=c, alpha=0.5)
-            ax_del.fill_between(indep_vals, deltas - delta_sds, deltas + delta_sds, color=c, alpha=0.1)
+
+            del_max = max(deltas)
+            ax_del_norm.plot(indep_vals, deltas / del_max, label=label, color=c)
+            ax_del_norm.fill_between(indep_vals, (deltas - delta_sems) / del_max, (deltas + delta_sems) / del_max,
+                                     color=c, alpha=0.5)
+
+            if plot_sd:
+                ax.fill_between(indep_vals, means - sds, means + sds, color=c, alpha=0.2)
+                ax_del.fill_between(indep_vals, deltas - delta_sds, deltas + delta_sds, color=c, alpha=0.2)
+                ax_del_norm.fill_between(indep_vals, (deltas - delta_sds) / del_max, (deltas + delta_sds) / del_max,
+                                         color=c, alpha=0.2)
         ax.set_xlabel(var_string_consts[indep_var]['x-label'])
         # ax.set_ylabel('')
         ax.legend()
         ax_del.set_xlabel(var_string_consts[indep_var]['x-label'])
         ax_del.legend()
+        ax_del_norm.set_xlabel(var_string_consts[indep_var]['x-label'])
+        ax_del_norm.legend()
 
         title = f'{stat.title()} vs {var_string_consts[indep_var]["x-label"]}'
         title_del = f'{stat.title()} Deviations vs {var_string_consts[indep_var]["x-label"]}'
-        title_extra = ', '.join([f'{val}{var_string_consts[var]["legend"]}' for var, vals in uniques.items()
-                                 if len(vals) == 1])
+        title_del_norm = f'{stat.title()} Normalized Deviations vs {var_string_consts[indep_var]["x-label"]}'
+        title_extra = [f'{vals[0]}{var_string_consts[var]["legend"]}' if var != 'bin_width'
+                       else f'{round(np.rad2deg(vals[0]))}{var_string_consts[var]["legend"]}' for var, vals
+                       in uniques.items() if len(vals) == 1]
+        title_extra = ', '.join(title_extra)
         if title_extra != '':
             title += f'\n{title_extra}'
             title_del += f'\n{title_extra}'
+            title_del_norm += f'\n{title_extra}'
 
         ax.set_title(title)
         ax_del.set_title(title_del)
+        ax_del_norm.set_title(title_del_norm)
 
         fig_names = {
             fig: f'{stat}_vs_{indep_var.replace("_", "")}',
             fig_del: f'{stat}_absdev_vs_{indep_var.replace("_", "")}',
+            fig_del_norm: f'{stat}_absdev_norm_vs_{indep_var.replace("_", "")}',
         }
 
         for fig_obj, fig_name in fig_names.items():
@@ -511,6 +545,7 @@ def bin_experiment(experiment, n_tracks, bin_width, samples, bootstraps, rng):
     data = np.zeros(n_tracks + 1, dtype=int)
     data_bs = np.zeros((bootstraps, n_tracks + 1), dtype=int)
     for event in experiment:
+        # event = rotate_event(event, rng.random() * 2 * np.pi)  # This doesn't matter with no phi dependence
         hist = get_resamples(event, bin_width, samples)
         data += hist
         for bootstrap in data_bs:
@@ -524,7 +559,7 @@ def run_experiment_no_bs(n_tracks, n_events, bin_width, samples, stats,
                          stats_plt, seed, n_exp=None):
     rng = np.random.default_rng(seed)
     experiment = gen_experiment(n_events, n_tracks, rng)
-    data = bin_experiment_no_bs(experiment, n_tracks, bin_width, samples)
+    data = bin_experiment_no_bs(experiment, n_tracks, bin_width, samples, rng)
 
     data_stats = DistStats(data)
     stat_vals = {}
@@ -537,13 +572,37 @@ def run_experiment_no_bs(n_tracks, n_events, bin_width, samples, stats,
     return n_exp, samples, n_events, bin_width, n_tracks, stat_vals, stat_errs_delta
 
 
-def bin_experiment_no_bs(experiment, n_tracks, bin_width, samples):
+def bin_experiment_no_bs(experiment, n_tracks, bin_width, samples, rng):
     data = np.zeros(n_tracks + 1, dtype=int)
     for event in experiment:
+        # event = rotate_event(event, rng.random() * 2 * np.pi)  # This doesn't matter with no phi dependence
         hist = get_resamples(event, bin_width, samples)
         data += hist
 
     return data
+
+
+def rotate_event(event, rotate_angle):
+    """
+    Rotate all tracks (float values [0,2pi)) in event by rotate_angle. Ensure output range remains [0, 2pi)
+    :param event:
+    :param rotate_angle:
+    :return:
+    """
+    event = event + rotate_angle
+    while np.any(event >= 2 * np.pi):
+        event = np.where(event >= 2 * np.pi, event - 2 * np.pi, event)
+
+    return np.sort(event)
+
+
+def get_bs_sem(vals, num_bs=250):
+    bs_means = []
+    for bs_index in range(num_bs):
+        bs_vals = np.random.choice(vals, size=vals.size)
+        bs_means.append(np.mean(bs_vals))
+
+    return np.std(np.array(bs_means))
 
 
 def plot_dist(data, n_tracks, bin_width, n_exp, out_dir=None):
