@@ -44,7 +44,7 @@ def resample_validation():
     :return:
     """
     seed = 1432
-    threads = 7
+    threads = 15
     n_tracks = [15]
     # n_samples = [1, 3, 1440]
     # n_samples = [1, 360]
@@ -52,12 +52,13 @@ def resample_validation():
     n_samples = np.arange(1, 20, 1)
     # n_events = np.arange(100, 2000, 10)
     n_events = [250]
-    bin_widths = np.deg2rad([60, 120, 240, 300])
-    experiments = 1000
+    # bin_widths = np.deg2rad([60, 120, 240, 300])
+    bin_widths = np.deg2rad([179, 180, 181])
+    experiments = 10000
     # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
     # plot_out_base = 'F:/Research/Resample_POC/Resample_Validation/'
-    # plot_out_base = 'D:/Transfer/Research/Resample_POC/Resample_Validation/'
-    plot_out_base = 'C:/Users/Dyn04/Desktop/Resample_POC/Resample_Validation/'
+    plot_out_base = 'E:/Transfer/Research/Resample_POC/Resample_Validation/'
+    # plot_out_base = 'C:/Users/Dyn04/Desktop/Resample_POC/Resample_Validation/'
     # plot_out_name = 'vs_nsamplesto5k_bws_ntrack15_nevent250/'
     # plot_out_name = 'vs_nsamplesto20_isobws_ntrack15_nevent250/'
     plot_out_name = 'rotate_test/'
