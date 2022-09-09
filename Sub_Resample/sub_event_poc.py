@@ -47,23 +47,23 @@ def resample_validation():
     threads = 15
     n_tracks = [15]
     # n_samples = [1, 3, 1440]
-    # n_samples = [1, 360]
+    n_samples = [1, 2, 3]
     # n_samples = np.array([1, 2, 3, 4, 5, 6, 7] + list(np.arange(10, 5000, 50)))
-    n_samples = np.arange(1, 20, 1)
-    # n_events = np.arange(100, 2000, 10)
-    n_events = [250]
+    # n_samples = np.arange(1, 20, 1)
+    n_events = np.arange(100, 2000, 5)
+    # n_events = [250]
     # bin_widths = np.deg2rad([60, 120, 240, 300])
-    bin_widths = np.deg2rad([179, 180, 181])
-    experiments = 10000
+    bin_widths = np.deg2rad([120])
+    experiments = 1000
     # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
     # plot_out_base = 'F:/Research/Resample_POC/Resample_Validation/'
     plot_out_base = 'E:/Transfer/Research/Resample_POC/Resample_Validation/'
     # plot_out_base = 'C:/Users/Dyn04/Desktop/Resample_POC/Resample_Validation/'
     # plot_out_name = 'vs_nsamplesto5k_bws_ntrack15_nevent250/'
     # plot_out_name = 'vs_nsamplesto20_isobws_ntrack15_nevent250/'
-    plot_out_name = 'rotate_test/'
+    plot_out_name = 'vs_neventsto2k_bw120_ntrack15_nsamples123/'
     plot_out_dir = plot_out_base + plot_out_name
-    plot_sds = False
+    plot_sds = True
     try:
         os.mkdir(plot_out_dir)
     except FileExistsError:
@@ -73,9 +73,9 @@ def resample_validation():
     stats = {bin_width: {n_track: define_stats(n_track, bin_width) for n_track in n_tracks}
              for bin_width in bin_widths}
 
-    # stats_plt = ['standard deviation', 'skewness', 'non-excess kurtosis']
+    stats_plt = ['standard deviation', 'skewness', 'non-excess kurtosis']
     # stats_plt = ['skewness', 'non-excess kurtosis']
-    stats_plt = ['standard deviation']
+    # stats_plt = ['standard deviation']
 
     write_info_file(plot_out_dir, threads, n_tracks, n_samples, n_events, bin_widths, 'resample_validiation',
                     experiments, stats_plt)
@@ -99,7 +99,8 @@ def resample_validation():
 
     plot_data = pd.DataFrame(plot_data)
 
-    plot_vs_indep_var(plot_data, stats_plt, stats, 'n_samples', plot_out_dir, plot_sds)
+    plot_vs_indep_var(plot_data, stats_plt, stats, 'n_events', plot_out_dir, plot_sds)
+    # plot_vs_indep_var(plot_data, stats_plt, stats, 'n_samples', plot_out_dir, plot_sds)
     # plot_vs_indep_var(plot_data, stats_plt, stats, 'bin_width', plot_out_dir, plot_sds)
 
     if show_plot:
