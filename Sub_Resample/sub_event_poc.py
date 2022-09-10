@@ -45,15 +45,15 @@ def resample_validation():
     """
     seed = 1432
     threads = 15
-    n_tracks = [15]
+    n_tracks = [15, 20, 25]
     # n_samples = [1, 3, 1440]
-    n_samples = [1, 2, 3]
+    # n_samples = [1, 2, 3]
     # n_samples = np.array([1, 2, 3, 4, 5, 6, 7] + list(np.arange(10, 5000, 50)))
-    # n_samples = np.arange(1, 20, 1)
-    n_events = np.arange(100, 2000, 5)
-    # n_events = [250]
+    n_samples = np.arange(1, 20, 1)
+    # n_events = np.arange(100, 2000, 5)
+    n_events = [250]
     # bin_widths = np.deg2rad([60, 120, 240, 300])
-    bin_widths = np.deg2rad([120])
+    bin_widths = np.deg2rad([60, 120])
     experiments = 1000
     # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
     # plot_out_base = 'F:/Research/Resample_POC/Resample_Validation/'
@@ -61,9 +61,10 @@ def resample_validation():
     # plot_out_base = 'C:/Users/Dyn04/Desktop/Resample_POC/Resample_Validation/'
     # plot_out_name = 'vs_nsamplesto5k_bws_ntrack15_nevent250/'
     # plot_out_name = 'vs_nsamplesto20_isobws_ntrack15_nevent250/'
-    plot_out_name = 'vs_neventsto2k_bw120_ntrack15_nsamples123/'
+    plot_out_name = 'vs_nsamplesto20_bw120_ntrack152025_nevent250/'
+    # plot_out_name = 'vs_neventsto2k_bw120_ntrack15_nsamples123/'
     plot_out_dir = plot_out_base + plot_out_name
-    plot_sds = True
+    plot_sds = False
     try:
         os.mkdir(plot_out_dir)
     except FileExistsError:
@@ -99,8 +100,8 @@ def resample_validation():
 
     plot_data = pd.DataFrame(plot_data)
 
-    plot_vs_indep_var(plot_data, stats_plt, stats, 'n_events', plot_out_dir, plot_sds)
-    # plot_vs_indep_var(plot_data, stats_plt, stats, 'n_samples', plot_out_dir, plot_sds)
+    # plot_vs_indep_var(plot_data, stats_plt, stats, 'n_events', plot_out_dir, plot_sds)
+    plot_vs_indep_var(plot_data, stats_plt, stats, 'n_samples', plot_out_dir, plot_sds)
     # plot_vs_indep_var(plot_data, stats_plt, stats, 'bin_width', plot_out_dir, plot_sds)
 
     if show_plot:
@@ -120,7 +121,7 @@ def plot_vs_indep_var(plot_data, stats_plt, stats, indep_var, plot_out_dir, plot
         ax_del_norm.grid()
         ax_del.axhline(0, color='black')
         ax_del_norm.axhline(0, color='black')
-        ax_del_norm.axhline(1, color='black')
+        # ax_del_norm.axhline(1, color='black')
 
         indep_vals = pd.unique(plot_data[indep_var])  # Assume here a square lattice
 
@@ -176,7 +177,7 @@ def plot_vs_indep_var(plot_data, stats_plt, stats, indep_var, plot_out_dir, plot
                 set_df = set_df[set_df[var] == var_val]
 
             c = next(color)
-            means, sds, sems, deltas, delta_sems, delta_sds = [], [], [], [], [], []
+            means, sds, sems, deltas, delta_sems, delta_sds, delta_norms, delta_norm_sems, delta_norm_sds = [], [], [], [], [], [], [], [], []
             for indep_val in indep_vals:
                 vals = set_df[set_df[indep_var] == indep_val]['val']
                 means.append(np.mean(vals))
@@ -196,10 +197,15 @@ def plot_vs_indep_var(plot_data, stats_plt, stats, indep_var, plot_out_dir, plot
                 # sns.histplot(delts)
                 # delta_sems.append(get_bs_sem(delts))  # Looks to be about equivalent to s/root(n)
                 deltas.append(np.mean(delts))
+                delta_norms.append(deltas[-1] / binom_val)
                 delta_sds.append(np.std(delts))
+                delta_norm_sds.append(np.std(delts / binom_val))
                 delta_sems.append(np.std(delts) / np.sqrt(vals.size))
+                delta_norm_sems.append(np.std(delts / binom_val) / np.sqrt(vals.size))
                 # print(f'{indep_val}: {delta_sds[-1]}')
-            means, sds, sems, deltas, delta_sems = (np.array(x) for x in (means, sds, sems, deltas, delta_sems))
+            means, sds, sems, deltas, delta_sems, delta_sds, delta_norms, delta_norm_sems, delta_norm_sds = \
+                (np.array(x) for x in (means, sds, sems, deltas, delta_sems, delta_sds, delta_norms, delta_norm_sems,
+                                       delta_norm_sds))
 
             label = []
             for var in set_vars:
@@ -213,15 +219,15 @@ def plot_vs_indep_var(plot_data, stats_plt, stats, indep_var, plot_out_dir, plot
             ax_del.plot(indep_vals, deltas, label=label, color=c)
             ax_del.fill_between(indep_vals, deltas - delta_sems, deltas + delta_sems, color=c, alpha=0.5)
 
-            del_max = max(deltas)
-            ax_del_norm.plot(indep_vals, deltas / del_max, label=label, color=c)
-            ax_del_norm.fill_between(indep_vals, (deltas - delta_sems) / del_max, (deltas + delta_sems) / del_max,
+            # del_max = max(deltas)
+            ax_del_norm.plot(indep_vals, delta_norms, label=label, color=c)
+            ax_del_norm.fill_between(indep_vals, delta_norms - delta_norm_sems, delta_norms + delta_norm_sems,
                                      color=c, alpha=0.5)
 
             if plot_sd:
                 ax.fill_between(indep_vals, means - sds, means + sds, color=c, alpha=0.2)
                 ax_del.fill_between(indep_vals, deltas - delta_sds, deltas + delta_sds, color=c, alpha=0.2)
-                ax_del_norm.fill_between(indep_vals, (deltas - delta_sds) / del_max, (deltas + delta_sds) / del_max,
+                ax_del_norm.fill_between(indep_vals, delta_norms - delta_norm_sds, delta_norms + delta_norm_sds,
                                          color=c, alpha=0.2)
         ax.set_xlabel(var_string_consts[indep_var]['x-label'])
         # ax.set_ylabel('')
