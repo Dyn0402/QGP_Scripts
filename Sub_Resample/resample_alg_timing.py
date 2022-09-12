@@ -13,8 +13,10 @@ import matplotlib.pyplot as plt
 
 
 def main():
-    base_path = '/home/dylan/Research/Results/Resample_Timing_Tests/'
-    tracks = ['10_tracks', '30_tracks', '10_tracks_vec', '30_tracks_vec', '10_tracks_alg3', '30_tracks_alg3']
+    # base_path = '/home/dylan/Research/Results/Resample_Timing_Tests/'
+    base_path = 'F:/Research/Results/Resample_Timing_Tests/'
+    # tracks = ['10_tracks', '30_tracks', '10_tracks_vec', '30_tracks_vec', '10_tracks_alg3', '30_tracks_alg3']
+    tracks = ['10_tracks', '30_tracks', '10_tracks_alg3', '30_tracks_alg3']
     plot_time_vs_samples(base_path, tracks)
     print('donzo')
 
