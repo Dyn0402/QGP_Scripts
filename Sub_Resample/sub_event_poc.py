@@ -30,11 +30,11 @@ import istarmap
 
 
 def main():
-    resample_validation()
+    # resample_validation()
     # resample_with_nsamples()
     # correlated_dists()
     # multiple_exps_dist()
-    # bootstrap_validation()
+    bootstrap_validation()
     print('donzo')
 
 
@@ -45,24 +45,24 @@ def resample_validation():
     """
     seed = 1432
     threads = 15
-    n_tracks = [15, 30]
-    n_samples = [1, 1440]
+    n_tracks = [15]
+    # n_samples = [1, 1440]
     # n_samples = [1, 2, 3]
     # n_samples = np.array([1, 2, 3, 4, 5, 6, 7] + list(np.arange(10, 5000, 50)))
-    # n_samples = np.arange(1, 31, 1)
-    n_events = np.arange(100, 2000, 5)
-    # n_events = [2000]
+    n_samples = np.arange(1, 31, 1)
+    # n_events = np.arange(100, 2000, 5)
+    n_events = [250]
     # bin_widths = np.deg2rad([60, 120, 240, 300])
-    bin_widths = np.deg2rad([60, 120])
+    bin_widths = np.deg2rad([179, 180, 181])
     experiments = 1000
     # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
     # plot_out_base = 'F:/Research/Resample_POC/Resample_Validation/'
     plot_out_base = 'E:/Transfer/Research/Resample_POC/Resample_Validation/'
     # plot_out_base = 'C:/Users/Dyn04/Desktop/Resample_POC/Resample_Validation/'
     # plot_out_name = 'vs_nsamplesto5k_bws_ntrack15_nevent250/'
-    # plot_out_name = 'vs_nsamplesto20_isobws_ntrack15_nevent250/'
+    plot_out_name = 'vs_nsamplesto20_bw180ish_ntrack15_nevent250/'
     # plot_out_name = 'vs_nsamplesto20_bw60and120_ntrack15and30_nevent2000/'
-    plot_out_name = 'vs_neventsto2k_bw60and120_ntrack15and30_nsamples1440/'
+    # plot_out_name = 'vs_neventsto2k_bw60and120_ntrack15and30_nsamples1440/'
     plot_out_dir = plot_out_base + plot_out_name
     plot_sds = False
     try:
@@ -100,7 +100,10 @@ def resample_validation():
 
     plot_data = pd.DataFrame(plot_data)
 
-    plot_vs_indep_var(plot_data, stats_plt, stats, 'n_events', plot_out_dir, plot_sds)
+    pars = {'n_events': len(n_events), 'n_samples': len(n_samples), 'bin_width': len(bin_widths)}
+    indep_var = max(pars, key=pars.get)  # Use the longest parameter list as the independent variable
+    plot_vs_indep_var(plot_data, stats_plt, stats, indep_var, plot_out_dir, plot_sds)
+    # plot_vs_indep_var(plot_data, stats_plt, stats, 'n_events', plot_out_dir, plot_sds)
     # plot_vs_indep_var(plot_data, stats_plt, stats, 'n_samples', plot_out_dir, plot_sds)
     # plot_vs_indep_var(plot_data, stats_plt, stats, 'bin_width', plot_out_dir, plot_sds)
 
@@ -129,8 +132,6 @@ def plot_vs_indep_var(plot_data, stats_plt, stats, indep_var, plot_out_dir, plot
         stat_combo_ax_del_norm[stat_index].grid()
         stat_combo_ax_del[stat_index].axhline(0, color='black')
         stat_combo_ax_del_norm[stat_index].axhline(0, color='black')
-
-        # ax_del_norm.axhline(1, color='black')
 
         indep_vals = pd.unique(plot_data[indep_var])  # Assume here a square lattice
 
@@ -345,7 +346,7 @@ def bootstrap_validation():
     bootstraps = 250
     experiments = 100
     # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
-    plot_out_base = 'F:/Research/Resample_POC/Bootstrap_Validation/'
+    plot_out_base = 'E:/Transfer/Research/Resample_POC/Bootstrap_Validation/'
     plot_out_name = 'nsample1440_nevent100_new/'
     plot_out_dir = plot_out_base + plot_out_name
     try:
