@@ -74,28 +74,23 @@ class DistStats:
             self.total_counts = vals.size
             pows = np.array(range(n_min, n_max + 1))
             vals = np.tile(vals, (pows.size, 1))
-            res = np.sum((vals.T ** pows).T, axis=1)
+            res = np.sum((vals.T.astype(np.longdouble) ** pows / self.total_counts).T, axis=1)
             self.raw_moments.update({p: x for p, x in zip(pows, res)})
         elif len(self.dist) > self.numpy_threshold:  # Numpy faster for many items
             vals, counts = np.array(list(self.dist.keys())), np.array(list(self.dist.values()))
             self.total_counts = np.sum(counts.astype(np.longlong))
             pows = np.array(range(n_min, n_max + 1))
             vals = np.tile(vals, (pows.size, 1))
-            res = np.sum((vals.T ** pows).T * counts.astype(np.longlong), axis=1)
+            res = np.sum((vals.T.astype(np.longdouble) ** pows).T * counts.astype(np.longdouble) / self.total_counts,
+                         axis=1)
             self.raw_moments.update({p: x for p, x in zip(pows, res)})
         else:
-            self.total_counts = 0
+            # self.total_counts = 0
+            self.total_counts = sum(self.dist.values())
             for x, counts in self.dist.items():
                 self.total_counts += counts
                 for ni in range(n_min, n_max + 1):
-                    self.raw_moments[ni] += x ** ni * counts
-
-        for ni in range(n_min, n_max + 1):
-            try:
-                self.raw_moments[ni] /= self.total_counts
-            except RuntimeWarning:
-                print(f'Warning treated as error for debug:\n'
-                      f'raw_moment {ni}: {self.raw_moments[ni]}, total_counts: {self.total_counts}')
+                    self.raw_moments[ni] += x ** ni * float(counts) / self.total_counts
 
     def calc_cent_moments(self, n_max=1):
         """
@@ -113,6 +108,15 @@ class DistStats:
             for nj in range(0, ni + 1):
                 self.cent_moments[ni] += \
                     binom(ni, nj) * (-1) ** (ni - nj) * self.raw_moments[nj] * self.raw_moments[1] ** (ni - nj)
+            if ni == 8 and self.cent_moments[8] < 0:
+                print(self.dist)
+                print(self.raw_moments)
+                sum_test = 0
+                for nj in range(0, ni + 1):
+                    sum_test += \
+                        binom(ni, nj) * (-1) ** (ni - nj) * self.raw_moments[nj] * self.raw_moments[1] ** (ni - nj)
+                    print(nj, binom(ni, nj), (ni - nj), sum_test,
+                          binom(ni, nj) * (-1) ** (ni - nj) * self.raw_moments[nj] * self.raw_moments[1] ** (ni - nj))
 
         for ni in range(2, n_max + 1):
             if self.cent_moments[2] <= 0:
@@ -268,8 +272,13 @@ class DistStats:
             err = ((cm[6] - cm[3] ** 2 + 9 * cm[2] ** 3 - 6 * cm[2] * cm[4]) / n) ** 0.5
         elif order == 4:
             val = cm[4] - 3 * cm[2] ** 2
-            err = pow((cm[8] - 12 * cm[6] * cm[2] - 8 * cm[5] * cm[3] - pow(cm[4], 2) + 48 * cm[4] * pow(cm[2], 2)
-                       + 64 * pow(cm[3], 2) * cm[2] - 36 * pow(cm[2], 4)) / n, 0.5)
+            try:
+                err = pow((cm[8] - 12 * cm[6] * cm[2] - 8 * cm[5] * cm[3] - pow(cm[4], 2) + 48 * cm[4] * pow(cm[2], 2)
+                           + 64 * pow(cm[3], 2) * cm[2] - 36 * pow(cm[2], 4)) / n, 0.5)
+            except RuntimeWarning:
+                print([cm[i] for i in range(2, 9)],
+                      cm[8] - 12 * cm[6] * cm[2] - 8 * cm[5] * cm[3] - pow(cm[4], 2) + 48 * cm[4] * pow(cm[2], 2)
+                      + 64 * pow(cm[3], 2) * cm[2] - 36 * pow(cm[2], 4))
         elif order == 5:
             val = cm[5] - 10 * cm[2] * cm[3]
             err = pow((cm[10] - pow(cm[5], 2) - 10 * cm[4] * cm[6] + 900 * pow(cm[2], 5) - 20 * cm[3] * cm[7]
