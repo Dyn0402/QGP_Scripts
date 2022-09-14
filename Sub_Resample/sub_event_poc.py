@@ -781,33 +781,21 @@ def plot_exp_sigmas(stat_vals, stat_errs, binom_val, stat, out_dir):
         sigmas.append((stat_vals[i] - binom_val) / stat_errs[i])
 
     fig, hist = plt.subplots()
-    hist.hist(sigmas)
+    bin_edges = hist.hist(sigmas)[1]
+    bin_width = bin_edges[1] - bin_edges[0]
     mean = np.mean(sigmas)
     mean_err = sem(sigmas)
     hist.axvline(mean, color='green', ls=':', label='mean')
     hist.axvspan(mean - mean_err, mean + mean_err, color='green', alpha=0.7)
     hist.axvline(0, ls='--', color='black')
     x = np.linspace(min(sigmas), max(sigmas), 1000)
-    y = norm.pdf(x) * len(sigmas)
+    y = norm.pdf(x) * len(sigmas) * bin_width
     hist.plot(x, y, color='red', alpha=0.7, label='Standard Normal')
     hist.set_xlabel('Sigmas from True')
     hist.set_ylabel('Number of Experiments')
     hist.set_title(stat.capitalize())
     hist.legend()
     fig.savefig(f'{out_dir}Sigmas_{stat}.png', bbox_inches='tight')
-
-    fig2, hist2 = plt.subplots()
-    hist2.hist(sigmas, density=True)
-    hist2.axvline(mean, color='green', ls=':', label='mean')
-    hist2.axvspan(mean - mean_err, mean + mean_err, color='green', alpha=0.7)
-    hist2.axvline(0, ls='--', color='black')
-    y2 = norm.pdf(x)
-    hist2.plot(x, y2, color='red', alpha=0.7, label='Standard Normal')
-    hist2.set_xlabel('Sigmas from True')
-    hist2.set_ylabel('Number of Experiments')
-    hist2.set_title(stat.capitalize())
-    hist2.legend()
-    fig2.savefig(f'{out_dir}Sigmas_Norm_{stat}.png', bbox_inches='tight')
 
 
 def define_stats(n_tracks, bin_width):
