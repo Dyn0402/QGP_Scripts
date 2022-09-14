@@ -338,19 +338,24 @@ def bootstrap_validation():
     :return:
     """
     seed = 13434
-    threads = 15
+    threads = 7
     n_tracks = 15
-    n_sample = 1440
-    n_events = 400
+    n_sample = 1
+    n_events = 250
     bin_width = np.deg2rad(120)
     bootstraps = 250
     experiments = 100
     # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
-    plot_out_base = 'E:/Transfer/Research/Resample_POC/Bootstrap_Validation/'
-    plot_out_name = 'nsample1440_nevent100_new/'
+    plot_out_base = 'D:/Transfer/Research/Resample_POC/Bootstrap_Validation/'
+    plot_out_name = 'nsample1_nevent250_bw120_ntrack15_nexp100/'
     plot_out_dir = plot_out_base + plot_out_name
+    plot_exps_out_dir = f'{plot_out_dir}Experiments/'
     try:
         os.mkdir(plot_out_dir)
+    except FileExistsError:
+        pass
+    try:
+        os.mkdir(plot_exps_out_dir)
     except FileExistsError:
         pass
     show_plot = False
@@ -363,7 +368,7 @@ def bootstrap_validation():
 
     seeds = np.random.SeedSequence(seed).spawn(experiments)
     jobs = [(n_tracks, n_events, bin_width, n_sample, bootstraps, stats, stats_plt, seed,
-             n_exp, True, plot_out_dir) for n_exp, seed in enumerate(seeds)]
+             n_exp, True, plot_exps_out_dir) for n_exp, seed in enumerate(seeds)]
 
     exp_stats = []
     with Pool(threads) as pool:
@@ -383,8 +388,11 @@ def bootstrap_validation():
             stats_err_delta_list[stat].append(stat_errs_delta[stat])
 
     for stat in stats_plt:
-        plot_exp_scatter(n_exps, stats_list[stat], stats_err_list[stat], stats_err_delta_list[stat],
-                         stats[stat]['true'], stat, plot_out_dir)
+        plot_exp_scatter(n_exps, stats_list[stat], stats[stat]['true'], stat, plot_out_dir, stats_err_list[stat])
+        plot_exp_scatter(n_exps, stats_list[stat], stats[stat]['true'], stat, plot_out_dir,
+                         stat_errs_delta=stats_err_delta_list[stat])
+        plot_exp_scatter(n_exps, stats_list[stat], stats[stat]['true'], stat, plot_out_dir, stats_err_list[stat],
+                         stats_err_delta_list[stat])
         plot_bs_vs_delta(n_exps, stats_err_list[stat], stats_err_delta_list[stat], stat, plot_out_dir)
         plot_bs_vs_delta_hist(stats_err_list[stat], stats_err_delta_list[stat], stat, plot_out_dir)
         plot_exp_deviation(stats_list[stat], stats[stat]['true'], stat, plot_out_dir)
@@ -611,7 +619,8 @@ def run_experiment(n_tracks, n_events, bin_width, samples, bootstraps, stats,
         bs_list = [stats[stat]['meth'](bs_dist).val for bs_dist in data_bs_stats]
         stat_errs.update({stat: np.std(bs_list)})
         if plot:
-            plot_bootstraps(bs_list, stat, stat_vals[stat], stat_errs[stat], stats[stat]['true'], n_exp, out_dir)
+            plot_bootstraps(bs_list, stat, stat_vals[stat], stat_errs[stat], stats[stat]['true'], n_exp, n_events,
+                            out_dir)
 
     return n_exp, stat_vals, stat_errs, stat_errs_delta
 
@@ -693,30 +702,40 @@ def plot_dist(data, n_tracks, bin_width, n_exp, out_dir=None):
         plt.close()
 
 
-def plot_bootstraps(bs_list, stat, exp_val, exp_err, binom_val, n_exp, out_dir):
+def plot_bootstraps(bs_list, stat, exp_val, exp_err, binom_val, n_exp, n_events, out_dir):
     sns.displot(bs_list, kde=True, rug=True, label='Bootstrap Estimates')
     plt.title(f'Experiment #{n_exp}')
     plt.axvline(exp_val, color='red', ls='--', label='Experiment Estimate')
+    plt.axvspan(exp_val - exp_err, exp_val + exp_err, color='red', alpha=0.3)
     plt.axvline(binom_val, color='green', ls='--', label='Binomial True')
-    plt.annotate(f'{Measure(exp_val, exp_err)}', xy=(0.02, 0.98), xycoords='axes fraction',
-                 bbox=dict(boxstyle='round', facecolor='tan', alpha=0.3), verticalalignment='top')
+    binom_val_dec_match = str(Measure(binom_val, exp_err)).split(' ')[0]
+    plt.annotate(f'Estimate {Measure(exp_val, exp_err)}\nBinom True {binom_val_dec_match}\n{n_events} Events',
+                 xy=(0.02, 0.98), xycoords='axes fraction', bbox=dict(boxstyle='round', facecolor='tan', alpha=0.3),
+                 verticalalignment='top')
     plt.xlabel(stat)
     plt.legend(loc='upper right')
     plt.savefig(f'{out_dir}Experiment_{n_exp}_{stat}.png', bbox_inches='tight')
     plt.close()
 
 
-def plot_exp_scatter(n_exps, stat_vals, stat_errs, stat_errs_delta, binom_val, stat, out_dir):
+def plot_exp_scatter(n_exps, stat_vals, binom_val, stat, out_dir, stat_errs_bs=None, stat_errs_delta=None):
     fig, ax = plt.subplots()
     ax.grid()
-    ax.errorbar(n_exps, stat_vals, yerr=stat_errs, marker='o', ls='none', label='Bootstrap Errors')
-    ax.errorbar(n_exps, stat_vals, yerr=stat_errs_delta, marker='', ls='none', color='green', elinewidth=3,
-                alpha=0.5, label='Delta Theorem Errors')
-    ax.axhline(binom_val, ls='--', color='black')
+    ax.axhline(binom_val, ls='--', color='black', label='Binomial True Value')
+    title = f'Scatter_{stat}'
+    if stat_errs_bs is not None:
+        ax.errorbar(n_exps, stat_vals, yerr=stat_errs_bs, marker='', ls='none', label='Bootstrap Errors')
+        title += '_bserr'
+    if stat_errs_delta is not None:
+        ax.errorbar(n_exps, stat_vals, yerr=stat_errs_delta, marker='', ls='none', color='green', elinewidth=3,
+                    alpha=0.5, label='Delta Theorem Errors')
+        title += '_dterr'
+    ax.scatter(n_exps, stat_vals, marker='o')
     ax.set_xlabel('Exerpiment #')
-    ax.set_title(stat)
+    ax.set_title(stat.capitalize())
     ax.legend()
-    fig.savefig(f'{out_dir}Scatter_{stat}.png', bbox_inches='tight')
+
+    fig.savefig(f'{out_dir}{title}.png', bbox_inches='tight')
 
 
 def plot_bs_vs_delta(n_exps, bs_errs, delta_errs, stat, out_dir):
@@ -762,18 +781,33 @@ def plot_exp_sigmas(stat_vals, stat_errs, binom_val, stat, out_dir):
         sigmas.append((stat_vals[i] - binom_val) / stat_errs[i])
 
     fig, hist = plt.subplots()
-    hist.hist(sigmas, density=True)
+    hist.hist(sigmas)
     mean = np.mean(sigmas)
     mean_err = sem(sigmas)
-    hist.axvspan(mean - mean_err, mean + mean_err, color='green', alpha=0.8, label='mean')
-    hist.axvline(0, ls='-', color='gray', alpha=1.0)
+    hist.axvline(mean, color='green', ls=':', label='mean')
+    hist.axvspan(mean - mean_err, mean + mean_err, color='green', alpha=0.7)
+    hist.axvline(0, ls='--', color='black')
     x = np.linspace(min(sigmas), max(sigmas), 1000)
-    y = norm.pdf(x)
-    hist.plot(x, y, color='red', alpha=0.7)
+    y = norm.pdf(x) * len(sigmas)
+    hist.plot(x, y, color='red', alpha=0.7, label='Standard Normal')
     hist.set_xlabel('Sigmas from True')
-    hist.set_title(stat)
+    hist.set_ylabel('Number of Experiments')
+    hist.set_title(stat.capitalize())
     hist.legend()
     fig.savefig(f'{out_dir}Sigmas_{stat}.png', bbox_inches='tight')
+
+    fig2, hist2 = plt.subplots()
+    hist2.hist(sigmas, density=True)
+    hist2.axvline(mean, color='green', ls=':', label='mean')
+    hist2.axvspan(mean - mean_err, mean + mean_err, color='green', alpha=0.7)
+    hist2.axvline(0, ls='--', color='black')
+    y2 = norm.pdf(x)
+    hist2.plot(x, y2, color='red', alpha=0.7, label='Standard Normal')
+    hist2.set_xlabel('Sigmas from True')
+    hist2.set_ylabel('Number of Experiments')
+    hist2.set_title(stat.capitalize())
+    hist2.legend()
+    fig2.savefig(f'{out_dir}Sigmas_Norm_{stat}.png', bbox_inches='tight')
 
 
 def define_stats(n_tracks, bin_width):
