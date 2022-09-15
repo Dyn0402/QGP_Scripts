@@ -103,12 +103,19 @@ def resample_validation():
 
 
 def plot_vs_indep_var(plot_data, stats_plt, stats, indep_var, plot_out_dir, plot_sd=True):
+    var_string_consts = {
+        'n_tracks': {'x-label': 'Number of Tracks', 'legend': ' tracks'},
+        'bin_width': {'x-label': 'Azimuthal Partition Width', 'legend': '° width'},
+        'n_events': {'x-label': 'Number of Events', 'legend': ' events'},
+        'n_samples': {'x-label': 'Number of Samples', 'legend': ' samples'}}
+    set_vars = list(var_string_consts.keys())
+    set_vars.remove(indep_var)
+
     stat_combo_fig, stat_combo_ax = plt.subplots(len(stats_plt), 1, sharex=True, figsize=(8, 8))
     stat_combo_fig_del, stat_combo_ax_del = plt.subplots(len(stats_plt), 1, sharex=True, figsize=(8, 8))
     stat_combo_fig_del_norm, stat_combo_ax_del_norm = plt.subplots(len(stats_plt), 1, sharex=True, figsize=(8, 8))
     for stat_index, stat in enumerate(stats_plt):
         color = iter(get_cmap('Set1').colors)
-        # color_binom = iter(get_cmap('tab20b').colors)
         stat_df = plot_data[plot_data['stat'] == stat]
         fig, ax = plt.subplots()
         fig_del, ax_del = plt.subplots()
@@ -124,17 +131,8 @@ def plot_vs_indep_var(plot_data, stats_plt, stats, indep_var, plot_out_dir, plot
         stat_combo_ax_del[stat_index].axhline(0, color='black')
         stat_combo_ax_del_norm[stat_index].axhline(0, color='black')
 
-        indep_vals = pd.unique(plot_data[indep_var])  # Assume here a square lattice
+        indep_vals = pd.unique(stat_df[indep_var])  # Assume here a square lattice
 
-        var_string_consts = {
-            'n_tracks': {'x-label': 'Number of Tracks', 'legend': ' tracks'},
-            'bin_width': {'x-label': 'Azimuthal Partition Width', 'legend': '° width'},
-            'n_events': {'x-label': 'Number of Events', 'legend': ' events'},
-            'n_samples': {'x-label': 'Number of Samples', 'legend': ' samples'}}
-
-        set_vars = list(var_string_consts.keys())
-
-        set_vars.remove(indep_var)
         uniques = {var: pd.unique(stat_df[var]) for var in set_vars}
         set_combos = product(*uniques.values())
         num_set_combos = np.product([len(unique_vals) for unique_vals in uniques.values()])
