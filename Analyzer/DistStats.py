@@ -108,29 +108,12 @@ class DistStats:
             for nj in range(0, ni + 1):
                 self.cent_moments[ni] += \
                     binom(ni, nj) * (-1) ** (ni - nj) * self.raw_moments[nj] * self.raw_moments[1] ** (ni - nj)
-            if ni == 8 and self.cent_moments[8] < 0:
-                print(self.dist)
-                print(self.raw_moments)
-                sum_test = 0
-                for nj in range(0, ni + 1):
-                    sum_test += \
-                        binom(ni, nj) * (-1) ** (ni - nj) * self.raw_moments[nj] * self.raw_moments[1] ** (ni - nj)
-                    print(nj, binom(ni, nj), (ni - nj), sum_test,
-                          binom(ni, nj) * (-1) ** (ni - nj) * self.raw_moments[nj] * self.raw_moments[1] ** (ni - nj))
 
         for ni in range(2, n_max + 1):
             if self.cent_moments[2] <= 0:
                 self.m.update({ni: float('nan')})
                 if self.debug:
                     print('Variance zero') if self.cent_moments[2] == 0 else print('Variance negative')
-            # if self.cent_moments[2] == 0:
-            #     if self.debug:
-            #         print('Variance zero')
-            #     self.m.update({ni: float('nan')})
-            # elif self.cent_moments[2] < 0:
-            #     if self.debug:
-            #         print('Variance negative')
-            #     self.m.update({ni: float('nan')})
             else:
                 self.m.update({ni: self.cent_moments[ni] / self.cent_moments[2] ** (0.5 * ni)})
 
@@ -269,16 +252,24 @@ class DistStats:
             err = pow((cm[4] - pow(cm[2], 2)) / n, 0.5)
         elif order == 3:
             val = cm[3]
-            err = ((cm[6] - cm[3] ** 2 + 9 * cm[2] ** 3 - 6 * cm[2] * cm[4]) / n) ** 0.5
+            try:
+                err = ((cm[6] - cm[3] ** 2 + 9 * cm[2] ** 3 - 6 * cm[2] * cm[4]) / n) ** 0.5
+            except RuntimeWarning:
+                print('Bad c3 error')
+                print(f'Central moments {cm}')
+                print(cm[6] - cm[3] ** 2 + 9 * cm[2] ** 3 - 6 * cm[2] * cm[4])
+                err = float('nan')
         elif order == 4:
             val = cm[4] - 3 * cm[2] ** 2
             try:
                 err = pow((cm[8] - 12 * cm[6] * cm[2] - 8 * cm[5] * cm[3] - pow(cm[4], 2) + 48 * cm[4] * pow(cm[2], 2)
                            + 64 * pow(cm[3], 2) * cm[2] - 36 * pow(cm[2], 4)) / n, 0.5)
             except RuntimeWarning:
-                print([cm[i] for i in range(2, 9)],
-                      cm[8] - 12 * cm[6] * cm[2] - 8 * cm[5] * cm[3] - pow(cm[4], 2) + 48 * cm[4] * pow(cm[2], 2)
+                print('Bad c4 error')
+                print(f'Central moments {cm}')
+                print(cm[8] - 12 * cm[6] * cm[2] - 8 * cm[5] * cm[3] - pow(cm[4], 2) + 48 * cm[4] * pow(cm[2], 2)
                       + 64 * pow(cm[3], 2) * cm[2] - 36 * pow(cm[2], 4))
+                err = float('nan')
         elif order == 5:
             val = cm[5] - 10 * cm[2] * cm[3]
             err = pow((cm[10] - pow(cm[5], 2) - 10 * cm[4] * cm[6] + 900 * pow(cm[2], 5) - 20 * cm[3] * cm[7]
@@ -324,11 +315,24 @@ class DistStats:
             err = pow((cm[4] - pow(cm[2], 2)) / n, 0.5)
         elif order == 3:
             val = n ** 2 / ((n - 1) * (n - 2)) * cm[3]
-            err = ((cm[6] - cm[3] ** 2 + 9 * cm[2] ** 3 - 6 * cm[2] * cm[4]) / n) ** 0.5
+            try:
+                err = ((cm[6] - cm[3] ** 2 + 9 * cm[2] ** 3 - 6 * cm[2] * cm[4]) / n) ** 0.5
+            except RuntimeWarning:
+                print('Bad k3 error')
+                print(f'Central moments {cm}')
+                print(cm[6] - cm[3] ** 2 + 9 * cm[2] ** 3 - 6 * cm[2] * cm[4])
+                err = float('nan')
         elif order == 4:
             val = n ** 2 * ((n + 1) * cm[4] - 3 * (n - 1) * cm[2] ** 2) / ((n - 1) * (n - 2) * (n - 3))
-            err = pow((cm[8] - 12 * cm[6] * cm[2] - 8 * cm[5] * cm[3] - pow(cm[4], 2) + 48 * cm[4] * pow(cm[2], 2)
-                       + 64 * pow(cm[3], 2) * cm[2] - 36 * pow(cm[2], 4)) / n, 0.5)
+            try:
+                err = pow((cm[8] - 12 * cm[6] * cm[2] - 8 * cm[5] * cm[3] - pow(cm[4], 2) + 48 * cm[4] * pow(cm[2], 2)
+                           + 64 * pow(cm[3], 2) * cm[2] - 36 * pow(cm[2], 4)) / n, 0.5)
+            except RuntimeWarning:
+                print('Bad k4 error')
+                print(f'Central moments {cm}')
+                print(cm[8] - 12 * cm[6] * cm[2] - 8 * cm[5] * cm[3] - pow(cm[4], 2) + 48 * cm[4] * pow(cm[2], 2)
+                      + 64 * pow(cm[3], 2) * cm[2] - 36 * pow(cm[2], 4))
+                err = float('nan')
         elif order == 5:
             val = n ** 3 * ((n + 5) * cm[5] - 10 * (n - 1) * cm[2] * cm[3]) / ((n - 1) * (n - 2) * (n - 3) * (n - 4))
             err = pow((cm[10] - pow(cm[5], 2) - 10 * cm[4] * cm[6] + 900 * pow(cm[2], 5) - 20 * cm[3] * cm[7]
