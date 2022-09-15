@@ -8,7 +8,9 @@ Created as QGP_Scripts/estimator_bias_poc.py
 @author: Dylan Neff, Dylan
 """
 
+from matplotlib.cm import get_cmap
 import pandas as pd
+from itertools import product
 import os
 from multiprocessing import Pool
 import tqdm
@@ -18,6 +20,7 @@ from poc_functions import *
 
 
 def main():
+    estimator_bias()
     print('donzo')
 
 
@@ -27,10 +30,10 @@ def estimator_bias():
         :return:
         """
     seed = 1432
-    threads = 15
+    threads = 7
     n_tracks = [15]
     # n_samples = [1, 1440]
-    n_samples = [1, 1440]
+    n_samples = [1]
     # n_samples = np.array([1, 2, 3, 4, 5, 6, 7] + list(np.arange(10, 5000, 50)))
     # n_samples = np.arange(1, 31, 1)
     # n_events = np.arange(100, 2000, 5)
@@ -39,15 +42,8 @@ def estimator_bias():
     # bin_widths = np.deg2rad([60, 120, 240, 300])
     bin_widths = np.deg2rad([120])
     experiments = 1000
-    # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
-    # plot_out_base = 'F:/Research/Resample_POC/Resample_Validation/'
-    plot_out_base = 'E:/Transfer/Research/Resample_POC/Resample_Validation/'
-    # plot_out_base = 'C:/Users/Dyn04/Desktop/Resample_POC/Resample_Validation/'
-    # plot_out_name = 'vs_nsamplesto5k_bws_ntrack15_nevent250/'
-    # plot_out_name = 'vs_nsamplesto20_bw180ish_ntrack15_nevent250/'
-    # plot_out_name = 'vs_nsamplesto20_bw60and120_ntrack15and30_nevent2000/'
-    # plot_out_name = 'vs_neventsto2k_bw60and120_ntrack15and30_nsamples1440/'
-    plot_out_name = 'kstats_vs_nevento30_nsamples1and1440_bw120_ntrack15/'
+    plot_out_base = 'D:/Transfer/Research/Resample_POC/Estimator_Bias/'
+    plot_out_name = 'kstats_vs_nevento30_nsamples1_bw120_ntrack15/'
     plot_out_dir = plot_out_base + plot_out_name
     plot_sds = False
     try:
@@ -59,10 +55,8 @@ def estimator_bias():
     stats = {bin_width: {n_track: define_stats(n_track, bin_width) for n_track in n_tracks}
              for bin_width in bin_widths}
 
-    stats_plt = ['c4', 'k4', 'c4/c2', 'k4/k2']
-    # stats_plt = ['standard deviation', 'skewness', 'non-excess kurtosis']
-    # stats_plt = ['skewness', 'non-excess kurtosis']
-    # stats_plt = ['standard deviation']
+    stat_plt_combos = [('c2', 'k2'), ('c3', 'k3'), ('c4', 'k4')]
+    stats_plt = [x for y in stat_plt_combos for x in y]  # Unpack combos
 
     write_info_file(plot_out_dir, threads, n_tracks, n_samples, n_events, bin_widths, 'estimator_bias',
                     experiments, stats_plt)
@@ -88,23 +82,27 @@ def estimator_bias():
 
     pars = {'n_events': len(n_events), 'n_samples': len(n_samples), 'bin_width': len(bin_widths)}
     indep_var = max(pars, key=pars.get)  # Use the longest parameter list as the independent variable
-    plot_vs_indep_var(plot_data, stats_plt, stats, indep_var, plot_out_dir, plot_sds)
-    # plot_vs_indep_var(plot_data, stats_plt, stats, 'n_events', plot_out_dir, plot_sds)
-    # plot_vs_indep_var(plot_data, stats_plt, stats, 'n_samples', plot_out_dir, plot_sds)
-    # plot_vs_indep_var(plot_data, stats_plt, stats, 'bin_width', plot_out_dir, plot_sds)
+    plot_vs_indep_var(plot_data, stat_plt_combos, stats, indep_var, plot_out_dir, plot_sds)
 
     if show_plot:
         plt.show()
 
 
-def plot(plot_data, stats_plt, stats, indep_var, plot_out_dir, plot_sd=True):
-    stat_combo_fig, stat_combo_ax = plt.subplots(len(stats_plt), 1, sharex=True, figsize=(8, 8))
-    stat_combo_fig_del, stat_combo_ax_del = plt.subplots(len(stats_plt), 1, sharex=True, figsize=(8, 8))
-    stat_combo_fig_del_norm, stat_combo_ax_del_norm = plt.subplots(len(stats_plt), 1, sharex=True, figsize=(8, 8))
-    for stat_index, stat in enumerate(stats_plt):
-        color = iter(get_cmap('Set1').colors)
-        # color_binom = iter(get_cmap('tab20b').colors)
-        stat_df = plot_data[plot_data['stat'] == stat]
+def plot_vs_indep_var(plot_data, stat_plt_combos, stats, indep_var, plot_out_dir, plot_sd=True):
+    var_string_consts = {
+        'n_tracks': {'x-label': 'Number of Tracks', 'legend': ' tracks'},
+        'bin_width': {'x-label': 'Azimuthal Partition Width', 'legend': '° width'},
+        'n_events': {'x-label': 'Number of Events', 'legend': ' events'},
+        'n_samples': {'x-label': 'Number of Samples', 'legend': ' samples'}}
+    set_vars = list(var_string_consts.keys())
+    set_vars.remove(indep_var)
+
+    stat_combo_fig, stat_combo_ax = plt.subplots(len(stat_plt_combos), 1, sharex=True, figsize=(8, 8))
+    stat_combo_fig_del, stat_combo_ax_del = plt.subplots(len(stat_plt_combos), 1, sharex=True, figsize=(8, 8))
+    stat_combo_fig_del_norm, stat_combo_ax_del_norm = plt.subplots(len(stat_plt_combos), 1, sharex=True, figsize=(8, 8))
+
+    binom_val_label = False
+    for stat_index, stat_combo in enumerate(stat_plt_combos):
         fig, ax = plt.subplots()
         fig_del, ax_del = plt.subplots()
         fig_del_norm, ax_del_norm = plt.subplots()
@@ -118,41 +116,22 @@ def plot(plot_data, stats_plt, stats, indep_var, plot_out_dir, plot_sd=True):
         stat_combo_ax_del_norm[stat_index].grid()
         stat_combo_ax_del[stat_index].axhline(0, color='black')
         stat_combo_ax_del_norm[stat_index].axhline(0, color='black')
+        color = iter(get_cmap('Set1').colors)
 
-        indep_vals = pd.unique(plot_data[indep_var])  # Assume here a square lattice
+        for stat in stat_combo:
+            stat_df = plot_data[plot_data['stat'] == stat]
 
-        var_string_consts = {
-            'n_tracks': {'x-label': 'Number of Tracks', 'legend': ' tracks'},
-            'bin_width': {'x-label': 'Azimuthal Partition Width', 'legend': '° width'},
-            'n_events': {'x-label': 'Number of Events', 'legend': ' events'},
-            'n_samples': {'x-label': 'Number of Samples', 'legend': ' samples'}}
+            indep_vals = pd.unique(stat_df[indep_var])  # Assume here a square lattice
 
-        set_vars = list(var_string_consts.keys())
+            uniques = {var: pd.unique(stat_df[var]) for var in set_vars}
+            set_combos = product(*uniques.values())
+            num_set_combos = np.product([len(unique_vals) for unique_vals in uniques.values()]) * len(stat_combo)
 
-        set_vars.remove(indep_var)
-        uniques = {var: pd.unique(stat_df[var]) for var in set_vars}
-        set_combos = product(*uniques.values())
-        num_set_combos = np.product([len(unique_vals) for unique_vals in uniques.values()])
-
-        binom_val_label = False
-        if indep_var == 'bin_width':
-            for n_track in uniques['n_tracks']:
-                binom_vals = []
-                for bin_width in indep_vals:
-                    binom_vals.append(stats[bin_width][n_track][stat]['true'])
-                if not binom_val_label:
-                    ax.plot(indep_vals, binom_vals, ls='--', color='black', label='Binomial Value')
-                    stat_combo_ax[stat_index].plot(indep_vals, binom_vals, ls='--', color='black',
-                                                   label='Binomial Value')
-                    binom_val_label = True
-                else:
-                    ax.plot(indep_vals, binom_vals, ls='--', color='black')
-                    stat_combo_ax[stat_index].plot(indep_vals, binom_vals, ls='--', color='black')
-        elif indep_var == 'n_tracks':
-            for bin_width in uniques['bin_width']:
-                binom_vals = []
-                for n_track in indep_vals:
-                    binom_vals.append(stats[bin_width][n_track][stat]['true'])
+            if indep_var == 'bin_width':
+                for n_track in uniques['n_tracks']:
+                    binom_vals = []
+                    for bin_width in indep_vals:
+                        binom_vals.append(stats[bin_width][n_track][stat]['true'])
                     if not binom_val_label:
                         ax.plot(indep_vals, binom_vals, ls='--', color='black', label='Binomial Value')
                         stat_combo_ax[stat_index].plot(indep_vals, binom_vals, ls='--', color='black',
@@ -161,87 +140,102 @@ def plot(plot_data, stats_plt, stats, indep_var, plot_out_dir, plot_sd=True):
                     else:
                         ax.plot(indep_vals, binom_vals, ls='--', color='black')
                         stat_combo_ax[stat_index].plot(indep_vals, binom_vals, ls='--', color='black')
-        else:
-            for bin_width in uniques['bin_width']:
-                for n_track in uniques['n_tracks']:
-                    # label = f'{n_track} track, {round(np.rad2deg(bin_width))}° Binomial Value'
-                    # c = next(color_binom)
-                    if not binom_val_label:
-                        ax.axhline(stats[bin_width][n_track][stat]['true'], ls='--', color='black',
-                                   label='Binomial Value')
-                        stat_combo_ax[stat_index].axhline(stats[bin_width][n_track][stat]['true'], ls='--',
-                                                          color='black', label='Binomial Value')
-                        binom_val_label = True
+            elif indep_var == 'n_tracks':
+                for bin_width in uniques['bin_width']:
+                    binom_vals = []
+                    for n_track in indep_vals:
+                        binom_vals.append(stats[bin_width][n_track][stat]['true'])
+                        if not binom_val_label:
+                            ax.plot(indep_vals, binom_vals, ls='--', color='black', label='Binomial Value')
+                            stat_combo_ax[stat_index].plot(indep_vals, binom_vals, ls='--', color='black',
+                                                           label='Binomial Value')
+                            binom_val_label = True
+                        else:
+                            ax.plot(indep_vals, binom_vals, ls='--', color='black')
+                            stat_combo_ax[stat_index].plot(indep_vals, binom_vals, ls='--', color='black')
+            else:
+                for bin_width in uniques['bin_width']:
+                    for n_track in uniques['n_tracks']:
+                        # label = f'{n_track} track, {round(np.rad2deg(bin_width))}° Binomial Value'
+                        # c = next(color_binom)
+                        if not binom_val_label:
+                            ax.axhline(stats[bin_width][n_track][stat]['true'], ls='--', color='black',
+                                       label='Binomial Value')
+                            stat_combo_ax[stat_index].axhline(stats[bin_width][n_track][stat]['true'], ls='--',
+                                                              color='black', label='Binomial Value')
+                            binom_val_label = True
+                        else:
+                            ax.axhline(stats[bin_width][n_track][stat]['true'], ls='--', color='black')
+                            stat_combo_ax[stat_index].axhline(stats[bin_width][n_track][stat]['true'], ls='--',
+                                                              color='black')
+
+            for set_var_vals in set_combos:
+                set_var_vals = dict(zip(set_vars, set_var_vals))
+                set_df = stat_df
+                for var, var_val in set_var_vals.items():
+                    set_df = set_df[set_df[var] == var_val]
+
+                c = next(color)
+                means, sds, sems, deltas, delta_sems, delta_sds, delta_norms, delta_norm_sems, delta_norm_sds = \
+                    [], [], [], [], [], [], [], [], []
+                for indep_val in indep_vals:
+                    vals = set_df[set_df[indep_var] == indep_val]['val']
+                    means.append(np.mean(vals))
+                    sds.append(np.std(vals))
+                    sems.append(sds[-1] / np.sqrt(vals.size))
+                    # delts = np.power(vals - stats[stat]['true'], 2)
+                    if indep_var == 'bin_width':
+                        binom_val = stats[indep_val][set_var_vals['n_tracks']][stat]['true']
+                    elif indep_var == 'n_tracks':
+                        binom_val = stats[set_var_vals['bin_width']][indep_val][stat]['true']
                     else:
-                        ax.axhline(stats[bin_width][n_track][stat]['true'], ls='--', color='black')
-                        stat_combo_ax[stat_index].axhline(stats[bin_width][n_track][stat]['true'], ls='--',
-                                                          color='black')
+                        binom_val = stats[set_var_vals['bin_width']][set_var_vals['n_tracks']][stat]['true']
+                    delts = np.abs(vals - binom_val)
+                    # fig_deltas, ax_deltas = plt.subplots()
+                    # ax_deltas.set_title(f'{indep_var} = {indep_val} {set_var_vals}')
+                    # fig_deltas.canvas.manager.set_window_title(f'{indep_var} = {indep_val} {set_var_vals}')
+                    # sns.histplot(delts)
+                    # delta_sems.append(get_bs_sem(delts))  # Looks to be about equivalent to s/root(n)
+                    deltas.append(np.mean(delts))
+                    delta_norms.append(deltas[-1] / binom_val)
+                    delta_sds.append(np.std(delts))
+                    delta_norm_sds.append(np.std(delts / binom_val))
+                    delta_sems.append(np.std(delts) / np.sqrt(vals.size))
+                    delta_norm_sems.append(np.std(delts / binom_val) / np.sqrt(vals.size))
+                    # print(f'{indep_val}: {delta_sds[-1]}')
+                means, sds, sems, deltas, delta_sems, delta_sds, delta_norms, delta_norm_sems, delta_norm_sds = \
+                    (np.array(x) for x in (means, sds, sems, deltas, delta_sems, delta_sds, delta_norms, delta_norm_sems,
+                                           delta_norm_sds))
 
-        for set_var_vals in set_combos:
-            set_var_vals = dict(zip(set_vars, set_var_vals))
-            set_df = stat_df
-            for var, var_val in set_var_vals.items():
-                set_df = set_df[set_df[var] == var_val]
+                label = []
+                if len(stat_combo) > 1:
+                    label.append(stat)
+                for var in set_vars:
+                    if len(uniques[var]) > 1:
+                        val = set_var_vals[var] if var != 'bin_width' else round(np.rad2deg(set_var_vals[var]))
+                        label.append(f'{val}{var_string_consts[var]["legend"]}')
+                label = ', '.join(label)
 
-            c = next(color)
-            means, sds, sems, deltas, delta_sems, delta_sds, delta_norms, delta_norm_sems, delta_norm_sds = \
-                [], [], [], [], [], [], [], [], []
-            for indep_val in indep_vals:
-                vals = set_df[set_df[indep_var] == indep_val]['val']
-                means.append(np.mean(vals))
-                sds.append(np.std(vals))
-                sems.append(sds[-1] / np.sqrt(vals.size))
-                # delts = np.power(vals - stats[stat]['true'], 2)
-                if indep_var == 'bin_width':
-                    binom_val = stats[indep_val][set_var_vals['n_tracks']][stat]['true']
-                elif indep_var == 'n_tracks':
-                    binom_val = stats[set_var_vals['bin_width']][indep_val][stat]['true']
-                else:
-                    binom_val = stats[set_var_vals['bin_width']][set_var_vals['n_tracks']][stat]['true']
-                delts = np.abs(vals - binom_val)
-                # fig_deltas, ax_deltas = plt.subplots()
-                # ax_deltas.set_title(f'{indep_var} = {indep_val} {set_var_vals}')
-                # fig_deltas.canvas.manager.set_window_title(f'{indep_var} = {indep_val} {set_var_vals}')
-                # sns.histplot(delts)
-                # delta_sems.append(get_bs_sem(delts))  # Looks to be about equivalent to s/root(n)
-                deltas.append(np.mean(delts))
-                delta_norms.append(deltas[-1] / binom_val)
-                delta_sds.append(np.std(delts))
-                delta_norm_sds.append(np.std(delts / binom_val))
-                delta_sems.append(np.std(delts) / np.sqrt(vals.size))
-                delta_norm_sems.append(np.std(delts / binom_val) / np.sqrt(vals.size))
-                # print(f'{indep_val}: {delta_sds[-1]}')
-            means, sds, sems, deltas, delta_sems, delta_sds, delta_norms, delta_norm_sems, delta_norm_sds = \
-                (np.array(x) for x in (means, sds, sems, deltas, delta_sems, delta_sds, delta_norms, delta_norm_sems,
-                                       delta_norm_sds))
+                for ax_ in [ax, stat_combo_ax[stat_index]]:
+                    ax_.plot(indep_vals, means, label=label, color=c)
+                    ax_.fill_between(indep_vals, means - sems, means + sems, color=c, alpha=0.6)
+                    if plot_sd:
+                        ax_.fill_between(indep_vals, means - sds, means + sds, color=c, alpha=0.2)
 
-            label = []
-            for var in set_vars:
-                if len(uniques[var]) > 1:
-                    val = set_var_vals[var] if var != 'bin_width' else round(np.rad2deg(set_var_vals[var]))
-                    label.append(f'{val}{var_string_consts[var]["legend"]}')
-            label = ', '.join(label)
+                for ax_del_ in [ax_del, stat_combo_ax_del[stat_index]]:
+                    ax_del_.plot(indep_vals, deltas, label=label, color=c)
+                    ax_del_.fill_between(indep_vals, deltas - delta_sems, deltas + delta_sems, color=c, alpha=0.5)
+                    if plot_sd:
+                        ax_del.fill_between(indep_vals, deltas - delta_sds, deltas + delta_sds, color=c, alpha=0.2)
 
-            for ax_ in [ax, stat_combo_ax[stat_index]]:
-                ax_.plot(indep_vals, means, label=label, color=c)
-                ax_.fill_between(indep_vals, means - sems, means + sems, color=c, alpha=0.6)
-                if plot_sd:
-                    ax_.fill_between(indep_vals, means - sds, means + sds, color=c, alpha=0.2)
-
-            for ax_del_ in [ax_del, stat_combo_ax_del[stat_index]]:
-                ax_del_.plot(indep_vals, deltas, label=label, color=c)
-                ax_del_.fill_between(indep_vals, deltas - delta_sems, deltas + delta_sems, color=c, alpha=0.5)
-                if plot_sd:
-                    ax_del.fill_between(indep_vals, deltas - delta_sds, deltas + delta_sds, color=c, alpha=0.2)
-
-            # del_max = max(deltas)
-            for ax_del_norm_ in [ax_del_norm, stat_combo_ax_del_norm[stat_index]]:
-                ax_del_norm_.plot(indep_vals, delta_norms, label=label, color=c)
-                ax_del_norm_.fill_between(indep_vals, delta_norms - delta_norm_sems, delta_norms + delta_norm_sems,
-                                          color=c, alpha=0.5)
-                if plot_sd:
-                    ax_del_norm.fill_between(indep_vals, delta_norms - delta_norm_sds, delta_norms + delta_norm_sds,
-                                             color=c, alpha=0.2)
+                # del_max = max(deltas)
+                for ax_del_norm_ in [ax_del_norm, stat_combo_ax_del_norm[stat_index]]:
+                    ax_del_norm_.plot(indep_vals, delta_norms, label=label, color=c)
+                    ax_del_norm_.fill_between(indep_vals, delta_norms - delta_norm_sems, delta_norms + delta_norm_sems,
+                                              color=c, alpha=0.5)
+                    if plot_sd:
+                        ax_del_norm.fill_between(indep_vals, delta_norms - delta_norm_sds, delta_norms + delta_norm_sds,
+                                                 color=c, alpha=0.2)
 
         ax.set_xlabel(var_string_consts[indep_var]['x-label'])
         ax_del.set_xlabel(var_string_consts[indep_var]['x-label'])
@@ -251,12 +245,13 @@ def plot(plot_data, stats_plt, stats, indep_var, plot_out_dir, plot_sd=True):
             ax_del.legend()
             ax_del_norm.legend()
 
-        for ax_ in [stat_combo_ax[stat_index], stat_combo_ax_del[stat_index], stat_combo_ax_del_norm[stat_index]]:
-            ax_.set_ylabel(stat)
+        if len(stat_combo) == 1:
+            for ax_ in [stat_combo_ax[stat_index], stat_combo_ax_del[stat_index], stat_combo_ax_del_norm[stat_index]]:
+                ax_.set_ylabel(stat)
 
-        title = f'{stat.title()} vs {var_string_consts[indep_var]["x-label"]}'
-        title_del = f'{stat.title()} Deviations vs {var_string_consts[indep_var]["x-label"]}'
-        title_del_norm = f'{stat.title()} Normalized Deviations vs {var_string_consts[indep_var]["x-label"]}'
+        title = f'{", ".join(stat_combo)} vs {var_string_consts[indep_var]["x-label"]}'
+        title_del = f'{", ".join(stat_combo)} Deviations vs {var_string_consts[indep_var]["x-label"]}'
+        title_del_norm = f'{", ".join(stat_combo)} Normalized Deviations vs {var_string_consts[indep_var]["x-label"]}'
         title_extra = [f'{vals[0]}{var_string_consts[var]["legend"]}' if var != 'bin_width'
                        else f'{round(np.rad2deg(vals[0]))}{var_string_consts[var]["legend"]}' for var, vals
                        in uniques.items() if len(vals) == 1]
