@@ -18,9 +18,11 @@ import tqdm
 import istarmap
 
 from pickle_methods import *
+from poc_functions import *
 
 
 def main():
+    bootstrap_validation()
     print('donzo')
 
 
@@ -91,12 +93,18 @@ def bootstrap_validation():
         plot_exp_deviation(stats_list[stat], stats[stat]['true'], stat, plot_out_dir)
         plot_exp_sigmas(stats_list[stat], stats_err_list[stat], stats[stat]['true'], stat, plot_out_dir)
 
+    plot_exp_scatter_stats(stats_plt, n_exps, stats_list, stats, plot_out_dir, stats_err_list, stats_err_delta_list)
+    plot_exp_sigmas_stats(stats_plt, stats_list, stats, plot_out_dir, stats_err_list, stats_err_delta_list)
+
     if show_plot:
         plt.show()
 
 
-def plot_exp_scatter(n_exps, stat_vals, binom_val, stat, out_dir, stat_errs_bs=None, stat_errs_delta=None):
-    fig, ax = plt.subplots()
+def plot_exp_scatter(n_exps, stat_vals, binom_val, stat, out_dir=None, stat_errs_bs=None, stat_errs_delta=None):
+    if out_dir is not None:
+        fig, ax = plt.subplots()
+    else:
+        ax = plt.gca()
     ax.grid()
     ax.axhline(binom_val, ls='--', color='black', label='Binomial True Value')
     title = f'Scatter_{stat}'
@@ -108,11 +116,12 @@ def plot_exp_scatter(n_exps, stat_vals, binom_val, stat, out_dir, stat_errs_bs=N
                     alpha=0.5, label='Delta Theorem Errors')
         title += '_dterr'
     ax.scatter(n_exps, stat_vals, marker='o')
-    ax.set_xlabel('Exerpiment #')
-    ax.set_title(stat.capitalize())
-    ax.legend()
 
-    fig.savefig(f'{out_dir}{title}.png', bbox_inches='tight')
+    if out_dir is not None:
+        ax.set_xlabel('Exerpiment #')
+        ax.set_title(stat.capitalize())
+        ax.legend()
+        fig.savefig(f'{out_dir}{title}.png', bbox_inches='tight')
 
 
 def plot_bs_vs_delta(n_exps, bs_errs, delta_errs, stat, out_dir):
@@ -153,12 +162,15 @@ def plot_exp_deviation(stat_vals, binom_val, stat, out_dir):
     fig.savefig(f'{out_dir}Deviation_{stat}.png', bbox_inches='tight')
 
 
-def plot_exp_sigmas(stat_vals, stat_errs, binom_val, stat, out_dir):
+def plot_exp_sigmas(stat_vals, stat_errs, binom_val, stat, out_dir=None):
     sigmas = []
     for i in range(len(stat_vals)):
         sigmas.append((stat_vals[i] - binom_val) / stat_errs[i])
 
-    fig, hist = plt.subplots()
+    if out_dir is not None:
+        fig, hist = plt.subplots()
+    else:
+        hist = plt.gca()
     bin_edges = hist.hist(sigmas)[1]
     bin_width = bin_edges[1] - bin_edges[0]
     mean = np.mean(sigmas)
@@ -169,11 +181,71 @@ def plot_exp_sigmas(stat_vals, stat_errs, binom_val, stat, out_dir):
     x = np.linspace(min(sigmas), max(sigmas), 1000)
     y = norm.pdf(x) * len(sigmas) * bin_width
     hist.plot(x, y, color='red', alpha=0.7, label='Standard Normal')
-    hist.set_xlabel('Sigmas from True')
-    hist.set_ylabel('Number of Experiments')
-    hist.set_title(stat.capitalize())
-    hist.legend()
-    fig.savefig(f'{out_dir}Sigmas_{stat}.png', bbox_inches='tight')
+
+    if out_dir is not None:
+        hist.set_xlabel('Sigmas from True')
+        hist.set_ylabel('Number of Experiments')
+        hist.set_title(stat.capitalize())
+        hist.legend()
+        fig.savefig(f'{out_dir}Sigmas_{stat}.png', bbox_inches='tight')
+
+
+def plot_exp_scatter_stats(stats_plt, n_exps, stats_list, stats, plot_out_dir, stats_err_bs_list, stats_err_dt_list):
+    fig_dt, axs_dt = plt.subplots(len(stats_plt), 1, sharex=True, figsize=(10, 8))
+    for stat_index, stat in enumerate(stats_plt):
+        plt.sca(axs_dt[stat_index])
+        plot_exp_scatter(n_exps, stats_list[stat], stats[stat]['true'], stat, stat_errs_delta=stats_err_dt_list[stat])
+        axs_dt[stat_index].set_ylabel(stat.capitalize())
+    axs_dt[-1].legend()
+    axs_dt[-1].set_xlabel('Experiment #')
+    fig_dt.tight_layout()
+    fig_dt.savefig(f'{plot_out_dir}Scatter_Stats_dterr.png', bbox_inches='tight')
+
+    fig_bs, axs_bs = plt.subplots(len(stats_plt), 1, sharex=True, figsize=(10, 8))
+    for stat_index, stat in enumerate(stats_plt):
+        plt.sca(axs_bs[stat_index])
+        plot_exp_scatter(n_exps, stats_list[stat], stats[stat]['true'], stat, stat_errs_bs=stats_err_bs_list[stat])
+        axs_bs[stat_index].set_ylabel(stat.capitalize())
+    axs_bs[-1].legend()
+    axs_bs[-1].set_xlabel('Experiment #')
+    fig_bs.tight_layout()
+    fig_bs.savefig(f'{plot_out_dir}Scatter_Stats_bserr.png', bbox_inches='tight')
+
+    fig_bsdt, axs_bsdt = plt.subplots(len(stats_plt), 1, sharex=True, figsize=(10, 8))
+    for stat_index, stat in enumerate(stats_plt):
+        plt.sca(axs_bsdt[stat_index])
+        plot_exp_scatter(n_exps, stats_list[stat], stats[stat]['true'], stat, stat_errs_bs=stats_err_bs_list[stat],
+                         stat_errs_delta=stats_err_dt_list[stat])
+        axs_bsdt[stat_index].set_ylabel(stat.capitalize())
+    axs_bsdt[-1].legend()
+    axs_bsdt[-1].set_xlabel('Experiment #')
+    fig_bsdt.tight_layout()
+    fig_bsdt.savefig(f'{plot_out_dir}Scatter_Stats_bsdterr.png', bbox_inches='tight')
+
+
+def plot_exp_sigmas_stats(stats_plt, stats_list, stats, plot_out_dir, stats_err_list, stats_err_delta_list):
+    fig_dt, axs_dt = plt.subplots(len(stats_plt), 1, sharex=True, figsize=(8, 8))
+    for stat_index, stat in enumerate(stats_plt):
+        plt.sca(axs_dt[stat_index])
+        plot_exp_sigmas(stats_list[stat], stats_err_delta_list[stat], stats[stat]['true'], stat)
+        axs_dt[stat_index].set_ylabel('Number of Experiments')
+        plt.annotate(stat.capitalize(), xy=(0.02, 0.98), xycoords='axes fraction', verticalalignment='top')
+        # bbox=dict(boxstyle='round', facecolor='tan', alpha=0.3),
+    axs_dt[0].legend()
+    axs_dt[-1].set_xlabel('Sigmas from True')
+    fig_dt.tight_layout()
+    fig_dt.savefig(f'{plot_out_dir}Sigmas_Stats_dterr.png', bbox_inches='tight')
+
+    fig_bs, axs_bs = plt.subplots(len(stats_plt), 1, sharex=True, figsize=(8, 8))
+    for stat_index, stat in enumerate(stats_plt):
+        plt.sca(axs_bs[stat_index])
+        plot_exp_sigmas(stats_list[stat], stats_err_list[stat], stats[stat]['true'], stat)
+        axs_bs[stat_index].set_ylabel('Number of Experiments')
+        plt.annotate(stat.capitalize(), xy=(0.02, 0.98), xycoords='axes fraction', verticalalignment='top')
+    axs_bs[0].legend()
+    axs_bs[-1].set_xlabel('Sigmas from True')
+    fig_bs.tight_layout()
+    fig_bs.savefig(f'{plot_out_dir}Sigmas_Stats_bserr.png', bbox_inches='tight')
 
 
 if __name__ == '__main__':
