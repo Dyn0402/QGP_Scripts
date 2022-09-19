@@ -48,6 +48,7 @@ def main():
 
 
 def get_resamples3(angles_in, bin_width, samples):
+    # Don't remember this one, does it work?
     angles = list(angles_in.copy())
     if bin_width > 2 * np.pi or bin_width <= 0:
         print(f'get_resamples bin_width {bin_width} out of range, setting to 2_PI')
@@ -88,7 +89,57 @@ def get_resamples3(angles_in, bin_width, samples):
     return hist
 
 
+def get_resamples4(angles_in, bin_width, samples, rng=None):
+    # angles = list(angles_in.copy())
+    # if bin_width > 2 * np.pi or bin_width <= 0:
+    #     print(f'get_resamples bin_width {bin_width} out of range, setting to 2_PI')
+    #     bin_width = 2 * np.pi
+    # if samples < 0:
+    #     print(f'get_resamples samples {samples} less than 0, taking absolute value: {samples} --> {abs(samples)}')
+    #     samples = abs(samples)
+
+    # sort here
+
+    num_angles = angles_in.size
+    hist = np.zeros(num_angles + 1, dtype=int)
+    if samples == 0:
+        return hist
+
+    # Generate samples random numbers on azimuth
+    if rng is None:
+        rng = np.random.default_rng()
+    bin_lows = np.sort(rng.rand(samples)) * 2 * np.pi
+
+    # bin_low = 0
+    # bin_high = bin_width
+    # dphi = 2 * np.pi / samples
+
+    # Append duplicate set +2pi to end for bins that wrap around the azimuth
+    angles = np.append(angles_in, np.append(angles_in + 2 * np.pi, 4 * np.pi))
+
+    low_index = 0
+    high_index = 0
+    sample_i = 0
+    bin_low = bin_lows[sample_i]
+    bin_high = bin_low + bin_width
+    while sample_i < samples:
+        while angles[low_index] < bin_low:
+            low_index += 1
+        while angles[high_index] < bin_high:
+            high_index += 1
+        step, step_high = 0, 0
+        sample_i_start = sample_i
+        while sample_i < samples and angles[low_index] > bin_low and angles[high_index] > bin_high:
+            sample_i += 1
+            bin_low = bin_lows[sample_i]
+            bin_high = bin_low + bin_width
+        hist[high_index - low_index] += sample_i - sample_i_start
+
+    return hist
+
+
 def get_resamples(angles_in, bin_width, samples):
+    # Think this is the main algorithm?
     # Expecting angles is numpy array
     # angles = angles_in.copy()
     # if bin_width > 2 * np.pi or bin_width <= 0:
