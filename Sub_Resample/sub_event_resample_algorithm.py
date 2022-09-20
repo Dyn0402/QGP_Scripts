@@ -21,6 +21,8 @@ def main():
     Copy and transcribe C++ algorithm to test and visualize
     :return:
     """
+    test_multi_alg4()
+    return
     # animation_function_test()
     # return
     # angles = [0.5, 1.5]
@@ -45,6 +47,56 @@ def main():
     # plt.show()
 
     print('donzo')
+
+
+def test_single_alg4():
+    """
+    For the case of equally spaced bins like in previous algorithm 3, compare algorithm 4 to make sure results are same
+    :return:
+    """
+    angles = np.deg2rad([20, 50, 55, 145, 195, 340])
+    bin_width = np.deg2rad(120)  # 2.09
+    n_samples = 15510
+    dphi = 2 * np.pi / n_samples
+    bin_lows = np.arange(0, 2 * np.pi, dphi)
+    hist3 = get_resamples(angles, bin_width, n_samples)
+    print(f'hist3: {hist3}')
+    print(f'hist3 sum: {np.sum(hist3)}')
+
+    hist4 = get_resamples4_testing(angles, bin_width, n_samples, bin_lows)
+    print(f'hist4: {hist4}')
+    print(f'hist4 sum: {np.sum(hist4)}')
+
+    print(f'hist3 equal to hist4? {np.all(hist3 == hist4)}')
+
+
+def test_multi_alg4():
+    """
+    For the case of equally spaced bins like in previous algorithm 3, compare algorithm 4 to make sure results are same.
+    Run many tests with random number of tracks, angles, bin_width, and number of samples. Count number of tests in
+    which algorithms produce different results.
+    Ran 100,000 tests and no differences found. Confident Algorithm 4 produces identical results for equally spaced bins
+    :return:
+    """
+    n_tests = 100000
+    n_bad_tests = 0
+    for n_test in range(n_tests):
+        n_tracks = np.random.randint(1, 100)
+        angles = np.deg2rad(360 * np.random.random(n_tracks))
+        bin_width = np.deg2rad(360 * np.random.random())
+        n_samples = np.random.randint(1, 10000)
+
+        dphi = 2 * np.pi / n_samples
+        bin_lows = np.arange(0, 2 * np.pi, dphi)
+        hist3 = get_resamples(angles, bin_width, n_samples)
+        hist4 = get_resamples4_testing(angles, bin_width, n_samples, bin_lows)
+
+        if not np.all(hist3 == hist4):
+            print(f'Bad test #{n_test}')
+            n_bad_tests += 1
+
+    print('Algorithm 4 testing finished')
+    print(f'{n_bad_tests} bad tests')
 
 
 def get_resamples3(angles_in, bin_width, samples):
@@ -108,11 +160,8 @@ def get_resamples4(angles_in, bin_width, samples, rng=None):
     # Generate samples random numbers on azimuth
     if rng is None:
         rng = np.random.default_rng()
-    bin_lows = np.sort(rng.rand(samples)) * 2 * np.pi
-
-    # bin_low = 0
-    # bin_high = bin_width
-    # dphi = 2 * np.pi / samples
+    bin_lows = np.sort(rng.random(samples)) * 2 * np.pi
+    bin_lows = np.append(bin_lows, 6 * np.pi)  # Dummy index for end of algorithm
 
     # Append duplicate set +2pi to end for bins that wrap around the azimuth
     angles = np.append(angles_in, np.append(angles_in + 2 * np.pi, 4 * np.pi))
@@ -127,7 +176,55 @@ def get_resamples4(angles_in, bin_width, samples, rng=None):
             low_index += 1
         while angles[high_index] < bin_high:
             high_index += 1
-        step, step_high = 0, 0
+        sample_i_start = sample_i
+        while sample_i < samples and angles[low_index] > bin_low and angles[high_index] > bin_high:
+            sample_i += 1
+            bin_low = bin_lows[sample_i]
+            bin_high = bin_low + bin_width
+        hist[high_index - low_index] += sample_i - sample_i_start
+
+    return hist
+
+
+def get_resamples4_testing(angles_in, bin_width, samples, bin_lows):
+    # angles = list(angles_in.copy())
+    # if bin_width > 2 * np.pi or bin_width <= 0:
+    #     print(f'get_resamples bin_width {bin_width} out of range, setting to 2_PI')
+    #     bin_width = 2 * np.pi
+    # if samples < 0:
+    #     print(f'get_resamples samples {samples} less than 0, taking absolute value: {samples} --> {abs(samples)}')
+    #     samples = abs(samples)
+
+    # sort here
+
+    num_angles = angles_in.size
+    hist = np.zeros(num_angles + 1, dtype=int)
+    if samples == 0:
+        return hist
+
+    # Generate samples random numbers on azimuth
+    # if rng is None:
+    #     rng = np.random.default_rng()
+    # bin_lows = np.sort(rng.rand(samples)) * 2 * np.pi
+
+    # bin_low = 0
+    # bin_high = bin_width
+    # dphi = 2 * np.pi / samples
+
+    # Append duplicate set +2pi to end for bins that wrap around the azimuth
+    angles = np.append(angles_in, np.append(angles_in + 2 * np.pi, 4 * np.pi))
+    bin_lows = np.append(bin_lows, 6 * np.pi)  # Dummy index for end of algorithm
+
+    low_index = 0
+    high_index = 0
+    sample_i = 0
+    bin_low = bin_lows[sample_i]
+    bin_high = bin_low + bin_width
+    while sample_i < samples:
+        while angles[low_index] < bin_low:
+            low_index += 1
+        while angles[high_index] < bin_high:
+            high_index += 1
         sample_i_start = sample_i
         while sample_i < samples and angles[low_index] > bin_low and angles[high_index] > bin_high:
             sample_i += 1
