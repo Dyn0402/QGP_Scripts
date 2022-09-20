@@ -13,7 +13,7 @@ import seaborn as sns
 from scipy.stats import binom
 
 from Measure import Measure
-from sub_event_resample_algorithm import get_resamples
+from sub_event_resample_algorithm import get_resamples, get_resamples4
 from pickle_methods import *
 
 
@@ -25,8 +25,8 @@ def gen_experiment(n_events, n_tracks, rng=np.random.default_rng()):
     return np.sort(rng.random((n_events, n_tracks))) * 2 * np.pi
 
 
-def run_experiment(n_tracks, n_events, bin_width, samples, bootstraps, stats,
-                   stats_plt, seed, n_exp=None, plot=False, out_dir=''):
+def run_experiment(n_tracks, n_events, bin_width, samples, bootstraps, stats, stats_plt, seed, n_exp=None,
+                   plot=False, out_dir=''):
     rng = np.random.default_rng(seed)
     experiment = gen_experiment(n_events, n_tracks, rng)
     data, data_bs = bin_experiment(experiment, n_tracks, bin_width, samples, bootstraps, rng)
@@ -66,11 +66,10 @@ def bin_experiment(experiment, n_tracks, bin_width, samples, bootstraps, rng):
     return data, data_bs
 
 
-def run_experiment_no_bs(n_tracks, n_events, bin_width, samples, stats,
-                         stats_plt, seed, n_exp=None):
+def run_experiment_no_bs(n_tracks, n_events, bin_width, samples, stats, stats_plt, seed, n_exp=None, alg=1):
     rng = np.random.default_rng(seed)
     experiment = gen_experiment(n_events, n_tracks, rng)
-    data = bin_experiment_no_bs(experiment, n_tracks, bin_width, samples, rng)
+    data = bin_experiment_no_bs(experiment, n_tracks, bin_width, samples, rng, alg)
 
     data_stats = DistStats(data)
     stat_vals = {}
@@ -80,14 +79,18 @@ def run_experiment_no_bs(n_tracks, n_events, bin_width, samples, stats,
         stat_vals.update({stat: meas.val})
         stat_errs_delta.update({stat: meas.err})
 
-    return n_exp, samples, n_events, bin_width, n_tracks, stat_vals, stat_errs_delta
+    return n_exp, samples, n_events, bin_width, n_tracks, stat_vals, stat_errs_delta, alg
 
 
-def bin_experiment_no_bs(experiment, n_tracks, bin_width, samples, rng):
+def bin_experiment_no_bs(experiment, n_tracks, bin_width, samples, rng, alg=1):
     data = np.zeros(n_tracks + 1, dtype=int)
     for event in experiment:
         # event = rotate_event(event, rng.random() * 2 * np.pi)  # This doesn't matter with no phi dependence
-        hist = get_resamples(event, bin_width, samples)
+        if alg == 4:
+            hist = get_resamples4(event, bin_width, samples, rng)
+        else:
+            hist = get_resamples(event, bin_width, samples)
+
         data += hist
 
     return data

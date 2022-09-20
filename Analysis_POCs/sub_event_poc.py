@@ -35,14 +35,16 @@ def resample_validation():
     threads = 15
     n_tracks = [15]
     # n_samples = [1, 1440]
-    n_samples = [1, 1440]
+    # n_samples = [1, 1440]
     # n_samples = np.array([1, 2, 3, 4, 5, 6, 7] + list(np.arange(10, 5000, 50)))
-    # n_samples = np.arange(1, 31, 1)
+    n_samples = np.arange(1, 31, 1)
     # n_events = np.arange(100, 2000, 5)
-    n_events = np.arange(4, 31, 1)
-    # n_events = [250]
+    # n_events = np.arange(10, 2000, 50)
+    n_events = [250]
     # bin_widths = np.deg2rad([60, 120, 240, 300])
-    bin_widths = np.deg2rad([120])
+    bin_widths = np.deg2rad([179, 180, 181])
+    # bin_widths = np.deg2rad([120])
+    algs = [1, 4]
     experiments = 1000
     # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
     # plot_out_base = 'F:/Research/Resample_POC/Resample_Validation/'
@@ -52,7 +54,9 @@ def resample_validation():
     # plot_out_name = 'vs_nsamplesto20_bw180ish_ntrack15_nevent250/'
     # plot_out_name = 'vs_nsamplesto20_bw60and120_ntrack15and30_nevent2000/'
     # plot_out_name = 'vs_neventsto2k_bw60and120_ntrack15and30_nsamples1440/'
-    plot_out_name = 'kstats_vs_nevento30_nsamples1and1440_bw120_ntrack15/'
+    # plot_out_name = 'vs_neventsto2k_bw120_ntrack15_nsamples1and1440_algs1and4/'
+    plot_out_name = 'vs_nsamplesto30_bw180ish_ntrack15_nevent250_algs1and4/'
+    # plot_out_name = 'kstats_vs_nevento30_nsamples1and1440_bw120_ntrack15/'
     plot_out_dir = plot_out_base + plot_out_name
     plot_sds = False
     try:
@@ -64,34 +68,36 @@ def resample_validation():
     stats = {bin_width: {n_track: define_stats(n_track, bin_width) for n_track in n_tracks}
              for bin_width in bin_widths}
 
-    stats_plt = ['c4', 'k4', 'c4/c2', 'k4/k2']
-    # stats_plt = ['standard deviation', 'skewness', 'non-excess kurtosis']
+    # stats_plt = ['c4', 'k4', 'c4/c2', 'k4/k2']
+    stats_plt = ['standard deviation', 'skewness', 'non-excess kurtosis']
     # stats_plt = ['skewness', 'non-excess kurtosis']
     # stats_plt = ['standard deviation']
 
     write_info_file(plot_out_dir, threads, n_tracks, n_samples, n_events, bin_widths, 'resample_validiation',
                     experiments, stats_plt)
 
-    num_indep_exps = experiments * len(n_events) * len(n_samples) * len(n_tracks) * len(bin_widths)
+    num_indep_exps = experiments * len(n_events) * len(n_samples) * len(n_tracks) * len(bin_widths) * len(algs)
     seeds = iter(np.random.SeedSequence(seed).spawn(num_indep_exps))
     plot_data = []
 
-    jobs = [(n_track, n_event, bin_width, n_sample, stats[bin_width][n_track], stats_plt, next(seeds), n_exp)
+    # n_tracks, n_events, bin_width, samples, stats, stats_plt, seed, n_exp = None, alg = 1
+    jobs = [(n_track, n_event, bin_width, n_sample, stats[bin_width][n_track], stats_plt, next(seeds), n_exp, alg)
             for n_exp in range(experiments) for n_event in n_events for n_sample in n_samples
-            for bin_width in bin_widths for n_track in n_tracks]
+            for bin_width in bin_widths for n_track in n_tracks for alg in algs]
 
     with Pool(threads) as pool:
         for exp_stat in tqdm.tqdm(pool.istarmap(run_experiment_no_bs, jobs), total=len(jobs)):
-            n_exp, n_samples_exp, n_events_exp, bin_width, n_track, stat_vals, stat_errs_delta = exp_stat
+            n_exp, n_samples_exp, n_events_exp, bin_width, n_track, stat_vals, stat_errs_delta, alg = exp_stat
             for stat, val in stat_vals.items():
                 plot_data.append({'stat': stat, 'n_exp': n_exp, 'n_samples': n_samples_exp, 'n_events': n_events_exp,
-                                  'n_tracks': n_track, 'bin_width': bin_width, 'val': val,
+                                  'n_tracks': n_track, 'bin_width': bin_width, 'val': val, 'algorithm': alg,
                                   'delta_err': stat_errs_delta[stat],
                                   })
 
     plot_data = pd.DataFrame(plot_data)
 
-    pars = {'n_events': len(n_events), 'n_samples': len(n_samples), 'bin_width': len(bin_widths)}
+    pars = {'n_events': len(n_events), 'n_samples': len(n_samples), 'bin_width': len(bin_widths),
+            'algorithm': len(algs)}
     indep_var = max(pars, key=pars.get)  # Use the longest parameter list as the independent variable
     plot_vs_indep_var(plot_data, stats_plt, stats, indep_var, plot_out_dir, plot_sds)
     # plot_vs_indep_var(plot_data, stats_plt, stats, 'n_events', plot_out_dir, plot_sds)
@@ -107,7 +113,9 @@ def plot_vs_indep_var(plot_data, stats_plt, stats, indep_var, plot_out_dir, plot
         'n_tracks': {'x-label': 'Number of Tracks', 'legend': ' tracks'},
         'bin_width': {'x-label': 'Azimuthal Partition Width', 'legend': '° width'},
         'n_events': {'x-label': 'Number of Events', 'legend': ' events'},
-        'n_samples': {'x-label': 'Number of Samples', 'legend': ' samples'}}
+        'n_samples': {'x-label': 'Number of Samples', 'legend': ' samples'},
+        'algorithm': {'x-label': 'N/A', 'legend': ' algorithm'},
+    }
     set_vars = list(var_string_consts.keys())
     set_vars.remove(indep_var)
 
