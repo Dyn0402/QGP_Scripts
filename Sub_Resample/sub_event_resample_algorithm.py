@@ -177,7 +177,7 @@ def get_resamples4(angles_in, bin_width, samples, rng=None):
         while angles[high_index] < bin_high:
             high_index += 1
         sample_i_start = sample_i
-        while sample_i < samples and angles[low_index] > bin_low and angles[high_index] > bin_high:
+        while sample_i < samples and angles[low_index] >= bin_low and angles[high_index] >= bin_high:
             sample_i += 1
             bin_low = bin_lows[sample_i]
             bin_high = bin_low + bin_width
@@ -226,7 +226,7 @@ def get_resamples4_testing(angles_in, bin_width, samples, bin_lows):
         while angles[high_index] < bin_high:
             high_index += 1
         sample_i_start = sample_i
-        while sample_i < samples and angles[low_index] > bin_low and angles[high_index] > bin_high:
+        while sample_i < samples and angles[low_index] >= bin_low and angles[high_index] >= bin_high:
             sample_i += 1
             bin_low = bin_lows[sample_i]
             bin_high = bin_low + bin_width
