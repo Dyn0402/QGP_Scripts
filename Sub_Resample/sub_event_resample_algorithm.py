@@ -21,19 +21,19 @@ def main():
     Copy and transcribe C++ algorithm to test and visualize
     :return:
     """
-    test_multi_alg4()
-    return
+    # test_multi_alg4()
+    # return
     # animation_function_test()
     # return
     # angles = [0.5, 1.5]
     # angles = list(np.deg2rad([20, 50, 51, 53, 55, 60, 70, 137, 187, 220, 224, 228, 273, 310, 354]))
-    angles = list(np.deg2rad([20, 50, 55, 145, 195, 340]))
+    angles = np.deg2rad([20, 50, 55, 145, 195, 340])
     bin_width = np.deg2rad(120)  # 2.09
-    samples = 360
+    samples = 120
     samples_list = np.arange(1, 361)
     fps = 10
     # gif_path = '/home/dylan/Research/Results/Presentations/12-21-21/6particles_360samples.gif'
-    gif_path = 'D:/Research/Results/Resample_POC/ani_resamp_test.gif'
+    gif_path = 'D:/Transfer/Research/Resample_POC/ani_resamp_test.gif'
     # angles = list(np.deg2rad(angles))
     # print(get_resamples(np.asarray(angles), bin_width, samples))
     # print(get_resamples3(angles, bin_width, samples))
@@ -41,7 +41,8 @@ def main():
     # print(get_hist(angles, np.rad2deg(bin_width), samples))
     # hist = plot_resamples3(angles, bin_width, samples, plot='event')
     # animate_resamples3(angles, bin_width, samples, gif_path, fps)
-    animate_nsamples_resamples3(angles, bin_width, samples_list, gif_path, fps=10)
+    animate_resamples4(angles, bin_width, samples, gif_path, fps)
+    # animate_nsamples_resamples3(angles, bin_width, samples_list, gif_path, fps=10)
     # print(hist)
     # plt.hist(hist, bins=np.arange(-0.5, len(angles) + 0.5, 1))
     # plt.show()
@@ -330,7 +331,7 @@ def plot_resamples3(angles_in, bin_width, samples, plot='hist'):
 
 
 def animate_resamples3(angles_in, bin_width, samples, gif_path, fps=10):
-    angles = angles_in.copy()
+    angles = list(angles_in.copy())
     if bin_width > 2 * np.pi or bin_width <= 0:
         print(f'get_resamples bin_width {bin_width} out of range, setting to 2_PI')
         bin_width = 2 * np.pi
@@ -371,6 +372,56 @@ def animate_resamples3(angles_in, bin_width, samples, gif_path, fps=10):
 
     ani = FuncAnimation(fig, ani_func, frames=samples, interval=1.0 / fps * 1000, repeat_delay=5000, repeat=False,
                         fargs=(angles[:num_angles], dphi, bin_width, hist, ax, ax_hist))
+    ani.save(gif_path, dpi=100, writer=PillowWriter(fps=fps))
+
+    return hist
+
+
+def animate_resamples4(angles_in, bin_width, samples, gif_path, fps=10, rng=None):
+    # angles = angles_in.copy()
+    # if bin_width > 2 * np.pi or bin_width <= 0:
+    #     print(f'get_resamples bin_width {bin_width} out of range, setting to 2_PI')
+    #     bin_width = 2 * np.pi
+    # if samples < 0:
+    #     print(f'get_resamples samples {samples} less than 0, taking absolute value: {samples} --> {abs(samples)}')
+    #     samples = abs(samples)
+
+    num_angles = angles_in.size
+    hist = np.zeros(samples, dtype=int)
+    if samples == 0:
+        return hist
+
+    # Generate samples random numbers on azimuth
+    if rng is None:
+        rng = np.random.default_rng()
+    bin_lows = np.sort(rng.random(samples)) * 2 * np.pi
+    bin_lows = np.append(bin_lows, 6 * np.pi)  # Dummy index for end of algorithm
+
+    # Append duplicate set +2pi to end for bins that wrap around the azimuth
+    angles = np.append(angles_in, np.append(angles_in + 2 * np.pi, 4 * np.pi))
+
+    low_index = 0
+    high_index = 0
+    sample_i = 0
+    bin_low = bin_lows[sample_i]
+    bin_high = bin_low + bin_width
+    for sample_i in range(samples):
+        while angles[low_index] < bin_low:
+            low_index += 1
+        while angles[high_index] < bin_high:
+            high_index += 1
+        hist[sample_i] = high_index - low_index
+        bin_low = bin_lows[sample_i]
+        bin_high = bin_low + bin_width
+
+    fig = plt.figure(figsize=(10, 5))
+    ax = plt.subplot(121, projection='polar')
+    ax_hist = plt.subplot(122)
+
+    angles = list(angles)
+    print((samples, angles[:num_angles], bin_width, hist, ax, ax_hist))
+    ani = FuncAnimation(fig, ani_func_rand, frames=samples, interval=1.0 / fps * 1000, repeat_delay=5000, repeat=False,
+                        fargs=(samples, angles[:num_angles], bin_lows, bin_width, hist, ax, ax_hist))
     ani.save(gif_path, dpi=100, writer=PillowWriter(fps=fps))
 
     return hist
@@ -490,6 +541,36 @@ def plot_binning_ani(angles, bin_low, bin_high, bin_width, dphi, counts, hist, a
     ax.text(-0.12, -0.05, f'Tracks in \nbin: {counts}', horizontalalignment='left', transform=ax.transAxes, size='large')
     ax.text(-0.12, 1,
             f'Samples:  {int(np.pi * 2 / dphi + 0.5)}\nPhi Step:  {dphi / np.pi * 180:.1f}°\nTracks:     {len(angles)}',
+            horizontalalignment='left', transform=ax.transAxes, size='large')
+    ax_hist.hist(hist, bins=np.arange(-0.5, len(angles) + 1.5), color='red', label='new')
+    ax_hist.hist(hist[:-1], bins=np.arange(-0.5, len(angles) + 1.5), color='blue')
+    ax_hist.legend()
+    ax_hist.set_xlabel('Tracks in Bin')
+    plt.tight_layout()
+
+
+def ani_func_rand(sample_i, n_samples, angles, bin_lows, bin_width, hist, ax, ax_hist):
+    print(sample_i)
+    bin_low = bin_lows[sample_i]
+    bin_high = bin_low + bin_width
+    plot_binning_ani_rand(angles, n_samples, bin_low, bin_high, bin_width, hist[sample_i], hist[:sample_i + 1], ax,
+                          ax_hist)
+
+
+def plot_binning_ani_rand(angles, n_samples, bin_low, bin_high, bin_width, counts, hist, ax, ax_hist):
+    ax.clear()
+    ax_hist.clear()
+    ax.vlines(angles, 0, 1, color='red', label='tracks')
+    bw_deg = int(bin_width / np.pi * 180)
+    ax.fill_between(np.linspace(bin_low, bin_high, 1000), 0, 1, alpha=0.5, color='gray', label=f'{bw_deg}° bin')
+    ax.grid(False)
+    ax.set_yticklabels([])
+    ax.set_ylim((0, 1))
+    leg_angle = np.deg2rad(300)
+    ax.legend(loc="upper left", bbox_to_anchor=(.5 + np.cos(leg_angle) / 2, .5 + np.sin(leg_angle) / 2))
+    ax.text(-0.12, -0.05, f'Tracks in \nbin: {counts}', horizontalalignment='left', transform=ax.transAxes, size='large')
+    ax.text(-0.12, 1,
+            f'Samples:  {n_samples}\nTracks:     {len(angles)}',
             horizontalalignment='left', transform=ax.transAxes, size='large')
     ax_hist.hist(hist, bins=np.arange(-0.5, len(angles) + 1.5), color='red', label='new')
     ax_hist.hist(hist[:-1], bins=np.arange(-0.5, len(angles) + 1.5), color='blue')
