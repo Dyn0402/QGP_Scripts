@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 
 def main():
     # base_path = '/home/dylan/Research/Results/Resample_Timing_Tests/'
-    base_path = 'D:/Transfer/Research/Results/Resample_Timing_Tests/'
+    base_path = 'E:/Transfer/Research/Results/Resample_Timing_Tests/'
     tracks = [{'file_name': '10_tracks_alg2', 'color': 'green', 'lightness': 0.8},
               {'file_name': '30_tracks_alg2', 'color': 'green', 'lightness': 1},
               {'file_name': '10_tracks_alg3', 'color': 'blue', 'lightness': 0.8},

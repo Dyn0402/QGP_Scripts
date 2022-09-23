@@ -29,11 +29,11 @@ def main():
     angles = np.deg2rad([20, 50, 51, 53, 55, 60, 70, 137, 187, 220, 224, 228, 273, 310, 354])
     # angles = np.deg2rad([20, 50, 55, 145, 195, 340])
     bin_width = np.deg2rad(120)  # 2.09
-    samples = 120
-    samples_list = np.arange(1, 360)
-    fps = 10
+    samples = 180
+    samples_list = np.arange(1, 180)
+    fps = 5
     # gif_path = '/home/dylan/Research/Results/Presentations/12-21-21/6particles_360samples.gif'
-    gif_path = 'E:/Transfer/Research/Resample_POC/Visualizations/animations/nsample_convergence.gif'
+    gif_path = 'E:/Transfer/Research/Resample_POC/Visualizations/animations/alg4_stats.gif'
     # angles = list(np.deg2rad(angles))
     # print(get_resamples(np.asarray(angles), bin_width, samples))
     # print(get_resamples3(angles, bin_width, samples))
@@ -42,8 +42,9 @@ def main():
     # hist = plot_resamples3(angles, bin_width, samples, plot='event')
     # animate_resamples3(angles, bin_width, samples, gif_path, fps)
     # animate_resamples4(angles, bin_width, samples, gif_path, fps)
-    plot_event_nobin(angles)
-    animate_nsamples_resamples3(angles, bin_width, samples_list, gif_path, fps=fps)
+    # plot_event_nobin(angles)
+    # animate_nsamples_resamples3(angles, bin_width, samples_list, gif_path, fps=fps)
+    animate_nsamples_resamples4(angles, bin_width, samples_list, gif_path, fps=fps)
     # print(hist)
     # plt.hist(hist, bins=np.arange(-0.5, len(angles) + 0.5, 1))
     # plt.show()
@@ -420,7 +421,7 @@ def animate_resamples4(angles_in, bin_width, samples, gif_path, fps=10, rng=None
     ax_hist = plt.subplot(122)
 
     angles = list(angles)
-    print((samples, angles[:num_angles], bin_width, hist, ax, ax_hist))
+    # print((samples, angles[:num_angles], bin_width, hist, ax, ax_hist))
     ani = FuncAnimation(fig, ani_func_rand, frames=samples, interval=1.0 / fps * 1000, repeat_delay=5000, repeat=False,
                         fargs=(samples, angles[:num_angles], bin_lows, bin_width, hist, ax, ax_hist))
     ani.save(gif_path, dpi=100, writer=PillowWriter(fps=fps))
@@ -465,6 +466,76 @@ def animate_nsamples_resamples3(angles_in, bin_width, samples, gif_path, fps=10)
             hist[sample_i] = high_index - low_index
             bin_low += dphi
             bin_high += dphi
+        hists.append(hist)
+
+    # hist_stats = []
+    # for hist in hists:
+    #     stats = DistStats(hist, unbinned=True)
+    #     hist_stats.append({'sd': stats.get_sd().val, 'skew': stats.get_skewness().val,
+    #                        'kurt': stats.get_kurtosis().val})
+
+    fig = plt.figure(figsize=(10, 5))
+    axs = [fig.add_subplot(1, 2, 1),
+           fig.add_subplot(3, 2, 2),
+           fig.add_subplot(3, 2, 4),
+           fig.add_subplot(3, 2, 6)]
+    plt.setp(axs[-3].get_xticklabels(), visible=False)
+    plt.setp(axs[-2].get_xticklabels(), visible=False)
+    axs[-1].set_xlabel('Number of Samples')
+    axs[1].get_shared_x_axes().join(axs[1], axs[2])
+    axs[2].get_shared_x_axes().join(axs[2], axs[3])
+    axs[1].set_xlim((0, max(samples)))
+    axs[1].set_ylabel('Standard Deviation')
+    axs[2].set_ylabel('Skewness')
+    axs[3].set_ylabel('Kurtosis')
+    axs[1].grid()
+    axs[2].grid()
+    axs[3].grid()
+    fig.tight_layout()
+
+    # print(samples)
+    # print(hists)
+    # print(len(samples), len(hists))
+    ani = FuncAnimation(fig, ani_nsamples_func, frames=list(zip(samples, hists)), interval=1.0 / fps * 1000,
+                        repeat_delay=5000, repeat=False, fargs=(num_angles, axs))
+    ani.save(gif_path, dpi=100, writer=PillowWriter(fps=fps))
+    # plt.show()
+
+
+def animate_nsamples_resamples4(angles_in, bin_width, samples, gif_path, fps=10, rng=None):
+    num_angles = angles_in.size
+
+    # Generate samples random numbers on azimuth
+    if rng is None:
+        rng = np.random.default_rng()
+
+    hists = []
+    for sample in samples:
+        if sample < 0:
+            print(f'get_resamples samples {sample} less than 0, taking absolute value: {sample} --> {abs(sample)}')
+            sample = abs(sample)
+        hist = np.zeros(sample, dtype=int)
+        if sample == 0:
+            return hist
+        bin_lows = np.sort(rng.random(sample)) * 2 * np.pi
+        bin_lows = np.append(bin_lows, 6 * np.pi)  # Dummy index for end of algorithm
+
+        # Append duplicate set +2pi to end for bins that wrap around the azimuth
+        angles = np.append(angles_in, np.append(angles_in + 2 * np.pi, 4 * np.pi))
+
+        low_index = 0
+        high_index = 0
+        sample_i = 0
+        bin_low = bin_lows[sample_i]
+        bin_high = bin_low + bin_width
+        for sample_i in range(sample):
+            while angles[low_index] < bin_low:
+                low_index += 1
+            while angles[high_index] < bin_high:
+                high_index += 1
+            hist[sample_i] = high_index - low_index
+            bin_low = bin_lows[sample_i]
+            bin_high = bin_low + bin_width
         hists.append(hist)
 
     # hist_stats = []
@@ -640,9 +711,9 @@ def plot_binning_nsamples_ani(num_angles, n_sample, hist, axs):
 
     axs[0].set_xlabel('Tracks in Bin')
 
-    axs[1].scatter(n_sample, stats['sd'], color='blue', zorder=10)
-    axs[2].scatter(n_sample, stats['skew'], color='blue', zorder=10)
-    axs[3].scatter(n_sample, stats['kurt'], color='blue', zorder=10)
+    axs[1].scatter(n_sample, sd.val, color='blue', zorder=10)
+    axs[2].scatter(n_sample, skew.val, color='blue', zorder=10)
+    axs[3].scatter(n_sample, kurt.val, color='blue', zorder=10)
 
     # plt.setp(axs[-3].get_xticklabels(), visible=False)
     # plt.setp(axs[-2].get_xticklabels(), visible=False)
