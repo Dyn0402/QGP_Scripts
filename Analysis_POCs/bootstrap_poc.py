@@ -32,6 +32,82 @@ def bootstrap_validation():
     :return:
     """
     seed = 13434
+    threads = 7
+    n_tracks = 15
+    n_sample = 1
+    n_events = 250
+    bin_width = np.deg2rad(120)
+    bootstraps = 250
+    experiments = 100
+    # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
+    plot_out_base = 'D:/Transfer/Research/Resample_POC/Bootstrap_Validation/'
+    plot_out_name = 'nsample1_nevent250_bw120_ntrack15_nexp100/'
+    plot_out_dir = plot_out_base + plot_out_name
+    plot_exps_out_dir = f'{plot_out_dir}Experiments/'
+    try:
+        os.mkdir(plot_out_dir)
+    except FileExistsError:
+        pass
+    try:
+        os.mkdir(plot_exps_out_dir)
+    except FileExistsError:
+        pass
+    show_plot = True
+
+    stats = define_stats(n_tracks, bin_width)
+
+    stats_plt = ['standard deviation', 'skewness', 'non-excess kurtosis']
+
+    write_info_file(plot_out_dir, threads, n_tracks, n_sample, n_events, bin_width, bootstraps, experiments, stats_plt)
+
+    seeds = np.random.SeedSequence(seed).spawn(experiments)
+    jobs = [(n_tracks, n_events, bin_width, n_sample, bootstraps, stats, stats_plt, seed,
+             n_exp, True, plot_exps_out_dir) for n_exp, seed in enumerate(seeds)]
+
+    exp_stats = []
+    with Pool(threads) as pool:
+        for exp_stat in tqdm.tqdm(pool.istarmap(run_experiment, jobs), total=len(jobs)):
+            exp_stats.append(exp_stat)
+
+    plt.clf()
+    n_exps = []
+    stats_list = {stat: [] for stat in stats_plt}
+    stats_err_list = {stat: [] for stat in stats_plt}
+    stats_err_delta_list = {stat: [] for stat in stats_plt}
+
+    for n_exp, stat_vals, stat_errs, stat_errs_delta in exp_stats:
+        n_exps.append(n_exp)
+        for stat in stats_plt:
+            stats_list[stat].append(stat_vals[stat])
+            stats_err_list[stat].append(stat_errs[stat])
+            stats_err_delta_list[stat].append(stat_errs_delta[stat])
+
+    for stat in stats_plt:
+        plot_exp_scatter(n_exps, stats_list[stat], stats[stat]['true'], stat, plot_out_dir, stats_err_list[stat])
+        plot_exp_scatter(n_exps, stats_list[stat], stats[stat]['true'], stat, plot_out_dir,
+                         stat_errs_delta=stats_err_delta_list[stat])
+        plot_exp_scatter(n_exps, stats_list[stat], stats[stat]['true'], stat, plot_out_dir, stats_err_list[stat],
+                         stats_err_delta_list[stat])
+        plot_bs_vs_delta(n_exps, stats_err_list[stat], stats_err_delta_list[stat], stat, plot_out_dir)
+        plot_bs_vs_delta_hist(stats_err_list[stat], stats_err_delta_list[stat], stat, plot_out_dir)
+        plot_err_vs_val_diff(stats_list[stat], stats_err_list[stat], stats_err_delta_list[stat], stats[stat]['true'],
+                             stat, plot_out_dir)
+        plot_exp_deviation(stats_list[stat], stats[stat]['true'], stat, plot_out_dir)
+        plot_exp_sigmas(stats_list[stat], stats_err_list[stat], stats[stat]['true'], stat, plot_out_dir)
+
+    plot_exp_scatter_stats(stats_plt, n_exps, stats_list, stats, plot_out_dir, stats_err_list, stats_err_delta_list)
+    plot_exp_sigmas_stats(stats_plt, stats_list, stats, plot_out_dir, stats_err_list, stats_err_delta_list)
+
+    if show_plot:
+        plt.show()
+
+
+def bootstrap_vs_nsamples():
+    """
+    Simulate binomials and test resampling bootstrap uncertainties against known answer
+    :return:
+    """
+    seed = 13434
     threads = 15
     n_tracks = 15
     n_sample = 1
@@ -122,6 +198,19 @@ def plot_exp_scatter(n_exps, stat_vals, binom_val, stat, out_dir=None, stat_errs
         ax.set_title(stat.capitalize())
         ax.legend()
         fig.savefig(f'{out_dir}{title}.png', bbox_inches='tight')
+
+
+def plot_err_vs_val_diff(stat_vals, bs_errs, delta_errs, binom_val, stat, out_dir):
+    fig, ax = plt.subplots()
+    ax.set_title(stat)
+    ax.grid()
+    ax.vline(0, color='black')
+    ax.scatter(stat_vals - binom_val, bs_errs, color='blue', alpha=0.8, label='Bootstrap')
+    ax.scatter(stat_vals - binom_val, delta_errs, color='green', alpha=0.8, label='Delta Theorem')
+    ax.set_ylabel('Error Value')
+    ax.set_xlabel('Experiment Value - Binomial Value')
+    ax.legend()
+    fig.savefig(f'{out_dir}Err_vs_Val_Scatter_{stat}.png', bbox_inches='tight')
 
 
 def plot_bs_vs_delta(n_exps, bs_errs, delta_errs, stat, out_dir):
