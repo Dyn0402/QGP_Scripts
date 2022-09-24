@@ -34,16 +34,11 @@ def main():
     fps = 5
     # gif_path = '/home/dylan/Research/Results/Presentations/12-21-21/6particles_360samples.gif'
     gif_path = 'E:/Transfer/Research/Resample_POC/Visualizations/animations/alg4_stats.gif'
-    # angles = list(np.deg2rad(angles))
-    # print(get_resamples(np.asarray(angles), bin_width, samples))
-    # print(get_resamples3(angles, bin_width, samples))
-    # angles = list(np.rad2deg(angles))
-    # print(get_hist(angles, np.rad2deg(bin_width), samples))
     # hist = plot_resamples3(angles, bin_width, samples, plot='event')
-    # animate_resamples3(angles, bin_width, samples, gif_path, fps)
+    # animate_resamples2(angles, bin_width, samples, gif_path, fps)
     # animate_resamples4(angles, bin_width, samples, gif_path, fps)
     # plot_event_nobin(angles)
-    # animate_nsamples_resamples3(angles, bin_width, samples_list, gif_path, fps=fps)
+    # animate_nsamples_resamples2(angles, bin_width, samples_list, gif_path, fps=fps)
     animate_nsamples_resamples4(angles, bin_width, samples_list, gif_path, fps=fps)
     # print(hist)
     # plt.hist(hist, bins=np.arange(-0.5, len(angles) + 0.5, 1))
@@ -62,7 +57,7 @@ def test_single_alg4():
     n_samples = 15510
     dphi = 2 * np.pi / n_samples
     bin_lows = np.arange(0, 2 * np.pi, dphi)
-    hist3 = get_resamples(angles, bin_width, n_samples)
+    hist3 = get_resamples3(angles, bin_width, n_samples)
     print(f'hist3: {hist3}')
     print(f'hist3 sum: {np.sum(hist3)}')
 
@@ -91,7 +86,7 @@ def test_multi_alg4():
 
         dphi = 2 * np.pi / n_samples
         bin_lows = np.arange(0, 2 * np.pi, dphi)
-        hist3 = get_resamples(angles, bin_width, n_samples)
+        hist3 = get_resamples3(angles, bin_width, n_samples)
         hist4 = get_resamples4_testing(angles, bin_width, n_samples, bin_lows)
 
         if not np.all(hist3 == hist4):
@@ -102,8 +97,9 @@ def test_multi_alg4():
     print(f'{n_bad_tests} bad tests')
 
 
-def get_resamples3(angles_in, bin_width, samples):
-    # Don't remember this one, does it work?
+def get_resamples2(angles_in, bin_width, samples):
+    # Same as Algorithm 3 except that single steps of dphi taken each time instead of multiple.
+    # Good for illustrating event spaced algorithms without complication of skipping steps in Algorithm 3
     angles = list(angles_in.copy())
     if bin_width > 2 * np.pi or bin_width <= 0:
         print(f'get_resamples bin_width {bin_width} out of range, setting to 2_PI')
@@ -238,8 +234,8 @@ def get_resamples4_testing(angles_in, bin_width, samples, bin_lows):
     return hist
 
 
-def get_resamples(angles_in, bin_width, samples):
-    # Think this is the main algorithm?
+def get_resamples3(angles_in, bin_width, samples):
+    # Main evenly spaced algorithm. Calculates number of dphi steps to take before new track added or removed from bin
     # Expecting angles is numpy array
     # angles = angles_in.copy()
     # if bin_width > 2 * np.pi or bin_width <= 0:
@@ -289,7 +285,7 @@ def get_resamples(angles_in, bin_width, samples):
     return hist
 
 
-def plot_resamples3(angles_in, bin_width, samples, plot='hist'):
+def plot_resamples2(angles_in, bin_width, samples, plot='hist'):
     angles = angles_in.copy()
     if bin_width > 2 * np.pi or bin_width <= 0:
         print(f'get_resamples bin_width {bin_width} out of range, setting to 2_PI')
@@ -332,7 +328,7 @@ def plot_resamples3(angles_in, bin_width, samples, plot='hist'):
     return hist
 
 
-def animate_resamples3(angles_in, bin_width, samples, gif_path, fps=10):
+def animate_resamples2(angles_in, bin_width, samples, gif_path, fps=10):
     angles = list(angles_in.copy())
     if bin_width > 2 * np.pi or bin_width <= 0:
         print(f'get_resamples bin_width {bin_width} out of range, setting to 2_PI')
@@ -429,7 +425,7 @@ def animate_resamples4(angles_in, bin_width, samples, gif_path, fps=10, rng=None
     return hist
 
 
-def animate_nsamples_resamples3(angles_in, bin_width, samples, gif_path, fps=10):
+def animate_nsamples_resamples2(angles_in, bin_width, samples, gif_path, fps=10):
     angles = list(angles_in.copy())
     if bin_width > 2 * np.pi or bin_width <= 0:
         print(f'get_resamples bin_width {bin_width} out of range, setting to 2_PI')
