@@ -32,16 +32,17 @@ def bootstrap_validation():
     :return:
     """
     seed = 13434
-    threads = 7
+    threads = 15
     n_tracks = 15
     n_sample = 1
-    n_events = 250
+    n_events = 10000
     bin_width = np.deg2rad(120)
-    bootstraps = 250
+    bootstraps = 2000
     experiments = 100
+    alg = 4
     # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
-    plot_out_base = 'D:/Transfer/Research/Resample_POC/Bootstrap_Validation/'
-    plot_out_name = 'nsample1_nevent250_bw120_ntrack15_nexp100/'
+    plot_out_base = 'E:/Transfer/Research/Resample_POC/Bootstrap_Validation/'
+    plot_out_name = 'nsample1_nevent10k_bw120_ntrack15_nexp100_nbs2k/'
     plot_out_dir = plot_out_base + plot_out_name
     plot_exps_out_dir = f'{plot_out_dir}Experiments/'
     try:
@@ -52,7 +53,7 @@ def bootstrap_validation():
         os.mkdir(plot_exps_out_dir)
     except FileExistsError:
         pass
-    show_plot = True
+    show_plot = False
 
     stats = define_stats(n_tracks, bin_width)
 
@@ -62,7 +63,7 @@ def bootstrap_validation():
 
     seeds = np.random.SeedSequence(seed).spawn(experiments)
     jobs = [(n_tracks, n_events, bin_width, n_sample, bootstraps, stats, stats_plt, seed,
-             n_exp, True, plot_exps_out_dir) for n_exp, seed in enumerate(seeds)]
+             n_exp, True, plot_exps_out_dir, alg) for n_exp, seed in enumerate(seeds)]
 
     exp_stats = []
     with Pool(threads) as pool:
@@ -90,13 +91,14 @@ def bootstrap_validation():
                          stats_err_delta_list[stat])
         plot_bs_vs_delta(n_exps, stats_err_list[stat], stats_err_delta_list[stat], stat, plot_out_dir)
         plot_bs_vs_delta_hist(stats_err_list[stat], stats_err_delta_list[stat], stat, plot_out_dir)
-        plot_err_vs_val_diff(stats_list[stat], stats_err_list[stat], stats_err_delta_list[stat], stats[stat]['true'],
-                             stat, plot_out_dir)
+        plot_err_vs_val_diff(stats_list[stat], stats[stat]['true'], stat, stats_err_list[stat],
+                             stats_err_delta_list[stat], plot_out_dir)
         plot_exp_deviation(stats_list[stat], stats[stat]['true'], stat, plot_out_dir)
         plot_exp_sigmas(stats_list[stat], stats_err_list[stat], stats[stat]['true'], stat, plot_out_dir)
 
     plot_exp_scatter_stats(stats_plt, n_exps, stats_list, stats, plot_out_dir, stats_err_list, stats_err_delta_list)
     plot_exp_sigmas_stats(stats_plt, stats_list, stats, plot_out_dir, stats_err_list, stats_err_delta_list)
+    plot_err_vs_val_diff_stats(stats_plt, stats_list, stats, plot_out_dir, stats_err_list, stats_err_delta_list)
 
     if show_plot:
         plt.show()
@@ -115,6 +117,7 @@ def bootstrap_vs_nsamples():
     bin_width = np.deg2rad(120)
     bootstraps = 250
     experiments = 100
+    alg = 4
     # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
     plot_out_base = 'E:/Transfer/Research/Resample_POC/Bootstrap_Validation/'
     plot_out_name = 'nsample1_nevent250_bw120_ntrack15_nexp100/'
@@ -138,7 +141,7 @@ def bootstrap_vs_nsamples():
 
     seeds = np.random.SeedSequence(seed).spawn(experiments)
     jobs = [(n_tracks, n_events, bin_width, n_sample, bootstraps, stats, stats_plt, seed,
-             n_exp, True, plot_exps_out_dir) for n_exp, seed in enumerate(seeds)]
+             n_exp, True, plot_exps_out_dir, alg) for n_exp, seed in enumerate(seeds)]
 
     exp_stats = []
     with Pool(threads) as pool:
@@ -200,17 +203,27 @@ def plot_exp_scatter(n_exps, stat_vals, binom_val, stat, out_dir=None, stat_errs
         fig.savefig(f'{out_dir}{title}.png', bbox_inches='tight')
 
 
-def plot_err_vs_val_diff(stat_vals, bs_errs, delta_errs, binom_val, stat, out_dir):
-    fig, ax = plt.subplots()
-    ax.set_title(stat)
+def plot_err_vs_val_diff(stat_vals, binom_val, stat, bs_errs=None, delta_errs=None, out_dir=None):
+    if out_dir is not None:
+        fig, ax = plt.subplots()
+    else:
+        ax = plt.gca()
+    ax.set_title(stat.title())
     ax.grid()
-    ax.vline(0, color='black')
-    ax.scatter(stat_vals - binom_val, bs_errs, color='blue', alpha=0.8, label='Bootstrap')
-    ax.scatter(stat_vals - binom_val, delta_errs, color='green', alpha=0.8, label='Delta Theorem')
-    ax.set_ylabel('Error Value')
+    ax.axvline(0, ls='--', color='black')
+    if bs_errs is not None:
+        ax.scatter(stat_vals - binom_val, bs_errs, color='blue', alpha=0.8, label='Bootstrap')
+    if delta_errs is not None:
+        ax.scatter(stat_vals - binom_val, delta_errs, color='green', alpha=0.8, label='Delta Theorem')
     ax.set_xlabel('Experiment Value - Binomial Value')
-    ax.legend()
-    fig.savefig(f'{out_dir}Err_vs_Val_Scatter_{stat}.png', bbox_inches='tight')
+    ax2 = ax.twiny()
+    ax2.set_xlim(ax.get_xlim() + binom_val)
+    ax2.tick_params(direction='in')
+    ax2.set_xlabel('Experiment Value')
+    if out_dir is not None:
+        ax.set_ylabel('Error Value')
+        ax.legend()
+        fig.savefig(f'{out_dir}Err_vs_Val_Scatter_{stat}.png', bbox_inches='tight')
 
 
 def plot_bs_vs_delta(n_exps, bs_errs, delta_errs, stat, out_dir):
@@ -335,6 +348,30 @@ def plot_exp_sigmas_stats(stats_plt, stats_list, stats, plot_out_dir, stats_err_
     axs_bs[-1].set_xlabel('Sigmas from True')
     fig_bs.tight_layout()
     fig_bs.savefig(f'{plot_out_dir}Sigmas_Stats_bserr.png', bbox_inches='tight')
+
+
+def plot_err_vs_val_diff_stats(stats_plt, stats_list, stats, plot_out_dir, stats_err_list, stats_err_delta_list):
+    fig_bsdt, axs_bsdt = plt.subplots(1, len(stats_plt), figsize=(12, 6))
+    for stat_index, stat in enumerate(stats_plt):
+        plt.sca(axs_bsdt[stat_index])
+        plot_err_vs_val_diff(stats_list[stat], stats[stat]['true'], stat, stats_err_list[stat],
+                             stats_err_delta_list[stat])
+        # plt.annotate(stat.capitalize(), xy=(0.02, 0.98), xycoords='axes fraction', verticalalignment='top')
+        # bbox=dict(boxstyle='round', facecolor='tan', alpha=0.3),
+    axs_bsdt[-1].legend()
+    axs_bsdt[0].set_ylabel('Error Value')
+    fig_bsdt.tight_layout()
+    fig_bsdt.savefig(f'{plot_out_dir}Err_vs_Val_Scatter_Stats_dtbs.png', bbox_inches='tight')
+
+    fig_bs, axs_bs = plt.subplots(len(stats_plt), 1, sharex=True, figsize=(8, 8))
+    for stat_index, stat in enumerate(stats_plt):
+        plt.sca(axs_bs[stat_index])
+        plot_err_vs_val_diff(stats_list[stat], stats[stat]['true'], stat, stats_err_list[stat])
+        # plt.annotate(stat.capitalize(), xy=(0.02, 0.98), xycoords='axes fraction', verticalalignment='top')
+    axs_bs[-1].legend()
+    axs_bs[0].set_ylabel('Error Value')
+    fig_bs.tight_layout()
+    fig_bs.savefig(f'{plot_out_dir}Err_vs_Val_Scatter_Stats_bs.png', bbox_inches='tight')
 
 
 if __name__ == '__main__':
