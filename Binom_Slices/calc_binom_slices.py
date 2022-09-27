@@ -39,7 +39,7 @@ def init_pars():
         # 'csv_path': '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim.csv',
         'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': True,  # If True check csv_path and only run missing datasets, else run all datasets
-        'threads': 16,
+        'threads': 14,
         'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
         'min_events': 100,  # Min number of total events per total_proton. Skip total_proton if fewer
@@ -63,12 +63,12 @@ def define_datasets(base_path):
     """
     Define sets to read for each dataset. Each dataset can contain multiple sets which will be combined to give
     systematic uncertainties. Here set parameters to define which sets will be read and combined.
-    :param base_path: Base path to data sets
+    :param base_path: Base path to data sets, used to find simulation sets
     :return: list of dictionaries containing parameters for defining datasets
     """
 
     all_divs = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356]
-    all_energies = [7, 11, 19, 27, 39, 62]
+    all_energies = [7, 19, 27, 39, 62]
     # all_energies = [7]
     all_cents = [8]  # [0, 1, 2, 3, 4, 5, 6, 7, 8]
 
@@ -77,7 +77,7 @@ def define_datasets(base_path):
     entry_vals = [
         # ['ampt_def', '_Ampt', ['default'], [], ['resample'], range(60), all_energies, all_cents, all_divs],
         # ['ampt_new_coal_resample_def', '_Ampt', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
-        ['ampt_baryon_first_fix_resample_def', '_Ampt', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
+        # ['ampt_baryon_first_fix_resample_def', '_Ampt', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
         # ['ampt_old_resample_def', '_Ampt_Old', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
         # ['ampt_eff1_resample_def', '_Ampt', ['resample', 'Eff1'], [], [], [0], all_energies, all_cents, all_divs],
         # ['ampt_eff2_resample_def', '_Ampt', ['resample', 'Eff2'], [], [], [0], all_energies, all_cents, all_divs],
@@ -89,10 +89,11 @@ def define_datasets(base_path):
         # ['ampt_old_eff3_resample_def', '_Ampt_Old', ['resample', 'Eff3'], [], [], [0], all_energies, all_cents,
         #  all_divs],
         # ['bes_def', '', ['default'], [], ['resample'], range(60), all_energies, [8], all_divs],
-        # ['bes_resample_def', '', ['default', 'resample'], [], [], [0], all_energies, [8], all_divs],
-        # ['cf_resample_def', '_CF', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
-        # ['cfev_resample_def', '_CFEV', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
-        # ['cfevb342_resample_def', '_CFEVb342', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
+        # ['bes_resample_def', '', ['default', 'resample'], [], ['alg3'], [0], all_energies, [8], all_divs],
+        ['cf_resample_def', '_CF', ['default', 'resample'], [], ['alg3'], [0], all_energies, all_cents, all_divs],
+        ['cfev_resample_def', '_CFEV', ['default', 'resample'], [], ['alg3'], [0], all_energies, all_cents, all_divs],
+        ['cfevb342_resample_def', '_CFEVb342', ['default', 'resample'], [], ['alg3'], [0], all_energies, all_cents,
+         all_divs],
     ]
 
     # # Anti-clustering

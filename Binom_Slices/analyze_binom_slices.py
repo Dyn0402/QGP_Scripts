@@ -34,8 +34,8 @@ from Measure import Measure
 
 def main():
     threads = 15
-    # base_path = 'F:/Research/Results/Azimuth_Analysis/'
-    base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
+    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
     # df_name = 'binom_slice_sds_cent8.csv'
     # df_name = 'binom_slice_stats_cent8_no_sim.csv'
     # df_name = 'binom_slice_stats_cent8_ampt_eff.csv'
@@ -97,9 +97,13 @@ def main():
     # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT_New_Coalescence', 'AMPT_Baryon_First',
     #                                             'MUSIC+FIST', 'MUSIC+FIST+EV']))
 
-    data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def', 'cfev_resample_def']
-    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue']))
-    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST EV']))
+    # data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def', 'cfev_resample_def']
+    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue']))
+    # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST EV']))
+
+    data_sets_plt = ['bes_resample_def', 'bes_resample_def_alg3']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red']))
+    data_sets_labels = dict(zip(data_sets_plt, ['STAR Stochastic', 'STAR Even Space']))
 
     # data_sets_plt = ['ampt_meson_first_resample_def', 'cf_resample_def', 'cfev_resample_def', 'cfevb342_resample_def']
     # data_sets_colors = dict(zip(data_sets_plt, ['red', 'blue', 'green', 'purple']))
@@ -602,20 +606,20 @@ def plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels):
     fig_curve_energy, ax_curve_energy = plt.subplots()
     ax_curve_energy.set_xlabel('Energy (GeV)')
     ax_curve_energy.set_ylabel('Curvature')
-    ax_curve_energy.axhline(0)
+    ax_curve_energy.axhline(0, color='black')
     fig_curve_energy.canvas.manager.set_window_title('Slope Curvature vs Energy')
 
     fig_base_energy, ax_base_energy = plt.subplots()
     ax_base_energy.set_xlabel('Energy (GeV)')
     ax_base_energy.set_ylabel('Baseline')
-    ax_base_energy.axhline(0)
+    ax_base_energy.axhline(0, color='black')
     fig_base_energy.canvas.manager.set_window_title('Slope Baseline vs Energy')
 
     fig_base_curve, ax_base_curve = plt.subplots()
     ax_base_curve.set_xlabel('Curvature')
     ax_base_curve.set_ylabel('Baseline')
-    ax_base_curve.axvline(0)
-    ax_base_curve.axhline(0)
+    ax_base_curve.axvline(0, color='black')
+    ax_base_curve.axhline(0, color='black')
     fig_base_curve.canvas.manager.set_window_title('Slope Baseline vs Curvature')
 
     colors = ['black', 'red', 'blue', 'green', 'purple', 'orange']

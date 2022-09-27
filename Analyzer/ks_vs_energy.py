@@ -23,11 +23,12 @@ def main():
 
 
 def from_dataframe():
-    base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
+    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
     df_name = 'binom_slice_stats_cent8_no_sim.csv'
     divs = 120
     energy = 39
-    data_set_name = 'ampt_new_coal_resample_def'
+    data_set_name = 'bes_resample_def'
     stat = 'standard deviation'
 
     df_path = base_path + df_name
@@ -76,11 +77,16 @@ def from_hist_files():
     energies = [7, 11, 19, 27, 39, 62]
     divisions = [120]
     centralities = [8]
-    path = {'raw': ['F:/Research/Data_Ampt_Old/default/Ampt_rapid05_n1ratios_0/', 'GeV/ratios_divisions_', '_centrality_', '_local.txt'],
-            'mix': ['F:/Research/Data_Ampt_Old_Mix/default/Ampt_rapid05_n1ratios_0/', 'GeV/ratios_divisions_', '_centrality_',
-                    '_local.txt']}
+    # path = {'raw': ['F:/Research/Data_Ampt_Old/default/Ampt_rapid05_n1ratios_0/', 'GeV/ratios_divisions_', '_centrality_', '_local.txt'],
+    #         'mix': ['F:/Research/Data_Ampt_Old_Mix/default/Ampt_rapid05_n1ratios_0/', 'GeV/ratios_divisions_', '_centrality_',
+    #                 '_local.txt']}
+    path = {
+        'raw': ['F:/Research/Data/default_resample/rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0/',
+                'GeV/ratios_divisions_', '_centrality_', '_local.txt'],
+        'mix': ['F:/Research/Data_Mix/default_resample/rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0/',
+                'GeV/ratios_divisions_', '_centrality_', '_local.txt']}
     colors = {7: 'red', 11: 'blue', 19: 'green', 27: 'cyan', 39: 'magenta', 62: 'black'}
-    cdf_plot = {'energy': 39, 'division': 120, 'centrality': 8, 'total particles': 35}
+    cdf_plot = {'energy': 39, 'division': 120, 'centrality': 8, 'total particles': 20}
     sd_plot = {'energy': 39, 'division': 120, 'centrality': 8}
     title_sufx = f'\n{sd_plot["energy"]}GeV, 0-5% Centrality, {sd_plot["division"]}° Bins'
 
