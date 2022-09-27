@@ -12,9 +12,67 @@ from AzimuthBinData import AzimuthBinData as AzData
 from scipy import stats
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+
+from Measure import Measure
 
 
 def main():
+    # from_hist_files()
+    from_dataframe()
+
+
+def from_dataframe():
+    base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
+    df_name = 'binom_slice_stats_cent8_no_sim.csv'
+    divs = 120
+    energy = 39
+    data_set_name = 'ampt_new_coal_resample_def'
+    stat = 'standard deviation'
+
+    df_path = base_path + df_name
+    df = pd.read_csv(df_path)
+    df = df.dropna()
+    print(df.head())
+    df = df[(df['name'] == data_set_name) & (df['divs'] == divs) & (df['energy'] == energy) & (df['stat'] == stat)]
+    df.sort_values(by=['total_protons'])
+    df_raw = df[df['data_type'] == 'raw']
+    df_mix = df[df['data_type'] == 'mix']
+
+    p = float(divs) / 360
+    y_binom_mix = (np.asarray(df_mix['total_protons']) * p * (1 - p)) ** 0.5
+    y_binom_raw = (np.asarray(df_raw['total_protons']) * p * (1 - p)) ** 0.5
+
+    fig1, ax1 = plt.subplots()
+    ax1.errorbar(df_raw['total_protons'], df_raw['val'], df_raw['err'], alpha=0.8, zorder=2, color='blue',
+                 ls='', marker='o', label='Raw')
+    ax1.errorbar(df_mix['total_protons'], df_mix['val'], df_mix['err'], alpha=0.8, zorder=1, color='green',
+                 ls='', marker='o', label='Mix')
+    ax1.plot(df_mix['total_protons'], y_binom_mix, color='red', alpha=0.8, zorder=0, label='Binomial')
+    ax1.set_xlabel('Total Protons in Event')
+    ax1.set_ylabel('Standard Deviation of Slice')
+    ax1.set_title(f'{energy}GeV, 0-5% Centrality, {divs}° Partitions')
+    ax1.legend()
+    fig1.tight_layout()
+
+    fig2, ax2 = plt.subplots()
+    raw_ratio = [Measure(val, err) / binom for val, err, binom in zip(df_raw['val'], df_raw['err'], y_binom_raw)]
+    mix_ratio = [Measure(val, err) / binom for val, err, binom in zip(df_mix['val'], df_mix['err'], y_binom_mix)]
+    ax2.errorbar(df_raw['total_protons'], [x.val for x in raw_ratio], [x.err for x in raw_ratio], ls='', marker='o',
+                 zorder=2, color='blue', alpha=0.8, label='Raw / Binomial')
+    ax2.errorbar(df_mix['total_protons'], [x.val for x in mix_ratio], [x.err for x in mix_ratio], ls='', marker='o',
+                 zorder=1, color='green', alpha=0.8, label='Mix / Binomial')
+    ax2.axhline(1, zorder=0, color='red', ls='--')
+    ax2.set_xlabel('Total Particles')
+    ax2.set_ylabel('Standard Deviation Ratio')
+    ax2.set_title(f'{energy}GeV, 0-5% Centrality, {divs}° Partitions')
+    ax2.legend()
+    fig2.tight_layout()
+
+    plt.show()
+
+
+def from_hist_files():
     energies = [7, 11, 19, 27, 39, 62]
     divisions = [120]
     centralities = [8]
@@ -155,7 +213,7 @@ def main():
     # fig5.set_size_inches(7, 7)
     ax5.scatter(raw_x, raw_y, zorder=2, color='blue', label='Raw SD')
     ax5.scatter(mix_x, mix_y, zorder=1, color='green', label='Mix SD')
-    ax5.plot(mix_x, y_mix, color='red', zorder=0, label='Binomal SD')
+    ax5.plot(mix_x, y_mix, color='red', zorder=0, label='Binomial SD')
     ax5.set_xlabel('Total Particles')
     ax5.set_ylabel('Standard Deviation of Slice')
     ax5.set_title(f'Standard Deviation of Total Particle Slices for {sd_plot["energy"]}GeV'+title_sufx)
