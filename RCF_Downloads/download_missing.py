@@ -21,7 +21,7 @@ def main():
 
 
 def download():
-    data_set = 'CF_Net'
+    data_set = 'AMPT_slimcent_sm'
     data_sets = {'BES1': {'remote_path_suf': 'BES1/', 'remote_tree_pref': 'trees/output',
                           'local_path': '/media/ucla/Research/', 'local_tree_pref': 'BES1_Trees'},
                  'AMPT_Run': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'dylan_run/output',

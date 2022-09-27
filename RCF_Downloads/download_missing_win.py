@@ -19,7 +19,7 @@ def main():
 
 
 def download():
-    data_set = 'AMPT_mb_sm'
+    data_set = 'AMPT_cent_sm_lin'
     # data_set = 'CF'
     # data_set = 'CF_b342_lin'
     data_sets = {'BES1': {'remote_path_suf': 'BES1/', 'remote_tree_pref': 'trees/output',
@@ -38,6 +38,9 @@ def download():
                  'AMPT_cent_sm': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'slim_most_central/string_melting',
                                   'local_path': 'F:/Research/',
                                   'local_tree_pref': 'AMPT_Trees/slim_most_central/string_melting'},
+                 'AMPT_cent_sm_lin': {'remote_path_suf': 'AMPT/', 'local_path': '/media/ucla/Research/',
+                                      'remote_tree_pref': 'slim_most_central_new_coal/string_melting',
+                                      'local_tree_pref': 'AMPT_Trees_New_Coalescence/slim_most_central/string_melting'},
                  'AMPT_mb_sm': {'remote_path_suf': 'AMPT/', 'remote_tree_pref': 'min_bias/string_melting',
                                 'local_path': 'F:/Research/',
                                 'local_tree_pref': 'AMPT_Trees/min_bias/string_melting'},
