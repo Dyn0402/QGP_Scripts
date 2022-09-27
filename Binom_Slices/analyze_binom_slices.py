@@ -34,8 +34,8 @@ from Measure import Measure
 
 def main():
     threads = 15
-    base_path = 'F:/Research/Results/Azimuth_Analysis/'
-    # base_path = 'F:/Transfer/Research/Results/Azimuth_Analysis/'
+    # base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
     # df_name = 'binom_slice_sds_cent8.csv'
     # df_name = 'binom_slice_stats_cent8_no_sim.csv'
     # df_name = 'binom_slice_stats_cent8_ampt_eff.csv'
@@ -133,6 +133,11 @@ def main():
     # print(protons_fits)
     # plot_protons_fits_vs_energy(protons_fits, all_sets_plt, data_sets_colors, data_sets_labels)
 
+    # stat_vs_protons(df, stat_plot, div_plt, cent_plt, [39], ['raw', 'mix'], ['bes_resample_def'], plot=True, fit=False)
+    # stat_vs_protons(df, stat_plot, div_plt, cent_plt, [39], data_types_plt, ['bes_resample_def'], plot=True, fit=False)
+    # plt.show()
+    # return
+
     protons_fits = []
     for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
         print(f'Div {div}')
@@ -151,9 +156,9 @@ def main():
     #                 data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
     stat_vs_protons(df, stat_plot, div_plt, cent_plt, [39], data_types_plt, all_sets_plt, plot=True, fit=True,
                     data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
-    # stat_vs_protons_energies(df, stat_plot, [120], cent_plt, [7, 11, 19, 27, 39, 62], data_types_plt, all_sets_plt,
-    #                          plot=False, fit=True, plot_fit=True, data_sets_colors=data_sets_colors,
-    #                          data_sets_labels=data_sets_labels)
+    stat_vs_protons_energies(df, stat_plot, [120], cent_plt, [7, 11, 19, 27, 39, 62], data_types_plt, all_sets_plt,
+                             plot=False, fit=True, plot_fit=True, data_sets_colors=data_sets_colors,
+                             data_sets_labels=data_sets_labels)
     for energy in [7, 11, 19, 27, 39, 62]:
         stat_vs_protons_divs(df, stat_plot, [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356], cent_plt, [energy],
                              data_types_plt, all_sets_plt, plot=True, fit=False, data_sets_colors=data_sets_colors,
@@ -481,7 +486,7 @@ def stat_vs_protons_energies(df, stat, divs, cent, energies, data_types, data_se
                     c = next(color)
                 else:
                     c = data_sets_colors[data_set]
-                ax.text(5, .94, f'{energy}GeV')
+                ax.text(5, .93, f'{energy}GeV', size='large')
             if plot:
                 if 'sim_' in data_set:
                     ax.fill_between(df['total_protons'], df['val'] - df['err'], df['val'] + df['err'],
