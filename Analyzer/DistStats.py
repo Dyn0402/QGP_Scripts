@@ -85,10 +85,8 @@ class DistStats:
                          axis=1)
             self.raw_moments.update({p: x for p, x in zip(pows, res)})
         else:
-            # self.total_counts = 0
             self.total_counts = sum(self.dist.values())
             for x, counts in self.dist.items():
-                self.total_counts += counts
                 for ni in range(n_min, n_max + 1):
                     self.raw_moments[ni] += x ** ni * float(counts) / self.total_counts
 
