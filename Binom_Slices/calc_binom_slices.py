@@ -39,7 +39,7 @@ def init_pars():
         # 'csv_path': '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim.csv',
         'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': True,  # If True check csv_path and only run missing datasets, else run all datasets
-        'threads': 14,
+        'threads': 1,
         'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
         'min_events': 100,  # Min number of total events per total_proton. Skip total_proton if fewer
@@ -68,7 +68,7 @@ def define_datasets(base_path):
     """
 
     all_divs = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356]
-    all_energies = [7, 19, 27, 39, 62]
+    all_energies = [7, 11, 19, 27, 39, 62]
     # all_energies = [7]
     all_cents = [8]  # [0, 1, 2, 3, 4, 5, 6, 7, 8]
 
@@ -90,10 +90,11 @@ def define_datasets(base_path):
         #  all_divs],
         # ['bes_def', '', ['default'], [], ['resample'], range(60), all_energies, [8], all_divs],
         # ['bes_resample_def', '', ['default', 'resample'], [], ['alg3'], [0], all_energies, [8], all_divs],
-        ['cf_resample_def', '_CF', ['default', 'resample'], [], ['alg3'], [0], all_energies, all_cents, all_divs],
-        ['cfev_resample_def', '_CFEV', ['default', 'resample'], [], ['alg3'], [0], all_energies, all_cents, all_divs],
-        ['cfevb342_resample_def', '_CFEVb342', ['default', 'resample'], [], ['alg3'], [0], all_energies, all_cents,
-         all_divs],
+        ['bes_single', '', ['default', 'single'], [], ['alg3'], [0], all_energies, [8], all_divs],
+        # ['cf_resample_def', '_CF', ['default', 'resample'], [], ['alg3'], [0], all_energies, all_cents, all_divs],
+        # ['cfev_resample_def', '_CFEV', ['default', 'resample'], [], ['alg3'], [0], all_energies, all_cents, all_divs],
+        # ['cfevb342_resample_def', '_CFEVb342', ['default', 'resample'], [], ['alg3'], [0], all_energies, all_cents,
+        #  all_divs],
     ]
 
     # # Anti-clustering
@@ -479,6 +480,8 @@ def get_div(raw_az_data, mix_az_data, total_protons, stat_method, min_counts, mi
                 #     div_stat_bs_list.append(div_stat_bs_meas)
             else:
                 div_stat_bs_list = None
+        else:
+            div_stat_bs_list = None
     else:
         div_stat_meas = None
         div_stat_bs_list = None

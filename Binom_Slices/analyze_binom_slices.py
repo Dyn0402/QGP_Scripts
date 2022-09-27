@@ -101,9 +101,9 @@ def main():
     # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue']))
     # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST EV']))
 
-    data_sets_plt = ['bes_resample_def', 'bes_resample_def_alg3']
-    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red']))
-    data_sets_labels = dict(zip(data_sets_plt, ['STAR Stochastic', 'STAR Even Space']))
+    data_sets_plt = ['bes_resample_def', 'bes_resample_def_alg3', 'bes_single']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'green']))
+    data_sets_labels = dict(zip(data_sets_plt, ['STAR Stochastic', 'STAR Even Space', 'STAR Single']))
 
     # data_sets_plt = ['ampt_meson_first_resample_def', 'cf_resample_def', 'cfev_resample_def', 'cfevb342_resample_def']
     # data_sets_colors = dict(zip(data_sets_plt, ['red', 'blue', 'green', 'purple']))
@@ -634,7 +634,8 @@ def plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels):
                                  color=data_sets_colors[data_set])
 
         ax_base_energy.errorbar(df_data_set['energy'], df_data_set['baseline'], yerr=df_data_set['base_err'], ls='none',
-                                marker='o', label=data_sets_labels[data_set], color=data_sets_colors[data_set])
+                                marker='o', label=data_sets_labels[data_set], color=data_sets_colors[data_set],
+                                alpha=0.8)
 
         energies = pd.unique(df_data_set['energy'])
         for energy_index, energy in enumerate(energies):
