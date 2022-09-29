@@ -3,7 +3,7 @@
 """
 Created on December 04 7:07 PM 2021
 Created in PyCharm
-Created as QGP_Scripts/Bootstrap_Az_Bin.py
+Created as QGP_Scripts/BootstrapAzBin.py
 
 @author: Dylan Neff, Dylan
 """

@@ -18,7 +18,7 @@ from multiprocessing import Pool
 import tqdm
 import istarmap  # Needed for tqdm
 
-from Bootstrap_Az_Bin import BootstrapAzBin
+from BootstrapAzBin import BootstrapAzBin
 from Measure import Measure
 from pickle_methods import *
 

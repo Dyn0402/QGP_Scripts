@@ -12,7 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from Bootstrap_Az_Bin import BootstrapAzBin as Bab
+from BootstrapAzBin import BootstrapAzBin as Bab
 from DistStats import DistStats as Ds
 
 

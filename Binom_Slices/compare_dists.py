@@ -20,7 +20,7 @@ import tqdm
 import istarmap  # Needed for tqdm
 
 from AzimuthBinData import AzimuthBinData as Abd
-from Bootstrap_Az_Bin import BootstrapAzBin as Babd
+from BootstrapAzBin import BootstrapAzBin as Babd
 
 from calc_binom_slices import find_sim_sets, get_name_amp_spread
 
