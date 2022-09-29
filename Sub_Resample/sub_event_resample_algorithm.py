@@ -26,8 +26,8 @@ def main():
     # animation_function_test()
     # return
     # angles = [0.5, 1.5]
-    angles = np.deg2rad([20, 50, 51, 53, 55, 60, 70, 137, 187, 220, 224, 228, 273, 310, 354])
-    # angles = np.deg2rad([20, 50, 55, 145, 195, 340])
+    # angles = np.deg2rad([20, 50, 51, 53, 55, 60, 70, 137, 187, 220, 224, 228, 273, 310, 354])
+    angles = np.deg2rad([20, 50, 55, 145, 195, 340])
     bin_width = np.deg2rad(120)  # 2.09
     samples = 180
     samples_list = np.arange(1, 180)
@@ -37,9 +37,10 @@ def main():
     # hist = plot_resamples3(angles, bin_width, samples, plot='event')
     # animate_resamples2(angles, bin_width, samples, gif_path, fps)
     # animate_resamples4(angles, bin_width, samples, gif_path, fps)
+    plot_event(angles, 0, bin_width, bin_width, 3)
     # plot_event_nobin(angles)
     # animate_nsamples_resamples2(angles, bin_width, samples_list, gif_path, fps=fps)
-    animate_nsamples_resamples4(angles, bin_width, samples_list, gif_path, fps=fps)
+    # animate_nsamples_resamples4(angles, bin_width, samples_list, gif_path, fps=fps)
     # print(hist)
     # plt.hist(hist, bins=np.arange(-0.5, len(angles) + 0.5, 1))
     # plt.show()
@@ -596,13 +597,13 @@ def plot_binning(angles, bin_low, bin_high, dphi, bin_width, counts, hist):
 def plot_event(angles, bin_low, bin_high, bin_width, counts):
     fig = plt.figure(figsize=(5, 5))
     ax = plt.subplot(111, projection='polar')
-    ax.vlines(angles, 0, 1, color='red', label='tracks')
+    ax.vlines(angles, 0, 1, color='red', label='Tracks')
     bw_deg = int(bin_width / np.pi * 180)
-    ax.fill_between(np.linspace(bin_low, bin_high, 1000), 0, 1, alpha=0.5, color='gray', label=f'{bw_deg}° bin')
+    ax.fill_between(np.linspace(bin_low, bin_high, 1000), 0, 1, alpha=0.5, color='gray', label=f'{bw_deg}° Partition')
     ax.grid(False)
     ax.set_yticklabels([])
     ax.set_ylim((0, 1))
-    leg_angle = np.deg2rad(300)
+    leg_angle = np.deg2rad(290)
     ax.legend(loc="upper left", bbox_to_anchor=(.5 + np.cos(leg_angle) / 2, .5 + np.sin(leg_angle) / 2))
     ax.text(-0.05, -0.05, f'Tracks in \nbin:  {counts}', horizontalalignment='left', transform=ax.transAxes,
             size='large')
@@ -615,7 +616,7 @@ def plot_event(angles, bin_low, bin_high, bin_width, counts):
 def plot_event_nobin(angles):
     fig = plt.figure(figsize=(5, 5))
     ax = plt.subplot(111, projection='polar')
-    ax.vlines(angles, 0, 1, color='red', label='tracks')
+    ax.vlines(angles, 0, 1, color='red', label='Tracks')
     ax.grid(False)
     ax.set_yticklabels([])
     ax.set_ylim((0, 1))
