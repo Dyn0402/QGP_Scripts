@@ -32,14 +32,16 @@ def main():
 
 def init_pars():
     pars = {
-        'base_path': 'F:/Research/',
+        # 'base_path': 'F:/Research/',
+        'base_path': 'D:/Transfer/Research/',
         # 'base_path': '/media/ucla/Research/',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_cfev.csv',
-        'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim.csv',
+        # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim.csv',
+        'csv_path': 'D:/Transfer/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim_new.csv',
         # 'csv_path': '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim.csv',
         'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': True,  # If True check csv_path and only run missing datasets, else run all datasets
-        'threads': 15,
+        'threads': 7,
         'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
         'min_events': 100,  # Min number of total events per total_proton. Skip total_proton if fewer
@@ -76,10 +78,12 @@ def define_datasets(base_path):
                    'set_nums', 'energies', 'cents', 'divs']
     entry_vals = [
         # ['ampt_def', '_Ampt', ['default'], [], ['resample'], range(60), all_energies, all_cents, all_divs],
-        ['ampt_new_coal_resample_def', '_Ampt_New_Coal', ['default', 'resample'], [], [], [0], all_energies, all_cents,
+        ['ampt_new_coal_single_def', '_Ampt_New_Coal', ['default', 'single'], [], [], [0], all_energies, all_cents,
          all_divs],
-        ['ampt_new_coal_resample_eff1', '_Ampt_New_Coal', ['default', 'resample', 'Eff1'], [], [], [0], all_energies,
+        ['ampt_new_coal_resample_def', '_Ampt_New_Coal', ['default', 'resample'], [], ['alg3'], [0], all_energies,
          all_cents, all_divs],
+        # ['ampt_new_coal_resample_eff1', '_Ampt_New_Coal', ['default', 'resample', 'Eff1'], [], [], [0], all_energies,
+        #  all_cents, all_divs],
         # ['ampt_baryon_first_fix_resample_def', '_Ampt', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
         # ['ampt_old_resample_def', '_Ampt_Old', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
         # ['ampt_eff1_resample_def', '_Ampt', ['resample', 'Eff1'], [], [], [0], all_energies, all_cents, all_divs],
@@ -265,7 +269,8 @@ def read_data(pars):
         df = get_systematics(pars, df)
     if pars['csv_append']:
         if df_old is not None:
-            df = df.append(df_old, ignore_index=True)
+            df = pd.concat([df, df_old], ignore_index=True)
+            # df = df.append(df_old, ignore_index=True)
         else:
             print(f'{pars["csv_path"]} not found! Skipping read and writing new.')
 

@@ -21,12 +21,12 @@ def main():
     divs = 120
     cent = 8
     energy = 39
-    samples = 72  # Just for title
+    samples = 1  # Just for title
     data_name = "AMPT"  # Just for title
     set_group = 'default_resample'
     set_name = 'Ampt_rapid05_resample_norotate_'
-    # set_group = 'default_resample'
-    # set_name = 'Ampt_rapid05_resample_norotate_'
+    # set_group = 'default_single'
+    # set_name = 'Ampt_rapid05_single_'
     set_num = 0
     data_set = '_Ampt_New_Coal'
     # base_path = '/home/dylan/Research/Data'
@@ -38,10 +38,10 @@ def main():
     raw = AzimuthBinData(path=path, div=divs)
     mix = AzimuthBinData(path=path_mix, div=divs)
 
-    title_sufx = f'\n{energy}GeV, 0-5% Centrality, {divs}° Partitions, {samples} Samples per Event'
+    title_sufx = f'\n{energy}GeV, 0-5% Centrality, {divs}° Partitions, {samples} Sample per Event'
 
-    plot_2d(raw.get_dist(), raw.max_particle, raw.get_max_bin(), divs, data_name, title_sufx)
-    plot_binomial(raw.get_dist(), 20, divs, data_name, title_sufx=title_sufx)
+    # plot_2d(raw.get_dist(), raw.max_particle, raw.get_max_bin(), divs, data_name, title_sufx)
+    plot_binomial(raw.get_dist(), 31, divs, data_name, title_sufx=title_sufx)
     # plot_ratio(raw.get_dist(), raw.max_particle, divs, x_bins=20, title_sufx=title_sufx)
     # plot_pull(raw.get_dist(), raw.max_particle, divs, x_bins=40, title_sufx=title_sufx)
 
@@ -57,7 +57,7 @@ def plot_2d(file_data, max_particle, max_bin, divs, data_name, title_sufx):
     data = np.ma.masked_where(data <= 0, data)
     edges = np.arange(-0.5, max_particle + 1)
     x_edges, y_edges = np.meshgrid(edges, edges)
-    fig, ax = plt.subplots(figsize=(6.5, 5), dpi=200)
+    fig, ax = plt.subplots(figsize=(6.5, 5), dpi=144)
     plt.pcolormesh(x_edges, y_edges, data, norm=colors.LogNorm(vmin=data.min(), vmax=data.max()))
     plt.plot(edges, 360 / float(divs) * edges, color='red', label='mean')
     plt.plot(edges, edges, color='blue', label='max')
@@ -259,7 +259,8 @@ def plot_binomial(data, particles, divs, data_name, title_sufx=''):
     x = range(particles + 1)
     y_binom = sum(y) * binom.pmf(x, particles, float(divs) / 360)
     # y_err = np.sqrt(y)  # No longer a good approximation with multi-sampling
-    fig1, ax1 = plt.subplots(figsize=(6.6, 3.3), dpi=200)
+    fig1, ax1 = plt.subplots(figsize=(6.6, 3.3), dpi=144)
+    # fig1, ax1 = plt.subplots(figsize=(6, 2.8), dpi=144)
     ax1.bar(x, y, align='center', zorder=0, label=f'{particles} Proton Events')
     ax1.scatter(x, y_binom, color='red', label='Binomial Distribution')
     ax1.set_xticks(range(0, len(y), 2))
