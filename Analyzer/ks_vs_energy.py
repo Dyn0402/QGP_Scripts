@@ -9,6 +9,8 @@ Created as QGP_Scripts/ks_vs_energy.py
 """
 
 from AzimuthBinData import AzimuthBinData as AzData
+from BootstrapAzBin import BootstrapAzBin as BsData
+from DistStats import DistStats
 from scipy import stats
 import matplotlib.pyplot as plt
 import numpy as np
@@ -19,12 +21,13 @@ from Measure import Measure
 
 def main():
     # from_hist_files()
-    from_dataframe()
+    from_hist_files_simple()
+    # from_dataframe()
 
 
 def from_dataframe():
-    # base_path = 'F:/Research/Results/Azimuth_Analysis/'
-    base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
+    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
     df_name = 'binom_slice_stats_cent8_no_sim.csv'
     divs = 120
     energy = 39
@@ -71,6 +74,145 @@ def from_dataframe():
     ax2.legend()
     fig2.tight_layout()
 
+    fig3, ax3 = plt.subplots(figsize=(6.66, 5), dpi=144)
+    raw_diff = [Measure(val, err) - binom for val, err, binom in zip(df_raw['val'], df_raw['err'], y_binom_raw)]
+    mix_diff = [Measure(val, err) - binom for val, err, binom in zip(df_mix['val'], df_mix['err'], y_binom_mix)]
+    ax3.errorbar(df_raw['total_protons'], [x.val for x in raw_diff], [x.err for x in raw_diff], alpha=0.8, zorder=2,
+                 color='blue', ls='', marker='o', label='Raw - Binomial')
+    ax3.errorbar(df_mix['total_protons'], [x.val for x in mix_diff], [x.err for x in mix_diff], alpha=0.8, zorder=1,
+                 color='green', ls='', marker='o', label='Mix - Binomial')
+    ax3.axhline(0, color='red', ls='--')
+    ax3.set_xlabel('Total Protons in Event')
+    ax3.set_ylabel('Standard Deviation Difference')
+    ax3.set_title(f'{energy}GeV, 0-5% Centrality, {divs}° Partitions, {samples} Samples per Event')
+    ax3.legend()
+    fig3.tight_layout()
+
+    plt.show()
+
+
+def from_hist_files_simple():
+    base_path = 'F:/Research/'
+    energy = 39
+    divs = [60, 180]
+    cent = 8
+    min_bs = 200  # of 250
+    # data_name = 'Ampt_New_Coal'
+    # set_group = 'default_resample'
+    # set_name = 'Ampt_rapid05_resample_norotate_'
+    data_name = 'CF'
+    set_group = 'default_resample'
+    set_name = 'CF_rapid05_resample_norotate_'
+    set_number = 0
+
+    plot_data = []
+    for div in divs:
+        file_name = f'ratios_divisions_{div}_centrality_{cent}_local.txt'
+
+        raw_path = f'{base_path}Data_{data_name}/{set_group}/{set_name}{set_number}/{energy}GeV/{file_name}'
+        mix_path = f'{base_path}Data_{data_name}_Mix/{set_group}/{set_name}{set_number}/{energy}GeV/{file_name}'
+        raw = BsData(div, raw_path)
+        mix = BsData(div, mix_path)
+
+        raw_stats = {tp: DistStats(x) for tp, x in raw.data.data.items()}
+        mix_stats = {tp: DistStats(x) for tp, x in mix.data.data.items()}
+        raw_bs_stats = [{tp: DistStats(y) for tp, y in x.data.items()} for x in raw.data_bs]
+        mix_bs_stats = [{tp: DistStats(y) for tp, y in x.data.items()} for x in mix.data_bs]
+
+        raw_tps, raw_c2_div_c1_vals, raw_c2_div_c1_errs = [], [], []
+        for tp, raw_stat in raw_stats.items():
+            val = raw_stat.get_cumulant(2).val / raw_stat.get_mean().val
+            bs_c2_div_c1s = []
+            for bs in raw_bs_stats:
+                if tp in bs:
+                    bs_c2_div_c1s.append(bs[tp].get_cumulant(2).val / bs[tp].get_cumulant(1).val)
+            if len(bs_c2_div_c1s) > min_bs:
+                raw_tps.append(tp)
+                raw_c2_div_c1_vals.append(val)
+                raw_c2_div_c1_errs.append(np.std(bs_c2_div_c1s))
+
+        mix_tps, mix_c2_div_c1_vals, mix_c2_div_c1_errs = [], [], []
+        for tp, mix_stat in mix_stats.items():
+            val = mix_stat.get_cumulant(2).val / mix_stat.get_mean().val
+            bs_c2_div_c1s = []
+            for bs in mix_bs_stats:
+                if tp in bs:
+                    bs_c2_div_c1s.append(bs[tp].get_cumulant(2).val / bs[tp].get_cumulant(1).val)
+            if len(bs_c2_div_c1s) > min_bs:
+                mix_tps.append(tp)
+                mix_c2_div_c1_vals.append(val)
+                mix_c2_div_c1_errs.append(np.std(bs_c2_div_c1s))
+
+        q = 1 - (float(div) / 360)
+        raw_y_vals = (np.array(raw_c2_div_c1_vals) - q) / np.array(raw_tps)
+        raw_y_errs = np.array(raw_c2_div_c1_errs) / np.array(raw_tps)
+        mix_y_vals = (np.array(mix_c2_div_c1_vals) - q) / np.array(mix_tps)
+        mix_y_errs = np.array(mix_c2_div_c1_errs) / np.array(mix_tps)
+
+        raw_mix_tps, raw_mix_diff_vals, raw_mix_diff_errs = [], [], []
+        raw_mix_diff_mean = 0
+        for raw_index, raw_tp in enumerate(raw_tps):
+            if raw_tp in mix_tps:
+                mix_index = mix_tps.index(raw_tp)
+                raw_mix_tps.append(raw_tp)
+                raw_mix_diff = Measure(raw_y_vals[raw_index], raw_y_errs[raw_index]) - \
+                               Measure(mix_y_vals[mix_index], mix_y_errs[mix_index])
+                raw_mix_diff_mean += raw_mix_diff.val * 1 / raw_mix_diff.err**2
+                raw_mix_diff_vals.append(raw_mix_diff.val)
+                raw_mix_diff_errs.append(raw_mix_diff.err)
+
+        raw_mix_diff_mean /= np.sum(1 / np.array(raw_mix_diff_errs)**2)
+
+        plot_data.append((q, raw_tps, raw_c2_div_c1_vals, raw_c2_div_c1_errs, mix_tps, mix_c2_div_c1_vals,
+                          mix_c2_div_c1_errs, raw_y_vals, raw_y_errs, mix_y_vals, mix_y_errs,
+                          raw_mix_tps, raw_mix_diff_vals, raw_mix_diff_errs, raw_mix_diff_mean))
+
+    fig1, ax1 = plt.subplots(figsize=(6.66, 5), dpi=144)
+    fig2, ax2 = plt.subplots(figsize=(6.66, 5), dpi=144)
+    fig3, ax3 = plt.subplots(figsize=(6.66, 5), dpi=144)
+    markers = iter(['o', 's', 'p'])
+    colors = iter(['b', 'g', 'r', 'm', 'c', 'k'])
+    for div, plot_data in zip(divs, plot_data):
+        marker, color = next(markers), next(colors)
+        q, raw_tps, raw_c2_div_c1_vals, raw_c2_div_c1_errs, mix_tps, mix_c2_div_c1_vals, mix_c2_div_c1_errs, \
+            raw_y_vals, raw_y_errs, mix_y_vals, mix_y_errs, raw_mix_tps, raw_mix_diff_vals, \
+            raw_mix_diff_errs, raw_mix_diff_mean = plot_data
+
+        ax1.errorbar(raw_tps, raw_c2_div_c1_vals, raw_c2_div_c1_errs, marker=marker, ls='none', color='blue', alpha=0.8,
+                     label=f'Raw {div}°')
+        ax1.errorbar(mix_tps, mix_c2_div_c1_vals, mix_c2_div_c1_errs, marker=marker, ls='none', color='green',
+                     alpha=0.8, label=f'Mix {div}°')
+        ax1.axhline(q, color='red', ls='--', label=f'Binomial {div}°')
+
+        ax2.errorbar(raw_tps, raw_y_vals, raw_y_errs, marker=marker, ls='none', color='blue', alpha=0.8,
+                     label=f'Raw {div}°')
+        ax2.errorbar(mix_tps, mix_y_vals, mix_y_errs, marker=marker, ls='none', color='green', alpha=0.8,
+                     label=f'Mix {div}°')
+
+        ax3.errorbar(raw_mix_tps, raw_mix_diff_vals, raw_mix_diff_errs, alpha=0.8, ls='none', marker=marker,
+                     color=color, label=f'{div}°')
+        ax3.axhline(raw_mix_diff_mean, color=color, alpha=0.7)
+        # ax3.axhspan(raw_mix_diff_mean.val - raw_mix_diff_mean.err, raw_mix_diff_mean.val + raw_mix_diff_mean.err,
+        #             color=color, alpha=0.4)
+        print(f'{div}° Mean: {raw_mix_diff_mean}')
+
+    ax1.set_xlabel('Total Protons in Event')
+    ax1.set_ylabel('C2 / C1')
+    ax1.legend()
+    fig1.tight_layout()
+
+    ax2.axhline(0, color='black', ls='--')
+    ax2.set_xlabel('Total Protons in Event')
+    ax2.set_ylabel('(C2 / C1 - q) / n')
+    ax2.legend()
+    fig2.tight_layout()
+
+    ax3.axhline(0, color='black', ls='--')
+    ax3.set_xlabel('Total Protons in Event')
+    ax3.set_ylabel('(C2 / C1 - q) / n - Mix')
+    ax3.legend()
+    fig3.tight_layout()
+
     plt.show()
 
 
@@ -98,7 +240,7 @@ def from_hist_files():
             for division in divisions:
                 data[source][energy][division] = {}
                 for centrality in centralities:
-                    current_path = path[source][0] + str(energy)+path[source][1] + str(division) + path[source][2] +\
+                    current_path = path[source][0] + str(energy) + path[source][1] + str(division) + path[source][2] + \
                                    str(centrality) + path[source][3]
                     data[source][energy][division][centrality] = AzData(path=current_path, div=division)
 
@@ -124,15 +266,17 @@ def from_hist_files():
                 for total_particles in raw.data:
                     if total_particles in mix.data:
                         plot_data_ks2_test[energy][0].append(total_particles)
-                        plot_data_ks2_test[energy][1].append(ks2_test(raw.data[total_particles], mix.data[total_particles]))
+                        plot_data_ks2_test[energy][1].append(
+                            ks2_test(raw.data[total_particles], mix.data[total_particles]))
                         plot_data_raw[energy][0].append(total_particles)
                         plot_data_raw[energy][1].append(ks2_test(raw.data[total_particles], stats.binom.pmf(
-                            range(0, total_particles+1), total_particles, 1.0/raw.div)))
+                            range(0, total_particles + 1), total_particles, 1.0 / raw.div)))
                         plot_data_mix[energy][0].append(total_particles)
                         plot_data_mix[energy][1].append(ks2_test(mix.data[total_particles], stats.binom.pmf(
-                            range(0, total_particles+1), total_particles, 1.0/mix.div)))
+                            range(0, total_particles + 1), total_particles, 1.0 / mix.div)))
                         sd_data_raw[energy][0].append(total_particles)
-                        sd_data_raw[energy][1].append(hist_sd(range(len(raw.data[total_particles])), raw.data[total_particles]))
+                        sd_data_raw[energy][1].append(
+                            hist_sd(range(len(raw.data[total_particles])), raw.data[total_particles]))
                         sd_data_mix[energy][0].append(total_particles)
                         sd_data_mix[energy][1].append(
                             hist_sd(range(len(mix.data[total_particles])), mix.data[total_particles]))
@@ -223,7 +367,7 @@ def from_hist_files():
     ax5.plot(mix_x, y_mix, color='red', zorder=0, label='Binomial SD')
     ax5.set_xlabel('Total Particles')
     ax5.set_ylabel('Standard Deviation of Slice')
-    ax5.set_title(f'Standard Deviation of Total Particle Slices for {sd_plot["energy"]}GeV'+title_sufx)
+    ax5.set_title(f'Standard Deviation of Total Particle Slices for {sd_plot["energy"]}GeV' + title_sufx)
     ax5.legend()
 
     # fig6.set_size_inches(10, 7)
@@ -236,7 +380,7 @@ def from_hist_files():
     # ax6.axhline(np.average(mix_ratio), zorder=0, color='green', ls='--', label='Mix Avg')
     ax6.set_xlabel('Total Particles')
     ax6.set_ylabel('Standard Deviation of Slice Divided by Binomial')
-    ax6.set_title(f'SD Divided by Binomial of Total Particle Slices for {sd_plot["energy"]}GeV'+title_sufx)
+    ax6.set_title(f'SD Divided by Binomial of Total Particle Slices for {sd_plot["energy"]}GeV' + title_sufx)
     ax6.legend()
 
     plt.show()
@@ -250,8 +394,8 @@ def ks2_test(dist1, dist2):
     cdf2 = get_cdf(dist2)
 
     for i, j in zip(cdf1, cdf2):
-        if abs(i-j) > ks:
-            ks = abs(i-j)
+        if abs(i - j) > ks:
+            ks = abs(i - j)
 
     return ks
 
@@ -272,8 +416,8 @@ def hist_sd(x, y):
         print('Only one event what is this amateur hour')
         return None
     else:
-        variance = sum((np.asarray(x) - mean)**2 * np.asarray(y)) / (sum(y) - 1)
-        return variance**0.5
+        variance = sum((np.asarray(x) - mean) ** 2 * np.asarray(y)) / (sum(y) - 1)
+        return variance ** 0.5
 
 
 def hist_mean(x, y):
