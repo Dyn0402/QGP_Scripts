@@ -97,13 +97,17 @@ def main():
     # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT_New_Coalescence', 'AMPT_Baryon_First',
     #                                             'MUSIC+FIST', 'MUSIC+FIST+EV']))
 
-    # data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def', 'cfev_resample_def']
-    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue']))
-    # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST EV']))
+    data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def', 'cf_resample_def', 'cfev_resample_def']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple']))
+    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST', 'MUSIC+FIST EV']))
 
-    data_sets_plt = ['bes_resample_def', 'bes_resample_def_alg3', 'bes_single']
-    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'green']))
-    data_sets_labels = dict(zip(data_sets_plt, ['STAR Stochastic', 'STAR Even Space', 'STAR Single']))
+    # data_sets_plt = ['cf_resample_def']
+    # data_sets_colors = dict(zip(data_sets_plt, ['blue']))
+    # data_sets_labels = dict(zip(data_sets_plt, ['MUSIC+FIST']))
+
+    # data_sets_plt = ['bes_resample_def', 'bes_resample_def_alg3', 'bes_single']
+    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'green']))
+    # data_sets_labels = dict(zip(data_sets_plt, ['STAR Stochastic', 'STAR Even Space', 'STAR Single']))
 
     # data_sets_plt = ['ampt_meson_first_resample_def', 'cf_resample_def', 'cfev_resample_def', 'cfevb342_resample_def']
     # data_sets_colors = dict(zip(data_sets_plt, ['red', 'blue', 'green', 'purple']))
@@ -124,6 +128,7 @@ def main():
 
     df = pd.read_csv(df_path)
     df = df.dropna()
+    print(pd.unique(df['name']))
     # df_data = df[~df['name'].str.contains('sim_')]
     # df_sim = df[df['name'].str.contains('sim_')]
     df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
@@ -132,10 +137,10 @@ def main():
     # fit_pars = stat_vs_divs(df, stat_plot, total_protons_plt, cent_plt, energies_plt, data_types_plt, data_sets_plt,
     #                         exclude_divs, plot=True, fit=True)
     #
-    # protons_fits = stat_vs_protons(df, stat_plot, div_plt, cent_plt, [7, 11, 19, 27, 39, 62], data_types_plt,
-    #                                all_sets_plt, plot=False, fit=True)
-    # print(protons_fits)
-    # plot_protons_fits_vs_energy(protons_fits, all_sets_plt, data_sets_colors, data_sets_labels)
+    protons_fits = stat_vs_protons(df, stat_plot, div_plt, cent_plt, [7, 11, 19, 27, 39, 62], data_types_plt,
+                                   all_sets_plt, plot=False, fit=True)
+    print(protons_fits)
+    plot_protons_fits_vs_energy(protons_fits, all_sets_plt, data_sets_colors, data_sets_labels)
 
     # stat_vs_protons(df, stat_plot, div_plt, cent_plt, [39], ['raw', 'mix'], ['bes_resample_def'], plot=True, fit=False)
     # stat_vs_protons(df, stat_plot, div_plt, cent_plt, [39], data_types_plt, ['bes_resample_def'], plot=True, fit=False)
@@ -158,14 +163,14 @@ def main():
     # stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, ['raw', 'mix'], all_sets_plt, plot=True, fit=False)
     # stat_vs_protons(df, stat_plot, div_plt, cent_plt, [39], data_types_plt, all_sets_plt, plot=True, fit=False,
     #                 data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
-    stat_vs_protons(df, stat_plot, div_plt, cent_plt, [39], data_types_plt, all_sets_plt, plot=True, fit=True,
+    stat_vs_protons(df, stat_plot, div_plt, cent_plt, [39], data_types_plt, all_sets_plt, plot=True, fit=False,
                     data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
-    stat_vs_protons_energies(df, stat_plot, [120], cent_plt, [7, 11, 19, 27, 39, 62], data_types_plt, all_sets_plt,
-                             plot=False, fit=True, plot_fit=True, data_sets_colors=data_sets_colors,
-                             data_sets_labels=data_sets_labels)
+    # stat_vs_protons_energies(df, stat_plot, [120], cent_plt, [7, 11, 19, 27, 39, 62], data_types_plt, all_sets_plt,
+    #                          plot=False, fit=True, plot_fit=True, data_sets_colors=data_sets_colors,
+    #                          data_sets_labels=data_sets_labels)
     for energy in [7, 11, 19, 27, 39, 62]:
         stat_vs_protons_divs(df, stat_plot, [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356], cent_plt, [energy],
-                             data_types_plt, all_sets_plt, plot=True, fit=False, data_sets_colors=data_sets_colors,
+                             data_types_plt, all_sets_plt, plot=True, fit=True, data_sets_colors=data_sets_colors,
                              data_sets_labels=data_sets_labels)
     plt.show()
     return
@@ -209,13 +214,13 @@ def main():
     #              exclude_divs, plot=True, fit=True)
     # df_pars = stat_vs_divs(df, stat_plot, total_protons_plt, cent_plt, energies_plt, data_types_plt, all_sets_plt,
     #                        exclude_divs, plot=False, fit=True)
-    # df_fits = interp_vs_div(df_pars, stat_plot, quad_par_line=line_xint1, r_amp_line=line_yint0, plot=True)
+    # df_fits = interp_vs_div(df_pars, stat_plot, quad_par_line=line_yint1, r_amp_line=line_yint0, plot=True)
     # for div_plt in [240]:
     # plot_vs_protons(df, stats_plot, div_plt, cent_plt, data_type_plt, y_ranges, data_sets_plt)
     # for total_protons_plt in [20]:
     #     df_pars = fit_vs_divs(df, stats_plot, total_protons_plt, cent_plt, energies_plt, data_type_plt, y_ranges,
     #                           all_sets_plt, exclude_divs, False)
-    #     df_fits = interp_vs_div(df_pars, y_ranges, quad_par_line=line_xint1, r_amp_line=line_yint0, plot=True)
+    #     df_fits = interp_vs_div(df_pars, y_ranges, quad_par_line=line_yint1, r_amp_line=line_yint0, plot=True)
     #     # plot_fits(df_fits)
     # plt.show()
 
@@ -226,8 +231,8 @@ def line(x, a, b):
     return a * x + b
 
 
-def line_xint1(x, a):
-    return a * (x - 1)
+def line_yint1(x, a):
+    return a * x + 1
 
 
 def line_yint0(x, a):
@@ -265,7 +270,8 @@ def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_
                 data.append((df_set, lab, data_set, df_set['amp'].iloc[0], df_set['spread'].iloc[0], energy))
 
     if plot:
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(6.66, 5), dpi=144)
+        fig.canvas.manager.set_window_title(f'Raw / Mix {stat} vs Total Protons {energy}GeV {div}°')
         # ax.set_title(f'{stat} {div}° Divisions')
         ax.set_xlabel('Total Protons in Event')
         ax.set_ylabel(f'Raw / Mix {stat}')
@@ -293,7 +299,10 @@ def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_
                                 color=c, alpha=0.4, zorder=zo)
 
         if fit and len(df) > 1:
-            popt, pcov = cf(line, df['total_protons'], df['val'], sigma=df['err'], absolute_sigma=True)
+            # popt, pcov = cf(line, df['total_protons'], df['val'], sigma=df['err'], absolute_sigma=True)
+            popt, pcov = cf(line_yint1, df['total_protons'], df['val'], sigma=df['err'], absolute_sigma=True)
+            popt = np.append(popt, 1)
+            pcov = np.array(((pcov[0][0], 0), (0, 0)))
             fits.append({'name': data_set, 'energy': energy, 'divs': div, 'amp': amp, 'spread': spread,
                          'slope': popt[0], 'slope_err': np.sqrt(np.diag(pcov))[0],
                          'int': popt[1], 'int_err': np.sqrt(np.diag(pcov))[1]})
@@ -546,8 +555,9 @@ def stat_vs_protons_energies(df, stat, divs, cent, energies, data_types, data_se
 
 def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, data_sets_labels=None, exclude_divs=[]):
     fig, ax = plt.subplots()
-    ax.axhline(0, ls='--', color='black')
+    ax.axhline(0, ls='-', color='black')
     energies = pd.unique(df['energy'])
+    energy_fig_axs = {energy: plt.subplots() for energy in energies}
     markers = ['o', 's', 'P', 'D', '*', '^', 'p']
     fit_pars = []
     for data_set in data_sets_plt:
@@ -556,18 +566,23 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
         for energy_marker, energy in enumerate(energies):
             df_energy = df_set[df_set['energy'] == energy]
             df_energy.sort_values(by='divs')
+            energy_fig, energy_ax = energy_fig_axs[energy]
             if data_sets_labels is None:
-                lab = data_set
+                lab_energy = data_set
             else:
-                lab = data_sets_labels[data_set]
+                lab_energy = data_sets_labels[data_set]
             if len(energies) > 1:
-                lab += f'_{energy}GeV'
+                lab = f'{lab_energy}_{energy}GeV'
             if data_sets_colors is None:
                 ax.errorbar(df_energy['divs'], df_energy['slope'], yerr=df_energy['slope_err'], ls='none',
                             marker=markers[energy_marker], label=lab)
+                energy_ax.errorbar(df_energy['divs'], df_energy['slope'], yerr=df_energy['slope_err'], ls='none',
+                                   marker='o', label=lab_energy)
             else:
                 ax.errorbar(df_energy['divs'], df_energy['slope'], yerr=df_energy['slope_err'], ls='none',
                             marker=markers[energy_marker], label=lab, color=data_sets_colors[data_set])
+                energy_ax.errorbar(df_energy['divs'], df_energy['slope'], yerr=df_energy['slope_err'], ls='none',
+                                   marker='o', label=lab_energy, color=data_sets_colors[data_set])
             if fit and df_energy.size > 1:
                 df = df[~df.divs.isin(exclude_divs)]
                 popt, pcov = cf(quad_180, df_energy['divs'], df_energy['slope'], sigma=df_energy['slope_err'],
@@ -577,11 +592,12 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
                                  'spread': df['spread'].iloc[0], 'amp': df['amp'].iloc[0],
                                  'curve_err': perr[0], 'base_err': perr[1]})
                 x = np.linspace(0, 360, 100)
-                # if plot:
                 if data_sets_colors is None:
-                    ax.plot(x, quad_180(x, *popt), ls='--')
+                    ax.plot(x, quad_180(x, *popt), ls='-', alpha=0.65)
+                    energy_ax.plot(x, quad_180(x, *popt), ls='-', alpha=0.65)
                 else:
-                    ax.plot(x, quad_180(x, *popt), ls='--', color=data_sets_colors[data_set])
+                    ax.plot(x, quad_180(x, *popt), ls='-', color=data_sets_colors[data_set], alpha=0.65)
+                    energy_ax.plot(x, quad_180(x, *popt), ls='-', color=data_sets_colors[data_set], alpha=0.65)
                     fit_pars[-1].update({'color': data_sets_colors[data_set]})
 
     title = ''
@@ -598,6 +614,15 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
     ax.set_xlabel('Azimuthal Partition Width')
     ax.legend()
     fig.tight_layout()
+
+    for energy, (energy_fig, energy_ax) in energy_fig_axs.items():
+        energy_ax.set_title(f'{energy}GeV')
+        energy_ax.set_xlabel('Azimuthal Partition Width')
+        energy_ax.set_ylabel('Slope')
+        energy_ax.axhline(0, color='black', zorder=0)
+        energy_ax.legend()
+        energy_fig.tight_layout()
+        energy_fig.canvas.manager.set_window_title(f'Slope vs Width {energy}GeV')
 
     return pd.DataFrame(fit_pars)
 
@@ -623,7 +648,7 @@ def plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels):
     fig_base_curve.canvas.manager.set_window_title('Slope Baseline vs Curvature')
 
     colors = ['black', 'red', 'blue', 'green', 'purple', 'orange']
-    markers = ['o', 's', '^']
+    markers = ['o', 's', '^', 'P', 'p', '2']
 
     data_sets = pd.unique(df_fits['data_set'])
     for data_set_index, data_set in enumerate(data_sets):
@@ -891,7 +916,7 @@ def stat_vs_divs(df, stat, total_protons, cent, energies, data_types, data_sets_
     return pd.DataFrame(fit_pars)
 
 
-def interp_vs_div(df_pars, stat, quad_par_line=line_xint1, r_amp_line=line_yint0, plot=False, fit=False):
+def interp_vs_div(df_pars, stat, quad_par_line=line_yint1, r_amp_line=line_yint0, plot=False, fit=False):
     base_curve_lin_fits = []
     spread_rs_amp = []
 
@@ -964,7 +989,7 @@ def interp_vs_div(df_pars, stat, quad_par_line=line_xint1, r_amp_line=line_yint0
                 x_plt = np.linspace(min(df_sim['baseline']), 1, 3)
                 ax.plot(x_plt, quad_par_line(x_plt, *popt), ls='--', alpha=0.7, color=df_spread['color'])
                 ax_dev.scatter(df_spread['baseline'],
-                               df_spread['curvature'] - line_xint1(df_spread['baseline'], *popt),
+                               df_spread['curvature'] - line_yint1(df_spread['baseline'], *popt),
                                color=df_spread['color'])
                 x_plt1 = np.array([0, 0.15])
                 ax_rs.plot(x_plt1, r_amp_line(x_plt1, *popt1), ls='--', alpha=0.8, color=df_spread['color'])

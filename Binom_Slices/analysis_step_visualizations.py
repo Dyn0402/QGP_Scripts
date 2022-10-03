@@ -15,14 +15,14 @@ from compare_dists import get_norm_dists
 
 
 def main():
-    # bs_visual()
-    full_bs_visual()
+    bs_visual()
+    # full_bs_visual()
     # full_bs_div_visual()
     print('donzo')
 
 
 def bs_visual():
-    base_path = 'D:/Research/'
+    base_path = 'F:/Research/'
     energy = 62
     cent = 8
     div = 60
