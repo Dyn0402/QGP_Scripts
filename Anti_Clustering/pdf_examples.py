@@ -16,8 +16,8 @@ from multiprocessing import Pool
 import tqdm
 import istarmap  # Needed for tqdm
 
-from anti_cluster_multi import ClustDist
-from sub_event_resample_algorithm import get_resamples3
+from ClustDist import ClustDist
+from sub_event_resample_algorithm import get_resamples4
 
 
 def main():
@@ -32,47 +32,47 @@ def run_static():
     cl_amp = 90
     bin_width = np.radians(120)
     tracks = 25
-    events = 1000
-    samples = 1440
+    events = 100
+    samples = 72
     threads = 12
     seed = 3
 
-    info_string = f'{int(np.rad2deg(bin_width) + 0.5)}° divisions, {tracks} tracks/event, {events} events, {samples} samples'
+    info_string = f'{int(np.rad2deg(bin_width) + 0.5)}° Partitions, {tracks} Tracks/Event, {events} Events, {samples} Samples/Event'
     pdf = ClustDist(phis, sd, cl_amp, a=0, b=2 * np.pi, wrap_num=5)
     plot_pdf(pdf, f'Track PDF\n{info_string}')
     plt.show()
 
     hist = sim_pdf_static(pdf, events, tracks, bin_width, samples, threads, seed)
     plot_pdf(pdf, f'PDF {info_string}')
-    plot_sim(hist, bin_width, f'Protons in Bin Distribution\n{info_string}')
+    plot_sim(hist, bin_width, f'Azimuthal Partition Multiplicity Distribution\n{info_string}')
     plt.show()
 
 
 def run_dynamic():
     phis = np.linspace(0, 2 * np.pi, 25)[:-1]
     # phis = [1, 5]
-    sd = 0.5
-    cl_amp = 0.5
+    sd = 1.0
+    cl_amp = -0.5
     bin_width = np.radians(120)
     tracks = 25
     events = 100
-    samples = 1440
-    threads = 12
-    seed = 3
+    samples = 72
+    threads = 15
+    seed = 61
 
     sim_pars = (cl_amp, sd, 5)
 
     # sim_event_dynamic_plot(sim_pars, tracks, bin_width, samples, seed)
     # return
 
-    info_string = f'{int(np.rad2deg(bin_width) + 0.5)}° divisions, {tracks} tracks/event, {events} events, {samples} samples'
+    info_string = f'{int(np.rad2deg(bin_width) + 0.5)}° Partitions, {tracks} Tracks/Event, {events} Events, {samples} Samples/Event'
     # pdf = ClustDist(phis, sd, cl_amp, a=0, b=2 * np.pi, wrap_num=5)
     # plot_pdf(pdf, f'Track PDF\n{info_string}')
     # plt.show()
 
     hist = sim_pdf_dynamic(sim_pars, events, tracks, bin_width, samples, threads, seed)
     # plot_pdf(pdf, f'PDF {info_string}')
-    plot_sim(hist, bin_width, f'Protons in Bin Distribution\n{info_string}')
+    plot_sim(hist, bin_width, f'Azimuthal Partition Multiplicity Distribution\n{info_string}')
     plt.show()
 
 
@@ -101,8 +101,8 @@ def sim_pdf_static(pdf, n_events, n_tracks, bin_width, samples, threads=1, seed=
 def sim_event_static(pdf, n_tracks, bin_width, samples, seed):
     rng = np.random.default_rng(seed)
     tracks = np.sort(pdf.rvs(size=n_tracks, random_state=rng))
-    hist = get_resamples3(tracks, bin_width, samples)
-    hist = np.histogram(hist, bins=np.arange(-0.5, n_tracks + 1.5, 1))[0]
+    hist = get_resamples4(tracks, bin_width, samples)
+    # hist = np.histogram(hist, bins=np.arange(-0.5, n_tracks + 1.5, 1))[0]
 
     return hist
 
@@ -129,19 +129,22 @@ def sim_event_dynamic(sim_pars, n_tracks, bin_width, samples, seed):
         phis.append(prob_dist.rvs())
         prob_dist = ClustDist(phis, sd, cl_amp, a=0, b=2 * np.pi, wrap_num=wrap_num)
     tracks = np.sort(phis)
-    hist = get_resamples3(tracks, bin_width, samples)
-    hist = np.histogram(hist, bins=np.arange(-0.5, n_tracks + 1.5, 1))[0]
+    hist = get_resamples4(tracks, bin_width, samples)
+    # print(hist)
+    # hist = np.histogram(hist, bins=np.arange(-0.5, n_tracks + 1.5, 1))[0]
+    # print(hist)
 
     return hist
 
 
 def plot_sim(hist, bin_width, title='Protons in Bin Distribution'):
-    fig_sim, ax_sim = plt.subplots()
+    fig_sim, ax_sim = plt.subplots(figsize=(6.67, 5), dpi=144)
     bin_centers = np.arange(0, len(hist), 1)
     ax_sim.bar(bin_centers, hist, width=1, align='center', label='Simulation')
     ax_sim.plot(bin_centers, binom.pmf(bin_centers, len(hist), bin_width / (2 * np.pi)) * np.sum(hist), color='red',
                 label='Binomial')
-    ax_sim.set_xlabel('Protons in Bin')
+    ax_sim.set_xlabel('Protons in Partition')
+    ax_sim.set_ylabel('Number of Partitions')
     ax_sim.set_title(title)
     ax_sim.legend()
     fig_sim.tight_layout()
