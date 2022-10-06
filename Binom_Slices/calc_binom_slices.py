@@ -97,7 +97,7 @@ def define_datasets(base_path):
         # ['ampt_old_eff3_resample_def', '_Ampt_Old', ['resample', 'Eff3'], [], [], [0], all_energies, all_cents,
         #  all_divs],
         # ['bes_def', '', ['default'], [], ['resample'], range(60), all_energies, [8], all_divs],
-        ['bes_resample_def', '', ['default', 'resample'], [], ['alg3'], [0], all_energies, [8], all_divs],
+        # ['bes_resample_def', '', ['default', 'resample'], [], ['alg3'], [0], all_energies, [8], all_divs],
         # ['bes_single', '', ['default', 'single'], [], ['alg3'], [0], all_energies, [8], all_divs],
         # ['cf_resample_def', '_CF', ['default', 'resample'], [], ['alg3'], [0], all_energies, all_cents, all_divs],
         # ['cfev_resample_def', '_CFEV', ['default', 'resample'], [], ['alg3'], [0], all_energies, all_cents, all_divs],
