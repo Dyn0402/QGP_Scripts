@@ -11,14 +11,15 @@ Created as QGP_Scripts/anti_cluster_multi
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
-from scipy.stats import rv_continuous
 from scipy.stats import norm
 from scipy.stats import uniform
 from scipy.interpolate import CubicSpline
-from scipy.interpolate import interp1d
+
+from ClustDist import ClustDist, ClustDist_slow, Testrv
 
 
 def main():
+    # specific_vals()
     # random_tracks()
     # clustered_tracks()
     clustered_tracks_ani()
@@ -38,9 +39,7 @@ def specific_vals():
     p_clust = np.ones(1000)
     p_aclust = np.ones(1000)
 
-    fig_ind_clust, ax_ind_clust = plt.subplots()
-    fig_ind_aclust, ax_ind_aclust = plt.subplots()
-    ax_ind_clust.set_xlabel('Phi Angle')
+    fig_ind_clust, (ax_ind_clust, ax_ind_aclust) = plt.subplots(2, 1, sharex=True)
     ax_ind_aclust.set_xlabel('Phi Angle')
     for dist, amp, sd in zip(dists, amps, sds):
         # clust_pdf = base + clust_amp(aclust_amp, sd, base_int) * dist.pdf(x) / amp
@@ -55,19 +54,25 @@ def specific_vals():
         p_clust *= clust_pdf
         p_aclust *= aclust_pdf
 
-    fig_clust, ax_clust = plt.subplots()
-    fig_aclust, ax_aclust = plt.subplots()
-    ax_clust.set_xlabel('Phi Angle')
+    fig_clust, (ax_clust, ax_aclust) = plt.subplots(2, 1, sharex=True, figsize=(6.5, 6.8), dpi=144)
     ax_aclust.set_xlabel('Phi Angle')
+    ax_clust.set_ylabel('Next Track Probability')
+    ax_aclust.set_ylabel('Next Track Probability')
+    ax_clust.axhline(1, color='gray', linewidth=0.5, alpha=0.5)
+    ax_aclust.axhline(1, color='gray', linewidth=0.5, alpha=0.5)
+    ax_clust.vlines(means, ymin=0.0, ymax=max(p_clust), color='black', ls='--', lw=1.0, alpha=0.4,
+                    label='Previous Tracks')
+    ax_aclust.vlines(means, ymin=0.0, ymax=max(p_aclust), color='black', ls='--', lw=1.0, alpha=0.4)
     ax_clust.plot(x, p_clust)
     ax_aclust.plot(x, p_aclust)
+    # ax_clust.text(4.5, 0.6, 'Attractive', size='x-large')
+    # ax_aclust.text(4.5, 0.4, 'Repulsive', size='x-large')
     ax_clust.set_ylim(bottom=0)
     ax_aclust.set_ylim(bottom=0)
+    ax_clust.legend(loc='upper right')
 
     fig_ind_clust.tight_layout()
-    fig_ind_aclust.tight_layout()
     fig_clust.tight_layout()
-    fig_aclust.tight_layout()
 
     plt.show()
 
@@ -168,13 +173,13 @@ def clustered_tracks():
 
 def clustered_tracks_ani():
     # gif_dir = 'C:/Users/Dylan/Desktop/pdf_test3.gif'
-    gif_dir = 'F:/Research/Results/Presentations/5-26-22/anticluster_example.gif'
+    gif_dir = 'F:/Research/Results/Presentations/10-3-22/cluster_example.gif'
     # gif_dir = 'C:/Users/Dyn04/Desktop/pdf_test.gif'
-    fps = 1
+    fps = 0.8
     n_tracks = 25
-    sd = 0.5  # np.pi
+    sd = 1.0  # np.pi
     wrap_num = 5
-    cl_amp = -0.5
+    cl_amp = 0.5
     x = np.linspace(0, 2 * np.pi, 1000)
     gif_path = f'{gif_dir}'
 
@@ -185,7 +190,7 @@ def clustered_tracks_ani():
         phis.append(prob_dists[-1].rvs())
         prob_dists.append(ClustDist(phis, sd, cl_amp, a=0, b=2*np.pi, wrap_num=wrap_num))
         y_maxes.append(max(prob_dists[-1].pdf(x)))
-    fig = plt.figure(figsize=(10, 5))
+    fig = plt.figure(figsize=(6.67, 4), dpi=144)
     ax = plt.subplot()
 
     y_lim = (0, max(y_maxes) * 1.2)
@@ -203,12 +208,13 @@ def ani_pdf(phi_index, phis, prob_dists, x_vals, y_lim, sim_pars, ax):
 def plot_pdf_ani(phis, pdf, x_vals, y_lim, sim_pars, ax):
     ax.clear()
     pdf_vals = pdf.pdf(x_vals)
-    ax.plot(x_vals, pdf_vals, label='PDF for next track')
+    ax.plot(x_vals, pdf_vals, label='PDF for Next Track')
     ax.vlines(phis[:-1], 0, y_lim[-1] * 0.5, color='black', ls='--', label='Tracks')
     if len(phis) > 0:
         ax.axvline(phis[-1], 0, y_lim[-1] * 0.5, color='red', ls='--', label='New Track')
-    ax.set_title(f'Probability Distribution for Track #{len(phis)} amp={sim_pars["amp"]}, spread={sim_pars["sd"]:.2f}')
-    ax.set_xlabel('Phi')
+    ax.set_title(f'Probability Distribution for Track #{len(phis)}  A={sim_pars["amp"]}, σ={sim_pars["sd"]:.1f}')
+    ax.set_xlabel('ϕ')
+    ax.set_ylabel('P(ϕ)')
     ax.set_ylim(y_lim)
     ax.legend()
     plt.tight_layout()
@@ -224,81 +230,6 @@ def rv_test():
 
 def clust_amp(aclust_amp, sigma, base_int):
     return 1 / (1 / aclust_amp - 2 * sigma * np.sqrt(2 * np.pi) / base_int)
-
-
-class ClustDist(rv_continuous):
-    def __init__(self, means, sd, amp, a, b, base=1, wrap_num=1):
-        self.means = means
-        self.sd = sd
-        self.base = base
-        self.amp = amp  # Positive for clustering, negative for anti-clustering
-        self.amp_norm = 1 / (np.sqrt(2 * np.pi) * self.sd)
-        self.dists = []
-        for mean in means:
-            self.dists.append([norm(mean, sd)])
-            for wrap_i in range(1, wrap_num + 1):
-                self.dists[-1].extend([norm(mean - 2 * wrap_i * np.pi, sd), norm(mean + 2 * wrap_i * np.pi, sd)])
-        # self.dists = [[norm(mean, sd), norm(mean - 2 * np.pi, sd), norm(mean + 2 * np.pi, sd)] for mean in means]
-        self.n_points = 1000
-        self.x = np.linspace(a, b, self.n_points)
-        self.prob = np.ones(self.n_points)
-
-        for dist in self.dists:
-            clust_pdf = self.base
-            for dist_sub in dist:
-                clust_pdf += self.amp * dist_sub.pdf(self.x) / self.amp_norm
-            self.prob *= clust_pdf
-        self.prob /= np.sum(self.prob) / self.n_points * (b - a)
-
-        # self.prob_interp = CubicSpline(self.x, self.prob)  # , bc_type='periodic')
-        self.prob_interp = interp1d(self.x, self.prob)
-
-        rv_continuous.__init__(self, a=a, b=b)
-
-    def _pdf(self, x):
-        return self.prob_interp(x)
-
-
-class ClustDist_slow(rv_continuous):
-    def __init__(self, means, sd, amp, a, b, base=1, anti=True):
-        self.means = means
-        self.sd = sd
-        self.base = base
-        self.amp = amp
-        self.amp_norm = 1 / (np.sqrt(2 * np.pi) * self.sd)
-        self.dists = [[norm(mean, sd), norm(mean - 2 * np.pi, sd), norm(mean + 2 * np.pi, sd)] for mean in means]
-        if anti:
-            self.sign = -1
-        else:
-            self.sign = 1
-
-        rv_continuous.__init__(self, a=a, b=b)
-
-    def _pdf(self, x):
-        try:
-            prob_clust = np.ones(size=len(x))
-        except TypeError:
-            prob_clust = 1
-
-        for dist in self.dists:
-            clust_pdf = self.base
-            for dist_sub in dist:
-                clust_pdf += self.sign * self.amp * dist_sub.pdf(x) / self.amp_norm
-            prob_clust *= clust_pdf
-
-        return prob_clust
-
-
-class Testrv(rv_continuous):
-    def __init__(self, a, b):
-        a = 0
-
-        rv_continuous.__init__(self, a=a, b=b)
-
-    def _pdf(self, x):
-        norm = self.b**2 / 2
-
-        return x / norm
 
 
 if __name__ == '__main__':
