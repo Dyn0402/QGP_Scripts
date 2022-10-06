@@ -43,8 +43,8 @@ def main():
     # df_name = 'binom_slice_sds_cent8.csv'
     # df_name = 'binom_slice_stats_cent8_no_sim.csv'
     # df_name = 'binom_slice_stats_cent8_ampt_eff.csv'
-    # df_name = 'binom_slice_stats_cent8_no_sim.csv'
-    df_name = 'binom_slice_stats_cent8_sim_test.csv'
+    df_name = 'binom_slice_stats_cent8_no_sim.csv'
+    # df_name = 'binom_slice_stats_cent8_sim_test.csv'
     # df_name = 'binom_slice_stats_cent8_ex_cl_ant_sim.csv'
     chi_df_name = 'chi_df_ampt_neks_cent8.csv'
     df_path = base_path + df_name
@@ -56,14 +56,14 @@ def main():
     sim_sets = []
     # sim_sets = ['sim_aclmul_amp02_spread1', 'sim_aclmul_amp2_spread1', 'sim_clmul_amp02_spread1',
     #             'sim_clmul_amp2_spread1']
-    amps = ['002', '004', '006', '008', '01']  # ['002', '006', '01']
-    spreads = ['05', '1']
-    for amp in amps:
-        for spread in spreads:
-            sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}')
-            sim_sets.append(f'sim_clmul_amp{amp}_spread{spread}')
-    sim_sets = sorted(sim_sets, reverse=True)
-    sim_sets = sim_sets[:int(len(sim_sets) / 2)] + sorted(sim_sets[int(len(sim_sets) / 2):])
+    # amps = ['002']  # ['002', '006', '01']
+    # spreads = ['05', '1']
+    # for amp in amps:
+    #     for spread in spreads:
+    #         sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}')
+    #         sim_sets.append(f'sim_clmul_amp{amp}_spread{spread}')
+    # sim_sets = sorted(sim_sets, reverse=True)
+    # sim_sets = sim_sets[:int(len(sim_sets) / 2)] + sorted(sim_sets[int(len(sim_sets) / 2):])
 
     # sim_amp_pairs = [('2', '1'), ('5', '1'), ('2', '05'), ('5', '05')]
     # # sim_amp_pairs = []  # [('5', '35'), ('02', '05'), ('015', '1')]
@@ -87,8 +87,8 @@ def main():
     total_protons_plt = 20
     cent_plt = 8
     energies_plt = [39, 'sim']  # [7, 11, 19, 27, 39, 62, 'sim']  # [7, 11, 19, 27, 39, 62]
-    # energies_fit = [7, 11, 19, 27, 39, 62]  # , 11, 19, 27, 39, 62]
-    energies_fit = ['sim']
+    energies_fit = [7, 11, 19, 27, 39, 62]  # , 11, 19, 27, 39, 62]
+    # energies_fit = ['sim']
     energy_plt = 62
     data_types_plt = ['divide']
     data_type_plt = 'divide'
@@ -113,22 +113,22 @@ def main():
     # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple']))
     # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST', 'MUSIC+FIST EV']))
 
-    # data_sets_plt = ['cf_resample_def']
-    # data_sets_colors = dict(zip(data_sets_plt, ['blue']))
-    # data_sets_labels = dict(zip(data_sets_plt, ['MUSIC+FIST']))
+    data_sets_plt = ['cf_resample_def']
+    data_sets_colors = dict(zip(data_sets_plt, ['blue']))
+    data_sets_labels = dict(zip(data_sets_plt, ['MUSIC+FIST']))
 
-    data_sets_plt, data_sets_colors, data_sets_labels = [], None, None
-    data_sets_plt = []
-    data_sets_labels = {}
-    for sim_set in sim_sets:
-        label = ''
-        if '_clmul_' in sim_set:
-            label += 'Attractive '
-        elif '_aclmul_' in sim_set:
-            label += 'Repulsive '
-        amp, spread = get_name_amp_spread(sim_set)
-        label += f'A={amp} σ={spread}'
-        data_sets_labels.update({sim_set: label})
+    # data_sets_plt, data_sets_colors, data_sets_labels = [], None, None
+    # data_sets_plt = []
+    # data_sets_labels = {}
+    # for sim_set in sim_sets:
+    #     label = ''
+    #     if '_clmul_' in sim_set:
+    #         label += 'Attractive '
+    #     elif '_aclmul_' in sim_set:
+    #         label += 'Repulsive '
+    #     amp, spread = get_name_amp_spread(sim_set)
+    #     label += f'A={amp} σ={spread}'
+    #     data_sets_labels.update({sim_set: label})
 
     # data_sets_plt = ['bes_resample_def', 'bes_resample_def_alg3', 'bes_single']
     # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'green']))
@@ -163,8 +163,8 @@ def main():
 
     # stat_vs_protons(df, stat_plot, div_plt, cent_plt, [7, 'sim'], data_types_plt, all_sets_plt, plot=True, fit=True,
     #                 data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
-    # stat_vs_protons(df, stat_plot, div_plt, cent_plt, [7, 'sim'], data_types_plt, all_sets_plt, plot=True, fit=False,
-    #                 data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
+    stat_vs_protons(df, stat_plot, div_plt, cent_plt, [7, 'sim'], data_types_plt, all_sets_plt, plot=True, fit=False,
+                    data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
     # plt.show()
     # return
 
