@@ -43,8 +43,8 @@ def main():
     # df_name = 'binom_slice_sds_cent8.csv'
     # df_name = 'binom_slice_stats_cent8_no_sim.csv'
     # df_name = 'binom_slice_stats_cent8_ampt_eff.csv'
-    df_name = 'binom_slice_stats_cent8_no_sim.csv'
-    # df_name = 'binom_slice_stats_cent8_sim_test.csv'
+    # df_name = 'binom_slice_stats_cent8_no_sim.csv'
+    df_name = 'binom_slice_stats_cent8_sim_test.csv'
     # df_name = 'binom_slice_stats_cent8_ex_cl_ant_sim.csv'
     chi_df_name = 'chi_df_ampt_neks_cent8.csv'
     df_path = base_path + df_name
@@ -56,14 +56,14 @@ def main():
     sim_sets = []
     # sim_sets = ['sim_aclmul_amp02_spread1', 'sim_aclmul_amp2_spread1', 'sim_clmul_amp02_spread1',
     #             'sim_clmul_amp2_spread1']
-    # amps = ['002']  # ['002', '006', '01']
-    # spreads = ['05', '1']
-    # for amp in amps:
-    #     for spread in spreads:
-    #         sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}')
-    #         sim_sets.append(f'sim_clmul_amp{amp}_spread{spread}')
-    # sim_sets = sorted(sim_sets, reverse=True)
-    # sim_sets = sim_sets[:int(len(sim_sets) / 2)] + sorted(sim_sets[int(len(sim_sets) / 2):])
+    amps = ['002', '004', '006', '008', '01']  # ['002', '006', '01']
+    spreads = ['05', '1']
+    for amp in amps:
+        for spread in spreads:
+            sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}')
+            sim_sets.append(f'sim_clmul_amp{amp}_spread{spread}')
+    sim_sets = sorted(sim_sets, reverse=True)
+    sim_sets = sim_sets[:int(len(sim_sets) / 2)] + sorted(sim_sets[int(len(sim_sets) / 2):])
 
     # sim_amp_pairs = [('2', '1'), ('5', '1'), ('2', '05'), ('5', '05')]
     # # sim_amp_pairs = []  # [('5', '35'), ('02', '05'), ('015', '1')]
@@ -87,8 +87,8 @@ def main():
     total_protons_plt = 20
     cent_plt = 8
     energies_plt = [39, 'sim']  # [7, 11, 19, 27, 39, 62, 'sim']  # [7, 11, 19, 27, 39, 62]
-    energies_fit = [7, 11, 19, 27, 39, 62]  # , 11, 19, 27, 39, 62]
-    # energies_fit = ['sim']
+    # energies_fit = [7, 11, 19, 27, 39, 62]  # , 11, 19, 27, 39, 62]
+    energies_fit = ['sim', 7]
     energy_plt = 62
     data_types_plt = ['divide']
     data_type_plt = 'divide'
@@ -113,22 +113,22 @@ def main():
     # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple']))
     # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST', 'MUSIC+FIST EV']))
 
-    data_sets_plt = ['cf_resample_def']
-    data_sets_colors = dict(zip(data_sets_plt, ['blue']))
-    data_sets_labels = dict(zip(data_sets_plt, ['MUSIC+FIST']))
+    # data_sets_plt = ['cf_resample_def']
+    # data_sets_colors = dict(zip(data_sets_plt, ['blue']))
+    # data_sets_labels = dict(zip(data_sets_plt, ['MUSIC+FIST']))
 
-    # data_sets_plt, data_sets_colors, data_sets_labels = [], None, None
-    # data_sets_plt = []
-    # data_sets_labels = {}
-    # for sim_set in sim_sets:
-    #     label = ''
-    #     if '_clmul_' in sim_set:
-    #         label += 'Attractive '
-    #     elif '_aclmul_' in sim_set:
-    #         label += 'Repulsive '
-    #     amp, spread = get_name_amp_spread(sim_set)
-    #     label += f'A={amp} σ={spread}'
-    #     data_sets_labels.update({sim_set: label})
+    data_sets_plt, data_sets_colors, data_sets_labels = [], None, None
+    data_sets_plt = []
+    data_sets_labels = {}
+    for sim_set in sim_sets:
+        label = ''
+        if '_clmul_' in sim_set:
+            label += 'Attractive '
+        elif '_aclmul_' in sim_set:
+            label += 'Repulsive '
+        amp, spread = get_name_amp_spread(sim_set)
+        label += f'A={amp} σ={spread}'
+        data_sets_labels.update({sim_set: label})
 
     # data_sets_plt = ['bes_resample_def', 'bes_resample_def_alg3', 'bes_single']
     # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'green']))
@@ -204,10 +204,13 @@ def main():
         protons_fits.append(protons_fits_div)
     protons_fits = pd.concat(protons_fits, ignore_index=True)
     print(protons_fits)
+    print(pd.unique(protons_fits['amp']))
+    print(pd.unique(protons_fits['spread']))
     df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
                                      data_sets_labels=data_sets_labels)
     # print(df_fits)
     # plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
+    plot_slope_div_fits_simpars(df_fits)
 
     plt.show()
     return
@@ -641,12 +644,12 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
             energy_ax.errorbar(df_energy['divs'], df_energy['slope'], yerr=df_energy['slope_err'], ls='none',
                                marker='o', label=lab_energy, color=color)
             if fit and df_energy.size > 1:
-                df = df[~df.divs.isin(exclude_divs)]
+                df_energy = df_energy[~df_energy.divs.isin(exclude_divs)]
                 popt, pcov = cf(quad_180, df_energy['divs'], df_energy['slope'], sigma=df_energy['slope_err'],
                                 absolute_sigma=True)
                 perr = np.sqrt(np.diag(pcov))
                 fit_pars.append({'data_set': data_set, 'energy': energy, 'curvature': popt[0], 'baseline': popt[1],
-                                 'spread': df['spread'].iloc[0], 'amp': df['amp'].iloc[0],
+                                 'spread': df_energy['spread'].iloc[0], 'amp': df_energy['amp'].iloc[0],
                                  'curve_err': perr[0], 'base_err': perr[1], 'color': color})
                 x = np.linspace(0, 360, 100)
                 ax.plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
@@ -735,6 +738,83 @@ def plot_slope_div_fits(df_fits, data_sets_colors=None, data_sets_labels=None):
     fig_base_curve.tight_layout()
     fig_base_energy.tight_layout()
     fig_curve_energy.tight_layout()
+
+
+def plot_slope_div_fits_simpars(df_fits):
+    fig_curve_amp, ax_curve_amp = plt.subplots()
+    ax_curve_amp.set_xlabel('Amplitude')
+    ax_curve_amp.set_ylabel('Curvature')
+    ax_curve_amp.axhline(0, color='black')
+    fig_curve_amp.canvas.manager.set_window_title('Slope Curvature vs Amplitude')
+
+    fig_curve_spread, ax_curve_spread = plt.subplots()
+    ax_curve_spread.set_xlabel('Spread')
+    ax_curve_spread.set_ylabel('Curvature')
+    ax_curve_spread.axhline(0, color='black')
+    fig_curve_spread.canvas.manager.set_window_title('Slope Curvature vs Spread')
+
+    fig_base_amp, ax_base_amp = plt.subplots()
+    ax_base_amp.set_xlabel('Amplitude')
+    ax_base_amp.set_ylabel('Baseline')
+    ax_base_amp.axhline(0, color='black')
+    fig_base_amp.canvas.manager.set_window_title('Slope Baseline vs Amplitude')
+
+    fig_base_spread, ax_base_spread = plt.subplots()
+    ax_base_spread.set_xlabel('Spread')
+    ax_base_spread.set_ylabel('Baseline')
+    ax_base_spread.axhline(0, color='black')
+    fig_base_spread.canvas.manager.set_window_title('Slope Baseline vs Spread')
+
+    fig_base_curve_gamp, ax_base_curve_gamp = plt.subplots()
+    ax_base_curve_gamp.set_xlabel('Curvature')
+    ax_base_curve_gamp.set_ylabel('Baseline')
+    ax_base_curve_gamp.axvline(0, color='black')
+    ax_base_curve_gamp.axhline(0, color='black')
+    fig_base_curve_gamp.canvas.manager.set_window_title('Slope Baseline vs Curvature Amp Sets')
+
+    fig_base_curve_gspread, ax_base_curve_gspread = plt.subplots()
+    ax_base_curve_gspread.set_xlabel('Curvature')
+    ax_base_curve_gspread.set_ylabel('Baseline')
+    ax_base_curve_gspread.axvline(0, color='black')
+    ax_base_curve_gspread.axhline(0, color='black')
+    fig_base_curve_gspread.canvas.manager.set_window_title('Slope Baseline vs Curvature Spread Sets')
+
+    amps = pd.unique(df_fits['amp'])
+    spreads = pd.unique(df_fits['spread'])
+
+    print(f'Amps: {amps}\nSpreads: {spreads}')
+
+    for amp in amps:
+        df_amp = df_fits[df_fits['amp'] == amp]
+        ax_curve_spread.errorbar(df_amp['spread'], df_amp['curvature'], yerr=df_amp['curve_err'], ls='none', marker='o',
+                                 label=f'A={amp}')
+        ax_base_spread.errorbar(df_amp['spread'], df_amp['baseline'], yerr=df_amp['base_err'], ls='none', marker='o',
+                                label=f'A={amp}')
+        ax_base_curve_gamp.errorbar(df_amp['baseline'], df_amp['curvature'], xerr=df_amp['base_err'],
+                                    yerr=df_amp['curve_err'], ls='none', marker='o', label=f'A={amp}')
+
+    for spread in spreads:
+        df_spread = df_fits[df_fits['spread'] == spread]
+        ax_curve_amp.errorbar(df_spread['amp'], df_spread['curvature'], yerr=df_spread['curve_err'], ls='none',
+                              marker='o', label=f'σ={spread}')
+        ax_base_amp.errorbar(df_spread['amp'], df_spread['baseline'], yerr=df_spread['base_err'], ls='none',
+                             marker='o', label=f'σ={spread}')
+        ax_base_curve_gspread.errorbar(df_spread['baseline'], df_spread['curvature'], xerr=df_spread['base_err'],
+                                       yerr=df_spread['curve_err'], ls='none', marker='o', label=f'σ={spread}')
+
+    ax_curve_amp.legend()
+    ax_curve_spread.legend()
+    ax_base_amp.legend()
+    ax_base_spread.legend()
+    ax_base_curve_gamp.legend()
+    ax_base_curve_gspread.legend()
+
+    fig_curve_amp.tight_layout()
+    fig_curve_spread.tight_layout()
+    fig_base_amp.tight_layout()
+    fig_base_spread.tight_layout()
+    fig_base_curve_gamp.tight_layout()
+    fig_base_curve_gspread.tight_layout()
 
 
 def plot_protons_fits_sim(df):
