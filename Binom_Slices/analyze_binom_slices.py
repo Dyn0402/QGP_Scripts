@@ -283,7 +283,7 @@ def line(x, a, b):
 
 
 def line_yint1(x, a):
-    return a * x + 1
+    return a * (x - 1) + 1
 
 
 def line_yint0(x, a):
@@ -292,6 +292,10 @@ def line_yint0(x, a):
 
 def quad_180(x, a, c):
     return a * (x - 180) ** 2 + c
+
+
+def quad_180_zparam(x, z, c):
+    return -c * ((x - 180) / z) ** 2 + c
 
 
 def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False, fit=False,
@@ -654,6 +658,14 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
                 x = np.linspace(0, 360, 100)
                 ax.plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
                 energy_ax.plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
+                popt2, pcov2 = cf(quad_180_zparam, df_energy['divs'], df_energy['slope'], sigma=df_energy['slope_err'],
+                                  absolute_sigma=True)
+                perr2 = np.sqrt(np.diag(pcov2))
+                fit_pars[-1].update({'zero_mag': popt2[0], 'zero_mag_err': perr2[0], 'baseline_z': popt2[1],
+                                     'base_z_err': perr2[1]})
+                print(f'{data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\nz-c fit: {popt2}\n'
+                      f'z-c covariance: {pcov2}')
+                print()
 
     title = ''
     if len(data_sets_plt) == 1:
@@ -779,6 +791,32 @@ def plot_slope_div_fits_simpars(df_fits):
     ax_base_curve_gspread.axhline(0, color='black')
     fig_base_curve_gspread.canvas.manager.set_window_title('Slope Baseline vs Curvature Spread Sets')
 
+    fig_zeros_amp, ax_zeros_amp = plt.subplots()
+    ax_zeros_amp.set_xlabel('Amplitude')
+    ax_zeros_amp.set_ylabel('Zeros')
+    ax_zeros_amp.axhline(0, color='black')
+    fig_zeros_amp.canvas.manager.set_window_title('Slope Zeros vs Amplitude')
+
+    fig_zeros_spread, ax_zeros_spread = plt.subplots()
+    ax_zeros_spread.set_xlabel('Spread')
+    ax_zeros_spread.set_ylabel('Zeros')
+    ax_zeros_spread.axhline(0, color='black')
+    fig_zeros_spread.canvas.manager.set_window_title('Slope Zeros vs Spread')
+
+    fig_base_zeros_gamp, ax_base_zeros_gamp = plt.subplots()
+    ax_base_zeros_gamp.set_ylabel('Zero Magnitude')
+    ax_base_zeros_gamp.set_xlabel('Baseline')
+    ax_base_zeros_gamp.axvline(0, color='black')
+    ax_base_zeros_gamp.axhline(0, color='black')
+    fig_base_zeros_gamp.canvas.manager.set_window_title('Slope Baseline vs Zero Amplitude Amp Sets')
+
+    fig_base_zeros_gspread, ax_base_zeros_gspread = plt.subplots()
+    ax_base_zeros_gspread.set_ylabel('Zero Magnitude')
+    ax_base_zeros_gspread.set_xlabel('Baseline')
+    ax_base_zeros_gspread.axvline(0, color='black')
+    ax_base_zeros_gspread.axhline(0, color='black')
+    fig_base_zeros_gspread.canvas.manager.set_window_title('Slope Baseline vs Zero Amplitude Spread Sets')
+
     amps = pd.unique(df_fits['amp'])
     spreads = pd.unique(df_fits['spread'])
 
@@ -792,6 +830,10 @@ def plot_slope_div_fits_simpars(df_fits):
                                 label=f'A={amp}')
         ax_base_curve_gamp.errorbar(df_amp['baseline'], df_amp['curvature'], xerr=df_amp['base_err'],
                                     yerr=df_amp['curve_err'], ls='none', marker='o', label=f'A={amp}')
+        ax_zeros_spread.errorbar(df_amp['spread'], df_amp['zero_mag'], yerr=df_amp['zero_mag_err'], ls='none',
+                                 marker='o', label=f'A={amp}')
+        ax_base_zeros_gamp.errorbar(df_amp['baseline_z'], df_amp['zero_mag'], xerr=df_amp['base_z_err'],
+                                    yerr=df_amp['zero_mag_err'], ls='none', marker='o', label=f'A={amp}')
 
     for spread in spreads:
         df_spread = df_fits[df_fits['spread'] == spread]
@@ -801,6 +843,10 @@ def plot_slope_div_fits_simpars(df_fits):
                              marker='o', label=f'σ={spread}')
         ax_base_curve_gspread.errorbar(df_spread['baseline'], df_spread['curvature'], xerr=df_spread['base_err'],
                                        yerr=df_spread['curve_err'], ls='none', marker='o', label=f'σ={spread}')
+        ax_zeros_amp.errorbar(df_spread['amp'], df_spread['zero_mag'], yerr=df_spread['zero_mag_err'], ls='none',
+                              marker='o', label=f'σ={spread}')
+        ax_base_zeros_gspread.errorbar(df_spread['baseline_z'], df_spread['zero_mag'], xerr=df_spread['base_z_err'],
+                                       yerr=df_spread['zero_mag_err'], ls='none', marker='o', label=f'σ={spread}')
 
     ax_curve_amp.legend()
     ax_curve_spread.legend()
@@ -808,6 +854,10 @@ def plot_slope_div_fits_simpars(df_fits):
     ax_base_spread.legend()
     ax_base_curve_gamp.legend()
     ax_base_curve_gspread.legend()
+    ax_zeros_amp.legend()
+    ax_zeros_spread.legend()
+    ax_base_zeros_gamp.legend()
+    ax_base_zeros_gspread.legend()
 
     fig_curve_amp.tight_layout()
     fig_curve_spread.tight_layout()
@@ -815,6 +865,10 @@ def plot_slope_div_fits_simpars(df_fits):
     fig_base_spread.tight_layout()
     fig_base_curve_gamp.tight_layout()
     fig_base_curve_gspread.tight_layout()
+    fig_zeros_amp.tight_layout()
+    fig_zeros_spread.tight_layout()
+    fig_base_zeros_gamp.tight_layout()
+    fig_base_zeros_gspread.tight_layout()
 
 
 def plot_protons_fits_sim(df):
