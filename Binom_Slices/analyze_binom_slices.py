@@ -38,8 +38,8 @@ def main():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
     threads = 15
-    base_path = 'F:/Research/Results/Azimuth_Analysis/'
-    # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
+    # base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
     # df_name = 'binom_slice_sds_cent8.csv'
     # df_name = 'binom_slice_stats_cent8_no_sim.csv'
     # df_name = 'binom_slice_stats_cent8_ampt_eff.csv'
@@ -835,18 +835,43 @@ def plot_slope_div_fits_simpars(df_fits):
         ax_base_zeros_gamp.errorbar(df_amp['baseline_z'], df_amp['zero_mag'], xerr=df_amp['base_z_err'],
                                     yerr=df_amp['zero_mag_err'], ls='none', marker='o', label=f'A={amp}')
 
+    cl_type_name = {'_clmul_': 'Attractive', '_aclmul_': 'Repulsive'}
+    colors = iter(plt.cm.rainbow(np.linspace(0, 1, len(spreads))))
     for spread in spreads:
+        color = next(colors)
         df_spread = df_fits[df_fits['spread'] == spread]
         ax_curve_amp.errorbar(df_spread['amp'], df_spread['curvature'], yerr=df_spread['curve_err'], ls='none',
-                              marker='o', label=f'σ={spread}')
-        ax_base_amp.errorbar(df_spread['amp'], df_spread['baseline'], yerr=df_spread['base_err'], ls='none',
-                             marker='o', label=f'σ={spread}')
+                              marker='o', label=f'σ={spread}', color=color)
+        for cl_type in cl_type_name.keys():
+            # spreads = sorted(spreads) if cl_type == '_aclmul_' else sorted(spreads, reverse=True)
+            df_set = df_spread[df_spread['data_set'].str.contains(cl_type)]
+            if cl_type == '_aclmul_':
+                ax_base_amp.errorbar(df_set['amp'], df_set['baseline_z'], yerr=df_set['base_z_err'], ls='none',
+                                     marker='o', label=f'σ={spread}', color=color)
+            else:
+                ax_base_amp.errorbar(df_set['amp'], df_set['baseline_z'], yerr=df_set['base_z_err'], ls='none',
+                                     marker='o', color=color)
+            popt, pcov = cf(line_yint0, df_set['amp'], df_set['baseline_z'], sigma=df_set['base_z_err'],
+                            absolute_sigma=True)
+            perr = np.sqrt(np.diag(pcov))
+            x_vals = np.array([0, max(df_set['amp'])])
+            ax_base_amp.plot(x_vals, line_yint0(x_vals, *popt), ls='--', color=color)
+            ax_base_amp.fill_between(x_vals, line_yint0(x_vals, popt[0] - perr[0]),
+                                     line_yint0(x_vals, popt[0] + perr[0]), color=color, alpha=0.3)
+
         ax_base_curve_gspread.errorbar(df_spread['baseline'], df_spread['curvature'], xerr=df_spread['base_err'],
-                                       yerr=df_spread['curve_err'], ls='none', marker='o', label=f'σ={spread}')
+                                       yerr=df_spread['curve_err'], ls='none', marker='o', label=f'σ={spread}',
+                                       color=color)
+        avg_zero = np.mean([Measure(val, err) for val, err in zip(df_spread['zero_mag'], df_spread['zero_mag_err'])])
         ax_zeros_amp.errorbar(df_spread['amp'], df_spread['zero_mag'], yerr=df_spread['zero_mag_err'], ls='none',
-                              marker='o', label=f'σ={spread}')
+                              marker='o', label=f'σ={spread}', color=color)
+        ax_zeros_amp.axhspan(avg_zero.val - avg_zero.err, avg_zero.val + avg_zero.err, alpha=0.3, color=color)
+        ax_zeros_amp.axhline(avg_zero.val, ls='--', color=color)
         ax_base_zeros_gspread.errorbar(df_spread['baseline_z'], df_spread['zero_mag'], xerr=df_spread['base_z_err'],
-                                       yerr=df_spread['zero_mag_err'], ls='none', marker='o', label=f'σ={spread}')
+                                       yerr=df_spread['zero_mag_err'], ls='none', marker='o', label=f'σ={spread}',
+                                       color=color)
+        ax_base_zeros_gspread.axhspan(avg_zero.val - avg_zero.err, avg_zero.val + avg_zero.err, alpha=0.3, color=color)
+        ax_base_zeros_gspread.axhline(avg_zero.val, ls='--', color=color)
 
     ax_curve_amp.legend()
     ax_curve_spread.legend()
