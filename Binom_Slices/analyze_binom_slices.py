@@ -658,14 +658,19 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
                 x = np.linspace(0, 360, 100)
                 ax.plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
                 energy_ax.plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
-                popt2, pcov2 = cf(quad_180_zparam, df_energy['divs'], df_energy['slope'], sigma=df_energy['slope_err'],
-                                  absolute_sigma=True)
-                perr2 = np.sqrt(np.diag(pcov2))
-                fit_pars[-1].update({'zero_mag': popt2[0], 'zero_mag_err': perr2[0], 'baseline_z': popt2[1],
-                                     'base_z_err': perr2[1]})
-                print(f'{data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\nz-c fit: {popt2}\n'
-                      f'z-c covariance: {pcov2}')
-                print()
+                if popt[0] * popt[1] < 0:
+                    popt2, pcov2 = cf(quad_180_zparam, df_energy['divs'], df_energy['slope'],
+                                      sigma=df_energy['slope_err'],
+                                      absolute_sigma=True)
+                    perr2 = np.sqrt(np.diag(pcov2))
+                    fit_pars[-1].update({'zero_mag': popt2[0], 'zero_mag_err': perr2[0], 'baseline_z': popt2[1],
+                                         'base_z_err': perr2[1]})
+                    print(f'{data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\nz-c fit: {popt2}\n'
+                          f'z-c covariance: {pcov2}')
+                    print()
+                else:
+                    print(f'No Zeros! {data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\n')
+                    print()
 
     title = ''
     if len(data_sets_plt) == 1:
@@ -714,6 +719,25 @@ def plot_slope_div_fits(df_fits, data_sets_colors=None, data_sets_labels=None):
     ax_base_curve.axhline(0, color='black')
     fig_base_curve.canvas.manager.set_window_title('Slope Baseline vs Curvature')
 
+    fig_zeros_energy, ax_zeros_energy = plt.subplots()
+    ax_zeros_energy.set_xlabel('Energy (GeV)')
+    ax_zeros_energy.set_ylabel('Zeros')
+    ax_zeros_energy.axhline(0, color='black')
+    fig_zeros_energy.canvas.manager.set_window_title('Slope Zeros vs Energy')
+
+    fig_basez_energy, ax_basez_energy = plt.subplots()
+    ax_basez_energy.set_xlabel('Energy (GeV)')
+    ax_basez_energy.set_ylabel('Baseline_z')
+    ax_basez_energy.axhline(0, color='black')
+    fig_basez_energy.canvas.manager.set_window_title('Slope Baseline_z vs Energy')
+
+    fig_basez_zeros, ax_basez_zeros = plt.subplots()
+    ax_basez_zeros.set_xlabel('Zeros')
+    ax_basez_zeros.set_ylabel('Baseline_z')
+    ax_basez_zeros.axvline(0, color='black')
+    ax_basez_zeros.axhline(0, color='black')
+    fig_basez_zeros.canvas.manager.set_window_title('Slope Baseline_z vs Zeros')
+
     colors = ['black', 'red', 'blue', 'green', 'purple', 'orange']
     markers = ['o', 's', '^', 'P', 'p', '2']
 
@@ -736,20 +760,35 @@ def plot_slope_div_fits(df_fits, data_sets_colors=None, data_sets_labels=None):
         ax_base_energy.errorbar(df_data_set['energy'], df_data_set['baseline'], yerr=df_data_set['base_err'], ls='none',
                                 marker='o', label=lab, color=color, alpha=0.8)
 
+        ax_zeros_energy.errorbar(df_data_set['energy'], df_data_set['zero_mag'], yerr=df_data_set['zero_mag_err'],
+                                 ls='none', marker='o', label=lab, color=color)
+
+        ax_basez_energy.errorbar(df_data_set['energy'], df_data_set['baseline_z'], yerr=df_data_set['base_z_err'],
+                                 ls='none', marker='o', label=lab, color=color, alpha=0.8)
+
         energies = pd.unique(df_data_set['energy'])
         for energy_index, energy in enumerate(energies):
             df_energy = df_data_set[df_data_set['energy'] == energy]
             ax_base_curve.errorbar(df_energy['curvature'], df_energy['baseline'], xerr=df_energy['curve_err'],
                                    yerr=df_energy['base_err'], ls='none', marker=markers[data_set_index % len(markers)],
                                    label=f'{lab}_{energy}GeV', color=colors[energy_index % len(colors)])
+            ax_basez_zeros.errorbar(df_energy['zero_mag'], df_energy['baseline_z'], xerr=df_energy['zero_mag_err'],
+                                    yerr=df_energy['base_z_err'], ls='none', color=colors[energy_index % len(colors)],
+                                    marker=markers[data_set_index % len(markers)], label=f'{lab}_{energy}GeV')
 
     ax_curve_energy.legend()
     ax_base_energy.legend()
     ax_base_curve.legend()
+    ax_zeros_energy.legend()
+    ax_basez_energy.legend()
+    ax_basez_zeros.legend()
 
     fig_base_curve.tight_layout()
     fig_base_energy.tight_layout()
     fig_curve_energy.tight_layout()
+    fig_zeros_energy.tight_layout()
+    fig_basez_energy.tight_layout()
+    fig_basez_zeros.tight_layout()
 
 
 def plot_slope_div_fits_simpars(df_fits):

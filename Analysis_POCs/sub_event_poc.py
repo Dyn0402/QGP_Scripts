@@ -30,27 +30,28 @@ def resample_validation():
     :return:
     """
     seed = 1432
-    threads = 7
+    threads = 15
     n_tracks = [15]
     # n_samples = [1, 1440]
     # n_samples = [1, 1440]
     # n_samples = np.array([1, 2, 3, 4, 5, 6, 7] + list(np.arange(10, 5000, 50)))
-    n_samples = np.arange(1, 31, 1)
+    # n_samples = np.arange(1, 31, 1)
+    n_samples = np.array([72])
     # n_samples = np.arange(10, 81, 1)
     # n_events = np.arange(100, 2000, 5)
-    # n_events = np.arange(10, 2000, 50)
-    n_events = [250]
+    n_events = np.arange(10, 2000, 50)
+    # n_events = [250]
     # bin_widths = np.deg2rad([60, 120, 240, 300])
     # bin_widths = np.deg2rad([179, 180, 181])
     bin_widths = np.deg2rad([180])
-    algs = [3, 4]
+    algs = [4]
     experiments = 1000
     # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
-    # plot_out_base = 'F:/Research/Resample_POC/Resample_Validation/'
-    plot_out_base = 'D:/Transfer/Research/Resample_POC/Resample_Validation/'
+    plot_out_base = 'F:/Research/Resample_POC/Resample_Validation/'
+    # plot_out_base = 'D:/Transfer/Research/Resample_POC/Resample_Validation/'
     # plot_out_base = 'C:/Users/Dyn04/Desktop/Resample_POC/Resample_Validation/'
     # plot_out_name = 'vs_nsamplesto5k_bws_ntrack15_nevent250/'
-    plot_out_name = 'vs_nsamplesto30_bw180_ntrack15_nevent250/'
+    plot_out_name = 'vs_neventsto2k_nsamples72_ntrack15_alg4/'
     # plot_out_name = 'vs_nsamplesto20_bw60and120_ntrack15and30_nevent2000/'
     # plot_out_name = 'vs_neventsto2k_bw60and120_ntrack15and30_nsamples1440/'
     # plot_out_name = 'vs_neventsto2k_bw120_ntrack15_nsamples1and1440_algs1and4/'
