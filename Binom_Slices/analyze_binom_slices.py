@@ -975,10 +975,16 @@ def plot_sigma_fits_interp(sigma_fits):
     for cl_type in cl_types:
         print(cl_type)
         df_cl_type = sigma_fits[sigma_fits['clust_type'] == cl_type]
+        f_spread_zero = interp1d(df_cl_type['zero_mean_val'], df_cl_type['spread'], kind='cubic')
+        x_spread_zero = np.linspace(min(df_cl_type['zero_mean_val']), max(df_cl_type['zero_mean_val']), 1000)
         ax_spread_zero.errorbar(df_cl_type['zero_mean_val'], df_cl_type['spread'], xerr=df_cl_type['zero_mean_err'],
                                 ls='none', label=cl_type, marker='o')
+        ax_spread_zero.plot(x_spread_zero, f_spread_zero(x_spread_zero))
+        f_spread_base = interp1d(df_cl_type['spread'], df_cl_type['base_slope_val'], kind='cubic')
+        x_spread_base = np.linspace(min(df_cl_type['spread']), max(df_cl_type['spread']), 1000)
         ax_spread_base_slope.errorbar(df_cl_type['spread'], df_cl_type['base_slope_val'], ls='none', label=cl_type,
                                       marker='o', yerr=df_cl_type['base_slope_err'])
+        ax_spread_base_slope.plot(x_spread_base, f_spread_base(x_spread_base))
 
     ax_spread_zero.legend()
     ax_spread_base_slope.legend()

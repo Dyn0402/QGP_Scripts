@@ -72,12 +72,12 @@ def plot_sims():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
     base_path = 'F:/Research/Results/Azimuth_Analysis/'
-    df_name = 'binom_slice_stats_cent8_sim_test.csv'
+    df_name = 'binom_slice_stats_cent8_sim_test2.csv'
     df_path = base_path + df_name
     sim_sets = []
 
     amps = ['002', '004', '006', '008', '01']  # ['002', '006', '01']
-    spreads = ['05', '1']
+    spreads = ['03', '04', '05', '06', '07', '08', '09', '1', '11', '12']
     for amp in amps:
         for spread in spreads:
             sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}')
