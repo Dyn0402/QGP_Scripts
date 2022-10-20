@@ -12,8 +12,9 @@ from analyze_binom_slices import *
 
 
 def main():
-    # plot_sims()
-    plot_star_model()
+    plot_sims()
+    # plot_star_model()
+    # plot_star_model_onediv()
     print('donzo')
 
 
@@ -70,7 +71,7 @@ def plot_star_model():
 def plot_sims():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
-    base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
+    base_path = 'F:/Research/Results/Azimuth_Analysis/'
     df_name = 'binom_slice_stats_cent8_sim_test.csv'
     df_path = base_path + df_name
     sim_sets = []
@@ -130,7 +131,52 @@ def plot_sims():
     df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
                                      data_sets_labels=data_sets_labels)
     # print(df_fits)
-    plot_slope_div_fits_simpars(df_fits)
+    sigma_fits = plot_slope_div_fits_simpars(df_fits)
+    plot_sigma_fits_interp(sigma_fits)
+
+    plt.show()
+
+
+def plot_star_model_onediv():
+    plt.rcParams["figure.figsize"] = (6.66, 5)
+    plt.rcParams["figure.dpi"] = 144
+    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    df_name = 'binom_slice_stats_cent8_no_sim.csv'
+    df_path = base_path + df_name
+    sim_sets = []
+
+    stat_plot = 'standard deviation'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
+    div_plt = 120
+    exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
+    cent_plt = 8
+    energies = [7, 11, 19, 27, 39, 62]
+    energy_plt = 39
+    data_types_plt = ['divide']
+    samples = 72  # For title purposes only
+
+    data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def', 'cf_resample_def', 'cfev_resample_def',
+                     'cfevb342_resample_def']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple', 'olive']))
+    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST', 'MUSIC+FIST EV 1fm^3',
+                                                'MUSIC+FIST EV 3.42fm^3']))
+
+    all_sets_plt = data_sets_plt + sim_sets[:]
+
+    df = pd.read_csv(df_path)
+    df = df.dropna()
+    print(pd.unique(df['name']))
+
+    df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
+
+    stat_vs_protons(df, stat_plot, div_plt, cent_plt, [energy_plt], data_types_plt, all_sets_plt, plot=True, fit=False,
+                    data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
+
+    protons_fits = stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies, data_types_plt,
+                                   all_sets_plt, plot=False, fit=True)
+    print(protons_fits)
+    plot_protons_fits_vs_energy(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors,
+                                data_sets_labels=data_sets_labels, title=f'0-5% Centrality, {div_plt}° Partitions, '
+                                                                         f'{samples} Samples per Event')
 
     plt.show()
 

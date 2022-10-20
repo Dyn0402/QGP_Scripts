@@ -375,7 +375,7 @@ def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_
                     fig_hist.tight_layout()
 
     if plot:
-        ax.legend(loc='upper left')
+        ax.legend(loc='upper center')
         fig.tight_layout()
 
     return pd.DataFrame(fits)
@@ -874,43 +874,64 @@ def plot_slope_div_fits_simpars(df_fits):
         ax_base_zeros_gamp.errorbar(df_amp['baseline_z'], df_amp['zero_mag'], xerr=df_amp['base_z_err'],
                                     yerr=df_amp['zero_mag_err'], ls='none', marker='o', label=f'A={amp}')
 
-    cl_type_name = {'_clmul_': 'Attractive', '_aclmul_': 'Repulsive'}
+    sigma_fits = []
+    cl_type_data = {'_clmul_': {'name': 'Attractive', 'line': '--'}, '_aclmul_': {'name': 'Repulsive', 'line': ':'}}
     colors = iter(plt.cm.rainbow(np.linspace(0, 1, len(spreads))))
     for spread in spreads:
         color = next(colors)
         df_spread = df_fits[df_fits['spread'] == spread]
         ax_curve_amp.errorbar(df_spread['amp'], df_spread['curvature'], yerr=df_spread['curve_err'], ls='none',
                               marker='o', label=f'σ={spread}', color=color)
-        for cl_type in cl_type_name.keys():
-            # spreads = sorted(spreads) if cl_type == '_aclmul_' else sorted(spreads, reverse=True)
+        for cl_type, cl_data in cl_type_data.items():
             df_set = df_spread[df_spread['data_set'].str.contains(cl_type)]
             if cl_type == '_aclmul_':
-                ax_base_amp.errorbar(df_set['amp'], df_set['baseline_z'], yerr=df_set['base_z_err'], ls='none',
-                                     marker='o', label=f'σ={spread}', color=color)
+                lab = f'σ={spread}'
             else:
-                ax_base_amp.errorbar(df_set['amp'], df_set['baseline_z'], yerr=df_set['base_z_err'], ls='none',
-                                     marker='o', color=color)
+                lab = None
+            ax_base_amp.errorbar(df_set['amp'], df_set['baseline_z'], yerr=df_set['base_z_err'], ls='none',
+                                 marker='o', label=lab, color=color)
             popt, pcov = cf(line_yint0, df_set['amp'], df_set['baseline_z'], sigma=df_set['base_z_err'],
                             absolute_sigma=True)
             perr = np.sqrt(np.diag(pcov))
             x_vals = np.array([0, max(df_set['amp'])])
-            ax_base_amp.plot(x_vals, line_yint0(x_vals, *popt), ls='--', color=color)
+            ax_base_amp.plot(x_vals, line_yint0(x_vals, *popt), ls=cl_data['line'], color=color)
             ax_base_amp.fill_between(x_vals, line_yint0(x_vals, popt[0] - perr[0]),
                                      line_yint0(x_vals, popt[0] + perr[0]), color=color, alpha=0.3)
+
+            avg_zero = np.mean(
+                [Measure(val, err) for val, err in zip(df_set['zero_mag'], df_set['zero_mag_err'])])
+            ax_zeros_amp.errorbar(df_set['amp'], df_set['zero_mag'], yerr=df_set['zero_mag_err'], ls='none',
+                                  marker='o', label=lab, color=color)
+            ax_zeros_amp.axhspan(avg_zero.val - avg_zero.err, avg_zero.val + avg_zero.err, alpha=0.3, color=color)
+            ax_zeros_amp.axhline(avg_zero.val, ls=cl_data['line'], color=color)
+            ax_base_zeros_gspread.errorbar(df_set['baseline_z'], df_set['zero_mag'], xerr=df_set['base_z_err'],
+                                           yerr=df_set['zero_mag_err'], ls='none', marker='o', label=lab,
+                                           color=color)
+            sigma_fits.append({'clust_type': cl_data['name'], 'spread': spread, 'zero_mean_val': avg_zero.val,
+                               'zero_mean_err': avg_zero.err, 'base_slope_val': popt[0], 'base_slope_err': perr[0]})
+
+    colors = iter(plt.cm.rainbow(np.linspace(0, 1, len(spreads))))  # Go through again to plot horizontal lines
+    for spread in spreads:
+        color = next(colors)
+        df_spread = df_fits[df_fits['spread'] == spread]
+        for cl_type, cl_data in cl_type_data.items():
+            df_set = df_spread[df_spread['data_set'].str.contains(cl_type)]
+            avg_zero = np.mean(
+                [Measure(val, err) for val, err in zip(df_set['zero_mag'], df_set['zero_mag_err'])])
+            ax_base_zeros_lims = ax_base_zeros_gspread.get_xlim()
+            ax_base_zeros_mid = (0 - ax_base_zeros_lims[0]) / np.diff(ax_base_zeros_lims)[0]
+            if cl_type == '_aclmul_':
+                ax_base_zeros_gspread.axhspan(avg_zero.val - avg_zero.err, avg_zero.val + avg_zero.err, alpha=0.3,
+                                              xmax=ax_base_zeros_mid, color=color)
+                ax_base_zeros_gspread.axhline(avg_zero.val, ls=cl_data['line'], color=color, xmax=ax_base_zeros_mid)
+            else:
+                ax_base_zeros_gspread.axhspan(avg_zero.val - avg_zero.err, avg_zero.val + avg_zero.err, alpha=0.3,
+                                              xmin=ax_base_zeros_mid, color=color)
+                ax_base_zeros_gspread.axhline(avg_zero.val, ls=cl_data['line'], color=color, xmin=ax_base_zeros_mid)
 
         ax_base_curve_gspread.errorbar(df_spread['baseline'], df_spread['curvature'], xerr=df_spread['base_err'],
                                        yerr=df_spread['curve_err'], ls='none', marker='o', label=f'σ={spread}',
                                        color=color)
-        avg_zero = np.mean([Measure(val, err) for val, err in zip(df_spread['zero_mag'], df_spread['zero_mag_err'])])
-        ax_zeros_amp.errorbar(df_spread['amp'], df_spread['zero_mag'], yerr=df_spread['zero_mag_err'], ls='none',
-                              marker='o', label=f'σ={spread}', color=color)
-        ax_zeros_amp.axhspan(avg_zero.val - avg_zero.err, avg_zero.val + avg_zero.err, alpha=0.3, color=color)
-        ax_zeros_amp.axhline(avg_zero.val, ls='--', color=color)
-        ax_base_zeros_gspread.errorbar(df_spread['baseline_z'], df_spread['zero_mag'], xerr=df_spread['base_z_err'],
-                                       yerr=df_spread['zero_mag_err'], ls='none', marker='o', label=f'σ={spread}',
-                                       color=color)
-        ax_base_zeros_gspread.axhspan(avg_zero.val - avg_zero.err, avg_zero.val + avg_zero.err, alpha=0.3, color=color)
-        ax_base_zeros_gspread.axhline(avg_zero.val, ls='--', color=color)
 
     ax_curve_amp.legend()
     ax_curve_spread.legend()
@@ -933,6 +954,37 @@ def plot_slope_div_fits_simpars(df_fits):
     fig_zeros_spread.tight_layout()
     fig_base_zeros_gamp.tight_layout()
     fig_base_zeros_gspread.tight_layout()
+
+    return pd.DataFrame(sigma_fits)
+
+
+def plot_sigma_fits_interp(sigma_fits):
+    fig_spread_zero, ax_spread_zero = plt.subplots()
+    ax_spread_zero.set_xlabel('Mean Zero')
+    ax_spread_zero.set_ylabel('Spread')
+    ax_spread_zero.axhline(0, color='black')
+    fig_spread_zero.canvas.manager.set_window_title('Spread vs Mean Zero')
+
+    fig_spread_base_slope, ax_spread_base_slope = plt.subplots()
+    ax_spread_base_slope.set_xlabel('Spread')
+    ax_spread_base_slope.set_ylabel('Base Slope')
+    ax_spread_base_slope.axhline(0, color='black')
+    fig_spread_base_slope.canvas.manager.set_window_title('Base Slope vs Spread')
+
+    cl_types = pd.unique(sigma_fits['clust_type'])
+    for cl_type in cl_types:
+        print(cl_type)
+        df_cl_type = sigma_fits[sigma_fits['clust_type'] == cl_type]
+        ax_spread_zero.errorbar(df_cl_type['zero_mean_val'], df_cl_type['spread'], xerr=df_cl_type['zero_mean_err'],
+                                ls='none', label=cl_type, marker='o')
+        ax_spread_base_slope.errorbar(df_cl_type['spread'], df_cl_type['base_slope_val'], ls='none', label=cl_type,
+                                      marker='o', yerr=df_cl_type['base_slope_err'])
+
+    ax_spread_zero.legend()
+    ax_spread_base_slope.legend()
+
+    fig_spread_zero.tight_layout()
+    fig_spread_base_slope.tight_layout()
 
 
 def plot_protons_fits_sim(df):
