@@ -12,9 +12,10 @@ from analyze_binom_slices import *
 
 
 def main():
-    plot_sims()
+    # plot_sims()
     # plot_star_model()
     # plot_star_model_onediv()
+    plot_vs_cent()
     print('donzo')
 
 
@@ -177,6 +178,46 @@ def plot_star_model_onediv():
     plot_protons_fits_vs_energy(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors,
                                 data_sets_labels=data_sets_labels, title=f'0-5% Centrality, {div_plt}° Partitions, '
                                                                          f'{samples} Samples per Event')
+
+    plt.show()
+
+
+def plot_vs_cent():
+    plt.rcParams["figure.figsize"] = (6.66, 5)
+    plt.rcParams["figure.dpi"] = 144
+    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    df_name = 'binom_slice_stats_cents.csv'
+    df_path = base_path + df_name
+    sim_sets = []
+
+    stat_plot = 'standard deviation'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
+    div_plt = 180
+    exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
+    cents = [1, 2, 3, 4, 5, 6, 7, 8]
+    energy_plt = 39
+    data_types_plt = ['divide']
+    samples = 72  # For title purposes only
+
+    data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red']))
+    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT']))
+
+    all_sets_plt = data_sets_plt + sim_sets[:]
+
+    df = pd.read_csv(df_path)
+    df = df.dropna()
+    print(pd.unique(df['name']))
+
+    df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
+
+    stat_vs_protons(df, stat_plot, div_plt, 3, [energy_plt], ['raw', 'mix'], all_sets_plt, plot=True, fit=False,
+                    data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
+    df_fit = stat_vs_protons_cents(df, stat_plot, [div_plt], cents, energy_plt, data_types_plt, all_sets_plt,
+                                   plot=True, fit=True, plot_fit=True, data_sets_colors=data_sets_colors,
+                                   data_sets_labels=data_sets_labels)
+    plot_protons_fits_vs_cent(df_fit, all_sets_plt, data_sets_colors=data_sets_colors,
+                              data_sets_labels=data_sets_labels,
+                              title=f'{energy_plt}GeV, {div_plt}° Partitions, {samples} Samples per Event')
 
     plt.show()
 

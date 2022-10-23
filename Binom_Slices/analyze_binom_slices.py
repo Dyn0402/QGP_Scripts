@@ -615,6 +615,128 @@ def stat_vs_protons_energies(df, stat, divs, cent, energies, data_types, data_se
     return pd.DataFrame(fits)
 
 
+def stat_vs_protons_cents(df, stat, divs, cents, energy, data_types, data_sets_plt, y_ranges=None, plot=False,
+                          fit=False, plot_fit=False, hist=False, data_sets_colors=None, data_sets_labels=None):
+    cent_data = []
+    for cent in cents:
+        data = []
+        for data_type in data_types:
+            for data_set in data_sets_plt:
+                for div in divs:
+                    df_pre = df
+                    if 'data_type' in df_pre:
+                        df_pre = df_pre[df_pre['data_type'] == data_type]
+                    if 'cent' in df_pre:
+                        df_pre = df_pre[df_pre['cent'] == cent]
+                    if 'stat' in df_pre:
+                        df_pre = df_pre[df_pre['stat'] == stat]
+                    df_set = df_pre[
+                        (df_pre['name'] == data_set) & (df_pre['divs'] == div) & (df_pre['energy'] == energy)]
+                    if len(df_set) == 0:
+                        continue
+                    if data_sets_labels is None:
+                        if energy == 'sim':
+                            lab = f'{data_set}_{data_type}'
+                        else:
+                            lab = f'{data_set}_{data_type}_{energy}GeV'
+                    else:
+                        lab = data_sets_labels[data_set]
+                    df_set = df_set.sort_values(by=['total_protons'])
+                    data.append((df_set, lab, data_set, df_set['amp'].iloc[0], df_set['spread'].iloc[0]))
+        cent_data.append(data)
+
+    if plot or plot_fit:
+        fig, ax_cents = plt.subplots(3, 3, sharex=True, sharey=True, figsize=(13.33, 6.16), dpi=144)
+        ax_cents = ax_cents.flat
+        fig.suptitle(f'{energy}GeV, {div}° Partitions, 72 Samples per Event')
+        # ax.set_title(f'{stat} {div}° Divisions')
+        for ax in ax_cents[-3:]:
+            ax.set_xlabel('Total Protons in Event')
+        ax_cents[3].set_ylabel(f'Raw / Mix {stat.title()}')
+        for i, ax in enumerate(ax_cents):
+            ax.axhline(1, ls='-', color='gray')
+            # if y_ranges:
+            #     ax.set_ylim(y_ranges[stat])
+            if stat == 'standard deviation':
+                ax.set_ylim(0.921, 1.019)
+            elif stat == 'skewness':
+                ax.set_ylim(0.71, 1.09)
+            elif stat == 'non-excess kurtosis':
+                ax.set_ylim(0.92, 1.06)
+            ax.set_xlim(0, 65)
+
+    fits = []
+    for data, ax, cent in zip(cent_data, ax_cents[:len(cents)], cents):
+        if plot or plot_fit:
+            color = iter(plt.cm.rainbow(np.linspace(0, 1, len(data))))
+        for i, (df, lab, data_set, amp, spread) in enumerate(data):
+            zo = len(data) - i + 4
+            if plot or plot_fit:
+                if data_sets_colors is None:
+                    c = next(color)
+                else:
+                    c = data_sets_colors[data_set]
+                ax.text(12, .925, f'Centrality {cent}', size='x-large')
+            if plot:
+                if 'sim_' in data_set:
+                    ax.fill_between(df['total_protons'], df['val'] - df['err'], df['val'] + df['err'],
+                                    label=lab, color=c, alpha=0.4)
+                else:
+                    ax.errorbar(df['total_protons'], df['val'], df['err'], label=lab,
+                                marker='o', ls='', color=c, alpha=0.7, zorder=zo)
+                    if 'sys' in df:
+                        ax.errorbar(df['total_protons'], df['val'], df['sys'], marker='', ls='',
+                                    elinewidth=3, color=c, alpha=0.4, zorder=zo)
+
+            if fit and len(df) > 1:
+                # popt, pcov = cf(line, df['total_protons'], df['val'], sigma=df['err'], absolute_sigma=True)
+                print(f'Data Set {data_set} Cent {cent}:\nTotal_protons: {df["total_protons"]}\nraw/mix sds: {df["val"]}')
+                popt, pcov = cf(line_yint1, df['total_protons'], df['val'], sigma=df['err'], absolute_sigma=True)
+                fits.append({'name': data_set, 'divs': div, 'amp': amp, 'spread': spread, 'slope': popt[0],
+                             'slope_err': np.sqrt(pcov[0])[0], 'cent': cent})
+                if plot_fit:
+                    line_vals = line_yint1(df['total_protons'], *popt)
+                    line_high = line_yint1(df['total_protons'], popt[0] + np.sqrt(pcov[0]))
+                    line_low = line_yint1(df['total_protons'], popt[0] - np.sqrt(pcov[0]))
+                    if plot:
+                        ax.fill_between(df['total_protons'], line_high, line_low, color=c, alpha=0.3)
+                        ax.plot(df['total_protons'], line_vals, ls='--', color=c)
+                    else:
+                        ax.fill_between(df['total_protons'], line_high, line_low, color=c, alpha=0.3)
+                        ax.plot(df['total_protons'], line_yint1(df['total_protons'], *popt), ls='--', color=c,
+                                label=lab)
+                    if hist:
+                        sigs = (df['val'] - line_yint1(df['total_protons'], *popt)) / df['err']
+                        fig_hist, ax_hist = plt.subplots()
+                        ax_hist.set_title(f'{lab}')
+                        ax_hist.set_xlabel('Standard Deviations from Linear Fit')
+                        sns.histplot(sigs, stat='density', kde=True)
+                        x_norm = np.linspace(min(sigs), max(sigs), 1000)
+                        ax_hist.plot(x_norm, norm(0, 1).pdf(x_norm), color='red', label='Standard Normal')
+                        ax_hist.legend()
+                        fig_hist.tight_layout()
+
+    if plot or plot_fit:
+        for i, (df, lab, data_set, amp, spread) in enumerate(data):  # Just to get legend in last axis
+            color = iter(plt.cm.rainbow(np.linspace(0, 1, len(data))))
+            if data_sets_colors is None:
+                c = next(color)
+            else:
+                c = data_sets_colors[data_set]
+            if 'sim_' in data_set:
+                ax_cents[-1].fill_between([], [], [], label=lab, color=c, alpha=0.4)
+            else:
+                ax_cents[-1].errorbar([], [], [], label=lab, marker='o', ls='', color=c, alpha=0.7)
+                if 'sys' in df:
+                    ax_cents[-1].errorbar([], [], [], marker='', ls='', elinewidth=3, color=c, alpha=0.4)
+        ax_cents[-1].legend()
+        fig.tight_layout()
+        fig.subplots_adjust(wspace=0.0, hspace=0.0)
+        fig.canvas.manager.set_window_title(f'binom_slices_{divs[0]}_{stat}')
+
+    return pd.DataFrame(fits)
+
+
 def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, data_sets_labels=None, exclude_divs=[]):
     fig, ax = plt.subplots()
     fig.canvas.manager.set_window_title(f'Slope vs Width All Energies')
@@ -1086,6 +1208,33 @@ def plot_protons_fits_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
     # legend_int.get_frame().set_alpha(0)
     fig_slope.tight_layout()
     fig_int.tight_layout()
+
+
+def plot_protons_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None):
+    fig_slope, ax_slope = plt.subplots(figsize=(6.66, 5), dpi=144)
+    ax_slope.axhline(0, color='gray')
+    fig_slope.canvas.manager.set_window_title(f'Slopes vs Centrality')
+    for data_set in data_sets_plt:
+        df_set = df[df['name'] == data_set]
+        df_set.sort_values(by='cent')
+        if data_sets_labels is None:
+            lab = data_set
+        else:
+            lab = data_sets_labels[data_set]
+        if data_sets_colors is None:
+            ax_slope.errorbar(df_set['cent'], df_set['slope'], yerr=df_set['slope_err'], ls='none', marker='o',
+                              label=lab)
+        else:
+            ax_slope.errorbar(df_set['cent'], df_set['slope'], yerr=df_set['slope_err'], ls='none', marker='o',
+                              color=data_sets_colors[data_set], label=lab)
+    ax_slope.set_ylabel('Slope of Raw/Mix SD vs Total Protons per Event')
+    ax_slope.set_xlabel('Centrality')
+    ax_slope.grid()
+    if title:
+        ax_slope.set_title(title)
+    legend_slope = ax_slope.legend()
+    # legend_slope.get_frame().set_alpha(0)
+    fig_slope.tight_layout()
 
 
 def plot_protons_fits_vs_amp(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None):
