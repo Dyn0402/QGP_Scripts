@@ -666,8 +666,9 @@ def stat_vs_protons_cents(df, stat, divs, cents, energy, data_types, data_sets_p
             ax.set_xlim(0, 65)
 
     fits = []
-    for data, ax, cent in zip(cent_data, ax_cents[:len(cents)], cents):
+    for data, ax_index, cent in zip(cent_data, range(len(cents)), cents):
         if plot or plot_fit:
+            ax = ax_cents[ax_index]
             color = iter(plt.cm.rainbow(np.linspace(0, 1, len(data))))
         for i, (df, lab, data_set, amp, spread) in enumerate(data):
             zo = len(data) - i + 4
@@ -689,11 +690,9 @@ def stat_vs_protons_cents(df, stat, divs, cents, energy, data_types, data_sets_p
                                     elinewidth=3, color=c, alpha=0.4, zorder=zo)
 
             if fit and len(df) > 1:
-                # popt, pcov = cf(line, df['total_protons'], df['val'], sigma=df['err'], absolute_sigma=True)
-                print(f'Data Set {data_set} Cent {cent}:\nTotal_protons: {df["total_protons"]}\nraw/mix sds: {df["val"]}')
                 popt, pcov = cf(line_yint1, df['total_protons'], df['val'], sigma=df['err'], absolute_sigma=True)
-                fits.append({'name': data_set, 'divs': div, 'amp': amp, 'spread': spread, 'slope': popt[0],
-                             'slope_err': np.sqrt(pcov[0])[0], 'cent': cent})
+                fits.append({'name': data_set, 'energy': energy, 'divs': div, 'amp': amp, 'spread': spread,
+                             'slope': popt[0], 'slope_err': np.sqrt(pcov[0])[0], 'cent': cent})
                 if plot_fit:
                     line_vals = line_yint1(df['total_protons'], *popt)
                     line_high = line_yint1(df['total_protons'], popt[0] + np.sqrt(pcov[0]))
@@ -1210,25 +1209,55 @@ def plot_protons_fits_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
     fig_int.tight_layout()
 
 
-def plot_protons_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None):
+def plot_protons_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None,
+                              fit=False, cent_ref=None, ref_type=None, data_sets_energies_cmaps=None):
     fig_slope, ax_slope = plt.subplots(figsize=(6.66, 5), dpi=144)
     ax_slope.axhline(0, color='gray')
     fig_slope.canvas.manager.set_window_title(f'Slopes vs Centrality')
+    energies = pd.unique(df['energy'])
     for data_set in data_sets_plt:
         df_set = df[df['name'] == data_set]
-        df_set.sort_values(by='cent')
-        if data_sets_labels is None:
-            lab = data_set
+        if data_sets_energies_cmaps is not None:
+            colors = iter([plt.cm.get_cmap(data_sets_energies_cmaps[data_set])(i)
+                           for i in np.linspace(1, 0.4, len(energies))])
+        elif data_sets_colors is not None:
+            color, colors = data_sets_colors[data_set], None
         else:
-            lab = data_sets_labels[data_set]
-        if data_sets_colors is None:
-            ax_slope.errorbar(df_set['cent'], df_set['slope'], yerr=df_set['slope_err'], ls='none', marker='o',
-                              label=lab)
-        else:
-            ax_slope.errorbar(df_set['cent'], df_set['slope'], yerr=df_set['slope_err'], ls='none', marker='o',
-                              color=data_sets_colors[data_set], label=lab)
+            colors, color = None
+        for energy in pd.unique(df_set['energy']):
+            if colors is not None:
+                color = next(colors)
+            df_energy = df_set[df_set['energy'] == energy]
+            df_energy.sort_values(by='cent')
+            if data_sets_labels is None:
+                lab = data_set
+            else:
+                lab = data_sets_labels[data_set]
+            if len(energies) > 1:
+                lab += f' {energy}GeV'
+
+            if cent_ref is None:
+                x = df_set['cent']
+                x_err = None
+            else:
+                cent_energy = cent_ref[(cent_ref['data_set'] == data_set) & (cent_ref['energy'] == energy)]
+                x = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_val'].iloc[0] for cent in
+                     df_energy['cent']]
+                x_err = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_sd'].iloc[0] for cent in
+                         df_energy['cent']]
+            if colors is None and color is None:
+                ax_slope.errorbar(x, df_energy['slope'], xerr=x_err, yerr=df_energy['slope_err'], marker='o', ls='-',
+                                  label=lab)
+            else:
+                ax_slope.errorbar(x, df_energy['slope'], xerr=x_err, yerr=df_energy['slope_err'], marker='o', ls='-',
+                                  color=color, label=lab)
+            if fit:
+                pass
     ax_slope.set_ylabel('Slope of Raw/Mix SD vs Total Protons per Event')
-    ax_slope.set_xlabel('Centrality')
+    if ref_type is None:
+        ax_slope.set_xlabel('Centrality')
+    else:
+        ax_slope.set_xlabel('Reference Multiplicity')
     ax_slope.grid()
     if title:
         ax_slope.set_title(title)
@@ -1574,6 +1603,10 @@ def plot_fits(df_fits):
         ax_slope.set_ylabel('Slope')
         ax_slope.grid()
         fig_slope.tight_layout()
+
+
+def get_ref_avg(path, cent, ref_type='refn'):
+    pass
 
 
 class MyBounds:

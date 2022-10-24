@@ -32,17 +32,17 @@ def main():
 
 def init_pars():
     pars = {
-        'base_path': 'F:/Research/',
+        # 'base_path': 'F:/Research/',
         # 'base_path': 'D:/Transfer/Research/',
-        # 'base_path': '/media/ucla/Research/',
+        'base_path': '/media/ucla/Research/',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_cfev.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_sim_test.csv',
-        'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cents.csv',
+        # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cents.csv',
         # 'csv_path': 'D:/Transfer/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim_new.csv',
-        # 'csv_path': '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim.csv',
+        'csv_path': '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_stats_cents.csv',
         'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
-        'only_new': True,  # If True check csv_path and only run missing datasets, else run all datasets
+        'only_new': False,  # If True check csv_path and only run missing datasets, else run all datasets
         'threads': 15,
         'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
@@ -72,8 +72,8 @@ def define_datasets(base_path):
     """
 
     all_divs = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356]
-    all_energies = [7, 19, 27, 39, 62]
-    # all_energies = [7]
+    # all_energies = [7, 11, 19, 27, 39, 62]
+    all_energies = [11]
     all_cents = [0, 1, 2, 3, 4, 5, 6, 7, 8]  # [8]
 
     entry_names = ['name', 'base_ext', 'exact_keys', 'contain_keys', 'exclude_keys',
