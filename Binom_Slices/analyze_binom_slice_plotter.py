@@ -7,6 +7,7 @@ Created as QGP_Scripts/analyze_binom_slice_plotter
 
 @author: Dylan Neff, Dyn04
 """
+import pandas as pd
 
 from analyze_binom_slices import *
 
@@ -16,6 +17,7 @@ def main():
     # plot_star_model()
     # plot_star_model_onediv()
     plot_vs_cent()
+    # plot_vs_cent_nofit()
     print('donzo')
 
 
@@ -185,13 +187,13 @@ def plot_star_model_onediv():
 def plot_vs_cent():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
-    # base_path = 'F:/Research/Results/Azimuth_Analysis/'
-    base_path = '/home/dylan/Research/Results/Azimuth_Analysis/'
+    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    # base_path = '/home/dylan/Research/Results/Azimuth_Analysis/'
     df_name = 'binom_slice_stats_cents.csv'
     df_path = base_path + df_name
 
-    cent_ref_path = '/home/dylan/Research/Results/Azimuth_Analysis/mean_cent_ref.csv'
-    cent_ref_df = pd.read_csv(cent_ref_path)
+    cent_ref_name = 'mean_cent_ref.csv'
+    cent_ref_df = pd.read_csv(f'{base_path}{cent_ref_name}')
     ref_type = 'refn'  # 'refn'
 
     print(cent_ref_df)
@@ -199,11 +201,13 @@ def plot_vs_cent():
     sim_sets = []
 
     stat_plot = 'standard deviation'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
-    div_plt = 180
+    div_plt = 60
+    divs_all = [60, 72, 89, 90, 180, 240, 270, 288, 300]
     exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
     cents = [1, 2, 3, 4, 5, 6, 7, 8]
-    energy_plt = 39
+    energy_plt = 62
     energies_fit = [7, 11, 19, 27, 39, 62]
+    # energies_fit = [energy_plt]
     data_types_plt = ['divide']
     samples = 72  # For title purposes only
 
@@ -214,7 +218,7 @@ def plot_vs_cent():
 
     data_sets_plt = ['bes_resample_def']
     data_sets_colors = dict(zip(data_sets_plt, ['black']))
-    data_sets_energies_cmaps = dict(zip(data_sets_plt, ['Greys']))
+    data_sets_energies_cmaps = dict(zip(data_sets_plt, ['brg']))
     data_sets_labels = dict(zip(data_sets_plt, ['STAR']))
 
     all_sets_plt = data_sets_plt + sim_sets[:]
@@ -227,22 +231,99 @@ def plot_vs_cent():
 
     stat_vs_protons(df, stat_plot, div_plt, 3, [energy_plt], ['raw', 'mix'], all_sets_plt, plot=True, fit=False,
                     data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
-    df_fit = stat_vs_protons_cents(df, stat_plot, [div_plt], cents, energy_plt, data_types_plt, all_sets_plt,
-                                   plot=True, fit=True, plot_fit=True, data_sets_colors=data_sets_colors,
-                                   data_sets_labels=data_sets_labels)
+    stat_vs_protons_cents(df, stat_plot, [div_plt], cents, energy_plt, data_types_plt, all_sets_plt, plot=True,
+                          fit=True, plot_fit=True, data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
 
-    df_fits = pd.DataFrame()
+    df_slope_fits = stat_vs_protons_cents(df, stat_plot, divs_all, cents, energy_plt, data_types_plt, all_sets_plt,
+                                          plot=False, fit=True, plot_fit=False, data_sets_colors=data_sets_colors,
+                                          data_sets_labels=data_sets_labels)
+
+    plot_protons_fits_divs_cents(df_slope_fits, data_sets_plt, fit=True, plot=True, data_sets_colors=data_sets_colors,
+                                 data_sets_labels=data_sets_labels, exclude_divs=exclude_divs)
+
+    df_onediv_fits, df_divs_fits = pd.DataFrame(), pd.DataFrame()
     for energy in energies_fit:
         df_fit = stat_vs_protons_cents(df, stat_plot, [div_plt], cents, energy, data_types_plt, all_sets_plt,
                                        plot=False, fit=True, plot_fit=False, data_sets_colors=data_sets_colors,
                                        data_sets_labels=data_sets_labels)
-        print(f'{energy}GeV {df_fit}')
-        df_fits = pd.concat([df_fits, df_fit])
+        df_onediv_fits = pd.concat([df_onediv_fits, df_fit])
 
-    plot_protons_fits_vs_cent(df_fits, all_sets_plt, data_sets_colors=data_sets_colors,
+        df_fit = stat_vs_protons_cents(df, stat_plot, divs_all, cents, energy, data_types_plt, all_sets_plt,
+                                       plot=False, fit=True, plot_fit=False, data_sets_colors=data_sets_colors,
+                                       data_sets_labels=data_sets_labels)
+        df_fits = plot_protons_fits_divs_cents(df_fit, data_sets_plt, fit=True, data_sets_colors=data_sets_colors,
+                                               data_sets_labels=data_sets_labels, exclude_divs=exclude_divs)
+        # print(f'{energy}GeV {df_fit}')
+        df_divs_fits = pd.concat([df_divs_fits, df_fits])
+
+    plot_protons_fits_vs_cent(df_onediv_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
                               data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,
                               title=f'{div_plt}° Partitions, {samples} Samples per Event',
                               data_sets_energies_cmaps=data_sets_energies_cmaps)
+
+    plot_div_fits_vs_cent(df_divs_fits, data_sets_plt, data_sets_colors=data_sets_colors,
+                          data_sets_labels=data_sets_labels, title=None, fit=True, cent_ref=cent_ref_df,
+                          ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
+
+    plot_div_fits_vs_cent(df_divs_fits, data_sets_plt, data_sets_colors=data_sets_colors,
+                          data_sets_labels=data_sets_labels, title=None, fit=False, cent_ref=cent_ref_df,
+                          ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
+
+    plt.show()
+
+
+def plot_vs_cent_nofit():
+    plt.rcParams["figure.figsize"] = (6.66, 5)
+    plt.rcParams["figure.dpi"] = 144
+    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    # base_path = '/home/dylan/Research/Results/Azimuth_Analysis/'
+    df_name = 'binom_slice_stats_cents.csv'
+    df_path = base_path + df_name
+
+    cent_ref_name = 'mean_cent_ref.csv'
+    cent_ref_df = pd.read_csv(f'{base_path}{cent_ref_name}')
+    ref_type = 'refn'  # 'refn'
+
+    print(cent_ref_df)
+
+    sim_sets = []
+
+    stat_plot = 'standard deviation'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
+    div_plt = 60
+    divs_all = [60, 72, 89, 90, 180, 240, 270, 288, 300]
+    exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
+    cents = [1, 2, 3, 4, 5, 6, 7, 8]
+    energy_plt = 62
+    energies_fit = [7, 11, 19, 27, 39, 62]
+    # energies_fit = [energy_plt]
+    data_types_plt = ['divide']
+    samples = 72  # For title purposes only
+
+    data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red']))
+    data_sets_energies_cmaps = dict(zip(data_sets_plt, ['Greys', 'Reds']))
+    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT']))
+
+    all_sets_plt = data_sets_plt + sim_sets[:]
+
+    df = pd.read_csv(df_path)
+    df = df.dropna()
+    print(pd.unique(df['name']))
+
+    df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
+
+    df_divs_fits = pd.DataFrame()
+    for energy in energies_fit:
+        df_fit = stat_vs_protons_cents(df, stat_plot, divs_all, cents, energy, data_types_plt, all_sets_plt,
+                                       plot=False, fit=True, plot_fit=False, data_sets_colors=data_sets_colors,
+                                       data_sets_labels=data_sets_labels)
+        df_fits = plot_protons_fits_divs_cents(df_fit, data_sets_plt, fit=True, data_sets_colors=data_sets_colors,
+                                               data_sets_labels=data_sets_labels, exclude_divs=exclude_divs)
+        df_divs_fits = pd.concat([df_divs_fits, df_fits])
+
+    plot_div_fits_vs_cent(df_divs_fits, data_sets_plt, data_sets_colors=data_sets_colors,
+                          data_sets_labels=data_sets_labels, title=None, fit=False, cent_ref=cent_ref_df,
+                          ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
 
     plt.show()
 
