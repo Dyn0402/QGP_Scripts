@@ -307,6 +307,10 @@ def inv_sqrtx_odr(pars, x):
     return pars[0] / np.sqrt(x) + pars[1]
 
 
+def inv_sqrtxlin_odr(pars, x):
+    return pars[0] / np.sqrt(x) + pars[1] + pars[2] * x
+
+
 def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False, fit=False,
                     hist=False, data_sets_colors=None, data_sets_labels=None):
     data = []
@@ -1383,6 +1387,7 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
     fig_zeros.canvas.manager.set_window_title(f'Zeros vs Centrality')
     energies = pd.unique(df['energy'])
     bases, refs, cs = [], [], [0]  # Just to set x and y limits for plot
+    consts = {}
     for data_set in data_sets_plt:
         df_set = df[df['data_set'] == data_set]
         if data_sets_energies_cmaps is not None:
@@ -1393,6 +1398,7 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
         else:
             colors, color = None
         print(pd.unique(df_set['energy']))
+        consts.update({data_set: {'energy': [], 'const_val': [], 'const_err': []}})
         for energy in pd.unique(df_set['energy']):
             if colors is not None:
                 color = next(colors)
@@ -1440,6 +1446,22 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
                 ax_base.plot(x_fit, inv_sqrtx(x_fit, *odr_out.beta), alpha=0.6, color=color)
                 print(f'{lab} Fit: {[Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]}')
                 cs.append(odr_out.beta[1])
+                consts[data_set]['energy'].append(energy)
+                consts[data_set]['const_val'].append(odr_out.beta[1])
+                consts[data_set]['const_err'].append(odr_out.sd_beta[1])
+
+                # p0 = [-0.02, 0.0001, -1e-6]
+                # x_fit = np.linspace(1, 800, 2000)
+                # odr_model = odr.Model(inv_sqrtxlin_odr)
+                # odr_data = odr.RealData(x, df_energy['baseline_z'], sx=x_err, sy=df_energy['base_z_err'])
+                # inv_sqrt_odr = odr.ODR(odr_data, odr_model, beta0=p0, maxit=500)
+                # odr_out = inv_sqrt_odr.run()
+                # ax_base.axhline(odr_out.beta[1], color=color, ls=':')
+                # ax_base.axhspan(odr_out.beta[1] - odr_out.sd_beta[1], odr_out.beta[1] + odr_out.sd_beta[1],
+                #                 color=color, alpha=0.4)
+                # ax_base.plot(x_fit, inv_sqrtxlin_odr(odr_out.beta, x_fit), alpha=0.6, color=color, ls=':')
+                # print(f'{lab} Fit: {[Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]}')
+                # cs.append(odr_out.beta[1])
                 # ax_base.set_ylim(ax_base_ylim)
                 # ax_base.set_xlim(ax_base_xlim)
                 # fit_index_highs = range(4, len(x))
@@ -1476,6 +1498,18 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
     # legend_slope.get_frame().set_alpha(0)
     fig_base.tight_layout()
     fig_zeros.tight_layout()
+
+    fig_consts_vs_energy, ax_consts_vs_energy = plt.subplots()
+    ax_consts_vs_energy.set_ylabel('Constant Fit Parameter')
+    ax_consts_vs_energy.set_xlabel('Energy (GeV)')
+    for data_set, data in consts.items():
+        ax_consts_vs_energy.errorbar(data['energy'], data['const_val'], yerr=data['const_err'], ls='none',
+                                     label=data_set, marker='o')
+    ax_consts_vs_energy.legend()
+    ax_consts_vs_energy.grid()
+    ax_consts_vs_energy.set_title('Fit Constants vs Energy')
+    fig_zeros.canvas.manager.set_window_title('Fit Constants vs Energy')
+    fig_consts_vs_energy.tight_layout()
 
 
 def plot_protons_fits_vs_amp(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None):
