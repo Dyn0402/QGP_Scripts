@@ -195,7 +195,7 @@ def plot_vs_cent():
 
     cent_ref_name = 'mean_cent_ref.csv'
     cent_ref_df = pd.read_csv(f'{base_path}{cent_ref_name}')
-    ref_type = 'refn'  # 'refn'
+    ref_type = 'ref'  # 'refn'
 
     print(cent_ref_df)
 
@@ -212,15 +212,15 @@ def plot_vs_cent():
     data_types_plt = ['divide']
     samples = 72  # For title purposes only
 
-    # data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def']
-    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red']))
-    # data_sets_energies_cmaps = dict(zip(data_sets_plt, ['Greys', 'Reds']))
-    # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT']))
+    data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red']))
+    data_sets_energies_cmaps = dict(zip(data_sets_plt, ['Greys', 'Reds']))
+    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT']))
 
-    data_sets_plt = ['bes_resample_def']
-    data_sets_colors = dict(zip(data_sets_plt, ['black']))
-    data_sets_energies_cmaps = dict(zip(data_sets_plt, ['brg']))
-    data_sets_labels = dict(zip(data_sets_plt, ['STAR']))
+    # data_sets_plt = ['bes_resample_def']
+    # data_sets_colors = dict(zip(data_sets_plt, ['black']))
+    # data_sets_energies_cmaps = dict(zip(data_sets_plt, ['brg']))
+    # data_sets_labels = dict(zip(data_sets_plt, ['STAR']))
 
     all_sets_plt = data_sets_plt + sim_sets[:]
 
@@ -339,7 +339,7 @@ def plot_vs_cent_fittest():
 
     cent_ref_name = 'mean_cent_ref.csv'
     cent_ref_df = pd.read_csv(f'{base_path}{cent_ref_name}')
-    ref_type = 'refn'  # 'refn'
+    ref_type = 'ref'  # 'refn'
 
     print(cent_ref_df)
 
