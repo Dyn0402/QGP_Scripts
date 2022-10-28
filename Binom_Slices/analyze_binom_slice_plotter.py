@@ -16,9 +16,9 @@ def main():
     # plot_sims()
     # plot_star_model()
     # plot_star_model_onediv()
-    plot_vs_cent()
+    # plot_vs_cent()
     # plot_vs_cent_nofit()
-    # plot_vs_cent_fittest()
+    plot_vs_cent_fittest()
     print('donzo')
 
 

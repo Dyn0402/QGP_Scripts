@@ -1334,7 +1334,7 @@ def plot_protons_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
                 lab += f' {energy}GeV'
 
             if cent_ref is None:
-                x = df_set['cent']
+                x = df_energy['cent']
                 x_err = None
             else:
                 cent_energy = cent_ref[(cent_ref['data_set'] == data_set) & (cent_ref['energy'] == energy)]
@@ -1357,7 +1357,8 @@ def plot_protons_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
                 colors_fit = iter(plt.cm.rainbow(np.linspace(0, 1, len(fit_index_highs))))
                 for i in fit_index_highs:
                     color_fit = next(colors_fit)
-                    odr_data = odr.RealData(x[:i], df_energy['slope'][:i], sx=x_err[:i], sy=df_energy['slope_err'][:i])
+                    sx = None if x_err is None else x_err[:i]
+                    odr_data = odr.RealData(x[:i], df_energy['slope'][:i], sx=sx, sy=df_energy['slope_err'][:i])
                     inv_sqrt_odr = odr.ODR(odr_data, odr_model, beta0=p0, maxit=500)
                     odr_out = inv_sqrt_odr.run()
                     ax_slope.plot(x_fit, inv_sqrtx(x_fit, *odr_out.beta), alpha=0.6, color=color_fit)
@@ -1420,7 +1421,7 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
                 lab += f' {energy}GeV'
 
             if cent_ref is None:
-                x = df_set['cent']
+                x = df_energy['cent']
                 x_err = None
             else:
                 cent_energy = cent_ref[(cent_ref['data_set'] == data_set) & (cent_ref['energy'] == energy)]
