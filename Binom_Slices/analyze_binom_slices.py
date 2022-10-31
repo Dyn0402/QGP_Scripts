@@ -315,6 +315,10 @@ def inv_invxpow_odr(pars, x):
     return pars[0] / np.power(x, pars[2]) + pars[1]
 
 
+def inv_invxpow_noc_odr(pars, x):
+    return pars[0] / np.power(x, pars[1])
+
+
 def inv_invx_odr(pars, x):
     return pars[0] / x + pars[1]
 
@@ -1449,7 +1453,7 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
                 odr_data = odr.RealData(x, df_energy['baseline_z'], sx=x_err, sy=df_energy['base_z_err'])
                 inv_sqrt_odr = odr.ODR(odr_data, odr_model, beta0=p0, maxit=500)
                 odr_out = inv_sqrt_odr.run()
-                ax_base.axhline(odr_out.beta[1], color=color, ls='--')
+                ax_base.axhline(odr_out.beta[1], color=color, ls='-')
                 ax_base.axhspan(odr_out.beta[1] - odr_out.sd_beta[1], odr_out.beta[1] + odr_out.sd_beta[1],
                                 color=color, alpha=0.4)
                 ax_base.plot(x_fit, inv_sqrtx(x_fit, *odr_out.beta), alpha=0.6, color=color)
@@ -1473,6 +1477,15 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
                 # consts[data_set]['energy'].append(energy)
                 # consts[data_set]['const_val'].append(odr_out.beta[1])
                 # consts[data_set]['const_err'].append(odr_out.sd_beta[1])
+
+                # p0 = [-0.02, 1]
+                # x_fit = np.linspace(1, 800, 2000)
+                # odr_model = odr.Model(inv_invxpow_noc_odr)
+                # odr_data = odr.RealData(x, df_energy['baseline_z'], sx=x_err, sy=df_energy['base_z_err'])
+                # inv_sqrt_odr = odr.ODR(odr_data, odr_model, beta0=p0, maxit=500)
+                # odr_out = inv_sqrt_odr.run()
+                # ax_base.plot(x_fit, inv_invxpow_noc_odr(odr_out.beta, x_fit), alpha=0.6, color=color, ls=':')
+                # print(f'{lab} Fit: {[Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]}')
 
                 p0 = [-0.02, 0.0001]
                 x_fit = np.linspace(1, 800, 2000)
