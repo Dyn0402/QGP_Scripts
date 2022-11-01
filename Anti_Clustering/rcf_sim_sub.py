@@ -17,7 +17,7 @@ from calc_binom_slices import find_sim_sets
 
 def main():
     submit_xml_path = '/star/u/dneff/git/QGP_Fluctuations/Tree_Reader/subs/submit_sub.xml'
-    sys.path.insert(0, '/star/u/dneff/git/QGP_Scripts/Anti_Clustering')
+    sys.path.insert(0, '/star/u/dneff/git/QGP_Scripts/Binom_Slices')
     sets = get_sets()
     for set_i in sets:
         submit_set(set_i, submit_xml_path)
