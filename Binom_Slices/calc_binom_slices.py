@@ -32,9 +32,9 @@ def main():
 
 def init_pars():
     pars = {
-        # 'base_path': 'F:/Research/',
+        'base_path': 'F:/Research/',
         # 'base_path': 'D:/Transfer/Research/',
-        'base_path': '/media/ucla/Research/',
+        # 'base_path': '/media/ucla/Research/',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_cfev.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim.csv',
         'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_sim.csv',
@@ -43,13 +43,13 @@ def init_pars():
         # 'csv_path': '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_stats_cents.csv',
         'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': False,  # If True check csv_path and only run missing datasets, else run all datasets
-        'threads': 11,
+        'threads': 12,
         'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
         'min_events': 100,  # Min number of total events per total_proton. Skip total_proton if fewer
         'min_bs': 100,  # Min number of bootstrap sets of total_proton. Skip if fewer
         'div_bs': 0,  # Number of bootstrap divide values to get
-        'save_cent': True,  # Include centrality column in output dataframe
+        'save_cent': False,  # Include centrality column in output dataframe
         'save_data_type': True,  # Include data_type column in output dataframe
         'save_stat': True,  # Include statistic column in output dataframe
         'save_set_num': False,  # Don't save set num if False. Currently not compatible with set nums!
