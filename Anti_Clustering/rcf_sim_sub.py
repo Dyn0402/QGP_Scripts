@@ -9,11 +9,9 @@ Created as QGP_Scripts/rcf_sim_sub
 """
 
 import os
-import sys
 from time import sleep
 
-sys.path.insert(0, '/star/u/dneff/git/QGP_Scripts/Binom_Slices')
-from calc_binom_slices import find_sim_sets
+import pandas as pd
 
 
 def main():
@@ -132,6 +130,49 @@ def submit_set(set_i, xml_path):
     sleep(1)
 
     os.remove(new_xml_path)
+
+
+def find_sim_sets(path, include_keys, exclude_keys=[], print_sets=False):
+    df = []
+    for file_path in os.listdir(path):
+        file_keys = file_path.strip().split('_')
+        if any([key in file_keys for key in exclude_keys]):
+            continue
+        if all([key in file_keys for key in include_keys]):
+            df_i = {}
+            for key in file_keys:
+                for par_i in ['amp', 'spread']:
+                    if key[:len(par_i)] == par_i:
+                        df_i.update({par_i: key.strip(par_i)})
+            df.append(df_i)
+
+    df = pd.DataFrame(df)
+
+    if print_sets:
+        for spread in pd.unique(df['spread']):
+            df_spread = df[df['spread'] == spread]
+            amps = pd.unique(df_spread["amp"])
+            # amps_sq = ['0', '01', '015', '02', '025', '03', '04', '045', '05', '06', '07', '09', '15', '2',
+            #            '225', '25', '4', '45', '5']
+            # amps = [amp for amp in amps if amp in amps_sq]
+            print(f'spread {spread}: {len(amps)} {amps}')
+
+        all_spreads, all_amps = pd.unique(df['spread']), pd.unique(df['amp'])
+        print(f'\n All spreads: \n{all_spreads}\n\nAll amps: \n{all_amps}')
+        all_amps = set(all_amps)
+
+        print('\nMissing amps per spread')
+        missing_sets = []
+        for spread in all_spreads:
+            df_spread = df[df['spread'] == spread]
+            amps_spread = set(pd.unique(df_spread['amp']))
+            miss_amps_spread = list(all_amps - amps_spread)
+            print(f'spread {spread}: {len(miss_amps_spread)} {miss_amps_spread}')
+            missing_sets.extend([(f"'{spread}'", f"'{amp}'") for amp in miss_amps_spread])
+
+        print(f'\nMissing sets: \n{"".join(f"({spread}, {amp}), " for spread, amp in missing_sets)}')
+
+    return df
 
 
 if __name__ == '__main__':
