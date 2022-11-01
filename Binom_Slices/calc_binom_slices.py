@@ -43,7 +43,7 @@ def init_pars():
         # 'csv_path': '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_stats_cents.csv',
         'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': False,  # If True check csv_path and only run missing datasets, else run all datasets
-        'threads': 12,
+        'threads': 15,
         'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
         'min_events': 100,  # Min number of total events per total_proton. Skip total_proton if fewer
@@ -118,7 +118,7 @@ def define_datasets(base_path):
             spread_float = float(f'0.{spread}') * 10  # For filtering if needed
             # if spread_float not in [0.5, 1]:
             #     continue
-            entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim_tests',
+            entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
                                ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
                                ['flat'], [], [0], [62], [8], all_divs])
 
@@ -257,7 +257,6 @@ def read_data(pars):
                 continue
         # print(dataset)
         jobs.extend(get_dataset_jobs(dataset, pars))
-
     if pars['check_only']:  # Just check the files and return
         with Pool(pars['threads']) as pool:
             for df_subset in tqdm.tqdm(pool.istarmap(check_subset, jobs), total=len(jobs)):
