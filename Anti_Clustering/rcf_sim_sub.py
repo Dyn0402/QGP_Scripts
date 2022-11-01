@@ -9,6 +9,7 @@ Created as QGP_Scripts/rcf_sim_sub
 """
 
 import os
+import sys
 from time import sleep
 
 from calc_binom_slices import find_sim_sets
@@ -16,6 +17,7 @@ from calc_binom_slices import find_sim_sets
 
 def main():
     submit_xml_path = '/star/u/dneff/git/QGP_Fluctuations/Tree_Reader/subs/submit_sub.xml'
+    sys.path.insert(0, '/star/u/dneff/git/QGP_Scripts/Anti_Clustering')
     sets = get_sets()
     for set_i in sets:
         submit_set(set_i, submit_xml_path)
