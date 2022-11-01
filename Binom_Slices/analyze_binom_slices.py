@@ -1030,7 +1030,15 @@ def plot_slope_div_fits_simpars(df_fits):
     ax_base_amp.set_xlabel('Amplitude')
     ax_base_amp.set_ylabel('Baseline')
     ax_base_amp.axhline(0, color='black')
+    ax_base_amp.axvline(0, color='black')
     fig_base_amp.canvas.manager.set_window_title('Slope Baseline vs Amplitude')
+
+    fig_amp_base, ax_amp_base = plt.subplots()
+    ax_amp_base.set_xlabel('Baseline')
+    ax_amp_base.set_ylabel('Amplitude')
+    ax_amp_base.axvline(0, color='black')
+    ax_amp_base.axhline(0, color='black')
+    fig_amp_base.canvas.manager.set_window_title('Slope Amplitude vs Baseline')
 
     fig_base_spread, ax_base_spread = plt.subplots()
     ax_base_spread.set_xlabel('Spread')
@@ -1107,7 +1115,7 @@ def plot_slope_div_fits_simpars(df_fits):
         for cl_type, cl_data in cl_type_data.items():
             df_set = df_spread[df_spread['data_set'].str.contains(cl_type)]
             if cl_type == '_aclmul_':
-                lab = f'σ={spread}'
+                lab = f'σ={spread:.1f}'
             else:
                 lab = None
             ax_base_amp.errorbar(df_set['amp'], df_set['baseline_z'], yerr=df_set['base_z_err'], ls='none',
@@ -1120,6 +1128,15 @@ def plot_slope_div_fits_simpars(df_fits):
             ax_base_amp.fill_between(x_vals, line_yint0(x_vals, popt[0] - perr[0]),
                                      line_yint0(x_vals, popt[0] + perr[0]), color=color, alpha=0.3)
 
+            ax_amp_base.errorbar(df_set['baseline_z'], df_set['amp'], xerr=df_set['base_z_err'], ls='none',
+                                 marker='o', label=lab, color=color)
+            inv_slope = 1 / Measure(popt[0], perr[0])
+            x_vals = np.array([0, max(df_set['baseline_z']) * 1.1]) if cl_type == '_clmul_' \
+                else np.array([min(df_set['baseline_z']) * 1.1, 0])
+            ax_amp_base.plot(x_vals, line_yint0(x_vals, inv_slope.val), ls=cl_data['line'], color=color)
+            ax_amp_base.fill_between(x_vals, line_yint0(x_vals, inv_slope.val - inv_slope.err),
+                                     line_yint0(x_vals, inv_slope.val + inv_slope.err), color=color, alpha=0.3)
+
             avg_zero = np.mean(
                 [Measure(val, err) for val, err in zip(df_set['zero_mag'], df_set['zero_mag_err'])])
             ax_zeros_amp.errorbar(df_set['amp'], df_set['zero_mag'], yerr=df_set['zero_mag_err'], ls='none',
@@ -1130,7 +1147,8 @@ def plot_slope_div_fits_simpars(df_fits):
                                            yerr=df_set['zero_mag_err'], ls='none', marker='o', label=lab,
                                            color=color)
             sigma_fits.append({'clust_type': cl_data['name'], 'spread': spread, 'zero_mean_val': avg_zero.val,
-                               'zero_mean_err': avg_zero.err, 'base_slope_val': popt[0], 'base_slope_err': perr[0]})
+                               'zero_mean_err': avg_zero.err, 'base_slope_val': popt[0], 'base_slope_err': perr[0],
+                               'amp_slope_val': inv_slope.val, 'amp_slope_err': inv_slope.err})
 
     colors = iter(plt.cm.rainbow(np.linspace(0, 1, len(spreads))))  # Go through again to plot horizontal lines
     for spread in spreads:
@@ -1158,6 +1176,7 @@ def plot_slope_div_fits_simpars(df_fits):
     ax_curve_amp.legend()
     ax_curve_spread.legend()
     ax_base_amp.legend()
+    ax_amp_base.legend()
     ax_base_spread.legend()
     ax_base_curve_gamp.legend()
     ax_base_curve_gspread.legend()
@@ -1169,6 +1188,7 @@ def plot_slope_div_fits_simpars(df_fits):
     fig_curve_amp.tight_layout()
     fig_curve_spread.tight_layout()
     fig_base_amp.tight_layout()
+    fig_amp_base.tight_layout()
     fig_base_spread.tight_layout()
     fig_base_curve_gamp.tight_layout()
     fig_base_curve_gspread.tight_layout()
@@ -1193,6 +1213,13 @@ def plot_sigma_fits_interp(sigma_fits):
     ax_spread_base_slope.axhline(0, color='black')
     fig_spread_base_slope.canvas.manager.set_window_title('Base Slope vs Spread')
 
+    fig_spread_amp_slope, ax_spread_amp_slope = plt.subplots()
+    ax_spread_amp_slope.set_xlabel('Spread')
+    ax_spread_amp_slope.set_ylabel('Amp Slope')
+    ax_spread_amp_slope.axhline(0, color='black')
+    fig_spread_amp_slope.canvas.manager.set_window_title('Amp Slope vs Spread')
+
+    interpolations = []
     cl_types = pd.unique(sigma_fits['clust_type'])
     for cl_type in cl_types:
         print(cl_type)
@@ -1202,17 +1229,29 @@ def plot_sigma_fits_interp(sigma_fits):
         ax_spread_zero.errorbar(df_cl_type['zero_mean_val'], df_cl_type['spread'], xerr=df_cl_type['zero_mean_err'],
                                 ls='none', label=cl_type, marker='o')
         ax_spread_zero.plot(x_spread_zero, f_spread_zero(x_spread_zero))
+
         f_spread_base = interp1d(df_cl_type['spread'], df_cl_type['base_slope_val'], kind='cubic')
         x_spread_base = np.linspace(min(df_cl_type['spread']), max(df_cl_type['spread']), 1000)
         ax_spread_base_slope.errorbar(df_cl_type['spread'], df_cl_type['base_slope_val'], ls='none', label=cl_type,
                                       marker='o', yerr=df_cl_type['base_slope_err'])
         ax_spread_base_slope.plot(x_spread_base, f_spread_base(x_spread_base))
 
+        f_spread_amp = interp1d(df_cl_type['spread'], df_cl_type['amp_slope_val'], kind='cubic')
+        ax_spread_amp_slope.errorbar(df_cl_type['spread'], df_cl_type['amp_slope_val'], ls='none', label=cl_type,
+                                     marker='o', yerr=df_cl_type['amp_slope_err'])
+        ax_spread_amp_slope.plot(x_spread_base, f_spread_amp(x_spread_base))
+
+        interpolations.append({'cl_type': cl_type, 'spread_zero': f_spread_zero, 'spread_amp': f_spread_amp})
+
     ax_spread_zero.legend()
     ax_spread_base_slope.legend()
+    ax_spread_amp_slope.legend()
 
     fig_spread_zero.tight_layout()
     fig_spread_base_slope.tight_layout()
+    fig_spread_amp_slope.tight_layout()
+
+    return interpolations
 
 
 def plot_protons_fits_sim(df):
@@ -1518,7 +1557,7 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
                 #                     color=color_fit, alpha=0.4)
                 #     print(f'{lab} Fit: {[Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]}')
     ax_base.set_ylim(min(bases) * 1.1, max(cs) * 1.1)
-    ax_base.set_xlim(0, max(refs)*1.1)
+    ax_base.set_xlim(0, max(refs) * 1.1)
 
     ax_base.set_ylabel('Baseline of Slope vs Partition Width Fit')
     ax_zeros.set_ylabel('Zeros of Slope vs Partition Width Fit')
@@ -1891,8 +1930,8 @@ def plot_fits(df_fits):
         fig_slope.tight_layout()
 
 
-def get_ref_avg(path, cent, ref_type='refn'):
-    pass
+def map_to_sim(baseline, zeros, interpolations):
+    sigma = interpolations
 
 
 class MyBounds:

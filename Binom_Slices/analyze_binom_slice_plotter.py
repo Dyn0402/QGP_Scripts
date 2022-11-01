@@ -7,18 +7,20 @@ Created as QGP_Scripts/analyze_binom_slice_plotter
 
 @author: Dylan Neff, Dyn04
 """
+
 import pandas as pd
+import pickle
 
 from analyze_binom_slices import *
 
 
 def main():
-    # plot_sims()
+    plot_sims()
     # plot_star_model()
     # plot_star_model_onediv()
     # plot_vs_cent()
     # plot_vs_cent_nofit()
-    plot_vs_cent_fittest()
+    # plot_vs_cent_fittest()
     print('donzo')
 
 
@@ -82,6 +84,11 @@ def plot_sims():
 
     amps = ['002', '004', '006', '008', '01']  # ['002', '006', '01']
     spreads = ['03', '04', '05', '06', '07', '08', '09', '1', '11', '12']
+    # amps = ['0', '002', '004', '005', '006', '008', '01', '0125', '015', '0175', '02', '0225', '025', '03', '035', '04',
+    #         '045', '05', '06', '07', '08', '09', '1', '125', '15', '175', '2', '225', '25', '3', '35', '4', '45', '5',
+    #         '6', '7', '8', '9', '99']
+    # spreads = ['001', '01', '02', '05', '06', '065', '07', '075', '08', '085', '09', '1', '15', '2', '225', '25',
+    #            '275', '3', '325', '35', '4']  # '375' missing '08' and '09'
     for amp in amps:
         for spread in spreads:
             sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}')
@@ -137,6 +144,89 @@ def plot_sims():
     # print(df_fits)
     sigma_fits = plot_slope_div_fits_simpars(df_fits)
     plot_sigma_fits_interp(sigma_fits)
+
+    plt.show()
+
+
+def get_sim_mapping():
+    plt.rcParams["figure.figsize"] = (6.66, 5)
+    plt.rcParams["figure.dpi"] = 144
+    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    df_name = 'binom_slice_stats_cent8_sim_test.csv'
+    pickle_map_name = 'binom_slice_sim_mapping'
+    df_path = base_path + df_name
+    sim_sets = []
+
+    # amps = ['002', '004', '006', '008', '01']  # ['002', '006', '01']
+    # spreads = ['03', '04', '05', '06', '07', '08', '09', '1', '11', '12']
+    amps = ['0', '002', '004', '005', '006', '008', '01', '0125', '015', '0175', '02', '0225', '025', '03', '035', '04',
+            '045', '05', '06', '07', '08', '09', '1', '125', '15', '175', '2', '225', '25', '3', '35', '4', '45', '5',
+            '6', '7', '8', '9', '99']
+    spreads = ['001', '01', '02', '05', '06', '065', '07', '075', '08', '085', '09', '1', '15', '2', '225', '25',
+               '275', '3', '325', '35', '4']  # '375' missing '08' and '09'
+    for amp in amps:
+        for spread in spreads:
+            sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}')
+            sim_sets.append(f'sim_clmul_amp{amp}_spread{spread}')
+    sim_sets = sorted(sim_sets, reverse=True)
+    sim_sets = sim_sets[:int(len(sim_sets) / 2)] + sorted(sim_sets[int(len(sim_sets) / 2):])
+
+    stat_plot = 'standard deviation'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
+    div_plt = 120
+    exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
+    cent_plt = 8
+    energies_plt = [39, 'sim']  # [7, 11, 19, 27, 39, 62, 'sim']  # [7, 11, 19, 27, 39, 62]
+    energies_fit = ['sim', 7]
+    data_types_plt = ['divide']
+    samples = 72  # For title purposes only
+
+    data_sets_plt, data_sets_colors, data_sets_labels = [], None, None
+    data_sets_plt = []
+    data_sets_labels = {}
+    for sim_set in sim_sets:
+        label = ''
+        if '_clmul_' in sim_set:
+            label += 'Attractive '
+        elif '_aclmul_' in sim_set:
+            label += 'Repulsive '
+        amp, spread = get_name_amp_spread(sim_set)
+        label += f'A={amp} σ={spread}'
+        data_sets_labels.update({sim_set: label})
+
+    all_sets_plt = data_sets_plt + sim_sets[:]
+
+    df = pd.read_csv(df_path)
+    df = df.dropna()
+    print(pd.unique(df['name']))
+
+    df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
+
+    stat_vs_protons(df, stat_plot, div_plt, cent_plt, [7, 'sim'], data_types_plt, all_sets_plt, plot=True, fit=False,
+                    data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
+
+    protons_fits = []
+    for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
+        print(f'Div {div}')
+        protons_fits_div = stat_vs_protons(df, stat_plot, div, cent_plt, energies_fit, data_types_plt, all_sets_plt,
+                                           plot=False, fit=True)
+        protons_fits.append(protons_fits_div)
+    protons_fits = pd.concat(protons_fits, ignore_index=True)
+    print(protons_fits)
+    print(pd.unique(protons_fits['amp']))
+    print(pd.unique(protons_fits['spread']))
+    df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
+                                     data_sets_labels=data_sets_labels)
+    # print(df_fits)
+    sigma_fits = plot_slope_div_fits_simpars(df_fits)
+    interpolations = plot_sigma_fits_interp(sigma_fits)
+
+    with open(f'{base_path}{pickle_map_name}', 'ab') as pickle_file:
+        pickle.dump(interpolations, pickle_file)
+
+    with open(f'{base_path}{pickle_map_name}', 'ab') as pickle_file:
+        interps_pickle = pickle_file.load(pickle_file)
+
+    print(interpolations, '\n\n', interps_pickle)
 
     plt.show()
 
