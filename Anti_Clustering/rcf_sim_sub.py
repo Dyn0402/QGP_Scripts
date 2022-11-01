@@ -11,6 +11,8 @@ Created as QGP_Scripts/rcf_sim_sub
 import os
 from time import sleep
 
+from calc_binom_slices import find_sim_sets
+
 
 def main():
     submit_xml_path = '/star/u/dneff/git/QGP_Fluctuations/Tree_Reader/subs/submit_sub.xml'
@@ -23,6 +25,11 @@ def main():
 def get_sets():
     clust_alg = 'anticlmulti'
     names = ['set_group', 'set_name']
+    existing_sets_path = '/star/u/dneff/gpfs/tree_reader_data/Data_Sim/'
+    existing_sets = find_sim_sets(existing_sets_path, ['flat80', clust_alg, 'resample'], ['test'], False)
+    existing_sets = None if existing_sets.size == 0 else existing_sets
+    print(f'Existing Sets:\n{existing_sets}')
+
     sets = [
         # ['flat80_anticlmulti_spread4_amp05_resample', 'Sim_spread4_amp05_flat80_anticlmulti_norotate_resample_'],
         # ['flat80_anticlmulti_spread4_amp06_resample', 'Sim_spread4_amp06_flat80_anticlmulti_norotate_resample_']
@@ -54,7 +61,6 @@ def get_sets():
     #     sets.append([f'flat80_anticlmulti_spread{spread}_amp{amp}_resample',
     #                  f'Sim_spread{spread}_amp{amp}_flat80_anticlmulti_norotate_resample_'])
 
-
     # Rerun all spreads/amps
     amps = ['0', '002', '004', '005', '006', '008', '01', '0125', '015', '0175', '02', '0225', '025', '03', '035', '04',
             '045', '05', '06', '07', '08', '09', '1', '125', '15', '175', '2', '225', '25', '3', '35', '4', '45', '5',
@@ -63,8 +69,10 @@ def get_sets():
                '275', '3', '325', '35', '375', '4']  # '45', '5']  # Run 45 and 5 on Old PC
     for amp in amps:
         for spread in spreads:
-            sets.append([f'flat80_{clust_alg}_spread{spread}_amp{amp}_resample',
-                         f'Sim_spread{spread}_amp{amp}_flat80_{clust_alg}_norotate_resample_'])
+            if existing_sets is None or \
+                    existing_sets[(existing_sets['spread'] == spread) & (existing_sets['amp'] == amp)].size == 0:
+                sets.append([f'flat80_{clust_alg}_spread{spread}_amp{amp}_resample',
+                             f'Sim_spread{spread}_amp{amp}_flat80_{clust_alg}_norotate_resample_'])
 
     # # New spreads all amps
     # amps = ['0', '005', '01', '0125', '015', '0175', '02', '0225', '025', '03', '035', '04', '045', '05', '06', '07',
@@ -94,7 +102,7 @@ def get_sets():
 
     # for seti in sets:
     #     print(seti)
-    # print(len(sets))
+    print(f'Number of sets to resubmit: {len(sets)}')
 
     sets = [dict(zip(names, x)) for x in sets]
 
