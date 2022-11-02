@@ -1219,8 +1219,8 @@ def plot_sigma_fits_interp(sigma_fits):
     ax_spread_amp_slope.axhline(0, color='black')
     fig_spread_amp_slope.canvas.manager.set_window_title('Amp Slope vs Spread')
 
-    interpolations = []
     cl_types = pd.unique(sigma_fits['clust_type'])
+    interpolations = {cl_type: {} for cl_type in cl_types}
     for cl_type in cl_types:
         print(cl_type)
         df_cl_type = sigma_fits[sigma_fits['clust_type'] == cl_type]
@@ -1241,7 +1241,7 @@ def plot_sigma_fits_interp(sigma_fits):
                                      marker='o', yerr=df_cl_type['amp_slope_err'])
         ax_spread_amp_slope.plot(x_spread_base, f_spread_amp(x_spread_base))
 
-        interpolations.append({'cl_type': cl_type, 'spread_zero': f_spread_zero, 'spread_amp': f_spread_amp})
+        interpolations[cl_type] = {'spread_zero': f_spread_zero, 'amp_slope_spread': f_spread_amp}
 
     ax_spread_zero.legend()
     ax_spread_base_slope.legend()
@@ -1931,7 +1931,23 @@ def plot_fits(df_fits):
 
 
 def map_to_sim(baseline, zeros, interpolations):
-    sigma = interpolations
+    """
+    Given baseline and zeros of quadratic fit to Raw SD / Mix SD Slope vs Partition Width, map to simulation amp, spread
+    parameters with input interpolations
+    :param baseline: Constant term in quadratic fit of Raw SD / Mix SD Slope vs Partition Width
+    :param zeros: Reparameterized curvature term in quadratic fit of Raw SD / Mix SD Slope vs Partition Width
+    :param interpolations: Interpolations from simulations for converting baseline and zeros to sim amp and spread
+    :return: Interpolated simulation amplitude and spread, mapped from input baseline and zeros
+    """
+    if baseline > 0:
+        interpolations = interpolations['_clmul_']
+    else:
+        interpolations = interpolations['_aclmul_']
+    spread = interpolations['spread_zero'][zeros]
+    amp_slope = interpolations['amp_slope_spread'][spread]
+    amp = amp_slope * baseline
+
+    return amp, spread
 
 
 class MyBounds:
