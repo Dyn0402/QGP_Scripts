@@ -11,11 +11,14 @@ Created as QGP_Scripts/analyze_binom_slice_plotter
 import pandas as pd
 import pickle
 
+import tqdm
+
 from analyze_binom_slices import *
 
 
 def main():
-    plot_sims()
+    # plot_sims()
+    get_sim_mapping()
     # plot_star_model()
     # plot_star_model_onediv()
     # plot_vs_cent()
@@ -152,13 +155,14 @@ def get_sim_mapping():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
     base_path = 'F:/Research/Results/Azimuth_Analysis/'
-    df_name = 'binom_slice_stats_cent8_sim_test.csv'
+    df_name = 'binom_slice_stats_cent8_sim.csv'
     pickle_map_name = 'binom_slice_sim_mapping'
+    threads = 11
     df_path = base_path + df_name
     sim_sets = []
 
     # amps = ['002', '004', '006', '008', '01']  # ['002', '006', '01']
-    # spreads = ['03', '04', '05', '06', '07', '08', '09', '1', '11', '12']
+    # spreads = ['02', '05', '06', '065', '07']
     amps = ['0', '002', '004', '005', '006', '008', '01', '0125', '015', '0175', '02', '0225', '025', '03', '035', '04',
             '045', '05', '06', '07', '08', '09', '1', '125', '15', '175', '2', '225', '25', '3', '35', '4', '45', '5',
             '6', '7', '8', '9', '99']
@@ -167,7 +171,7 @@ def get_sim_mapping():
     for amp in amps:
         for spread in spreads:
             sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}')
-            sim_sets.append(f'sim_clmul_amp{amp}_spread{spread}')
+            # sim_sets.append(f'sim_clmul_amp{amp}_spread{spread}')
     sim_sets = sorted(sim_sets, reverse=True)
     sim_sets = sim_sets[:int(len(sim_sets) / 2)] + sorted(sim_sets[int(len(sim_sets) / 2):])
 
@@ -176,7 +180,7 @@ def get_sim_mapping():
     exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
     cent_plt = 8
     energies_plt = [39, 'sim']  # [7, 11, 19, 27, 39, 62, 'sim']  # [7, 11, 19, 27, 39, 62]
-    energies_fit = ['sim', 7]
+    energies_fit = ['sim', 62]
     data_types_plt = ['divide']
     samples = 72  # For title purposes only
 
@@ -201,15 +205,22 @@ def get_sim_mapping():
 
     df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
 
-    stat_vs_protons(df, stat_plot, div_plt, cent_plt, [7, 'sim'], data_types_plt, all_sets_plt, plot=True, fit=False,
-                    data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
+    # stat_vs_protons(df, stat_plot, div_plt, cent_plt, [7, 'sim'], data_types_plt, all_sets_plt, plot=True, fit=False,
+    #                 data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
 
     protons_fits = []
-    for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
-        print(f'Div {div}')
-        protons_fits_div = stat_vs_protons(df, stat_plot, div, cent_plt, energies_fit, data_types_plt, all_sets_plt,
-                                           plot=False, fit=True)
-        protons_fits.append(protons_fits_div)
+    other_pars = (cent_plt, energies_fit, data_types_plt, all_sets_plt, None, False, True, False, None, None)
+    jobs = [(df, stat_plot, div, *other_pars) for div in np.setdiff1d(np.unique(df['divs']), exclude_divs)]
+    with Pool(threads) as pool:
+        for proton_fits_div in tqdm.tqdm(pool.istarmap(stat_vs_protons, jobs), total=len(jobs)):
+            # print(proton_fits_div)
+            protons_fits.append(proton_fits_div)
+    print(protons_fits)
+    # for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
+    #     print(f'Div {div}')
+    #     protons_fits_div = stat_vs_protons(df, stat_plot, div, cent_plt, energies_fit, data_types_plt, all_sets_plt,
+    #                                        plot=False, fit=True)
+    #     protons_fits.append(protons_fits_div)
     protons_fits = pd.concat(protons_fits, ignore_index=True)
     print(protons_fits)
     print(pd.unique(protons_fits['amp']))
@@ -223,8 +234,8 @@ def get_sim_mapping():
     with open(f'{base_path}{pickle_map_name}', 'ab') as pickle_file:
         pickle.dump(interpolations, pickle_file)
 
-    with open(f'{base_path}{pickle_map_name}', 'ab') as pickle_file:
-        interps_pickle = pickle_file.load(pickle_file)
+    with open(f'{base_path}{pickle_map_name}', 'rb') as pickle_file:
+        interps_pickle = pickle.load(pickle_file)
 
     print(interpolations, '\n\n', interps_pickle)
 

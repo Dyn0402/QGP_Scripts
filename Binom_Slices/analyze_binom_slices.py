@@ -326,18 +326,29 @@ def inv_invx_odr(pars, x):
 def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False, fit=False,
                     hist=False, data_sets_colors=None, data_sets_labels=None):
     data = []
+    # print(f'data_sets to plot:  {data_sets_plt}\n\n\n')
+    # print(f"data_sets in df:  {pd.unique(df['name'])}\n\n")
     for data_type in data_types:
         for data_set in data_sets_plt:
             for energy in energies:
                 df_pre = df
+                # print(f'1 {df_pre.size}')
                 if 'data_type' in df_pre:
                     df_pre = df_pre[df_pre['data_type'] == data_type]
+                # print(f'2 {df_pre.size}')
                 if 'cent' in df_pre:
                     df_pre = df_pre[df_pre['cent'] == cent]
+                # print(f'3 {df_pre.size}')
                 if 'stat' in df_pre:
                     df_pre = df_pre[df_pre['stat'] == stat]
+                # print(f'4 {df_pre.size}')
+                # print(f'4.1 {df_pre[(df_pre["name"] == data_set)].size}  -->  {data_set}')
+                # print(f'4.2 {df_pre[(df_pre["divs"] == div)].size}')
+                # print(f'4.3 {df_pre[(df_pre["energy"] == energy)].size}')
                 df_set = df_pre[(df_pre['name'] == data_set) & (df_pre['divs'] == div) & (df_pre['energy'] == energy)]
+                # print(f'5 {df_set.size}')
                 if len(df_set) == 0:
+                    # print('Empty!!@#@')
                     continue
                 if data_sets_labels is None:
                     if energy == 'sim':
@@ -794,29 +805,32 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
             energy_ax.errorbar(df_energy['divs'], df_energy['slope'], yerr=df_energy['slope_err'], ls='none',
                                marker='o', label=lab_energy, color=color)
             if fit and df_energy.size > 1:
-                df_energy = df_energy[~df_energy.divs.isin(exclude_divs)]
-                popt, pcov = cf(quad_180, df_energy['divs'], df_energy['slope'], sigma=df_energy['slope_err'],
-                                absolute_sigma=True)
-                perr = np.sqrt(np.diag(pcov))
-                fit_pars.append({'data_set': data_set, 'energy': energy, 'curvature': popt[0], 'baseline': popt[1],
-                                 'spread': df_energy['spread'].iloc[0], 'amp': df_energy['amp'].iloc[0],
-                                 'curve_err': perr[0], 'base_err': perr[1], 'color': color})
-                x = np.linspace(0, 360, 100)
-                ax.plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
-                energy_ax.plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
-                if popt[0] * popt[1] < 0:
-                    popt2, pcov2 = cf(quad_180_zparam, df_energy['divs'], df_energy['slope'],
-                                      sigma=df_energy['slope_err'],
-                                      absolute_sigma=True)
-                    perr2 = np.sqrt(np.diag(pcov2))
-                    fit_pars[-1].update({'zero_mag': popt2[0], 'zero_mag_err': perr2[0], 'baseline_z': popt2[1],
-                                         'base_z_err': perr2[1]})
-                    print(f'{data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\nz-c fit: {popt2}\n'
-                          f'z-c covariance: {pcov2}')
-                    print()
-                else:
-                    print(f'No Zeros! {data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\n')
-                    print()
+                try:
+                    df_energy = df_energy[~df_energy.divs.isin(exclude_divs)]
+                    popt, pcov = cf(quad_180, df_energy['divs'], df_energy['slope'], sigma=df_energy['slope_err'],
+                                    absolute_sigma=True)
+                    perr = np.sqrt(np.diag(pcov))
+                    fit_pars.append({'data_set': data_set, 'energy': energy, 'curvature': popt[0], 'baseline': popt[1],
+                                     'spread': df_energy['spread'].iloc[0], 'amp': df_energy['amp'].iloc[0],
+                                     'curve_err': perr[0], 'base_err': perr[1], 'color': color})
+                    x = np.linspace(0, 360, 100)
+                    ax.plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
+                    energy_ax.plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
+                    if popt[0] * popt[1] < 0:
+                        popt2, pcov2 = cf(quad_180_zparam, df_energy['divs'], df_energy['slope'],
+                                          sigma=df_energy['slope_err'],
+                                          absolute_sigma=True)
+                        perr2 = np.sqrt(np.diag(pcov2))
+                        fit_pars[-1].update({'zero_mag': popt2[0], 'zero_mag_err': perr2[0], 'baseline_z': popt2[1],
+                                             'base_z_err': perr2[1]})
+                        print(f'{data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\nz-c fit: {popt2}\n'
+                              f'z-c covariance: {pcov2}')
+                        print()
+                    else:
+                        print(f'No Zeros! {data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\n')
+                        print()
+                except RuntimeError as e:
+                    print(f'Fitting Error, skipping data_set {data_set}, {e}')
 
     title = ''
     if len(data_sets_plt) == 1:
@@ -1114,6 +1128,9 @@ def plot_slope_div_fits_simpars(df_fits):
                               marker='o', label=f'σ={spread}', color=color)
         for cl_type, cl_data in cl_type_data.items():
             df_set = df_spread[df_spread['data_set'].str.contains(cl_type)]
+            if df_set.size == 0 or any(np.isnan(df_set['baseline_z'])) or any(np.isinf(df_set['baseline_z'])) or \
+                    any(np.isnan(df_set['base_z_err'])) or any(np.isinf(df_set['base_z_err'])):
+                continue
             if cl_type == '_aclmul_':
                 lab = f'σ={spread:.1f}'
             else:
@@ -1156,8 +1173,10 @@ def plot_slope_div_fits_simpars(df_fits):
         df_spread = df_fits[df_fits['spread'] == spread]
         for cl_type, cl_data in cl_type_data.items():
             df_set = df_spread[df_spread['data_set'].str.contains(cl_type)]
-            avg_zero = np.mean(
-                [Measure(val, err) for val, err in zip(df_set['zero_mag'], df_set['zero_mag_err'])])
+            if df_set.size == 0:
+                continue
+            avg_zero = sum([Measure(val, err) for val, err in zip(df_set['zero_mag'], df_set['zero_mag_err'])])
+            avg_zero /= df_set['zero_mag'].size
             ax_base_zeros_lims = ax_base_zeros_gspread.get_xlim()
             ax_base_zeros_mid = (0 - ax_base_zeros_lims[0]) / np.diff(ax_base_zeros_lims)[0]
             if cl_type == '_aclmul_':
