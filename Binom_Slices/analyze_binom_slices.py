@@ -25,7 +25,7 @@ import scipy.interpolate as interp
 from scipy.interpolate import RectBivariateSpline
 from scipy.stats import norm
 
-from calc_binom_slices import get_name_amp_spread
+from calc_binom_slices import get_name_amp_spread, get_name_amp_spread_pm
 
 from multiprocessing import Pool
 import tqdm
@@ -358,7 +358,14 @@ def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_
                 else:
                     lab = data_sets_labels[data_set]
                 df_set = df_set.sort_values(by=['total_protons'])
-                data.append((df_set, lab, data_set, df_set['amp'].iloc[0], df_set['spread'].iloc[0], energy))
+                if '_clmultipm_' in data_set:
+                    ap, am = df_set['ampplus'].iloc[0], df_set['ampminus'].iloc[0]
+                    sp, sm = df_set['spreadplus'].iloc[0], df_set['spreadminus'].iloc[0]
+                    amp, spread = 0, 0
+                else:
+                    amp, spread = df_set['amp'].iloc[0], df_set['spread'].iloc[0]
+                    ap, am, sp, sm = 0, 0, 0, 0
+                data.append((df_set, lab, data_set, amp, spread, ap, am, sp, sm, energy))
 
     if plot:
         fig, ax = plt.subplots(figsize=(6.66, 5), dpi=144)
@@ -372,7 +379,7 @@ def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_
         color = iter(plt.cm.rainbow(np.linspace(0, 1, len(data))))
 
     fits = []
-    for i, (df, lab, data_set, amp, spread, energy) in enumerate(data):
+    for i, (df, lab, data_set, amp, spread, ap, am, sp, sm, energy) in enumerate(data):
         zo = len(data) - i + 4
         if plot:
             if data_sets_colors is None:
@@ -394,8 +401,8 @@ def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_
             popt, pcov = cf(line_yint1, df['total_protons'], df['val'], sigma=df['err'], absolute_sigma=True)
             popt = np.append(popt, 1)
             pcov = np.array(((pcov[0][0], 0), (0, 0)))
-            fits.append({'name': data_set, 'energy': energy, 'divs': div, 'amp': amp, 'spread': spread,
-                         'slope': popt[0], 'slope_err': np.sqrt(np.diag(pcov))[0],
+            fits.append({'name': data_set, 'energy': energy, 'divs': div, 'amp': amp, 'spread': spread, 'am': am,
+                         'slope': popt[0], 'slope_err': np.sqrt(np.diag(pcov))[0], 'ap': ap, 'sp': sp, 'sm': sm,
                          'int': popt[1], 'int_err': np.sqrt(np.diag(pcov))[1]})
             if plot:
                 ax.plot(df['total_protons'], line(df['total_protons'], *popt), ls='--', color=c)
@@ -812,7 +819,9 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
                     perr = np.sqrt(np.diag(pcov))
                     fit_pars.append({'data_set': data_set, 'energy': energy, 'curvature': popt[0], 'color': color,
                                      'curve_baseline': popt[1], 'curve_err': perr[0], 'curve_base_err': perr[1],
-                                     'spread': df_energy['spread'].iloc[0], 'amp': df_energy['amp'].iloc[0]})
+                                     'spread': df_energy['spread'].iloc[0], 'amp': df_energy['amp'].iloc[0],
+                                     'ap': df_energy['ap'].iloc[0], 'am': df_energy['am'].iloc[0],
+                                     'sp': df_energy['sp'].iloc[0], 'sm': df_energy['sm'].iloc[0]})
                     x = np.linspace(0, 360, 100)
                     ax.plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
                     energy_ax.plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)

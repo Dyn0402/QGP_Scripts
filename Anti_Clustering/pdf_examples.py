@@ -81,7 +81,7 @@ def run_dynamic_plus_minus():
     # phis = np.linspace(0, 2 * np.pi, 2)[:-1]
     phis = [3]
     sd_minus, sd_plus = 1.0, 0.2
-    amp_minus, amp_plus = -0.5, 0.2
+    amp_minus, amp_plus = -0.2, 0.2
     bin_width = np.radians(120)
     tracks = 2
     events = 100

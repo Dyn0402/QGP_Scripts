@@ -11,6 +11,8 @@ Created as QGP_Scripts/analyze_binom_slice_plotter
 import pandas as pd
 import pickle
 
+import itertools
+
 import tqdm
 
 from analyze_binom_slices import *
@@ -18,7 +20,8 @@ from analyze_binom_slices import *
 
 def main():
     # plot_sims()
-    get_sim_mapping()
+    # get_sim_mapping()
+    get_sim_mapping_pm()
     # plot_star_model()
     # plot_star_model_onediv()
     # plot_vs_cent()
@@ -242,6 +245,68 @@ def get_sim_mapping():
         plt.figure(fig_i)
         window_title = plt.gcf().canvas.manager.get_window_title()
         plt.savefig(f'{out_dir}{window_title}.png')
+
+    plt.show()
+
+
+def get_sim_mapping_pm():
+    plt.rcParams["figure.figsize"] = (6.66, 5)
+    plt.rcParams["figure.dpi"] = 144
+    base_path = '/media/ucla/Research/Results/Azimuth_Analysis/'
+    df_name = 'binom_slice_stats_simpm_test.csv'
+    pickle_map_name = 'binom_slice_sim_mapping'
+    out_dir = 'F:/Research/Results/Sim_Mapping/'
+    threads = 11
+    df_path = base_path + df_name
+    sim_sets = []
+
+    aps = ['02', '04']
+    ams = ['01', '02']
+    sps = ['02', '04']
+    sms = ['1', '2']
+    for (ap, am, sp, sm) in itertools.product(aps, ams, sps, sms):
+        sim_sets.append(f'sim_clmultipm_ampplus{ap}_ampminus{am}_spreadplus{sp}_spreadminus{sm}')
+
+    stat_plot = 'standard deviation'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
+    div_plt = 120
+    exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
+    cent_plt = 8
+    energies_plt = [39, 'sim']  # [7, 11, 19, 27, 39, 62, 'sim']  # [7, 11, 19, 27, 39, 62]
+    energies_fit = ['sim']
+    data_types_plt = ['divide']
+    samples = 72  # For title purposes only
+
+    data_sets_plt, data_sets_colors, data_sets_labels = [], None, None
+    data_sets_plt = []
+    data_sets_labels = {}
+    for sim_set in sim_sets:
+        ap, am, sp, sm = get_name_amp_spread_pm(sim_set)
+        label = f'A+={ap} σ+={round(sp, 2)} A-={am} σ-={round(sm, 2)}'
+        data_sets_labels.update({sim_set: label})
+
+    all_sets_plt = data_sets_plt + sim_sets[:]
+
+    df = pd.read_csv(df_path)
+    df = df.dropna()
+    print(pd.unique(df['name']))
+
+    df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
+
+    # stat_vs_protons(df, stat_plot, div_plt, cent_plt, [7, 'sim'], data_types_plt, all_sets_plt, plot=True, fit=False,
+    #                 data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
+
+    protons_fits = []
+    other_pars = (cent_plt, energies_fit, data_types_plt, all_sets_plt, None, False, True, False, None, None)
+    jobs = [(df, stat_plot, div, *other_pars) for div in np.setdiff1d(np.unique(df['divs']), exclude_divs)]
+    with Pool(threads) as pool:
+        for proton_fits_div in tqdm.tqdm(pool.istarmap(stat_vs_protons, jobs), total=len(jobs)):
+            protons_fits.append(proton_fits_div)
+    protons_fits = pd.concat(protons_fits, ignore_index=True)
+    print(protons_fits)
+    df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
+                                     data_sets_labels=data_sets_labels)
+    # print(df_fits)
+    sigma_fits = plot_slope_div_fits_simpars(df_fits)
 
     plt.show()
 
