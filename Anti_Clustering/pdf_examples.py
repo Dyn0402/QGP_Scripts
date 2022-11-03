@@ -16,12 +16,13 @@ from multiprocessing import Pool
 import tqdm
 import istarmap  # Needed for tqdm
 
-from ClustDist import ClustDist
+from ClustDist import ClustDist, ClustDistPlusMinus
 from sub_event_resample_algorithm import get_resamples4
 
 
 def main():
-    run_dynamic()
+    # run_dynamic()
+    run_dynamic_plus_minus()
     print('donzo')
 
 
@@ -69,6 +70,35 @@ def run_dynamic():
     # pdf = ClustDist(phis, sd, cl_amp, a=0, b=2 * np.pi, wrap_num=5)
     # plot_pdf(pdf, f'Track PDF\n{info_string}')
     # plt.show()
+
+    hist = sim_pdf_dynamic(sim_pars, events, tracks, bin_width, samples, threads, seed)
+    # plot_pdf(pdf, f'PDF {info_string}')
+    plot_sim(hist, bin_width, f'Azimuthal Partition Multiplicity Distribution\n{info_string}')
+    plt.show()
+
+
+def run_dynamic_plus_minus():
+    # phis = np.linspace(0, 2 * np.pi, 2)[:-1]
+    phis = [3]
+    sd_minus, sd_plus = 1.0, 0.2
+    amp_minus, amp_plus = -0.5, 0.2
+    bin_width = np.radians(120)
+    tracks = 2
+    events = 100
+    samples = 72
+    threads = 15
+    seed = 61
+
+    sim_pars = (amp_minus, amp_plus, sd_minus, sd_plus, 5)
+
+    # sim_event_dynamic_plot(sim_pars, tracks, bin_width, samples, seed)
+    # return
+
+    info_string = f'{int(np.rad2deg(bin_width) + 0.5)}° Partitions, {tracks} Tracks/Event, {events} Events, ' \
+                  f'{samples} Samples/Event'
+    pdf = ClustDistPlusMinus(phis, sd_minus, sd_plus, amp_minus, amp_plus, a=0, b=2 * np.pi, wrap_num=5)
+    plot_pdf(pdf, f'Track PDF\n{info_string}')
+    plt.show()
 
     hist = sim_pdf_dynamic(sim_pars, events, tracks, bin_width, samples, threads, seed)
     # plot_pdf(pdf, f'PDF {info_string}')
@@ -128,6 +158,37 @@ def sim_event_dynamic(sim_pars, n_tracks, bin_width, samples, seed):
         prob_dist.random_state = rng
         phis.append(prob_dist.rvs())
         prob_dist = ClustDist(phis, sd, cl_amp, a=0, b=2 * np.pi, wrap_num=wrap_num)
+    tracks = np.sort(phis)
+    hist = get_resamples4(tracks, bin_width, samples)
+    # print(hist)
+    # hist = np.histogram(hist, bins=np.arange(-0.5, n_tracks + 1.5, 1))[0]
+    # print(hist)
+
+    return hist
+
+
+def sim_pdf_dynamic_plus_minus(sim_pars, n_events, n_tracks, bin_width, samples, threads=1, seed=42):
+    hist = np.zeros(n_tracks + 1, dtype=int)
+    seeds = iter(np.random.SeedSequence(seed).spawn(n_events))
+    jobs = [(sim_pars, n_tracks, bin_width, samples, next(seeds)) for event_i in range(n_events)]
+
+    with Pool(threads) as pool:
+        for hist_i in tqdm.tqdm(pool.istarmap(sim_event_dynamic_plus_minus, jobs), total=len(jobs)):
+            hist += hist_i
+
+    return hist
+
+
+def sim_event_dynamic_plus_minus(sim_pars, n_tracks, bin_width, samples, seed):
+    rng = np.random.default_rng(seed)
+    amp_minus, amp_plus, sd_minus, sd_plus, wrap_num = sim_pars
+    phis = []
+    prob_dist = ClustDistPlusMinus(phis, sd_minus, sd_plus, amp_minus, amp_plus, a=0, b=2 * np.pi, wrap_num=wrap_num)
+    while len(phis) < n_tracks:
+        prob_dist.random_state = rng
+        phis.append(prob_dist.rvs())
+        prob_dist = ClustDistPlusMinus(phis, sd_minus, sd_plus, amp_minus, amp_plus, a=0, b=2 * np.pi,
+                                       wrap_num=wrap_num)
     tracks = np.sort(phis)
     hist = get_resamples4(tracks, bin_width, samples)
     # print(hist)
