@@ -157,17 +157,18 @@ def get_sim_mapping():
     base_path = 'F:/Research/Results/Azimuth_Analysis/'
     df_name = 'binom_slice_stats_cent8_sim.csv'
     pickle_map_name = 'binom_slice_sim_mapping'
+    out_dir = 'F:/Research/Results/Sim_Mapping/'
     threads = 11
     df_path = base_path + df_name
     sim_sets = []
 
     # amps = ['002', '004', '006', '008', '01']  # ['002', '006', '01']
     # spreads = ['02', '05', '06', '065', '07']
-    amps = ['0', '002', '004', '005', '006', '008', '01', '0125', '015', '0175', '02', '0225', '025', '03', '035', '04',
-            '045', '05', '06', '07', '08', '09', '1', '125', '15', '175', '2', '225', '25', '3', '35', '4', '45', '5',
-            '6', '7', '8', '9', '99']
-    spreads = ['001', '01', '02', '05', '06', '065', '07', '075', '08', '085', '09', '1', '15', '2', '225', '25',
-               '275', '3', '325', '35', '4']  # '375' missing '08' and '09'
+    # amps = ['002', '004', '005', '006', '008', '01', '0125', '015', '0175', '02', '0225', '025', '03', '035', '04']
+    # spreads = ['05', '06', '065', '07', '075', '08', '085', '09', '1', '15', '2']
+    amps = ['002', '004', '005', '006', '008', '01', '0125', '015', '0175', '02', '0225', '025', '03', '035', '04',
+            '045', '05', '06', '07', '08', '09', '1', '125', '15', '175', '2', '225', '25', '3']
+    spreads = ['05', '06', '065', '07', '075', '08', '085', '09', '1', '15', '2', '225', '25', '275', '3']
     for amp in amps:
         for spread in spreads:
             sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}')
@@ -194,7 +195,7 @@ def get_sim_mapping():
         elif '_aclmul_' in sim_set:
             label += 'Repulsive '
         amp, spread = get_name_amp_spread(sim_set)
-        label += f'A={amp} σ={spread}'
+        label += f'A={amp} σ={round(spread, 2)}'
         data_sets_labels.update({sim_set: label})
 
     all_sets_plt = data_sets_plt + sim_sets[:]
@@ -234,10 +235,13 @@ def get_sim_mapping():
     with open(f'{base_path}{pickle_map_name}', 'ab') as pickle_file:
         pickle.dump(interpolations, pickle_file)
 
-    with open(f'{base_path}{pickle_map_name}', 'rb') as pickle_file:
-        interps_pickle = pickle.load(pickle_file)
+    # with open(f'{base_path}{pickle_map_name}', 'rb') as pickle_file:
+    #     interps_pickle = pickle.load(pickle_file)
 
-    print(interpolations, '\n\n', interps_pickle)
+    for fig_i in plt.get_fignums():
+        plt.figure(fig_i)
+        window_title = plt.gcf().canvas.manager.get_window_title()
+        plt.savefig(f'{out_dir}{window_title}.png')
 
     plt.show()
 

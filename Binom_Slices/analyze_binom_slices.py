@@ -810,9 +810,9 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
                     popt, pcov = cf(quad_180, df_energy['divs'], df_energy['slope'], sigma=df_energy['slope_err'],
                                     absolute_sigma=True)
                     perr = np.sqrt(np.diag(pcov))
-                    fit_pars.append({'data_set': data_set, 'energy': energy, 'curvature': popt[0], 'baseline': popt[1],
-                                     'spread': df_energy['spread'].iloc[0], 'amp': df_energy['amp'].iloc[0],
-                                     'curve_err': perr[0], 'base_err': perr[1], 'color': color})
+                    fit_pars.append({'data_set': data_set, 'energy': energy, 'curvature': popt[0], 'color': color,
+                                     'curve_baseline': popt[1], 'curve_err': perr[0], 'curve_base_err': perr[1],
+                                     'spread': df_energy['spread'].iloc[0], 'amp': df_energy['amp'].iloc[0]})
                     x = np.linspace(0, 360, 100)
                     ax.plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
                     energy_ax.plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
@@ -821,8 +821,8 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
                                           sigma=df_energy['slope_err'],
                                           absolute_sigma=True)
                         perr2 = np.sqrt(np.diag(pcov2))
-                        fit_pars[-1].update({'zero_mag': popt2[0], 'zero_mag_err': perr2[0], 'baseline_z': popt2[1],
-                                             'base_z_err': perr2[1]})
+                        fit_pars[-1].update({'zero_mag': popt2[0], 'zero_mag_err': perr2[0], 'baseline': popt2[1],
+                                             'base_err': perr2[1]})
                         print(f'{data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\nz-c fit: {popt2}\n'
                               f'z-c covariance: {pcov2}')
                         print()
@@ -902,9 +902,10 @@ def plot_protons_fits_divs_cents(df, data_sets_plt, plot=False, fit=False, data_
                     popt, pcov = cf(quad_180, df_energy['divs'], df_energy['slope'], sigma=df_energy['slope_err'],
                                     absolute_sigma=True)
                     perr = np.sqrt(np.diag(pcov))
-                    fit_pars.append({'data_set': data_set, 'energy': energy, 'curvature': popt[0], 'baseline': popt[1],
-                                     'spread': df_energy['spread'].iloc[0], 'amp': df_energy['amp'].iloc[0],
-                                     'curve_err': perr[0], 'base_err': perr[1], 'color': color, 'cent': cent})
+                    fit_pars.append({'data_set': data_set, 'energy': energy, 'curvature': popt[0], 'color': color,
+                                     'curve_base': popt[1], 'curve_err': perr[0], 'curve_base_err': perr[1],
+                                     'cent': cent, 'spread': df_energy['spread'].iloc[0],
+                                     'amp': df_energy['amp'].iloc[0]})
                     if plot:
                         x = np.linspace(0, 360, 100)
                         ax.plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
@@ -913,8 +914,8 @@ def plot_protons_fits_divs_cents(df, data_sets_plt, plot=False, fit=False, data_
                                           sigma=df_energy['slope_err'],
                                           absolute_sigma=True)
                         perr2 = np.sqrt(np.diag(pcov2))
-                        fit_pars[-1].update({'zero_mag': popt2[0], 'zero_mag_err': perr2[0], 'baseline_z': popt2[1],
-                                             'base_z_err': perr2[1]})
+                        fit_pars[-1].update({'zero_mag': popt2[0], 'zero_mag_err': perr2[0], 'baseline': popt2[1],
+                                             'base_err': perr2[1]})
                         print(f'{data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\nz-c fit: {popt2}\n'
                               f'z-c covariance: {pcov2}')
                         print()
@@ -936,24 +937,11 @@ def plot_protons_fits_divs_cents(df, data_sets_plt, plot=False, fit=False, data_
 
 
 def plot_slope_div_fits(df_fits, data_sets_colors=None, data_sets_labels=None):
-    fig_curve_energy, ax_curve_energy = plt.subplots()
-    ax_curve_energy.set_xlabel('Energy (GeV)')
-    ax_curve_energy.set_ylabel('Curvature')
-    ax_curve_energy.axhline(0, color='black')
-    fig_curve_energy.canvas.manager.set_window_title('Slope Curvature vs Energy')
-
     fig_base_energy, ax_base_energy = plt.subplots()
     ax_base_energy.set_xlabel('Energy (GeV)')
     ax_base_energy.set_ylabel('Baseline')
     ax_base_energy.axhline(0, color='black')
     fig_base_energy.canvas.manager.set_window_title('Slope Baseline vs Energy')
-
-    fig_base_curve, ax_base_curve = plt.subplots()
-    ax_base_curve.set_xlabel('Curvature')
-    ax_base_curve.set_ylabel('Baseline')
-    ax_base_curve.axvline(0, color='black')
-    ax_base_curve.axhline(0, color='black')
-    fig_base_curve.canvas.manager.set_window_title('Slope Baseline vs Curvature')
 
     fig_zeros_energy, ax_zeros_energy = plt.subplots()
     ax_zeros_energy.set_xlabel('Energy (GeV)')
@@ -961,18 +949,12 @@ def plot_slope_div_fits(df_fits, data_sets_colors=None, data_sets_labels=None):
     ax_zeros_energy.axhline(0, color='black')
     fig_zeros_energy.canvas.manager.set_window_title('Slope Zeros vs Energy')
 
-    fig_basez_energy, ax_basez_energy = plt.subplots()
-    ax_basez_energy.set_xlabel('Energy (GeV)')
-    ax_basez_energy.set_ylabel('Baseline_z')
-    ax_basez_energy.axhline(0, color='black')
-    fig_basez_energy.canvas.manager.set_window_title('Slope Baseline_z vs Energy')
-
     fig_basez_zeros, ax_basez_zeros = plt.subplots()
     ax_basez_zeros.set_xlabel('Zeros')
-    ax_basez_zeros.set_ylabel('Baseline_z')
+    ax_basez_zeros.set_ylabel('Baseline')
     ax_basez_zeros.axvline(0, color='black')
     ax_basez_zeros.axhline(0, color='black')
-    fig_basez_zeros.canvas.manager.set_window_title('Slope Baseline_z vs Zeros')
+    fig_basez_zeros.canvas.manager.set_window_title('Slope Baseline vs Zeros')
 
     colors = ['black', 'red', 'blue', 'green', 'purple', 'orange']
     markers = ['o', 's', '^', 'P', 'p', '2']
@@ -990,56 +972,29 @@ def plot_slope_div_fits(df_fits, data_sets_colors=None, data_sets_labels=None):
 
         df_data_set = df_fits[df_fits['data_set'] == data_set]
 
-        ax_curve_energy.errorbar(df_data_set['energy'], df_data_set['curvature'], yerr=df_data_set['curve_err'],
-                                 ls='none', marker='o', label=lab, color=color)
-
         ax_base_energy.errorbar(df_data_set['energy'], df_data_set['baseline'], yerr=df_data_set['base_err'], ls='none',
                                 marker='o', label=lab, color=color, alpha=0.8)
 
         ax_zeros_energy.errorbar(df_data_set['energy'], df_data_set['zero_mag'], yerr=df_data_set['zero_mag_err'],
                                  ls='none', marker='o', label=lab, color=color)
 
-        ax_basez_energy.errorbar(df_data_set['energy'], df_data_set['baseline_z'], yerr=df_data_set['base_z_err'],
-                                 ls='none', marker='o', label=lab, color=color, alpha=0.8)
-
         energies = pd.unique(df_data_set['energy'])
         for energy_index, energy in enumerate(energies):
             df_energy = df_data_set[df_data_set['energy'] == energy]
-            ax_base_curve.errorbar(df_energy['curvature'], df_energy['baseline'], xerr=df_energy['curve_err'],
-                                   yerr=df_energy['base_err'], ls='none', marker=markers[data_set_index % len(markers)],
-                                   label=f'{lab}_{energy}GeV', color=colors[energy_index % len(colors)])
-            ax_basez_zeros.errorbar(df_energy['zero_mag'], df_energy['baseline_z'], xerr=df_energy['zero_mag_err'],
-                                    yerr=df_energy['base_z_err'], ls='none', color=colors[energy_index % len(colors)],
+            ax_basez_zeros.errorbar(df_energy['zero_mag'], df_energy['baseline'], xerr=df_energy['zero_mag_err'],
+                                    yerr=df_energy['base_err'], ls='none', color=colors[energy_index % len(colors)],
                                     marker=markers[data_set_index % len(markers)], label=f'{lab}_{energy}GeV')
 
-    ax_curve_energy.legend()
     ax_base_energy.legend()
-    ax_base_curve.legend()
     ax_zeros_energy.legend()
-    ax_basez_energy.legend()
     ax_basez_zeros.legend()
 
-    fig_base_curve.tight_layout()
     fig_base_energy.tight_layout()
-    fig_curve_energy.tight_layout()
     fig_zeros_energy.tight_layout()
-    fig_basez_energy.tight_layout()
     fig_basez_zeros.tight_layout()
 
 
 def plot_slope_div_fits_simpars(df_fits):
-    fig_curve_amp, ax_curve_amp = plt.subplots()
-    ax_curve_amp.set_xlabel('Amplitude')
-    ax_curve_amp.set_ylabel('Curvature')
-    ax_curve_amp.axhline(0, color='black')
-    fig_curve_amp.canvas.manager.set_window_title('Slope Curvature vs Amplitude')
-
-    fig_curve_spread, ax_curve_spread = plt.subplots()
-    ax_curve_spread.set_xlabel('Spread')
-    ax_curve_spread.set_ylabel('Curvature')
-    ax_curve_spread.axhline(0, color='black')
-    fig_curve_spread.canvas.manager.set_window_title('Slope Curvature vs Spread')
-
     fig_base_amp, ax_base_amp = plt.subplots()
     ax_base_amp.set_xlabel('Amplitude')
     ax_base_amp.set_ylabel('Baseline')
@@ -1060,20 +1015,6 @@ def plot_slope_div_fits_simpars(df_fits):
     ax_base_spread.axhline(0, color='black')
     fig_base_spread.canvas.manager.set_window_title('Slope Baseline vs Spread')
 
-    fig_base_curve_gamp, ax_base_curve_gamp = plt.subplots()
-    ax_base_curve_gamp.set_xlabel('Curvature')
-    ax_base_curve_gamp.set_ylabel('Baseline')
-    ax_base_curve_gamp.axvline(0, color='black')
-    ax_base_curve_gamp.axhline(0, color='black')
-    fig_base_curve_gamp.canvas.manager.set_window_title('Slope Baseline vs Curvature Amp Sets')
-
-    fig_base_curve_gspread, ax_base_curve_gspread = plt.subplots()
-    ax_base_curve_gspread.set_xlabel('Curvature')
-    ax_base_curve_gspread.set_ylabel('Baseline')
-    ax_base_curve_gspread.axvline(0, color='black')
-    ax_base_curve_gspread.axhline(0, color='black')
-    fig_base_curve_gspread.canvas.manager.set_window_title('Slope Baseline vs Curvature Spread Sets')
-
     fig_zeros_amp, ax_zeros_amp = plt.subplots()
     ax_zeros_amp.set_xlabel('Amplitude')
     ax_zeros_amp.set_ylabel('Zeros')
@@ -1087,18 +1028,18 @@ def plot_slope_div_fits_simpars(df_fits):
     fig_zeros_spread.canvas.manager.set_window_title('Slope Zeros vs Spread')
 
     fig_base_zeros_gamp, ax_base_zeros_gamp = plt.subplots()
-    ax_base_zeros_gamp.set_ylabel('Zero Magnitude')
+    ax_base_zeros_gamp.set_ylabel('Zeros')
     ax_base_zeros_gamp.set_xlabel('Baseline')
     ax_base_zeros_gamp.axvline(0, color='black')
     ax_base_zeros_gamp.axhline(0, color='black')
-    fig_base_zeros_gamp.canvas.manager.set_window_title('Slope Baseline vs Zero Amplitude Amp Sets')
+    fig_base_zeros_gamp.canvas.manager.set_window_title('Slope Baseline vs Zeros Amp Sets')
 
     fig_base_zeros_gspread, ax_base_zeros_gspread = plt.subplots()
-    ax_base_zeros_gspread.set_ylabel('Zero Magnitude')
+    ax_base_zeros_gspread.set_ylabel('Zeros')
     ax_base_zeros_gspread.set_xlabel('Baseline')
     ax_base_zeros_gspread.axvline(0, color='black')
     ax_base_zeros_gspread.axhline(0, color='black')
-    fig_base_zeros_gspread.canvas.manager.set_window_title('Slope Baseline vs Zero Amplitude Spread Sets')
+    fig_base_zeros_gspread.canvas.manager.set_window_title('Slope Baseline vs Zeros Spread Sets')
 
     amps = pd.unique(df_fits['amp'])
     spreads = pd.unique(df_fits['spread'])
@@ -1107,15 +1048,11 @@ def plot_slope_div_fits_simpars(df_fits):
 
     for amp in amps:
         df_amp = df_fits[df_fits['amp'] == amp]
-        ax_curve_spread.errorbar(df_amp['spread'], df_amp['curvature'], yerr=df_amp['curve_err'], ls='none', marker='o',
-                                 label=f'A={amp}')
         ax_base_spread.errorbar(df_amp['spread'], df_amp['baseline'], yerr=df_amp['base_err'], ls='none', marker='o',
                                 label=f'A={amp}')
-        ax_base_curve_gamp.errorbar(df_amp['baseline'], df_amp['curvature'], xerr=df_amp['base_err'],
-                                    yerr=df_amp['curve_err'], ls='none', marker='o', label=f'A={amp}')
         ax_zeros_spread.errorbar(df_amp['spread'], df_amp['zero_mag'], yerr=df_amp['zero_mag_err'], ls='none',
                                  marker='o', label=f'A={amp}')
-        ax_base_zeros_gamp.errorbar(df_amp['baseline_z'], df_amp['zero_mag'], xerr=df_amp['base_z_err'],
+        ax_base_zeros_gamp.errorbar(df_amp['baseline'], df_amp['zero_mag'], xerr=df_amp['base_err'],
                                     yerr=df_amp['zero_mag_err'], ls='none', marker='o', label=f'A={amp}')
 
     sigma_fits = []
@@ -1124,20 +1061,18 @@ def plot_slope_div_fits_simpars(df_fits):
     for spread in spreads:
         color = next(colors)
         df_spread = df_fits[df_fits['spread'] == spread]
-        ax_curve_amp.errorbar(df_spread['amp'], df_spread['curvature'], yerr=df_spread['curve_err'], ls='none',
-                              marker='o', label=f'σ={spread}', color=color)
         for cl_type, cl_data in cl_type_data.items():
             df_set = df_spread[df_spread['data_set'].str.contains(cl_type)]
-            if df_set.size == 0 or any(np.isnan(df_set['baseline_z'])) or any(np.isinf(df_set['baseline_z'])) or \
-                    any(np.isnan(df_set['base_z_err'])) or any(np.isinf(df_set['base_z_err'])):
+            if df_set.size == 0 or any(np.isnan(df_set['baseline'])) or any(np.isinf(df_set['baseline'])) or \
+                    any(np.isnan(df_set['base_err'])) or any(np.isinf(df_set['base_err'])):
                 continue
             if cl_type == '_aclmul_':
-                lab = f'σ={spread:.1f}'
+                lab = f'σ={round(spread, 2)}'
             else:
                 lab = None
-            ax_base_amp.errorbar(df_set['amp'], df_set['baseline_z'], yerr=df_set['base_z_err'], ls='none',
+            ax_base_amp.errorbar(df_set['amp'], df_set['baseline'], yerr=df_set['base_err'], ls='none',
                                  marker='o', label=lab, color=color)
-            popt, pcov = cf(line_yint0, df_set['amp'], df_set['baseline_z'], sigma=df_set['base_z_err'],
+            popt, pcov = cf(line_yint0, df_set['amp'], df_set['baseline'], sigma=df_set['base_err'],
                             absolute_sigma=True)
             perr = np.sqrt(np.diag(pcov))
             x_vals = np.array([0, max(df_set['amp'])])
@@ -1145,11 +1080,11 @@ def plot_slope_div_fits_simpars(df_fits):
             ax_base_amp.fill_between(x_vals, line_yint0(x_vals, popt[0] - perr[0]),
                                      line_yint0(x_vals, popt[0] + perr[0]), color=color, alpha=0.3)
 
-            ax_amp_base.errorbar(df_set['baseline_z'], df_set['amp'], xerr=df_set['base_z_err'], ls='none',
+            ax_amp_base.errorbar(df_set['baseline'], df_set['amp'], xerr=df_set['base_err'], ls='none',
                                  marker='o', label=lab, color=color)
             inv_slope = 1 / Measure(popt[0], perr[0])
-            x_vals = np.array([0, max(df_set['baseline_z']) * 1.1]) if cl_type == '_clmul_' \
-                else np.array([min(df_set['baseline_z']) * 1.1, 0])
+            x_vals = np.array([0, max(df_set['baseline']) * 1.1]) if cl_type == '_clmul_' \
+                else np.array([min(df_set['baseline']) * 1.1, 0])
             ax_amp_base.plot(x_vals, line_yint0(x_vals, inv_slope.val), ls=cl_data['line'], color=color)
             ax_amp_base.fill_between(x_vals, line_yint0(x_vals, inv_slope.val - inv_slope.err),
                                      line_yint0(x_vals, inv_slope.val + inv_slope.err), color=color, alpha=0.3)
@@ -1160,7 +1095,7 @@ def plot_slope_div_fits_simpars(df_fits):
                                   marker='o', label=lab, color=color)
             ax_zeros_amp.axhspan(avg_zero.val - avg_zero.err, avg_zero.val + avg_zero.err, alpha=0.3, color=color)
             ax_zeros_amp.axhline(avg_zero.val, ls=cl_data['line'], color=color)
-            ax_base_zeros_gspread.errorbar(df_set['baseline_z'], df_set['zero_mag'], xerr=df_set['base_z_err'],
+            ax_base_zeros_gspread.errorbar(df_set['baseline'], df_set['zero_mag'], xerr=df_set['base_err'],
                                            yerr=df_set['zero_mag_err'], ls='none', marker='o', label=lab,
                                            color=color)
             sigma_fits.append({'clust_type': cl_data['name'], 'spread': spread, 'zero_mean_val': avg_zero.val,
@@ -1188,29 +1123,17 @@ def plot_slope_div_fits_simpars(df_fits):
                                               xmin=ax_base_zeros_mid, color=color)
                 ax_base_zeros_gspread.axhline(avg_zero.val, ls=cl_data['line'], color=color, xmin=ax_base_zeros_mid)
 
-        ax_base_curve_gspread.errorbar(df_spread['baseline'], df_spread['curvature'], xerr=df_spread['base_err'],
-                                       yerr=df_spread['curve_err'], ls='none', marker='o', label=f'σ={spread}',
-                                       color=color)
-
-    ax_curve_amp.legend()
-    ax_curve_spread.legend()
     ax_base_amp.legend()
     ax_amp_base.legend()
     ax_base_spread.legend()
-    ax_base_curve_gamp.legend()
-    ax_base_curve_gspread.legend()
     ax_zeros_amp.legend()
     ax_zeros_spread.legend()
     ax_base_zeros_gamp.legend()
     ax_base_zeros_gspread.legend()
 
-    fig_curve_amp.tight_layout()
-    fig_curve_spread.tight_layout()
     fig_base_amp.tight_layout()
     fig_amp_base.tight_layout()
     fig_base_spread.tight_layout()
-    fig_base_curve_gamp.tight_layout()
-    fig_base_curve_gspread.tight_layout()
     fig_zeros_amp.tight_layout()
     fig_zeros_spread.tight_layout()
     fig_base_zeros_gamp.tight_layout()
@@ -1493,22 +1416,22 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
                          df_energy['cent']]
             ls = 'none' if fit else '-'
             if colors is None and color is None:
-                ax_base.errorbar(x, df_energy['baseline_z'], xerr=x_err, yerr=df_energy['base_z_err'], marker='o',
+                ax_base.errorbar(x, df_energy['baseline'], xerr=x_err, yerr=df_energy['base_err'], marker='o',
                                  ls=ls, label=lab)
                 ax_zeros.errobar(x, df_energy['zero_mag'], xerr=x_err, yerr=df_energy['zero_mag_err'], marker='o',
                                  ls='none', label=lab)
             else:
-                ax_base.errorbar(x, df_energy['baseline_z'], xerr=x_err, yerr=df_energy['base_z_err'], marker='o',
+                ax_base.errorbar(x, df_energy['baseline'], xerr=x_err, yerr=df_energy['base_err'], marker='o',
                                  ls=ls, color=color, label=lab)
                 ax_zeros.errorbar(x, df_energy['zero_mag'], xerr=x_err, yerr=df_energy['zero_mag_err'], marker='o',
                                   ls='none', color=color, label=lab)
-            bases.extend(list(df_energy['baseline_z']))
+            bases.extend(list(df_energy['baseline']))
             refs.extend(list(x))
             if fit:
                 p0 = [-0.02, 0.0001]
                 x_fit = np.linspace(1, 800, 2000)
                 odr_model = odr.Model(inv_sqrtx_odr)
-                odr_data = odr.RealData(x, df_energy['baseline_z'], sx=x_err, sy=df_energy['base_z_err'])
+                odr_data = odr.RealData(x, df_energy['baseline'], sx=x_err, sy=df_energy['base_err'])
                 inv_sqrt_odr = odr.ODR(odr_data, odr_model, beta0=p0, maxit=500)
                 odr_out = inv_sqrt_odr.run()
                 ax_base.axhline(odr_out.beta[1], color=color, ls='-')
@@ -1524,7 +1447,7 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
                 p0 = [-0.02, 0.0001, 1]
                 x_fit = np.linspace(1, 800, 2000)
                 odr_model = odr.Model(inv_invxpow_odr)
-                odr_data = odr.RealData(x, df_energy['baseline_z'], sx=x_err, sy=df_energy['base_z_err'])
+                odr_data = odr.RealData(x, df_energy['baseline'], sx=x_err, sy=df_energy['base_err'])
                 inv_sqrt_odr = odr.ODR(odr_data, odr_model, beta0=p0, maxit=500)
                 odr_out = inv_sqrt_odr.run()
                 ax_base.axhline(odr_out.beta[1], color=color, ls=':')
@@ -1539,7 +1462,7 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
                 # p0 = [-0.02, 1]
                 # x_fit = np.linspace(1, 800, 2000)
                 # odr_model = odr.Model(inv_invxpow_noc_odr)
-                # odr_data = odr.RealData(x, df_energy['baseline_z'], sx=x_err, sy=df_energy['base_z_err'])
+                # odr_data = odr.RealData(x, df_energy['baseline'], sx=x_err, sy=df_energy['base_err'])
                 # inv_sqrt_odr = odr.ODR(odr_data, odr_model, beta0=p0, maxit=500)
                 # odr_out = inv_sqrt_odr.run()
                 # ax_base.plot(x_fit, inv_invxpow_noc_odr(odr_out.beta, x_fit), alpha=0.6, color=color, ls=':')
@@ -1548,7 +1471,7 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
                 p0 = [-0.02, 0.0001]
                 x_fit = np.linspace(1, 800, 2000)
                 odr_model = odr.Model(inv_invx_odr)
-                odr_data = odr.RealData(x, df_energy['baseline_z'], sx=x_err, sy=df_energy['base_z_err'])
+                odr_data = odr.RealData(x, df_energy['baseline'], sx=x_err, sy=df_energy['base_err'])
                 inv_sqrt_odr = odr.ODR(odr_data, odr_model, beta0=p0, maxit=500)
                 odr_out = inv_sqrt_odr.run()
                 ax_base.axhline(odr_out.beta[1], color=color, ls='--')
@@ -1566,8 +1489,8 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
                 # colors_fit = iter(plt.cm.rainbow(np.linspace(0, 1, len(fit_index_highs))))
                 # for i in fit_index_highs:
                 #     color_fit = next(colors_fit)
-                #     odr_data = odr.RealData(x[:i], df_energy['baseline_z'][:i], sx=x_err[:i],
-                #                             sy=df_energy['base_z_err'][:i])
+                #     odr_data = odr.RealData(x[:i], df_energy['baseline'][:i], sx=x_err[:i],
+                #                             sy=df_energy['base_err'][:i])
                 #     inv_sqrt_odr = odr.ODR(odr_data, odr_model, beta0=p0, maxit=500)
                 #     odr_out = inv_sqrt_odr.run()
                 #     ax_base.plot(x_fit, inv_sqrtx(x_fit, *odr_out.beta), alpha=0.6, color=color_fit)
