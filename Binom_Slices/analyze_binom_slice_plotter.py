@@ -27,6 +27,7 @@ def main():
     # plot_vs_cent()
     # plot_vs_cent_nofit()
     # plot_vs_cent_fittest()
+    # plot_all_zero_base()
     print('donzo')
 
 
@@ -35,6 +36,7 @@ def plot_star_model():
     plt.rcParams["figure.dpi"] = 144
     base_path = 'F:/Research/Results/Azimuth_Analysis/'
     df_name = 'binom_slice_stats_cent8_no_sim.csv'
+    df_fits_out_name = 'Base_Zero_Fits/cf_fits.csv'
     df_path = base_path + df_name
     sim_sets = []
 
@@ -46,9 +48,13 @@ def plot_star_model():
     data_types_plt = ['divide']
     samples = 72  # For title purposes only
 
-    data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def', 'cf_resample_def', 'cfev_resample_def']
-    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple']))
-    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST', 'MUSIC+FIST EV']))
+    # data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def', 'cf_resample_def', 'cfev_resample_def']
+    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple']))
+    # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST', 'MUSIC+FIST EV']))
+
+    data_sets_plt = ['cf_resample_def', 'cfev_resample_def']
+    data_sets_colors = dict(zip(data_sets_plt, ['blue', 'purple']))
+    data_sets_labels = dict(zip(data_sets_plt, ['MUSIC+FIST', 'MUSIC+FIST EV']))
 
     all_sets_plt = data_sets_plt + sim_sets[:]
 
@@ -73,6 +79,7 @@ def plot_star_model():
     print(pd.unique(protons_fits['spread']))
     df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
                                      data_sets_labels=data_sets_labels)
+    df_fits.to_csv(f'{base_path}{df_fits_out_name}', index=False)
     # print(df_fits)
     plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
     # plot_slope_div_fits_simpars(df_fits)
@@ -161,7 +168,8 @@ def get_sim_mapping():
     df_name = 'binom_slice_stats_cent8_sim.csv'
     pickle_map_name = 'binom_slice_sim_mapping'
     out_dir = 'F:/Research/Results/Sim_Mapping/'
-    threads = 11
+    df_fits_out_name = 'Base_Zero_Fits/sim.csv'
+    threads = 15
     df_path = base_path + df_name
     sim_sets = []
 
@@ -170,8 +178,9 @@ def get_sim_mapping():
     # amps = ['002', '004', '005', '006', '008', '01', '0125', '015', '0175', '02', '0225', '025', '03', '035', '04']
     # spreads = ['05', '06', '065', '07', '075', '08', '085', '09', '1', '15', '2']
     amps = ['002', '004', '005', '006', '008', '01', '0125', '015', '0175', '02', '0225', '025', '03', '035', '04',
-            '045', '05', '06', '07', '08', '09', '1', '125', '15', '175', '2', '225', '25', '3']
-    spreads = ['05', '06', '065', '07', '075', '08', '085', '09', '1', '15', '2', '225', '25', '275', '3']
+            '045', '05', '06', '07', '08', '09', '1', '125', '15', '175', '2', '225', '25', '3', '35', '4', '45', '5']
+    spreads = ['01', '02', '05', '06', '065', '07', '075', '08', '085', '09', '1', '15', '2', '225', '25', '275', '3',
+               '325', '35', '375', '4']
     for amp in amps:
         for spread in spreads:
             sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}')
@@ -231,6 +240,8 @@ def get_sim_mapping():
     print(pd.unique(protons_fits['spread']))
     df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
                                      data_sets_labels=data_sets_labels)
+    df_fits.to_csv(f'{base_path}{df_fits_out_name}', index=False)
+
     # print(df_fits)
     sigma_fits = plot_slope_div_fits_simpars(df_fits)
     interpolations = plot_sigma_fits_interp(sigma_fits)
@@ -252,18 +263,19 @@ def get_sim_mapping():
 def get_sim_mapping_pm():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
-    base_path = '/media/ucla/Research/Results/Azimuth_Analysis/'
+    base_path = 'F:/Research/Results/Azimuth_Analysis/'
     df_name = 'binom_slice_stats_simpm_test.csv'
     pickle_map_name = 'binom_slice_sim_mapping'
     out_dir = 'F:/Research/Results/Sim_Mapping/'
+    df_fits_out_name = 'Base_Zero_Fits/simpm.csv'
     threads = 11
     df_path = base_path + df_name
     sim_sets = []
 
-    aps = ['02', '04']
-    ams = ['01', '02']
-    sps = ['02', '04']
-    sms = ['1', '2']
+    aps = ['04']  # ['02', '04']
+    ams = ['02']  # ['01', '02']
+    sps = ['02', '04']  # ['02', '04']
+    sms = ['2']  # ['1', '2']
     for (ap, am, sp, sm) in itertools.product(aps, ams, sps, sms):
         sim_sets.append(f'sim_clmultipm_ampplus{ap}_ampminus{am}_spreadplus{sp}_spreadminus{sm}')
 
@@ -296,8 +308,10 @@ def get_sim_mapping_pm():
     #                 data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
 
     protons_fits = []
-    other_pars = (cent_plt, energies_fit, data_types_plt, all_sets_plt, None, False, True, False, None, None)
+    other_pars = (cent_plt, energies_fit, data_types_plt, all_sets_plt, None, True, True, False, None, None)
     jobs = [(df, stat_plot, div, *other_pars) for div in np.setdiff1d(np.unique(df['divs']), exclude_divs)]
+    stat_vs_protons(*jobs[0])
+    stat_vs_protons(*jobs[1])
     with Pool(threads) as pool:
         for proton_fits_div in tqdm.tqdm(pool.istarmap(stat_vs_protons, jobs), total=len(jobs)):
             protons_fits.append(proton_fits_div)
@@ -305,6 +319,7 @@ def get_sim_mapping_pm():
     print(protons_fits)
     df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
                                      data_sets_labels=data_sets_labels)
+    df_fits.to_csv(f'{base_path}{df_fits_out_name}', index=False)
     # print(df_fits)
     sigma_fits = plot_slope_div_fits_simpars(df_fits)
 
@@ -362,6 +377,7 @@ def plot_vs_cent():
     # base_path = '/home/dylan/Research/Results/Azimuth_Analysis/'
     df_name = 'binom_slice_stats_cents.csv'
     df_path = base_path + df_name
+    df_fits_out_name = 'Base_Zero_Fits/bes_ampt_cents.csv'
 
     cent_ref_name = 'mean_cent_ref.csv'
     cent_ref_df = pd.read_csv(f'{base_path}{cent_ref_name}')
@@ -426,6 +442,8 @@ def plot_vs_cent():
                                                data_sets_labels=data_sets_labels, exclude_divs=exclude_divs)
         # print(f'{energy}GeV {df_fit}')
         df_divs_fits = pd.concat([df_divs_fits, df_fits])
+
+    df_divs_fits.to_csv(f'{base_path}{df_fits_out_name}', index=False)
 
     plot_protons_fits_vs_cent(df_onediv_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
                               data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,
@@ -547,6 +565,44 @@ def plot_vs_cent_fittest():
     plot_div_fits_vs_cent(df_fits, data_sets_plt, data_sets_colors=data_sets_colors,
                           data_sets_labels=data_sets_labels, title=f'{energy_plt}GeV', fit=True, cent_ref=cent_ref_df,
                           ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
+
+    plt.show()
+
+
+def plot_all_zero_base():
+    plt.rcParams["figure.figsize"] = (6.66, 5)
+    plt.rcParams["figure.dpi"] = 144
+    base_path = 'F:/Research/Results/Azimuth_Analysis/Base_Zero_Fits/'
+    # base_path = '/home/dylan/Research/Results/Azimuth_Analysis/'
+    df_names = ['cf_fits.csv', 'sim.csv', 'simpm.csv', 'bes_ampt_cents.csv']  #
+    df_paths = [base_path + df_name for df_name in df_names]
+
+    stat_plot = 'standard deviation'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
+    div_plt = 60
+    divs_all = [60, 72, 89, 90, 180, 240, 270, 288, 300]
+    exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
+    cents = [1, 2, 3, 4, 5, 6, 7, 8]
+    energies = [7, 11, 19, 27, 39, 62, 'sim']
+    data_types_plt = ['divide']
+
+    # data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def', 'cfev_resample_def', 'sim_aclmul_']
+    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'purple', 'blue']))
+    # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'CFEV', 'Simulation']))
+
+    data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def', 'cfev_resample_def', 'sim_aclmul_',
+                     'sim_clmultipm_']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'purple', 'blue', 'green']))
+    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'CFEV', 'Simulation', 'Simulation 2 Gaus']))
+
+    df_fits = pd.DataFrame()
+    for df_path in df_paths:
+        df = pd.read_csv(df_path)
+        df = df.dropna()
+        df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['data_set'] else row['energy'], axis=1)
+        print(f'{df_path}\n{df.head()}\n\n')
+        df_fits = pd.concat([df_fits, df])
+
+    plot_base_zeros(df_fits, data_sets_plt, data_sets_labels, data_sets_colors)
 
     plt.show()
 

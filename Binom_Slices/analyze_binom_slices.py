@@ -299,6 +299,10 @@ def quad_180_zparam(x, z, c):
     return -c * ((x - 180) / z) ** 2 + c
 
 
+def double_quad_180_zparam(x, z1, c1, z2, c2):
+    return quad_180_zparam(x, z1, c1) * quad_180_zparam(x, z2, c2)
+
+
 def inv_sqrtx(x, a, c):
     return a / np.sqrt(x) + c
 
@@ -401,8 +405,8 @@ def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_
             popt, pcov = cf(line_yint1, df['total_protons'], df['val'], sigma=df['err'], absolute_sigma=True)
             popt = np.append(popt, 1)
             pcov = np.array(((pcov[0][0], 0), (0, 0)))
-            fits.append({'name': data_set, 'energy': energy, 'divs': div, 'amp': amp, 'spread': spread, 'am': am,
-                         'slope': popt[0], 'slope_err': np.sqrt(np.diag(pcov))[0], 'ap': ap, 'sp': sp, 'sm': sm,
+            fits.append({'name': data_set, 'energy': energy, 'divs': div, 'amp': amp, 'spread': spread, 'ap': ap,
+                         'am': am, 'sp': sp, 'sm': sm, 'slope': popt[0], 'slope_err': np.sqrt(np.diag(pcov))[0],
                          'int': popt[1], 'int_err': np.sqrt(np.diag(pcov))[1]})
             if plot:
                 ax.plot(df['total_protons'], line(df['total_protons'], *popt), ls='--', color=c)
@@ -825,6 +829,12 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
                     x = np.linspace(0, 360, 100)
                     ax.plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
                     energy_ax.plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
+                    # p0 = [*popt, -popt[0], popt[1]]
+                    # popt3, pcov3 = cf(double_quad_180_zparam, df_energy['divs'], df_energy['slope'], p0=p0,
+                    #                   sigma=df_energy['slope_err'], absolute_sigma=True)
+                    # perr3 = np.sqrt(np.diag(pcov))
+                    # ax.plot(x, double_quad_180_zparam(x, *popt3), ls='--', color=color, alpha=0.65)
+                    # energy_ax.plot(x, double_quad_180_zparam(x, *popt3), ls='--', color=color, alpha=0.65)
                     if popt[0] * popt[1] < 0:
                         popt2, pcov2 = cf(quad_180_zparam, df_energy['divs'], df_energy['slope'],
                                           sigma=df_energy['slope_err'],
@@ -1879,6 +1889,43 @@ def plot_fits(df_fits):
         ax_slope.set_ylabel('Slope')
         ax_slope.grid()
         fig_slope.tight_layout()
+
+
+def plot_base_zeros(df, data_sets_plt, data_sets_labels, data_sets_colors):
+    fig_base_amp, ax_base_amp = plt.subplots()
+    fig_amp_base, ax_amp_base = plt.subplots()
+
+    ax_base_amp.axvline(0, color='black')
+    ax_amp_base.axhline(0, color='black')
+
+    ax_base_amp.grid()
+    ax_amp_base.grid()
+
+    for data_set in data_sets_plt:
+        df_set = df[df['data_set'].str.contains(data_set)]
+        print(f'{data_set}: {df_set.size}')
+        ax_base_amp.errorbar(df_set['zero_mag'], df_set['baseline'], yerr=df_set['base_err'], marker='o', ls='none',
+                             xerr=df_set['zero_mag_err'], color=data_sets_colors[data_set],
+                             label=data_sets_labels[data_set])
+        ax_amp_base.errorbar(df_set['baseline'], df_set['zero_mag'], xerr=df_set['base_err'], marker='o', ls='none',
+                             yerr=df_set['zero_mag_err'], color=data_sets_colors[data_set],
+                             label=data_sets_labels[data_set])
+
+    ax_base_amp.set_xlabel('Zeros')
+    ax_base_amp.set_ylabel('Baseline')
+    ax_amp_base.set_ylabel('Baseline')
+    ax_amp_base.set_ylabel('Zeros')
+
+    ax_base_amp.set_xlim(110, 230)
+    ax_amp_base.set_ylim(110, 230)
+
+    ax_base_amp.legend()
+    ax_amp_base.legend()
+
+    fig_base_amp.tight_layout()
+    fig_base_amp.canvas.manager.set_window_title('Baselines vs Zeros')
+    fig_amp_base.tight_layout()
+    fig_amp_base.canvas.manager.set_window_title('Zeros vs Baselines')
 
 
 def map_to_sim(baseline, zeros, interpolations):

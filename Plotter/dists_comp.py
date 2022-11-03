@@ -28,31 +28,29 @@ def set_dists():
 
 
 def dist1():
-    dist_type = 'single44'
-    pgroup = '0'
-    dist_dict = {'base_path': f'D:/Transfer/Research/Data_Sim/{dist_type}_pgroup{pgroup}_spread002/',
-                 'set_name': f'Sim_pgroup{pgroup}_spread002_{dist_type}_n1ratios_',
+    dist_type = 'flat80_anticlmulti_spread1_amp01_resample'
+    dist_dict = {'base_path': f'F:/Research/Data_Sim/{dist_type}/',
+                 'set_name': f'Sim_spread1_amp01_flat80_anticlmulti_norotate_resample_',
                  'set_num': 0,
                  'energy': 62,
                  'div': 60,
                  'cent': 8,
                  'color': 'r',
-                 'label': 'pgroup=0%'}
+                 'label': 's1a01'}
 
     return dist_dict
 
 
 def dist2():
-    dist_type = 'single44'
-    pgroup = '01'
-    dist_dict = {'base_path': f'D:/Transfer/Research/Data_Sim/{dist_type}_pgroup{pgroup}_spread002/',
-                 'set_name': f'Sim_pgroup{pgroup}_spread002_{dist_type}_n1ratios_',
+    dist_type = 'flat80_anticlmulti_spread1_amp1_resample'
+    dist_dict = {'base_path': f'F:/Research/Data_Sim/{dist_type}/',
+                 'set_name': f'Sim_spread1_amp1_flat80_anticlmulti_norotate_resample_',
                  'set_num': 0,
                  'energy': 62,
                  'div': 60,
                  'cent': 8,
                  'color': 'b',
-                 'label': 'pgroup=1%'}
+                 'label': 's1a1'}
 
     return dist_dict
 
