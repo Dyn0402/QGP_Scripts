@@ -32,17 +32,17 @@ def main():
 
 def init_pars():
     pars = {
-        # 'base_path': 'F:/Research/',
+        'base_path': 'F:/Research/',
         # 'base_path': 'D:/Transfer/Research/',
-        'base_path': '/media/ucla/Research/',
+        # 'base_path': '/media/ucla/Research/',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_cfev.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim.csv',
-        # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_sim.csv',
+        'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_sim.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cents.csv',
         # 'csv_path': 'D:/Transfer/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim_new.csv',
-        'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
+        # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
         'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
-        'only_new': False,  # If True check csv_path and only run missing datasets, else run all datasets
+        'only_new': True,  # If True check csv_path and only run missing datasets, else run all datasets
         'threads': 15,
         'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
@@ -107,35 +107,35 @@ def define_datasets(base_path):
     ]
 
     # Plus Minus Clustering
-    df = find_sim_sets(f'{base_path}Data_Sim_tests/', ['flat80', 'clmultiplusminus', 'resample'], [], False)
-    # df = find_sim_sets(f'{base_path}Data_Sim_tests/', ['flat80', 'anticlmulti', 'resample'], [], True)
-    for ap in np.unique(df['ampplus']):
-        df_ap = df[df['ampplus'] == ap]
-        for am in np.unique(df['ampminus']):
-            df_am = df_ap[df_ap['ampminus'] == am]
-            for sp in np.unique(df_am['spreadplus']):
-                df_sp = df_am[df_am['spreadplus'] == sp]
-                for sm in np.unique(df_sp['spreadminus']):
-                    entry_vals.append([f'sim_clmultipm_ampplus{ap}_ampminus{am}_spreadplus{sp}_spreadminus{sm}',
-                                       '_Sim_tests',
-                                       ['clmultiplusminus', f'ampplus{ap}', f'ampminus{am}', f'spreadplus{sp}',
-                                        f'spreadminus{sm}', 'resample'], ['flat'], [], [0], [62], [8], all_divs])
+    # df = find_sim_sets(f'{base_path}Data_Sim_tests/', ['flat80', 'clmultiplusminus', 'resample'], [], False)
+    # # df = find_sim_sets(f'{base_path}Data_Sim_tests/', ['flat80', 'anticlmulti', 'resample'], [], True)
+    # for ap in np.unique(df['ampplus']):
+    #     df_ap = df[df['ampplus'] == ap]
+    #     for am in np.unique(df['ampminus']):
+    #         df_am = df_ap[df_ap['ampminus'] == am]
+    #         for sp in np.unique(df_am['spreadplus']):
+    #             df_sp = df_am[df_am['spreadplus'] == sp]
+    #             for sm in np.unique(df_sp['spreadminus']):
+    #                 entry_vals.append([f'sim_clmultipm_ampplus{ap}_ampminus{am}_spreadplus{sp}_spreadminus{sm}',
+    #                                    '_Sim_tests',
+    #                                    ['clmultiplusminus', f'ampplus{ap}', f'ampminus{am}', f'spreadplus{sp}',
+    #                                     f'spreadminus{sm}', 'resample'], ['flat'], [], [0], [62], [8], all_divs])
 
     # Anti-clustering
-    # df = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample'], ['test'], True)
-    # # df = find_sim_sets(f'{base_path}Data_Sim_tests/', ['flat80', 'anticlmulti', 'resample'], [], True)
-    # for amp in np.unique(df['amp']):
-    #     amp_float = float(f'0.{amp}')  # For filtering if needed
-    #     # if amp_float not in [0.2, 0.5]:
-    #     #     continue
-    #     df_amp = df[df['amp'] == amp]
-    #     for spread in np.unique(df_amp['spread']):
-    #         spread_float = float(f'0.{spread}') * 10  # For filtering if needed
-    #         # if spread_float not in [0.5, 1]:
-    #         #     continue
-    #         entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
-    #                            ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
-    #                            ['flat'], [], [0], [62], [8], all_divs])
+    df = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample'], ['test'], True)
+    # df = find_sim_sets(f'{base_path}Data_Sim_tests/', ['flat80', 'anticlmulti', 'resample'], [], True)
+    for amp in np.unique(df['amp']):
+        amp_float = float(f'0.{amp}')  # For filtering if needed
+        # if amp_float not in [0.2, 0.5]:
+        #     continue
+        df_amp = df[df['amp'] == amp]
+        for spread in np.unique(df_amp['spread']):
+            spread_float = float(f'0.{spread}') * 10  # For filtering if needed
+            # if spread_float not in [0.5, 1]:
+            #     continue
+            entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
+                               ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
+                               ['flat'], [], [0], [62], [8], all_divs])
 
     # Clustering
     # df = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'clmulti', 'resample'], ['test'], True)

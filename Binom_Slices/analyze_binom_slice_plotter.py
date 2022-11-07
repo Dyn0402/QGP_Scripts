@@ -20,11 +20,11 @@ from analyze_binom_slices import *
 
 def main():
     # plot_sims()
-    # get_sim_mapping()
-    get_sim_mapping_pm()
+    get_sim_mapping()
+    # get_sim_mapping_pm()
     # plot_star_model()
     # plot_star_model_onediv()
-    # plot_vs_cent()
+    plot_vs_cent()
     # plot_vs_cent_nofit()
     # plot_vs_cent_fittest()
     # plot_all_zero_base()
@@ -36,7 +36,9 @@ def plot_star_model():
     plt.rcParams["figure.dpi"] = 144
     base_path = 'F:/Research/Results/Azimuth_Analysis/'
     df_name = 'binom_slice_stats_cent8_no_sim.csv'
-    df_fits_out_name = 'Base_Zero_Fits/cf_fits.csv'
+    fits_out_base = 'Base_Zero_Fits'
+    df_tproton_fits_name = 'cf_tprotons_fits.csv'
+    df_partitions_fits_name = 'cf_partitions_fits.csv'
     df_path = base_path + df_name
     sim_sets = []
 
@@ -74,12 +76,13 @@ def plot_star_model():
                                            plot=False, fit=True)
         protons_fits.append(protons_fits_div)
     protons_fits = pd.concat(protons_fits, ignore_index=True)
+    protons_fits.to_csv(f'{base_path}{fits_out_base}{df_tproton_fits_name}', index=False)
     print(protons_fits)
     print(pd.unique(protons_fits['amp']))
     print(pd.unique(protons_fits['spread']))
     df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
                                      data_sets_labels=data_sets_labels)
-    df_fits.to_csv(f'{base_path}{df_fits_out_name}', index=False)
+    df_fits.to_csv(f'{base_path}{fits_out_base}{df_partitions_fits_name}', index=False)
     # print(df_fits)
     plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
     # plot_slope_div_fits_simpars(df_fits)
@@ -168,7 +171,9 @@ def get_sim_mapping():
     df_name = 'binom_slice_stats_cent8_sim.csv'
     pickle_map_name = 'binom_slice_sim_mapping'
     out_dir = 'F:/Research/Results/Sim_Mapping/'
-    df_fits_out_name = 'Base_Zero_Fits/sim.csv'
+    fits_out_base = 'Base_Zero_Fits'
+    df_tproton_fits_name = 'sim_tprotons_fits.csv'
+    df_partitions_fits_name = 'sim_partitions_fits.csv'
     threads = 15
     df_path = base_path + df_name
     sim_sets = []
@@ -235,12 +240,13 @@ def get_sim_mapping():
     #                                        plot=False, fit=True)
     #     protons_fits.append(protons_fits_div)
     protons_fits = pd.concat(protons_fits, ignore_index=True)
+    protons_fits.to_csv(f'{base_path}{fits_out_base}{df_tproton_fits_name}', index=False)
     print(protons_fits)
     print(pd.unique(protons_fits['amp']))
     print(pd.unique(protons_fits['spread']))
     df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
                                      data_sets_labels=data_sets_labels)
-    df_fits.to_csv(f'{base_path}{df_fits_out_name}', index=False)
+    df_fits.to_csv(f'{base_path}{fits_out_base}{df_partitions_fits_name}', index=False)
 
     # print(df_fits)
     sigma_fits = plot_slope_div_fits_simpars(df_fits)
@@ -376,8 +382,10 @@ def plot_vs_cent():
     base_path = 'F:/Research/Results/Azimuth_Analysis/'
     # base_path = '/home/dylan/Research/Results/Azimuth_Analysis/'
     df_name = 'binom_slice_stats_cents.csv'
+    fits_out_base = 'Base_Zero_Fits'
+    df_tproton_fits_name = 'sim_tprotons_fits.csv'
+    df_partitions_fits_name = 'sim_partitions_fits.csv'
     df_path = base_path + df_name
-    df_fits_out_name = 'Base_Zero_Fits/bes_ampt_cents.csv'
 
     cent_ref_name = 'mean_cent_ref.csv'
     cent_ref_df = pd.read_csv(f'{base_path}{cent_ref_name}')
@@ -428,22 +436,25 @@ def plot_vs_cent():
     plot_protons_fits_divs_cents(df_slope_fits, data_sets_plt, fit=True, plot=True, data_sets_colors=data_sets_colors,
                                  data_sets_labels=data_sets_labels, exclude_divs=exclude_divs)
 
-    df_onediv_fits, df_divs_fits = pd.DataFrame(), pd.DataFrame()
+    df_onediv_fits, df_tp_fits, df_divs_fits = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
     for energy in energies_fit:
         df_fit = stat_vs_protons_cents(df, stat_plot, [div_plt], cents, energy, data_types_plt, all_sets_plt,
                                        plot=False, fit=True, plot_fit=False, data_sets_colors=data_sets_colors,
                                        data_sets_labels=data_sets_labels)
         df_onediv_fits = pd.concat([df_onediv_fits, df_fit])
 
-        df_fit = stat_vs_protons_cents(df, stat_plot, divs_all, cents, energy, data_types_plt, all_sets_plt,
+        df_tp_fit = stat_vs_protons_cents(df, stat_plot, divs_all, cents, energy, data_types_plt, all_sets_plt,
                                        plot=False, fit=True, plot_fit=False, data_sets_colors=data_sets_colors,
                                        data_sets_labels=data_sets_labels)
-        df_fits = plot_protons_fits_divs_cents(df_fit, data_sets_plt, fit=True, data_sets_colors=data_sets_colors,
+        df_tp_fits = pd.concat([df_tp_fits, df_tp_fit])
+
+        df_fits = plot_protons_fits_divs_cents(df_tp_fit, data_sets_plt, fit=True, data_sets_colors=data_sets_colors,
                                                data_sets_labels=data_sets_labels, exclude_divs=exclude_divs)
         # print(f'{energy}GeV {df_fit}')
         df_divs_fits = pd.concat([df_divs_fits, df_fits])
 
-    df_divs_fits.to_csv(f'{base_path}{df_fits_out_name}', index=False)
+    df_tp_fits.to_csv(f'{base_path}{fits_out_base}{df_tproton_fits_name}', index=False)
+    df_divs_fits.to_csv(f'{base_path}{fits_out_base}{df_partitions_fits_name}', index=False)
 
     plot_protons_fits_vs_cent(df_onediv_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
                               data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,
