@@ -955,6 +955,42 @@ def plot_protons_fits_divs_cents(df, data_sets_plt, plot=False, fit=False, data_
     return pd.DataFrame(fit_pars)
 
 
+def plot_vs_div_width_comp(df, title=''):
+    fig, ax = plt.subplots()
+    fig.canvas.manager.set_window_title(f'Closest Sims vs Partition Width {title}')
+    ax.set_title(title)
+    ax.set_xlabel('Azimuthal Partition Width')
+    ax.set_ylabel('Raw SD / Mix SD vs Total Protons Slope')
+    ax.axhline(0, color='black')
+
+    fig2, ax2 = plt.subplots()
+    fig2.canvas.manager.set_window_title(f'Closest Sims Zero Base {title}')
+    ax2.set_title(title)
+    ax2.set_xlabel('Baseline')
+    ax2.set_ylabel('Zeros')
+    ax2.set_ylim(110, 230)
+    ax2.set_xlim(-0.013, 0.0005)
+    ax2.grid()
+
+    colors = iter(plt.cm.rainbow(np.linspace(0, 1, len(pd.unique(df['name'])))))
+    for data_set in pd.unique(df['name']):
+        color = next(colors)
+        df_set = df[df['name'] == data_set]
+
+        ax.errorbar(df_set['divs'], df_set['slope'], df_set['slope_err'], ls='none', marker='o', alpha=0.6, color=color,
+                    label=data_set)
+        popt, pcov = cf(quad_180_zparam, df_set['divs'], df_set['slope'], sigma=df_set['slope_err'], absolute_sigma=True)
+        perr = np.sqrt(np.diag(pcov))
+        x_plt = np.linspace(0, 360, 1000)
+        ax.plot(x_plt, quad_180_zparam(x_plt, *popt), color=color)
+        ax2.errorbar(popt[1], popt[0], perr[0], perr[1], color=color, marker='o', ls='none', label=data_set)
+
+    ax.legend()
+    ax2.legend()
+    fig.tight_layout()
+    fig2.tight_layout()
+
+
 def plot_slope_div_fits(df_fits, data_sets_colors=None, data_sets_labels=None):
     fig_base_energy, ax_base_energy = plt.subplots()
     ax_base_energy.set_xlabel('Energy (GeV)')

@@ -20,11 +20,12 @@ from analyze_binom_slices import *
 
 def main():
     # plot_sims()
-    get_sim_mapping()
+    # get_sim_mapping()
     # get_sim_mapping_pm()
     # plot_star_model()
     # plot_star_model_onediv()
-    plot_vs_cent()
+    # plot_vs_cent()
+    plot_closest_sims()
     # plot_vs_cent_nofit()
     # plot_vs_cent_fittest()
     # plot_all_zero_base()
@@ -174,9 +175,11 @@ def get_sim_mapping():
     fits_out_base = 'Base_Zero_Fits'
     df_tproton_fits_name = 'sim_tprotons_fits.csv'
     df_partitions_fits_name = 'sim_partitions_fits.csv'
-    threads = 15
+    threads = 11
     df_path = base_path + df_name
     sim_sets = []
+
+    print(f'{base_path}{fits_out_base}{df_tproton_fits_name}')
 
     # amps = ['002', '004', '006', '008', '01']  # ['002', '006', '01']
     # spreads = ['02', '05', '06', '065', '07']
@@ -240,13 +243,13 @@ def get_sim_mapping():
     #                                        plot=False, fit=True)
     #     protons_fits.append(protons_fits_div)
     protons_fits = pd.concat(protons_fits, ignore_index=True)
-    protons_fits.to_csv(f'{base_path}{fits_out_base}{df_tproton_fits_name}', index=False)
+    protons_fits.to_csv(f'{base_path}{fits_out_base}/{df_tproton_fits_name}', index=False)
     print(protons_fits)
     print(pd.unique(protons_fits['amp']))
     print(pd.unique(protons_fits['spread']))
     df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
                                      data_sets_labels=data_sets_labels)
-    df_fits.to_csv(f'{base_path}{fits_out_base}{df_partitions_fits_name}', index=False)
+    df_fits.to_csv(f'{base_path}{fits_out_base}/{df_partitions_fits_name}', index=False)
 
     # print(df_fits)
     sigma_fits = plot_slope_div_fits_simpars(df_fits)
@@ -383,8 +386,8 @@ def plot_vs_cent():
     # base_path = '/home/dylan/Research/Results/Azimuth_Analysis/'
     df_name = 'binom_slice_stats_cents.csv'
     fits_out_base = 'Base_Zero_Fits'
-    df_tproton_fits_name = 'sim_tprotons_fits.csv'
-    df_partitions_fits_name = 'sim_partitions_fits.csv'
+    df_tproton_fits_name = 'bes_ampt_cents_tprotons_fits.csv'
+    df_partitions_fits_name = 'bes_ampt_cents_partitions_fits.csv'
     df_path = base_path + df_name
 
     cent_ref_name = 'mean_cent_ref.csv'
@@ -397,7 +400,7 @@ def plot_vs_cent():
 
     stat_plot = 'standard deviation'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
     div_plt = 60
-    divs_all = [60, 72, 89, 90, 180, 240, 270, 288, 300]
+    divs_all = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300]
     exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
     cents = [1, 2, 3, 4, 5, 6, 7, 8]
     energy_plt = 62
@@ -444,8 +447,8 @@ def plot_vs_cent():
         df_onediv_fits = pd.concat([df_onediv_fits, df_fit])
 
         df_tp_fit = stat_vs_protons_cents(df, stat_plot, divs_all, cents, energy, data_types_plt, all_sets_plt,
-                                       plot=False, fit=True, plot_fit=False, data_sets_colors=data_sets_colors,
-                                       data_sets_labels=data_sets_labels)
+                                          plot=False, fit=True, plot_fit=False, data_sets_colors=data_sets_colors,
+                                          data_sets_labels=data_sets_labels)
         df_tp_fits = pd.concat([df_tp_fits, df_tp_fit])
 
         df_fits = plot_protons_fits_divs_cents(df_tp_fit, data_sets_plt, fit=True, data_sets_colors=data_sets_colors,
@@ -453,8 +456,8 @@ def plot_vs_cent():
         # print(f'{energy}GeV {df_fit}')
         df_divs_fits = pd.concat([df_divs_fits, df_fits])
 
-    df_tp_fits.to_csv(f'{base_path}{fits_out_base}{df_tproton_fits_name}', index=False)
-    df_divs_fits.to_csv(f'{base_path}{fits_out_base}{df_partitions_fits_name}', index=False)
+    df_tp_fits.to_csv(f'{base_path}{fits_out_base}/{df_tproton_fits_name}', index=False)
+    df_divs_fits.to_csv(f'{base_path}{fits_out_base}/{df_partitions_fits_name}', index=False)
 
     plot_protons_fits_vs_cent(df_onediv_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
                               data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,
@@ -614,6 +617,68 @@ def plot_all_zero_base():
         df_fits = pd.concat([df_fits, df])
 
     plot_base_zeros(df_fits, data_sets_plt, data_sets_labels, data_sets_colors)
+
+    plt.show()
+
+
+def plot_closest_sims():
+    plt.rcParams["figure.figsize"] = (6.66, 5)
+    plt.rcParams["figure.dpi"] = 144
+    base_path = 'F:/Research/Results/Azimuth_Analysis/Base_Zero_Fits/'
+    # base_path = '/home/dylan/Research/Results/Azimuth_Analysis/'
+    df_data_name = 'bes_ampt_cents_tprotons_fits.csv'
+    df_sim_name = 'sim_tprotons_fits.csv'
+
+    stat = 'standard deviation'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
+    divs_all = [60, 72, 89, 90, 180, 240, 270, 288, 300]
+    cent = 8
+    energy = 62
+    num_sims_plt = 4
+    data_name = 'bes_resample_def'  # 'ampt_new_coal_resample_def'
+
+    # data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def', 'cfev_resample_def', 'sim_aclmul_']
+    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'purple', 'blue']))
+    # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'CFEV', 'Simulation']))
+
+    data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def', 'cfev_resample_def', 'sim_aclmul_',
+                     'sim_clmultipm_']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'purple', 'blue', 'green']))
+    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'CFEV', 'Simulation', 'Simulation 2 Gaus']))
+
+    df_data = pd.read_csv(base_path + df_data_name)
+    df_data = df_data.dropna()
+    df_data = df_data[(df_data['name'] == data_name) & (df_data['energy'] == energy) & (df_data['cent'] == cent)]
+    print(df_data)
+
+    df_sim = pd.read_csv(base_path + df_sim_name)
+    df_sim = df_sim.dropna()
+    # df_sim['energy'] = df_sim.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
+
+    df_diffs = []
+    for sim_set in pd.unique(df_sim['name']):
+        df_sim_set = df_sim[df_sim['name'] == sim_set]
+        diff, diff_weight = 0, 0
+        for div in divs_all:
+            diff += abs(df_data[df_data['divs'] == div]['slope'].iloc[0] -
+                        df_sim_set[df_sim_set['divs'] == div]['slope'].iloc[0])
+            weight = 10 if div == 180 else 1
+            diff_weight += abs(df_data[df_data['divs'] == div]['slope'].iloc[0] -
+                               df_sim_set[df_sim_set['divs'] == div]['slope'].iloc[0]) * weight
+        diff_180 = abs(df_data[df_data['divs'] == 180]['slope'].iloc[0] -
+                       df_sim_set[df_sim_set['divs'] == 180]['slope'].iloc[0])
+        df_diffs.append({'sim_set': sim_set, 'diff': diff, 'diff_weight': diff_weight, 'diff_180': diff_180})
+    df_diffs = pd.DataFrame(df_diffs)
+
+    close_sims_diff = list(df_diffs.sort_values(by=['diff'], ascending=True)['sim_set'][:num_sims_plt])
+    close_sims_180 = list(df_diffs.sort_values(by=['diff_180'], ascending=True)['sim_set'][:num_sims_plt])
+    close_sims_weight = list(df_diffs.sort_values(by=['diff_weight'], ascending=True)['sim_set'][:num_sims_plt])
+    df_plt_diff = pd.concat([df_data, df_sim[df_sim['name'].isin(close_sims_diff)]])
+    df_plt_180 = pd.concat([df_data, df_sim[df_sim['name'].isin(close_sims_180)]])
+    df_plt_weight = pd.concat([df_data, df_sim[df_sim['name'].isin(close_sims_weight)]])
+
+    plot_vs_div_width_comp(df_plt_diff, 'BES Equal Weight')
+    plot_vs_div_width_comp(df_plt_180, 'BES 180 Only')
+    plot_vs_div_width_comp(df_plt_weight, 'BES 180 Weighted x10')
 
     plt.show()
 
