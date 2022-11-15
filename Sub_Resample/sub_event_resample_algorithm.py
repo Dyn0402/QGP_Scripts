@@ -11,6 +11,7 @@ Created as QGP_Scripts/sub_event_resample_algorithm.py
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
+from matplotlib.patches import FancyArrowPatch
 import math
 
 from DistStats import DistStats
@@ -595,9 +596,15 @@ def plot_binning(angles, bin_low, bin_high, dphi, bin_width, counts, hist):
 
 
 def plot_event(angles, bin_low, bin_high, bin_width, counts):
-    fig = plt.figure(figsize=(5, 5))
+    fig = plt.figure(figsize=(4.5, 4.5), dpi=144)
     ax = plt.subplot(111, projection='polar')
-    ax.vlines(angles, 0, 1, color='red', label='Tracks')
+    # ax.vlines(angles, 0, 1, ls='--', color='red', label='Tracks')
+    ax.plot([], [], color='red', ls='--', label='Tracks')  # Just for legend
+    for angle in angles:
+        arrow = FancyArrowPatch(posA=(angle, 0), posB=(angle, 1), arrowstyle='-|>', color='red', ls='--',
+                                mutation_scale=20, shrinkA=0, shrinkB=0)
+        ax.add_artist(arrow)
+    # ax.arrow(angles[0], 0, angles[0], 1, color='red', width=0.1)
     bw_deg = int(bin_width / np.pi * 180)
     ax.fill_between(np.linspace(bin_low, bin_high, 1000), 0, 1, alpha=0.5, color='gray', label=f'{bw_deg}° Partition')
     ax.grid(False)
