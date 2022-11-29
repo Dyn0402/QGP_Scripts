@@ -328,7 +328,7 @@ def inv_invx_odr(pars, x):
 
 
 def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False, fit=False,
-                    hist=False, data_sets_colors=None, data_sets_labels=None):
+                    hist=False, data_sets_colors=None, data_sets_labels=None, star_prelim=False):
     data = []
     # print(f'data_sets to plot:  {data_sets_plt}\n\n\n')
     # print(f"data_sets in df:  {pd.unique(df['name'])}\n\n")
@@ -374,7 +374,7 @@ def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_
     if plot:
         fig, ax = plt.subplots(figsize=(6.66, 5), dpi=144)
         fig.canvas.manager.set_window_title(f'Raw Div Mix {stat.title()} vs Total Protons {energy}GeV {div}°')
-        ax.set_title(f'{energy}GeV, 0-5% Centrality, {div}° Partitions, 72 Samples per Event')
+        ax.set_title(f'{energy} GeV, 0-5% Centrality, {div}° Partitions, 72 Samples per Event')
         ax.set_xlabel('Total Protons in Event')
         ax.set_ylabel(f'Raw / Mix {stat.title()}')
         ax.axhline(1, ls='--', color='black')
@@ -422,7 +422,13 @@ def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_
                     fig_hist.tight_layout()
 
     if plot:
-        ax.legend(loc='upper center')
+        if star_prelim:
+            ax.text(10, 0.955, 'STAR Preliminary', fontsize=15)
+            eta_line = r'|$\eta$| < 1'
+            pt_line = r'0.4 < $p_T$ < 2.0 GeV'
+            ax.text(10, 0.962, f'Au+Au\n{eta_line}\n{pt_line}')
+            ax.text(31.6, 1.041, 'statistical uncertainty only', fontsize=8)
+        ax.legend(loc='upper center', framealpha=1.0).set_zorder(10)
         fig.tight_layout()
 
     return pd.DataFrame(fits)
@@ -544,7 +550,8 @@ def stat_vs_protons_divs(df, stat, divs, cent, energies, data_types, data_sets_p
 
 
 def stat_vs_protons_energies(df, stat, divs, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False,
-                             fit=False, plot_fit=False, hist=False, data_sets_colors=None, data_sets_labels=None):
+                             fit=False, plot_fit=False, hist=False, data_sets_colors=None, data_sets_labels=None,
+                             star_prelim=False):
     energy_data = []
     for energy in energies:
         data = []
@@ -592,7 +599,7 @@ def stat_vs_protons_energies(df, stat, divs, cent, energies, data_types, data_se
                 ax.set_ylim(0.71, 1.09)
             elif stat == 'non-excess kurtosis':
                 ax.set_ylim(0.92, 1.06)
-            ax.set_xlim(0, 65)
+            ax.set_xlim(0, 69)
 
     fits = []
     for data, ax, energy in zip(energy_data, ax_energies[:len(energies)], energies):
@@ -605,7 +612,7 @@ def stat_vs_protons_energies(df, stat, divs, cent, energies, data_types, data_se
                     c = next(color)
                 else:
                     c = data_sets_colors[data_set]
-                ax.text(12, .925, f'{energy}GeV', size='x-large')
+                ax.text(12, .925, f'{energy} GeV', size='x-large')
             if plot:
                 if 'sim_' in data_set:
                     ax.fill_between(df['total_protons'], df['val'] - df['err'], df['val'] + df['err'],
@@ -654,7 +661,13 @@ def stat_vs_protons_energies(df, stat, divs, cent, energies, data_types, data_se
         #         ax.errorbar([], [], [], label=lab, marker='o', ls='', color=c, alpha=0.7)
         #         if 'sys' in df:
         #             ax.errorbar([], [], [], marker='', ls='', elinewidth=3, color=c, alpha=0.4)
-        ax_energies[-1].legend(loc='lower right')
+        ax_energies[-3].legend(loc='lower right', framealpha=1.0).set_zorder(10)
+        if star_prelim:
+            ax_energies[4].text(46, 0.93, 'STAR \nPreliminary', fontsize=15)
+            eta_line = r'|$\eta$| < 1'
+            pt_line = r'0.4 < $p_T$ < 2.0 GeV'
+            ax_energies[4].text(46, 0.95, f'Au+Au\n{eta_line}\n{pt_line}')
+            ax_energies[2].text(15, 1.012, 'statistical uncertainty only')
         fig.tight_layout()
         fig.subplots_adjust(wspace=0.0, hspace=0.0)
         fig.canvas.manager.set_window_title(f'binom_slices_{divs[0]}_{stat}')

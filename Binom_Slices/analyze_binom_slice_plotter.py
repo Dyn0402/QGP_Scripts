@@ -22,10 +22,10 @@ def main():
     # plot_sims()
     # get_sim_mapping()
     # get_sim_mapping_pm()
-    # plot_star_model()
+    plot_star_model()
     # plot_star_model_onediv()
     # plot_vs_cent()
-    plot_closest_sims()
+    # plot_closest_sims()
     # plot_vs_cent_nofit()
     # plot_vs_cent_fittest()
     # plot_all_zero_base()
@@ -35,7 +35,8 @@ def main():
 def plot_star_model():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
-    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    # base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
     df_name = 'binom_slice_stats_cent8_no_sim.csv'
     fits_out_base = 'Base_Zero_Fits'
     df_tproton_fits_name = 'cf_tprotons_fits.csv'
@@ -51,13 +52,13 @@ def plot_star_model():
     data_types_plt = ['divide']
     samples = 72  # For title purposes only
 
-    # data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def', 'cf_resample_def', 'cfev_resample_def']
-    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple']))
-    # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST', 'MUSIC+FIST EV']))
+    data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def', 'cf_resample_def', 'cfev_resample_def']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple']))
+    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST', 'MUSIC+FIST EV (1 fm)']))
 
-    data_sets_plt = ['cf_resample_def', 'cfev_resample_def']
-    data_sets_colors = dict(zip(data_sets_plt, ['blue', 'purple']))
-    data_sets_labels = dict(zip(data_sets_plt, ['MUSIC+FIST', 'MUSIC+FIST EV']))
+    # data_sets_plt = ['cf_resample_def', 'cfev_resample_def']
+    # data_sets_colors = dict(zip(data_sets_plt, ['blue', 'purple']))
+    # data_sets_labels = dict(zip(data_sets_plt, ['MUSIC+FIST', 'MUSIC+FIST EV']))
 
     all_sets_plt = data_sets_plt + sim_sets[:]
 
@@ -67,8 +68,15 @@ def plot_star_model():
 
     df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
 
-    stat_vs_protons(df, stat_plot, div_plt, cent_plt, [7, 'sim'], data_types_plt, all_sets_plt, plot=True, fit=False,
-                    data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
+    stat_vs_protons(df, stat_plot, div_plt, cent_plt, [39], data_types_plt, all_sets_plt, plot=True, fit=False,
+                    data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels, star_prelim=True,
+                    y_ranges={'standard deviation': [0.946, 1.045]})
+    stat_vs_protons_energies(df, stat_plot, [120], cent_plt, [7, 11, 19, 27, 39, 62], data_types_plt, all_sets_plt,
+                             plot=True, fit=True, plot_fit=False, data_sets_colors=data_sets_colors,
+                             data_sets_labels=data_sets_labels, star_prelim=True)
+
+    plt.show()
+    return
 
     protons_fits = []
     for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
@@ -338,7 +346,8 @@ def get_sim_mapping_pm():
 def plot_star_model_onediv():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
-    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    # base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
     df_name = 'binom_slice_stats_cent8_no_sim.csv'
     df_path = base_path + df_name
     sim_sets = []
