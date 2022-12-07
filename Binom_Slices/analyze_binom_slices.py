@@ -677,6 +677,7 @@ def stat_vs_protons_energies(df, stat, divs, cent, energies, data_types, data_se
 
 def stat_vs_protons_cents(df, stat, divs, cents, energy, data_types, data_sets_plt, y_ranges=None, plot=False,
                           fit=False, plot_fit=False, hist=False, data_sets_colors=None, data_sets_labels=None):
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '60-70%', 1: '70-80%'}
     cent_data = []
     for cent in cents:
         data = []
@@ -737,7 +738,7 @@ def stat_vs_protons_cents(df, stat, divs, cents, energy, data_types, data_sets_p
                     c = next(color)
                 else:
                     c = data_sets_colors[data_set]
-                ax.text(12, .925, f'Centrality {cent}', size='x-large')
+                ax.text(62, .925, f'{cent_map[cent]}', size='x-large', horizontalalignment='right')
             if plot:
                 if 'sim_' in data_set:
                     ax.fill_between(df['total_protons'], df['val'] - df['err'], df['val'] + df['err'],
@@ -1360,7 +1361,7 @@ def plot_protons_fits_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
 
 
 def plot_protons_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None,
-                              fit=False, cent_ref=None, ref_type=None, data_sets_energies_cmaps=None):
+                              fit=False, cent_ref=None, ref_type=None, data_sets_energies_cmaps=None, ls='-'):
     fig_slope, ax_slope = plt.subplots(figsize=(6.66, 5), dpi=144)
     ax_slope.axhline(0, color='black')
     fig_slope.canvas.manager.set_window_title(f'Slopes vs Centrality')
@@ -1395,13 +1396,13 @@ def plot_protons_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
                      df_energy['cent']]
                 x_err = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_sd'].iloc[0] for cent in
                          df_energy['cent']]
-            ls = 'none' if fit else '-'
+            ls = 'none' if fit else ls
             if colors is None and color is None:
                 ax_slope.errorbar(x, df_energy['slope'], xerr=x_err, yerr=df_energy['slope_err'], marker='o', ls=ls,
-                                  label=lab)
+                                  label=lab, alpha=0.6)
             else:
                 ax_slope.errorbar(x, df_energy['slope'], xerr=x_err, yerr=df_energy['slope_err'], marker='o', ls=ls,
-                                  color=color, label=lab)
+                                  color=color, label=lab, alpha=0.6)
             if fit:
                 p0 = [-0.02, 0.0001]
                 x_fit = np.linspace(min(x), max(x), 1000)

@@ -394,6 +394,7 @@ def plot_vs_cent():
     base_path = 'F:/Research/Results/Azimuth_Analysis/'
     # base_path = '/home/dylan/Research/Results/Azimuth_Analysis/'
     df_name = 'binom_slice_stats_cents.csv'
+    save_fits = False
     fits_out_base = 'Base_Zero_Fits'
     df_tproton_fits_name = 'bes_ampt_cents_tprotons_fits.csv'
     df_partitions_fits_name = 'bes_ampt_cents_partitions_fits.csv'
@@ -401,18 +402,18 @@ def plot_vs_cent():
 
     cent_ref_name = 'mean_cent_ref.csv'
     cent_ref_df = pd.read_csv(f'{base_path}{cent_ref_name}')
-    ref_type = 'ref'  # 'refn'
+    ref_type = 'refn'  # 'refn'
 
     print(cent_ref_df)
 
     sim_sets = []
 
     stat_plot = 'standard deviation'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
-    div_plt = 60
+    div_plt = 120
     divs_all = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300]
     exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
     cents = [1, 2, 3, 4, 5, 6, 7, 8]
-    energy_plt = 62
+    energy_plt = 39
     energies_fit = [7, 11, 19, 27, 39, 62]
     # energies_fit = [energy_plt]
     data_types_plt = ['divide']
@@ -465,12 +466,28 @@ def plot_vs_cent():
         # print(f'{energy}GeV {df_fit}')
         df_divs_fits = pd.concat([df_divs_fits, df_fits])
 
-    df_tp_fits.to_csv(f'{base_path}{fits_out_base}/{df_tproton_fits_name}', index=False)
-    df_divs_fits.to_csv(f'{base_path}{fits_out_base}/{df_partitions_fits_name}', index=False)
+    if save_fits:
+        df_tp_fits.to_csv(f'{base_path}{fits_out_base}/{df_tproton_fits_name}', index=False)
+        df_divs_fits.to_csv(f'{base_path}{fits_out_base}/{df_partitions_fits_name}', index=False)
 
-    plot_protons_fits_vs_cent(df_onediv_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
+    plot_protons_fits_vs_cent(df_onediv_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=False,
                               data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,
                               title=f'{div_plt}° Partitions, {samples} Samples per Event',
+                              data_sets_energies_cmaps=data_sets_energies_cmaps)
+
+    plot_protons_fits_vs_cent(df_onediv_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=False,
+                              data_sets_labels=data_sets_labels,
+                              title=f'{div_plt}° Partitions, {samples} Samples per Event',
+                              data_sets_energies_cmaps=data_sets_energies_cmaps)
+
+    plot_protons_fits_vs_cent(df_onediv_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=False,
+                              data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,
+                              title=f'{div_plt}° Partitions, {samples} Samples per Event', ls='none',
+                              data_sets_energies_cmaps=data_sets_energies_cmaps)
+
+    plot_protons_fits_vs_cent(df_onediv_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=False,
+                              data_sets_labels=data_sets_labels,
+                              title=f'{div_plt}° Partitions, {samples} Samples per Event', ls='none',
                               data_sets_energies_cmaps=data_sets_energies_cmaps)
 
     plot_div_fits_vs_cent(df_divs_fits, data_sets_plt, data_sets_colors=data_sets_colors,
