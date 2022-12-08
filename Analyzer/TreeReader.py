@@ -31,7 +31,7 @@ class TreeReader:
             tree_name = f'{self.tree_name};{tree_index}'
             if tree_name in self.file.classnames():
                 tracks = self.file[tree_name].arrays(self.event_attributes)
-                tracks =
+                # tracks =
                 # Calculate p and rapidity
                 self.tracks.append(tracks)
             else:
