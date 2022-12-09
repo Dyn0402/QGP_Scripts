@@ -24,8 +24,8 @@ def main():
     # get_sim_mapping_pm()
     # plot_star_model()
     # plot_star_model_onediv()
-    plot_vs_cent()
-    # plot_closest_sims()
+    # plot_vs_cent()
+    plot_closest_sims()
     # plot_vs_cent_nofit()
     # plot_vs_cent_fittest()
     # plot_all_zero_base()
@@ -660,7 +660,8 @@ def plot_closest_sims():
     cent = 8
     energy = 62
     num_sims_plt = 4
-    data_name = 'bes_resample_def'  # 'ampt_new_coal_resample_def'
+    data_name = 'ampt_new_coal_resample_def'  # 'bes_resample_def'
+    data_title = 'AMPT'  # 'BES'
 
     # data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def', 'cfev_resample_def', 'sim_aclmul_']
     # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'purple', 'blue']))
@@ -696,15 +697,25 @@ def plot_closest_sims():
     df_diffs = pd.DataFrame(df_diffs)
 
     close_sims_diff = list(df_diffs.sort_values(by=['diff'], ascending=True)['sim_set'][:num_sims_plt])
-    close_sims_180 = list(df_diffs.sort_values(by=['diff_180'], ascending=True)['sim_set'][:num_sims_plt])
-    close_sims_weight = list(df_diffs.sort_values(by=['diff_weight'], ascending=True)['sim_set'][:num_sims_plt])
     df_plt_diff = pd.concat([df_data, df_sim[df_sim['name'].isin(close_sims_diff)]])
+
+    close_sims_180 = list(df_diffs.sort_values(by=['diff_180'], ascending=True)['sim_set'][:num_sims_plt])
     df_plt_180 = pd.concat([df_data, df_sim[df_sim['name'].isin(close_sims_180)]])
+
+    close_sims_weight = list(df_diffs.sort_values(by=['diff_weight'], ascending=True)['sim_set'][:num_sims_plt])
     df_plt_weight = pd.concat([df_data, df_sim[df_sim['name'].isin(close_sims_weight)]])
 
-    plot_vs_div_width_comp(df_plt_diff, 'BES Equal Weight')
-    plot_vs_div_width_comp(df_plt_180, 'BES 180 Only')
-    plot_vs_div_width_comp(df_plt_weight, 'BES 180 Weighted x10')
+    df_plt_amp1 = pd.concat([df_data, df_sim[(df_sim['amp'] == 0.1) &
+                                             (df_sim['spread'] < 3) & (df_sim['spread'] > 0.5)]])
+    df_plt_amp1 = df_plt_amp1.sort_values(by=['spread'])
+    df_plt_spread1 = pd.concat([df_data, df_sim[(df_sim['spread'] == 1) & (df_sim['amp'] < 0.125)]])
+    df_plt_spread1 = df_plt_spread1.sort_values(by=['amp'])
+
+    plot_vs_div_width_comp(df_plt_diff, f'{data_title} {energy} GeV Equal Weight')
+    plot_vs_div_width_comp(df_plt_180, f'{data_title} {energy} GeV 180 Only')
+    plot_vs_div_width_comp(df_plt_weight, f'{data_title} {energy} GeV 180 Weighted x10')
+    plot_vs_div_width_comp(df_plt_amp1, f'{data_title} {energy} GeV A=0.1')
+    plot_vs_div_width_comp(df_plt_spread1, f'{data_title} {energy} GeV spread=1')
 
     plt.show()
 
