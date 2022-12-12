@@ -21,17 +21,17 @@ def main():
     divs = 120
     cent = 8
     energy = 39
-    samples = 1  # Just for title
+    samples = 72  # Just for title
     data_name = "AMPT"  # Just for title
-    set_group = 'default_resample'
-    set_name = 'Ampt_rapid05_resample_norotate_'
+    set_group = 'default_single'
+    set_name = 'Ampt_rapid05_single_'
     # set_group = 'default_single'
     # set_name = 'Ampt_rapid05_single_'
     set_num = 0
     data_set = '_Ampt_New_Coal'
     # base_path = '/home/dylan/Research/Data'
-    # base_path = 'D:/Research/Data'
-    base_path = 'D:/Transfer/Research/Data'
+    base_path = 'F:/Research/Data'
+    # base_path = 'D:/Transfer/Research/Data'
     set_path = f'{set_group}/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
     path = f'{base_path}{data_set}/{set_path}'
     path_mix = f'{base_path}{data_set}_Mix/{set_path}'
@@ -40,7 +40,7 @@ def main():
 
     title_sufx = f'\n{energy}GeV, 0-5% Centrality, {divs}° Partitions, {samples} Sample per Event'
 
-    # plot_2d(raw.get_dist(), raw.max_particle, raw.get_max_bin(), divs, data_name, title_sufx)
+    plot_2d(raw.get_dist(), raw.max_particle, raw.get_max_bin(), divs, data_name, title_sufx)
     plot_binomial(raw.get_dist(), 31, divs, data_name, title_sufx=title_sufx)
     # plot_ratio(raw.get_dist(), raw.max_particle, divs, x_bins=20, title_sufx=title_sufx)
     # plot_pull(raw.get_dist(), raw.max_particle, divs, x_bins=40, title_sufx=title_sufx)
