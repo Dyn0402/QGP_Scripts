@@ -21,8 +21,8 @@ from Measure import Measure
 
 def main():
     # from_hist_files()
-    from_hist_files_simple()
-    # from_dataframe()
+    # from_hist_files_simple()
+    from_dataframe()
 
 
 def from_dataframe():
@@ -32,8 +32,11 @@ def from_dataframe():
     divs = 120
     energy = 39
     samples = 72  # For title only
-    data_set_name = 'ampt_new_coal_resample_def'
-    # data_set_name = 'bes_resample_def'
+    data_set = 'AMPT'
+    if data_set == 'AMPT':
+        data_set_name = 'ampt_new_coal_resample_def'
+    elif data_set == 'BES':
+        data_set_name = 'bes_resample_def'
     stat = 'standard deviation'
 
     df_path = base_path + df_name
@@ -56,7 +59,7 @@ def from_dataframe():
     ax1.plot(df_mix['total_protons'], y_binom_mix, color='red', alpha=0.8, zorder=0, label='Binomial')
     ax1.set_xlabel('Total Protons in Event')
     ax1.set_ylabel('Standard Deviation of Slice')
-    ax1.set_title(f'{energy}GeV, 0-5% Centrality, {divs}° Partitions, {samples} Samples per Event')
+    ax1.set_title(f'{data_set} {energy}GeV, 0-5% Centrality, {divs}° Partitions, {samples} Samples per Event')
     ax1.legend()
     fig1.tight_layout()
 
@@ -70,7 +73,7 @@ def from_dataframe():
     ax2.axhline(1, zorder=0, color='red', ls='--')
     ax2.set_xlabel('Total Protons in Event')
     ax2.set_ylabel('Standard Deviation Ratio')
-    ax2.set_title(f'{energy}GeV, 0-5% Centrality, {divs}° Partitions, {samples} Samples per Event')
+    ax2.set_title(f'{data_set} {energy}GeV, 0-5% Centrality, {divs}° Partitions, {samples} Samples per Event')
     ax2.legend()
     fig2.tight_layout()
 
@@ -84,7 +87,7 @@ def from_dataframe():
     ax3.axhline(0, color='red', ls='--')
     ax3.set_xlabel('Total Protons in Event')
     ax3.set_ylabel('Standard Deviation Difference')
-    ax3.set_title(f'{energy}GeV, 0-5% Centrality, {divs}° Partitions, {samples} Samples per Event')
+    ax3.set_title(f'{data_set} {energy}GeV, 0-5% Centrality, {divs}° Partitions, {samples} Samples per Event')
     ax3.legend()
     fig3.tight_layout()
 
@@ -318,8 +321,8 @@ def from_hist_files():
     # fig2, ax2 = plt.subplots()
     # fig3, ax3 = plt.subplots()
     # fig4, ax4 = plt.subplots()
-    fig5, ax5 = plt.subplots()
-    fig6, ax6 = plt.subplots()
+    fig5, ax5 = plt.subplots(figsize=(6.66, 5), dpi=144)
+    fig6, ax6 = plt.subplots(figsize=(6.66, 5), dpi=144)
 
     # for energy in energies:
     #     # ax1.plot(plot_data_ks2[energy][0], plot_data_ks2[energy][1], color=colors[energy], label=f'{energy}GeV')
@@ -382,6 +385,9 @@ def from_hist_files():
     ax6.set_ylabel('Standard Deviation of Slice Divided by Binomial')
     ax6.set_title(f'SD Divided by Binomial of Total Particle Slices for {sd_plot["energy"]}GeV' + title_sufx)
     ax6.legend()
+
+    fig5.tight_layout()
+    fig6.tight_layout()
 
     plt.show()
 

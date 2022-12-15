@@ -22,10 +22,10 @@ def main():
     # plot_sims()
     # get_sim_mapping()
     # get_sim_mapping_pm()
-    # plot_star_model()
+    plot_star_model()
     # plot_star_model_onediv()
     # plot_vs_cent()
-    plot_closest_sims()
+    # plot_closest_sims()
     # plot_vs_cent_nofit()
     # plot_vs_cent_fittest()
     # plot_all_zero_base()
@@ -35,8 +35,8 @@ def main():
 def plot_star_model():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
-    # base_path = 'F:/Research/Results/Azimuth_Analysis/'
-    base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
+    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
     df_name = 'binom_slice_stats_cent8_no_sim.csv'
     fits_out_base = 'Base_Zero_Fits'
     df_tproton_fits_name = 'cf_tprotons_fits.csv'
