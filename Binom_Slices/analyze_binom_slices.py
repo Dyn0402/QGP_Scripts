@@ -428,7 +428,9 @@ def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_
             pt_line = r'0.4 < $p_T$ < 2.0 GeV'
             ax.text(10, 0.962, f'Au+Au\n{eta_line}\n{pt_line}')
             ax.text(31.6, 1.041, 'statistical uncertainty only', fontsize=8)
-        ax.legend(loc='upper center', framealpha=1.0).set_zorder(10)
+            ax.legend(loc='upper center', framealpha=1.0).set_zorder(10)
+        else:
+            ax.legend(loc='upper left')
         fig.tight_layout()
 
     return pd.DataFrame(fits)

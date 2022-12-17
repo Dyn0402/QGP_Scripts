@@ -19,10 +19,10 @@ from analyze_binom_slices import *
 
 
 def main():
-    # plot_sims()
-    # get_sim_mapping()
+    plot_sims()
+    get_sim_mapping()
     # get_sim_mapping_pm()
-    plot_star_model()
+    # plot_star_model()
     # plot_star_model_onediv()
     # plot_vs_cent()
     # plot_closest_sims()
@@ -103,12 +103,15 @@ def plot_sims():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
     base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    # df_name = 'binom_slice_stats_cent8_sim.csv'
     df_name = 'binom_slice_stats_cent8_sim_test.csv'
     df_path = base_path + df_name
     sim_sets = []
 
-    amps = ['002', '004', '006', '008', '01']  # ['002', '006', '01']
-    spreads = ['03', '04', '05', '06', '07', '08', '09', '1', '11', '12']
+    # amps = ['002', '004', '006', '008', '01']  # ['002', '006', '01']
+    amps = ['002', '006', '01']  # ['002', '006', '01']
+    # spreads = ['03', '04', '05', '06', '07', '08', '09', '1', '11', '12']
+    spreads = ['1', '12']
     # amps = ['0', '002', '004', '005', '006', '008', '01', '0125', '015', '0175', '02', '0225', '025', '03', '035', '04',
     #         '045', '05', '06', '07', '08', '09', '1', '125', '15', '175', '2', '225', '25', '3', '35', '4', '45', '5',
     #         '6', '7', '8', '9', '99']
@@ -151,8 +154,9 @@ def plot_sims():
 
     df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
 
-    stat_vs_protons(df, stat_plot, div_plt, cent_plt, [7, 'sim'], data_types_plt, all_sets_plt, plot=True, fit=False,
+    stat_vs_protons(df, stat_plot, div_plt, cent_plt, [7, 'sim'], data_types_plt, all_sets_plt, plot=True, fit=True,
                     data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
+    # plt.show()
 
     protons_fits = []
     for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
@@ -166,8 +170,12 @@ def plot_sims():
     print(pd.unique(protons_fits['spread']))
     df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
                                      data_sets_labels=data_sets_labels)
+    proton_fits_div = protons_fits[protons_fits['divs'] == div_plt]
+    plot_protons_fits_vs_amp(proton_fits_div, all_sets_plt, data_sets_colors, data_sets_labels)
+    # plt.show()
     # print(df_fits)
     sigma_fits = plot_slope_div_fits_simpars(df_fits)
+    plt.show()
     plot_sigma_fits_interp(sigma_fits)
 
     plt.show()
