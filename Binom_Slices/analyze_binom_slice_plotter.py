@@ -19,7 +19,7 @@ from analyze_binom_slices import *
 
 
 def main():
-    plot_sims()
+    # plot_sims()
     # get_sim_mapping()
     # get_sim_mapping_pm()
     # plot_star_model()
@@ -29,7 +29,7 @@ def main():
     # plot_vs_cent_nofit()
     # plot_vs_cent_fittest()
     # plot_all_zero_base()
-    # plot_ampt_efficiency()
+    plot_ampt_efficiency()
     print('donzo')
 
 
@@ -750,9 +750,10 @@ def plot_ampt_efficiency():
     base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
     # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
     df_name = 'binom_slice_stats_ampt_eff.csv'
-    fits_out_base = 'Base_Zero_Fits'
-    df_tproton_fits_name = 'cf_tprotons_fits.csv'
-    df_partitions_fits_name = 'cf_partitions_fits.csv'
+    save_fits = False
+    fits_out_base = 'Base_Zero_Fits/'
+    df_tproton_fits_name = 'ampt_eff_tprotons_fits.csv'
+    df_partitions_fits_name = 'ampt_eff_partitions_fits.csv'
     df_path = base_path + df_name
     sim_sets = []
 
@@ -769,10 +770,6 @@ def plot_ampt_efficiency():
     data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple', 'green']))
     data_sets_labels = dict(zip(data_sets_plt, ['100%', '90%', '80%', '70%', '60%']))
 
-    # data_sets_plt = ['cf_resample_def', 'cfev_resample_def']
-    # data_sets_colors = dict(zip(data_sets_plt, ['blue', 'purple']))
-    # data_sets_labels = dict(zip(data_sets_plt, ['MUSIC+FIST', 'MUSIC+FIST EV']))
-
     all_sets_plt = data_sets_plt + sim_sets[:]
 
     df = pd.read_csv(df_path)
@@ -782,14 +779,14 @@ def plot_ampt_efficiency():
     df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
 
     stat_vs_protons(df, stat_plot, div_plt, cent_plt, [39], data_types_plt, all_sets_plt, plot=True, fit=False,
-                    data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels, star_prelim=True,
+                    data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels, star_prelim=False,
                     y_ranges={'standard deviation': [0.946, 1.045]})
     stat_vs_protons_energies(df, stat_plot, [120], cent_plt, [7, 11, 19, 27, 39, 62], data_types_plt, all_sets_plt,
                              plot=True, fit=True, plot_fit=False, data_sets_colors=data_sets_colors,
-                             data_sets_labels=data_sets_labels, star_prelim=True)
+                             data_sets_labels=data_sets_labels, star_prelim=False)
 
-    plt.show()
-    return
+    # plt.show()
+    # return
 
     protons_fits = []
     for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
@@ -798,16 +795,34 @@ def plot_ampt_efficiency():
                                            plot=False, fit=True)
         protons_fits.append(protons_fits_div)
     protons_fits = pd.concat(protons_fits, ignore_index=True)
-    protons_fits.to_csv(f'{base_path}{fits_out_base}{df_tproton_fits_name}', index=False)
+    if save_fits:
+        protons_fits.to_csv(f'{base_path}{fits_out_base}{df_tproton_fits_name}', index=False)
     print(protons_fits)
     print(pd.unique(protons_fits['amp']))
     print(pd.unique(protons_fits['spread']))
     df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
                                      data_sets_labels=data_sets_labels)
-    df_fits.to_csv(f'{base_path}{fits_out_base}{df_partitions_fits_name}', index=False)
+    if save_fits:
+        df_fits.to_csv(f'{base_path}{fits_out_base}{df_partitions_fits_name}', index=False)
     # print(df_fits)
     plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
-    # plot_slope_div_fits_simpars(df_fits)
+
+    def_set = 'ampt_new_coal_resample_def'
+    df_fits_ratio = []  # Divide baseline/zeros by 100% default to see difference
+    for energy in pd.unique(df_fits['energy']):
+        df_fits_energy = df_fits[df_fits['energy'] == energy]
+        df_fits_energy_def = df_fits_energy[df_fits_energy['data_set'] == def_set]
+        base_def = Measure(df_fits_energy_def['baseline'].iloc[0], df_fits_energy_def['base_err'].iloc[0])
+        zero_def = Measure(df_fits_energy_def['zero_mag'].iloc[0], df_fits_energy_def['zero_mag_err'].iloc[0])
+        for ds_i, data_set in enumerate(pd.unique(df_fits_energy['data_set'])):
+            if data_set != def_set:
+                df_fits_e_ds = df_fits_energy[df_fits_energy['data_set'] == data_set]
+                base_div = Measure(df_fits_e_ds['baseline'].iloc[0], df_fits_e_ds['base_err'].iloc[0]) / base_def
+                zero_div = Measure(df_fits_e_ds['zero_mag'].iloc[0], df_fits_e_ds['zero_mag_err'].iloc[0]) / zero_def
+                energy_shifted = energy - 1 + ds_i / 2.0
+                df_fits_ratio.append({'data_set': data_set, 'energy': energy_shifted, 'baseline': base_div.val,
+                                      'base_err': base_div.err, 'zero_mag': zero_div.val, 'zero_mag_err': zero_div.err})
+    plot_slope_div_fits(pd.DataFrame(df_fits_ratio), data_sets_colors, data_sets_labels, ref_line=1)
 
     plt.show()
 

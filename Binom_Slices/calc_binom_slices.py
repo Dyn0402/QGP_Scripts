@@ -43,9 +43,9 @@ def init_pars():
         # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
         'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': False,  # If True check csv_path and only run missing datasets, else run all datasets
-        'threads': 11,
+        'threads': 12,
         'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
-        'check_only': True,  # Don't do any real work, just try to read each file to check for failed reads
+        'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
         'min_events': 100,  # Min number of total events per total_proton. Skip total_proton if fewer
         'min_bs': 100,  # Min number of bootstrap sets of total_proton. Skip if fewer
         'div_bs': 0,  # Number of bootstrap divide values to get

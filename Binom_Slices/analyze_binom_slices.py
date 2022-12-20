@@ -1026,17 +1026,17 @@ def plot_vs_div_width_comp(df, title=''):
     fig2.tight_layout()
 
 
-def plot_slope_div_fits(df_fits, data_sets_colors=None, data_sets_labels=None):
+def plot_slope_div_fits(df_fits, data_sets_colors=None, data_sets_labels=None, ref_line=0):
     fig_base_energy, ax_base_energy = plt.subplots()
     ax_base_energy.set_xlabel('Energy (GeV)')
     ax_base_energy.set_ylabel('Baseline')
-    ax_base_energy.axhline(0, color='black')
+    ax_base_energy.axhline(ref_line, color='black')
     fig_base_energy.canvas.manager.set_window_title('Slope Baseline vs Energy')
 
     fig_zeros_energy, ax_zeros_energy = plt.subplots()
     ax_zeros_energy.set_xlabel('Energy (GeV)')
     ax_zeros_energy.set_ylabel('Zeros')
-    ax_zeros_energy.axhline(0, color='black')
+    ax_zeros_energy.axhline(ref_line, color='black')
     fig_zeros_energy.canvas.manager.set_window_title('Slope Zeros vs Energy')
 
     fig_basez_zeros, ax_basez_zeros = plt.subplots()
