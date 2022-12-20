@@ -37,19 +37,19 @@ def init_pars():
         # 'base_path': '/media/ucla/Research/',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_cfev.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim.csv',
-        'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_sim.csv',
+        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_stats_ampt_eff.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cents.csv',
         # 'csv_path': 'D:/Transfer/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim_new.csv',
         # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
         'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
-        'only_new': True,  # If True check csv_path and only run missing datasets, else run all datasets
-        'threads': 15,
+        'only_new': False,  # If True check csv_path and only run missing datasets, else run all datasets
+        'threads': 11,
         'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
-        'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
+        'check_only': True,  # Don't do any real work, just try to read each file to check for failed reads
         'min_events': 100,  # Min number of total events per total_proton. Skip total_proton if fewer
         'min_bs': 100,  # Min number of bootstrap sets of total_proton. Skip if fewer
         'div_bs': 0,  # Number of bootstrap divide values to get
-        'save_cent': False,  # Include centrality column in output dataframe
+        'save_cent': True,  # Include centrality column in output dataframe
         'save_data_type': True,  # Include data_type column in output dataframe
         'save_stat': True,  # Include statistic column in output dataframe
         'save_set_num': False,  # Don't save set num if False. Currently not compatible with set nums!
@@ -82,10 +82,16 @@ def define_datasets(base_path):
         # ['ampt_def', '_Ampt', ['default'], [], ['resample'], range(60), all_energies, all_cents, all_divs],
         # ['ampt_new_coal_single_def', '_Ampt_New_Coal', ['default', 'single'], [], [], [0], all_energies, all_cents,
         #  all_divs],
-        # ['ampt_new_coal_resample_def', '_Ampt_New_Coal', ['default', 'resample'], [], ['alg3'], [0], all_energies,
-        #  all_cents, all_divs],
-        # ['ampt_new_coal_resample_eff1', '_Ampt_New_Coal', ['default', 'resample', 'Eff1'], [], [], [0], all_energies,
-        #  all_cents, all_divs],
+        ['ampt_new_coal_resample_def', '_Ampt_New_Coal', ['default', 'resample'], [], ['alg3'], [0], all_energies,
+         all_cents, all_divs],
+        ['ampt_new_coal_resample_eff1', '_Ampt_New_Coal', ['resample', 'eff1'], [], ['alg3'], [0],
+         all_energies, all_cents, all_divs],
+        ['ampt_new_coal_resample_eff2', '_Ampt_New_Coal', ['resample', 'eff2'], [], ['alg3'], [0],
+         all_energies, all_cents, all_divs],
+        ['ampt_new_coal_resample_eff3', '_Ampt_New_Coal', ['resample', 'eff3'], [], ['alg3'], [0],
+         all_energies, all_cents, all_divs],
+        ['ampt_new_coal_resample_eff4', '_Ampt_New_Coal', ['resample', 'eff4'], [], ['alg3'], [0],
+         all_energies, all_cents, all_divs],
         # ['ampt_baryon_first_fix_resample_def', '_Ampt', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
         # ['ampt_old_resample_def', '_Ampt_Old', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
         # ['ampt_eff1_resample_def', '_Ampt', ['resample', 'Eff1'], [], [], [0], all_energies, all_cents, all_divs],
@@ -122,20 +128,20 @@ def define_datasets(base_path):
     #                                     f'spreadminus{sm}', 'resample'], ['flat'], [], [0], [62], [8], all_divs])
 
     # Anti-clustering
-    df = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample'], ['test'], True)
-    # df = find_sim_sets(f'{base_path}Data_Sim_tests/', ['flat80', 'anticlmulti', 'resample'], [], True)
-    for amp in np.unique(df['amp']):
-        amp_float = float(f'0.{amp}')  # For filtering if needed
-        # if amp_float not in [0.2, 0.5]:
-        #     continue
-        df_amp = df[df['amp'] == amp]
-        for spread in np.unique(df_amp['spread']):
-            spread_float = float(f'0.{spread}') * 10  # For filtering if needed
-            # if spread_float not in [0.5, 1]:
-            #     continue
-            entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
-                               ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
-                               ['flat'], [], [0], [62], [8], all_divs])
+    # df = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample'], ['test'], True)
+    # # df = find_sim_sets(f'{base_path}Data_Sim_tests/', ['flat80', 'anticlmulti', 'resample'], [], True)
+    # for amp in np.unique(df['amp']):
+    #     amp_float = float(f'0.{amp}')  # For filtering if needed
+    #     # if amp_float not in [0.2, 0.5]:
+    #     #     continue
+    #     df_amp = df[df['amp'] == amp]
+    #     for spread in np.unique(df_amp['spread']):
+    #         spread_float = float(f'0.{spread}') * 10  # For filtering if needed
+    #         # if spread_float not in [0.5, 1]:
+    #         #     continue
+    #         entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
+    #                            ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
+    #                            ['flat'], [], [0], [62], [8], all_divs])
 
     # Clustering
     # df = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'clmulti', 'resample'], ['test'], True)
