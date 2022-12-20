@@ -794,7 +794,7 @@ def stat_vs_protons_cents(df, stat, divs, cents, energy, data_types, data_sets_p
         ax_cents[-1].legend()
         fig.tight_layout()
         fig.subplots_adjust(wspace=0.0, hspace=0.0)
-        fig.canvas.manager.set_window_title(f'binom_slices_{divs[0]}_{stat}')
+        fig.canvas.manager.set_window_title(f'binom_slices_cents_{divs[0]}_{stat}')
 
     return pd.DataFrame(fits)
 
@@ -803,7 +803,10 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
     fig, ax = plt.subplots()
     fig.canvas.manager.set_window_title(f'Slope vs Width All Energies')
     ax.axhline(0, ls='-', color='black')
+    fig_panels, ax_panels = plt.subplots(2, 3, sharex=True, sharey=True, dpi=144, figsize=(13.33, 6.16))
+    fig_panels.canvas.manager.set_window_title(f'Slope vs Width Energy Panels')
     energies = pd.unique(df['energy'])
+    ax_panels = dict(zip(energies, ax_panels.flat))
     energy_fig_axs = {energy: plt.subplots() for energy in energies}
     markers = ['o', 's', 'P', 'D', '*', '^', 'p']
     colors = iter(plt.cm.rainbow(np.linspace(0, 1, len(energies) * len(data_sets_plt))))
@@ -831,6 +834,8 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
                         marker=markers[energy_marker], label=lab, color=color)
             energy_ax.errorbar(df_energy['divs'], df_energy['slope'], yerr=df_energy['slope_err'], ls='none',
                                marker='o', label=lab_energy, color=color)
+            ax_panels[energy].errorbar(df_energy['divs'], df_energy['slope'], yerr=df_energy['slope_err'], ls='none',
+                                       marker='o', label=lab_energy, color=color)
             if fit and df_energy.size > 1:
                 try:
                     df_energy = df_energy[~df_energy.divs.isin(exclude_divs)]
@@ -845,6 +850,7 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
                     x = np.linspace(0, 360, 100)
                     ax.plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
                     energy_ax.plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
+                    ax_panels[energy].plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
                     # p0 = [*popt, -popt[0], popt[1]]
                     # popt3, pcov3 = cf(double_quad_180_zparam, df_energy['divs'], df_energy['slope'], p0=p0,
                     #                   sigma=df_energy['slope_err'], absolute_sigma=True)
@@ -877,19 +883,31 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
     if title != '':
         ax.set_title(title)
 
-    ax.set_ylabel('Slope')
+    ax.set_ylabel('Slope of Raw/Mix SD vs Total Protons per Event')
     ax.set_xlabel('Azimuthal Partition Width')
     ax.legend()
-    fig.tight_layout()
 
-    for energy, (energy_fig, energy_ax) in energy_fig_axs.items():
-        energy_ax.set_title(f'{energy}GeV')
+    for energy_i, (energy, (energy_fig, energy_ax)) in enumerate(energy_fig_axs.items()):
+        energy_ax.set_title(f'{energy} GeV')
         energy_ax.set_xlabel('Azimuthal Partition Width')
-        energy_ax.set_ylabel('Slope')
+        energy_ax.set_ylabel('Slope of Raw/Mix SD vs Total Protons per Event')
         energy_ax.axhline(0, color='black', zorder=0)
         energy_ax.legend()
         energy_fig.tight_layout()
         energy_fig.canvas.manager.set_window_title(f'Slope vs Width {energy}GeV')
+
+        ax_panels[energy].axhline(0, color='black', zorder=0)
+        ax_panels[energy].text(180, 0.00025, f'{energy} GeV', ha='center', fontsize=14)
+        if energy_i >= 3:
+            ax_panels[energy].set_xlabel('Azimuthal Partition Width')
+        if energy_i in [0, 3]:
+            ax_panels[energy].set_ylabel('Slope of Raw/Mix SD vs Protons/Event')
+        if energy_i == 1:
+            ax_panels[energy].legend(loc='upper center', bbox_to_anchor=(0.5, 0.85), framealpha=1.0)
+
+    fig.tight_layout()
+    fig_panels.tight_layout()
+    fig_panels.subplots_adjust(wspace=0.0, hspace=0.0)
 
     return pd.DataFrame(fit_pars)
 
@@ -995,7 +1013,8 @@ def plot_vs_div_width_comp(df, title=''):
 
         ax.errorbar(df_set['divs'], df_set['slope'], df_set['slope_err'], ls='none', marker='o', alpha=0.6, color=color,
                     label=data_set)
-        popt, pcov = cf(quad_180_zparam, df_set['divs'], df_set['slope'], sigma=df_set['slope_err'], absolute_sigma=True)
+        popt, pcov = cf(quad_180_zparam, df_set['divs'], df_set['slope'], sigma=df_set['slope_err'],
+                        absolute_sigma=True)
         perr = np.sqrt(np.diag(pcov))
         x_plt = np.linspace(0, 360, 1000)
         ax.plot(x_plt, quad_180_zparam(x_plt, *popt), color=color)
@@ -1047,18 +1066,23 @@ def plot_slope_div_fits(df_fits, data_sets_colors=None, data_sets_labels=None):
                                 marker='o', label=lab, color=color, alpha=0.8)
 
         ax_zeros_energy.errorbar(df_data_set['energy'], df_data_set['zero_mag'], yerr=df_data_set['zero_mag_err'],
-                                 ls='none', marker='o', label=lab, color=color)
+                                 ls='none', marker='o', label=lab, color=color, alpha=0.8)
 
         energies = pd.unique(df_data_set['energy'])
         for energy_index, energy in enumerate(energies):
             df_energy = df_data_set[df_data_set['energy'] == energy]
             ax_basez_zeros.errorbar(df_energy['zero_mag'], df_energy['baseline'], xerr=df_energy['zero_mag_err'],
                                     yerr=df_energy['base_err'], ls='none', color=colors[energy_index % len(colors)],
-                                    marker=markers[data_set_index % len(markers)], label=f'{lab}_{energy}GeV')
+                                    marker=markers[data_set_index % len(markers)], label=f'{lab} {energy}GeV',
+                                    alpha=0.8)
 
     ax_base_energy.legend()
     ax_zeros_energy.legend()
-    ax_basez_zeros.legend()
+    ax_basez_zeros.legend(loc='center left', bbox_to_anchor=(0.05, 0.5))
+
+    ax_base_energy.grid()
+    ax_zeros_energy.grid()
+    ax_basez_zeros.grid()
 
     fig_base_energy.tight_layout()
     fig_zeros_energy.tight_layout()
@@ -1445,6 +1469,7 @@ def plot_protons_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
 
 def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None,
                           fit=False, cent_ref=None, ref_type=None, data_sets_energies_cmaps=None):
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '60-70%', 1: '70-80%'}
     fig_base, ax_base = plt.subplots(figsize=(6.66, 5), dpi=144)
     ax_base.axhline(0, color='black')
     fig_base.canvas.manager.set_window_title(f'Baselines vs Centrality')
@@ -1477,7 +1502,7 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
                 lab += f' {energy}GeV'
 
             if cent_ref is None:
-                x = df_energy['cent']
+                x = [cent_map[cent_i] for cent_i in df_energy['cent']]
                 x_err = None
             else:
                 cent_energy = cent_ref[(cent_ref['data_set'] == data_set) & (cent_ref['energy'] == energy)]
@@ -1488,14 +1513,14 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
             ls = 'none' if fit else '-'
             if colors is None and color is None:
                 ax_base.errorbar(x, df_energy['baseline'], xerr=x_err, yerr=df_energy['base_err'], marker='o',
-                                 ls=ls, label=lab)
+                                 ls=ls, label=lab, alpha=0.6)
                 ax_zeros.errobar(x, df_energy['zero_mag'], xerr=x_err, yerr=df_energy['zero_mag_err'], marker='o',
-                                 ls='none', label=lab)
+                                 ls='none', label=lab, alpha=0.6)
             else:
                 ax_base.errorbar(x, df_energy['baseline'], xerr=x_err, yerr=df_energy['base_err'], marker='o',
-                                 ls=ls, color=color, label=lab)
+                                 ls=ls, color=color, label=lab, alpha=0.6)
                 ax_zeros.errorbar(x, df_energy['zero_mag'], xerr=x_err, yerr=df_energy['zero_mag_err'], marker='o',
-                                  ls='none', color=color, label=lab)
+                                  ls='none', color=color, label=lab, alpha=0.6)
             bases.extend(list(df_energy['baseline']))
             refs.extend(list(x))
             if fit:
@@ -1570,7 +1595,10 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
                 #                     color=color_fit, alpha=0.4)
                 #     print(f'{lab} Fit: {[Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]}')
     ax_base.set_ylim(min(bases) * 1.1, max(cs) * 1.1)
-    ax_base.set_xlim(0, max(refs) * 1.1)
+    try:
+        ax_base.set_xlim(0, max(refs) * 1.1)
+    except TypeError:
+        pass
 
     ax_base.set_ylabel('Baseline of Slope vs Partition Width Fit')
     ax_zeros.set_ylabel('Zeros of Slope vs Partition Width Fit')
@@ -1600,7 +1628,7 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
     ax_consts_vs_energy.legend()
     ax_consts_vs_energy.grid()
     ax_consts_vs_energy.set_title('Fit Constants vs Energy')
-    fig_zeros.canvas.manager.set_window_title('Fit Constants vs Energy')
+    fig_consts_vs_energy.canvas.manager.set_window_title('Fit Constants vs Energy')
     fig_consts_vs_energy.tight_layout()
 
 
