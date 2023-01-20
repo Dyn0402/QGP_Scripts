@@ -29,7 +29,8 @@ def main():
     # plot_vs_cent_nofit()
     # plot_vs_cent_fittest()
     # plot_all_zero_base()
-    plot_ampt_efficiency()
+    # plot_ampt_efficiency()
+    plot_flow()
     print('donzo')
 
 
@@ -823,6 +824,96 @@ def plot_ampt_efficiency():
                 df_fits_ratio.append({'data_set': data_set, 'energy': energy_shifted, 'baseline': base_div.val,
                                       'base_err': base_div.err, 'zero_mag': zero_div.val, 'zero_mag_err': zero_div.err})
     plot_slope_div_fits(pd.DataFrame(df_fits_ratio), data_sets_colors, data_sets_labels, ref_line=1)
+
+    plt.show()
+
+
+def plot_flow():
+    plt.rcParams["figure.figsize"] = (6.66, 5)
+    plt.rcParams["figure.dpi"] = 144
+    base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+    # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
+    df_name = 'binom_slice_stats_flow.csv'
+    save_fits = False
+    fits_out_base = 'Base_Zero_Fits/'
+    df_tproton_fits_name = 'flow_tprotons_fits.csv'
+    df_partitions_fits_name = 'flow_partitions_fits.csv'
+    df_path = base_path + df_name
+    sim_sets = []
+
+    stat_plot = 'standard deviation'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
+    div_plt = 120
+    exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
+    cent_plt = 8
+    energies_fit = [7, 11, 19, 27, 39, 62]
+    data_types_plt = ['divide']
+    samples = 72  # For title purposes only
+
+    data_sets_plt = ['flow_resample_res99_v207', 'flow_resample_res75_v207', 'flow_resample_res5_v207',
+                     'flow_resample_res3_v207', 'flow_resample_res15_v202']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple', 'green']))
+    data_sets_labels = dict(zip(data_sets_plt, ['0.99', '0.75', '0.5', '0.3', '0.15']))
+
+    all_sets_plt = data_sets_plt + sim_sets[:]
+
+    df = pd.read_csv(df_path)
+    df = df.dropna()
+    print(pd.unique(df['name']))
+
+    df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
+
+    for data_set in data_sets_plt:
+        df_set = df[df['name'] == data_set]
+        stat_vs_protons(df_set, stat_plot, div_plt, cent_plt, [62], ['raw', 'mix'], all_sets_plt, plot=True, fit=False,
+                        data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels, star_prelim=False)
+
+    for data_set in data_sets_plt:
+        df_set = df[df['name'] == data_set]
+        stat_vs_protons(df_set, stat_plot, div_plt, cent_plt, [62], data_types_plt, all_sets_plt, plot=True, fit=False,
+                        data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels, star_prelim=False,
+                        y_ranges={'standard deviation': [0.946, 1.045]})
+    # stat_vs_protons_energies(df, stat_plot, [120], cent_plt, [7, 11, 19, 27, 39, 62], data_types_plt, all_sets_plt,
+    #                          plot=True, fit=True, plot_fit=False, data_sets_colors=data_sets_colors,
+    #                          data_sets_labels=data_sets_labels, star_prelim=False)
+    #
+    # # plt.show()
+    # # return
+    #
+    # protons_fits = []
+    # for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
+    #     print(f'Div {div}')
+    #     protons_fits_div = stat_vs_protons(df, stat_plot, div, cent_plt, energies_fit, data_types_plt, all_sets_plt,
+    #                                        plot=False, fit=True)
+    #     protons_fits.append(protons_fits_div)
+    # protons_fits = pd.concat(protons_fits, ignore_index=True)
+    # if save_fits:
+    #     protons_fits.to_csv(f'{base_path}{fits_out_base}{df_tproton_fits_name}', index=False)
+    # print(protons_fits)
+    # print(pd.unique(protons_fits['amp']))
+    # print(pd.unique(protons_fits['spread']))
+    # df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
+    #                                  data_sets_labels=data_sets_labels)
+    # if save_fits:
+    #     df_fits.to_csv(f'{base_path}{fits_out_base}{df_partitions_fits_name}', index=False)
+    # # print(df_fits)
+    # plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
+    #
+    # def_set = 'ampt_new_coal_resample_def'
+    # df_fits_ratio = []  # Divide baseline/zeros by 100% default to see difference
+    # for energy in pd.unique(df_fits['energy']):
+    #     df_fits_energy = df_fits[df_fits['energy'] == energy]
+    #     df_fits_energy_def = df_fits_energy[df_fits_energy['data_set'] == def_set]
+    #     base_def = Measure(df_fits_energy_def['baseline'].iloc[0], df_fits_energy_def['base_err'].iloc[0])
+    #     zero_def = Measure(df_fits_energy_def['zero_mag'].iloc[0], df_fits_energy_def['zero_mag_err'].iloc[0])
+    #     for ds_i, data_set in enumerate(pd.unique(df_fits_energy['data_set'])):
+    #         if data_set != def_set:
+    #             df_fits_e_ds = df_fits_energy[df_fits_energy['data_set'] == data_set]
+    #             base_div = Measure(df_fits_e_ds['baseline'].iloc[0], df_fits_e_ds['base_err'].iloc[0]) / base_def
+    #             zero_div = Measure(df_fits_e_ds['zero_mag'].iloc[0], df_fits_e_ds['zero_mag_err'].iloc[0]) / zero_def
+    #             energy_shifted = energy - 1 + ds_i / 2.0
+    #             df_fits_ratio.append({'data_set': data_set, 'energy': energy_shifted, 'baseline': base_div.val,
+    #                                   'base_err': base_div.err, 'zero_mag': zero_div.val, 'zero_mag_err': zero_div.err})
+    # plot_slope_div_fits(pd.DataFrame(df_fits_ratio), data_sets_colors, data_sets_labels, ref_line=1)
 
     plt.show()
 
