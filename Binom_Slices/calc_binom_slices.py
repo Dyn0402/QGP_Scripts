@@ -37,19 +37,20 @@ def init_pars():
         # 'base_path': '/media/ucla/Research/',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_cfev.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim.csv',
-        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_stats_ampt_eff.csv',
+        # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_stats_ampt_eff.csv',
+        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_stats_flow.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cents.csv',
         # 'csv_path': 'D:/Transfer/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim_new.csv',
         # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
         'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': False,  # If True check csv_path and only run missing datasets, else run all datasets
-        'threads': 12,
+        'threads': 11,
         'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
         'min_events': 100,  # Min number of total events per total_proton. Skip total_proton if fewer
         'min_bs': 100,  # Min number of bootstrap sets of total_proton. Skip if fewer
         'div_bs': 0,  # Number of bootstrap divide values to get
-        'save_cent': True,  # Include centrality column in output dataframe
+        'save_cent': False,  # Include centrality column in output dataframe
         'save_data_type': True,  # Include data_type column in output dataframe
         'save_stat': True,  # Include statistic column in output dataframe
         'save_set_num': False,  # Don't save set num if False. Currently not compatible with set nums!
@@ -82,16 +83,16 @@ def define_datasets(base_path):
         # ['ampt_def', '_Ampt', ['default'], [], ['resample'], range(60), all_energies, all_cents, all_divs],
         # ['ampt_new_coal_single_def', '_Ampt_New_Coal', ['default', 'single'], [], [], [0], all_energies, all_cents,
         #  all_divs],
-        ['ampt_new_coal_resample_def', '_Ampt_New_Coal', ['default', 'resample'], [], ['alg3'], [0], all_energies,
-         all_cents, all_divs],
-        ['ampt_new_coal_resample_eff1', '_Ampt_New_Coal', ['resample', 'eff1'], [], ['alg3'], [0],
-         all_energies, all_cents, all_divs],
-        ['ampt_new_coal_resample_eff2', '_Ampt_New_Coal', ['resample', 'eff2'], [], ['alg3'], [0],
-         all_energies, all_cents, all_divs],
-        ['ampt_new_coal_resample_eff3', '_Ampt_New_Coal', ['resample', 'eff3'], [], ['alg3'], [0],
-         all_energies, all_cents, all_divs],
-        ['ampt_new_coal_resample_eff4', '_Ampt_New_Coal', ['resample', 'eff4'], [], ['alg3'], [0],
-         all_energies, all_cents, all_divs],
+        # ['ampt_new_coal_resample_def', '_Ampt_New_Coal', ['default', 'resample'], [], ['alg3'], [0], all_energies,
+        #  all_cents, all_divs],
+        # ['ampt_new_coal_resample_eff1', '_Ampt_New_Coal', ['resample', 'eff1'], [], ['alg3'], [0],
+        #  all_energies, all_cents, all_divs],
+        # ['ampt_new_coal_resample_eff2', '_Ampt_New_Coal', ['resample', 'eff2'], [], ['alg3'], [0],
+        #  all_energies, all_cents, all_divs],
+        # ['ampt_new_coal_resample_eff3', '_Ampt_New_Coal', ['resample', 'eff3'], [], ['alg3'], [0],
+        #  all_energies, all_cents, all_divs],
+        # ['ampt_new_coal_resample_eff4', '_Ampt_New_Coal', ['resample', 'eff4'], [], ['alg3'], [0],
+        #  all_energies, all_cents, all_divs],
         # ['ampt_baryon_first_fix_resample_def', '_Ampt', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
         # ['ampt_old_resample_def', '_Ampt_Old', ['default', 'resample'], [], [], [0], all_energies, all_cents, all_divs],
         # ['ampt_eff1_resample_def', '_Ampt', ['resample', 'Eff1'], [], [], [0], all_energies, all_cents, all_divs],
@@ -110,7 +111,17 @@ def define_datasets(base_path):
         # ['cfev_resample_def', '_CFEV', ['default', 'resample'], [], ['alg3'], [0], all_energies, all_cents, all_divs],
         # ['cfevb342_resample_def', '_CFEVb342', ['default', 'resample'], [], ['alg3'], [0], all_energies, all_cents,
         #  all_divs],
+        # ['flow_resample_res1_v207', '_Sim_Flow', ['resample', 'res1', 'v207'], [], [], [0], [62], [8], all_divs],
     ]
+
+    reses = ['1', '15', '2', '3', '4', '5', '6', '75', '9', '99']
+    for res in reses:
+        entry_vals.append([f'flow_resample_res{res}_v207', '_Sim_Flow', ['resample', f'res{res}', 'v207'], [], [], [0],
+                           [62], [8], all_divs])
+    entry_vals.append(['flow_resample_res15_v205', '_Sim_Flow', ['resample', 'res15', 'v205'], [], [], [0], [62], [8],
+                       all_divs])
+    entry_vals.append(['flow_resample_res15_v202', '_Sim_Flow', ['resample', 'res15', 'v202'], [], [], [0], [62], [8],
+                       all_divs])
 
     # Plus Minus Clustering
     # df = find_sim_sets(f'{base_path}Data_Sim_tests/', ['flat80', 'clmultiplusminus', 'resample'], [], False)
