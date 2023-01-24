@@ -833,7 +833,7 @@ def plot_flow():
     plt.rcParams["figure.dpi"] = 144
     base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
     # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
-    df_name = 'binom_slice_stats_flow.csv'
+    df_name = 'binom_slice_stats_flow_test.csv'
     save_fits = False
     fits_out_base = 'Base_Zero_Fits/'
     df_tproton_fits_name = 'flow_tprotons_fits.csv'
@@ -862,42 +862,45 @@ def plot_flow():
 
     df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
 
-    for data_set in data_sets_plt:
-        df_set = df[df['name'] == data_set]
-        stat_vs_protons(df_set, stat_plot, div_plt, cent_plt, [62], ['raw', 'mix'], all_sets_plt, plot=True, fit=False,
-                        data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels, star_prelim=False)
+    # for data_set in data_sets_plt:
+    #     df_set = df[df['name'] == data_set]
+    #     stat_vs_protons(df_set, stat_plot, div_plt, cent_plt, [62], ['raw', 'mix'], all_sets_plt, plot=True, fit=False,
+    #                     data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels, star_prelim=False)
 
     for data_set in data_sets_plt:
         df_set = df[df['name'] == data_set]
         stat_vs_protons(df_set, stat_plot, div_plt, cent_plt, [62], data_types_plt, all_sets_plt, plot=True, fit=False,
                         data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels, star_prelim=False,
                         y_ranges={'standard deviation': [0.946, 1.045]})
-    # stat_vs_protons_energies(df, stat_plot, [120], cent_plt, [7, 11, 19, 27, 39, 62], data_types_plt, all_sets_plt,
-    #                          plot=True, fit=True, plot_fit=False, data_sets_colors=data_sets_colors,
-    #                          data_sets_labels=data_sets_labels, star_prelim=False)
-    #
-    # # plt.show()
-    # # return
-    #
-    # protons_fits = []
-    # for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
-    #     print(f'Div {div}')
-    #     protons_fits_div = stat_vs_protons(df, stat_plot, div, cent_plt, energies_fit, data_types_plt, all_sets_plt,
-    #                                        plot=False, fit=True)
-    #     protons_fits.append(protons_fits_div)
-    # protons_fits = pd.concat(protons_fits, ignore_index=True)
-    # if save_fits:
-    #     protons_fits.to_csv(f'{base_path}{fits_out_base}{df_tproton_fits_name}', index=False)
-    # print(protons_fits)
-    # print(pd.unique(protons_fits['amp']))
-    # print(pd.unique(protons_fits['spread']))
-    # df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
-    #                                  data_sets_labels=data_sets_labels)
-    # if save_fits:
-    #     df_fits.to_csv(f'{base_path}{fits_out_base}{df_partitions_fits_name}', index=False)
-    # # print(df_fits)
-    # plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
-    #
+
+    # protons_fits_div = stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_fit, data_types_plt, all_sets_plt,
+    #                                    plot=False, fit=True)
+    stat_vs_protons_energies(df, stat_plot, [120], cent_plt, [7, 11, 19, 27, 39, 62], data_types_plt, all_sets_plt,
+                             plot=True, fit=True, plot_fit=False, data_sets_colors=data_sets_colors,
+                             data_sets_labels=data_sets_labels, star_prelim=False)
+
+    # plt.show()
+    # return
+
+    protons_fits = []
+    for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
+        print(f'Div {div}')
+        protons_fits_div = stat_vs_protons(df, stat_plot, div, cent_plt, energies_fit, data_types_plt, all_sets_plt,
+                                           plot=False, fit=True)
+        protons_fits.append(protons_fits_div)
+    protons_fits = pd.concat(protons_fits, ignore_index=True)
+    if save_fits:
+        protons_fits.to_csv(f'{base_path}{fits_out_base}{df_tproton_fits_name}', index=False)
+    print(protons_fits)
+    print(pd.unique(protons_fits['amp']))
+    print(pd.unique(protons_fits['spread']))
+    df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
+                                     data_sets_labels=data_sets_labels)
+    if save_fits:
+        df_fits.to_csv(f'{base_path}{fits_out_base}{df_partitions_fits_name}', index=False)
+    # print(df_fits)
+    plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
+
     # def_set = 'ampt_new_coal_resample_def'
     # df_fits_ratio = []  # Divide baseline/zeros by 100% default to see difference
     # for energy in pd.unique(df_fits['energy']):
