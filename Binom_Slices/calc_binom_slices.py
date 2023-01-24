@@ -38,13 +38,13 @@ def init_pars():
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_cfev.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_stats_ampt_eff.csv',
-        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_stats_flow_test.csv',
+        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_stats_flow.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cents.csv',
         # 'csv_path': 'D:/Transfer/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim_new.csv',
         # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
         'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': False,  # If True check csv_path and only run missing datasets, else run all datasets
-        'threads': 11,
+        'threads': 16,
         'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
         'min_events': 100,  # Min number of total events per total_proton. Skip total_proton if fewer
@@ -114,8 +114,8 @@ def define_datasets(base_path):
         # ['flow_resample_res1_v207', '_Sim_Flow', ['resample', 'res1', 'v207'], [], [], [0], [62], [8], all_divs],
     ]
 
-    # reses = ['1', '15', '2', '3', '4', '5', '6', '75', '9', '99']
-    reses = ['1', '15', '3', '5', '75', '99']
+    reses = ['1', '15', '2', '3', '4', '5', '6', '75', '9', '99']
+    # reses = ['1', '15', '3', '5', '75', '99']
     for res in reses:
         entry_vals.append([f'flow_resample_res{res}_v207', '_Sim_Flow', ['resample', f'res{res}', 'v207'], [], [], [0],
                            [62], [8], all_divs])

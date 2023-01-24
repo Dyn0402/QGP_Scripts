@@ -29,7 +29,7 @@ def from_dataframe():
     base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
     # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
     # df_name = 'binom_slice_stats_cent8_no_sim.csv'
-    df_name = 'binom_slice_stats_flow_test.csv'
+    df_name = 'binom_slice_stats_flow.csv'
     divs = 120
     energy = 62
     samples = 72  # For title only
@@ -39,7 +39,7 @@ def from_dataframe():
     elif data_set == 'BES':
         data_set_name = 'bes_resample_def'
     elif data_set == 'Flow':
-        data_set_name = 'flow_resample_res5_v207'
+        data_set_name = 'flow_resample_res15_v205'
     stat = 'standard deviation'
 
     df_path = base_path + df_name
