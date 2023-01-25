@@ -43,7 +43,7 @@ def init_pars():
         # 'csv_path': 'D:/Transfer/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim_new.csv',
         # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
         'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
-        'only_new': False,  # If True check csv_path and only run missing datasets, else run all datasets
+        'only_new': True,  # If True check csv_path and only run missing datasets, else run all datasets
         'threads': 16,
         'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
@@ -115,14 +115,16 @@ def define_datasets(base_path):
     ]
 
     reses = ['1', '15', '2', '3', '4', '5', '6', '75', '9', '99']
+    v2s = ['01', '02', '03', '04', '05', '06', '07']
     # reses = ['1', '15', '3', '5', '75', '99']
-    for res in reses:
-        entry_vals.append([f'flow_resample_res{res}_v207', '_Sim_Flow', ['resample', f'res{res}', 'v207'], [], [], [0],
-                           [62], [8], all_divs])
-    entry_vals.append(['flow_resample_res15_v205', '_Sim_Flow', ['resample', 'res15', 'v205'], [], [], [0], [62], [8],
-                       all_divs])
-    entry_vals.append(['flow_resample_res15_v202', '_Sim_Flow', ['resample', 'res15', 'v202'], [], [], [0], [62], [8],
-                       all_divs])
+    for v2 in v2s:
+        for res in reses:
+            entry_vals.append([f'flow_resample_res{res}_v2{v2}', '_Sim_Flow', ['resample', f'res{res}', f'v2{v2}'], [],
+                               [], [0], [62], [8], all_divs])
+    # entry_vals.append(['flow_resample_res15_v205', '_Sim_Flow', ['resample', 'res15', 'v205'], [], [], [0], [62], [8],
+    #                    all_divs])
+    # entry_vals.append(['flow_resample_res15_v202', '_Sim_Flow', ['resample', 'res15', 'v202'], [], [], [0], [62], [8],
+    #                    all_divs])
 
     # Plus Minus Clustering
     # df = find_sim_sets(f'{base_path}Data_Sim_tests/', ['flat80', 'clmultiplusminus', 'resample'], [], False)
