@@ -23,7 +23,7 @@ def main():
     # get_sim_mapping()
     # get_sim_mapping_pm()
     # plot_star_model()
-    plot_star_model_onediv()
+    # plot_star_model_onediv()
     # plot_vs_cent()
     # plot_closest_sims()
     # plot_vs_cent_nofit()
@@ -849,10 +849,15 @@ def plot_flow():
     data_types_plt = ['divide']
     samples = 72  # For title purposes only
 
-    data_sets_plt = ['flow_resample_res99_v207', 'flow_resample_res75_v207', 'flow_resample_res5_v207',
-                     'flow_resample_res3_v207', 'flow_resample_res15_v202']
-    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple', 'green']))
-    data_sets_labels = dict(zip(data_sets_plt, ['0.99', '0.75', '0.5', '0.3', '0.15']))
+    # data_sets_plt = ['flow_resample_res99_v207', 'flow_resample_res75_v207', 'flow_resample_res5_v207',
+    #                  'flow_resample_res3_v207', 'flow_resample_res15_v207']
+    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple', 'green']))
+    # data_sets_labels = dict(zip(data_sets_plt, ['0.99', '0.75', '0.5', '0.3', '0.15']))
+
+    data_sets_plt = ['flow_resample_res15_v207', 'flow_resample_res15_v206', 'flow_resample_res15_v205',
+                     'flow_resample_res15_v204', 'flow_resample_res15_v203', 'flow_resample_res15_v202']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple', 'green', 'olive']))
+    data_sets_labels = dict(zip(data_sets_plt, ['v2=0.07', 'v2=0.06', 'v2=0.05', 'v2=0.04', 'v2=0.03', 'v2=0.02']))
 
     all_sets_plt = data_sets_plt + sim_sets[:]
 
@@ -867,17 +872,23 @@ def plot_flow():
     #     stat_vs_protons(df_set, stat_plot, div_plt, cent_plt, [62], ['raw', 'mix'], all_sets_plt, plot=True, fit=False,
     #                     data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels, star_prelim=False)
 
-    for data_set in data_sets_plt:
-        df_set = df[df['name'] == data_set]
-        stat_vs_protons(df_set, stat_plot, div_plt, cent_plt, [62], data_types_plt, all_sets_plt, plot=True, fit=False,
-                        data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels, star_prelim=False,
-                        y_ranges={'standard deviation': [0.946, 1.045]})
-        stat_vs_protons(df_set, stat_plot, div_plt, cent_plt, [62], ['raw'], all_sets_plt, plot=True, fit=True,
-                        data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels, star_prelim=False,
-                        y_ranges={'standard deviation': [0.946, 1.045]})
+    flow_vs_v2(df, div_plt, '15')
 
-    plt.show()
-    return
+    # plt.show()
+    # return
+
+    # for data_set in data_sets_plt:
+    #     df_set = df[df['name'] == data_set]
+    #     stat_vs_protons(df_set, stat_plot, div_plt, cent_plt, [62], data_types_plt, all_sets_plt, plot=True, fit=False,
+    #                     data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels, star_prelim=False,
+    #                     y_ranges={'standard deviation': [0.946, 1.045]})
+    #     stat_vs_protons(df_set, stat_plot, div_plt, cent_plt, [62], ['raw'], all_sets_plt, plot=True, fit=True,
+    #                     data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels, star_prelim=False,
+    #                     y_ranges={'standard deviation': [0.946, 1.045]})
+    #
+    #
+    # plt.show()
+    # return
     protons_fits = []
     for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
         print(f'Div {div}')

@@ -327,6 +327,10 @@ def inv_invx_odr(pars, x):
     return pars[0] / x + pars[1]
 
 
+def quad(x, a, b, c):
+    return a * x ** 2 + b * x + c
+
+
 def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False, fit=False,
                     hist=False, data_sets_colors=None, data_sets_labels=None, star_prelim=False):
     data = []
@@ -2006,6 +2010,45 @@ def plot_base_zeros(df, data_sets_plt, data_sets_labels, data_sets_colors):
     fig_base_amp.canvas.manager.set_window_title('Baselines vs Zeros')
     fig_amp_base.tight_layout()
     fig_amp_base.canvas.manager.set_window_title('Zeros vs Baselines')
+
+
+def flow_vs_v2(df, div, res):
+    df = df[df['name'].str.contains(f'res{res}')]
+    df = df[(df['stat'] == 'standard deviation') & (df['divs'] == div) & (df['data_type'] == 'raw')]
+    v2s, slope_vals, slope_errs = [], [], []
+    p = div / 360.0
+    q = 1 - p
+    for data_set in pd.unique(df['name']):
+        v2 = float('0.' + data_set[data_set.find('_v2')+3:])
+        df_v2 = df[df['name'] == data_set]
+        fig, ax = plt.subplots(figsize=(6.66, 5), dpi=144)
+        ax.axhline(1, color='black', ls='--')
+        raw_div_binom = [Measure(val, err) / np.sqrt(n * p * q) for n, val, err in
+                         zip(df_v2['total_protons'], df_v2['val'], df_v2['err'])]
+        y_vals, y_errs = [x.val for x in raw_div_binom], [x.err for x in raw_div_binom]
+        ax.errorbar(df_v2['total_protons'], y_vals, y_errs, marker='o', ls='none', color='blue')
+        ax.set_xlabel('Total Protons in Event')
+        ax.set_ylabel('Raw / Binomial')
+        ax.set_title(data_set)
+        popt, pcov = cf(line_yint1, df_v2['total_protons'], y_vals, sigma=y_errs, absolute_sigma=True)
+        ax.plot(df_v2['total_protons'], line_yint1(df_v2['total_protons'], *popt), ls='--', color='red')
+        v2s.append(v2)
+        slope_vals.append(popt[0])
+        slope_errs.append(np.sqrt(np.diag(pcov))[0])
+
+    v2s, slope_vals, slope_errs = zip(*sorted(zip(v2s, slope_vals, slope_errs)))
+    v2s, slope_vals, slope_errs = np.array(v2s), np.array(slope_vals), np.array(slope_errs)
+    fig, ax = plt.subplots(figsize=(6.66, 5), dpi=144)
+    ax.set_xlabel('v2')
+    ax.set_ylabel(r'$\sigma_{raw}/\sigma_{binomial}$ vs Total Protons Slope')
+    ax.axhline(0, color='black')
+    ax.axvline(0, color='black')
+    ax.errorbar(v2s, slope_vals, slope_errs, marker='o', ls='none', alpha=0.8)
+    popt, pcov = cf(quad, v2s, slope_vals, sigma=slope_errs, absolute_sigma=True)
+    print([f'{val} +- {err}' for val, err in zip(popt, np.sqrt(np.diag(pcov)))])
+    xs = np.linspace(0, 0.07, 200)
+    ax.plot(xs, quad(xs, *popt), ls='--', color='red')
+    ax.grid()
 
 
 def map_to_sim(baseline, zeros, interpolations):
