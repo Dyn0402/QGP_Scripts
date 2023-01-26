@@ -22,8 +22,8 @@ from Measure import Measure
 def main():
     # from_hist_files()
     # from_hist_files_simple()
-    from_dataframe()
-    # flow_plots()
+    # from_dataframe()
+    flow_plots()
     print('donzo')
 
 
@@ -36,9 +36,9 @@ def from_dataframe():
     # df_name = 'binom_slice_stats_flow.csv'
     divs = 120
     energy = 62
-    cent = None
+    cent = 6
     samples = 72  # For title only
-    data_set = 'CF'
+    data_set = 'AMPT'
     if data_set == 'AMPT':
         # data_set_name = 'ampt_new_coal_resample_def'
         data_set_name = 'ampt_new_coal_resample_def_noprerot'
@@ -183,11 +183,13 @@ def flow_plots():
     fig2.tight_layout()
     fig2.subplots_adjust(wspace=0, hspace=0)
 
-    data_set_names = ['flow_resample_res15_v207', 'flow_resample_res15_v205', 'flow_resample_res15_v202']
-    data_set_name_labels = ['v2=0.07, resolution=0.15', 'v2=0.05, resolution=0.15', 'v2=0.02, resolution=0.15']
+    data_set_names = ['flow_resample_res15_v207', 'flow_resample_res15_v206', 'flow_resample_res15_v205',
+                      'flow_resample_res15_v204', 'flow_resample_res15_v203', 'flow_resample_res15_v202']
+    data_set_name_labels = ['v2=0.07, resolution=0.15', 'v2=0.06, resolution=0.15', 'v2=0.05, resolution=0.15',
+                            'v2=0.04, resolution=0.15', 'v2=0.03, resolution=0.15', 'v2=0.02, resolution=0.15']
     data_set_name_labels = dict(zip(data_set_names, data_set_name_labels))
 
-    fig, axs = plt.subplots(1, 3, figsize=(13.33, 6), dpi=144, sharex=True, sharey=True)
+    fig, axs = plt.subplots(2, 3, figsize=(13.33, 6), dpi=144, sharex=True, sharey=True)
     for ax_i, (data_set_name, ax) in enumerate(zip(data_set_names, axs.flat)):
         df = df_all[(df_all['name'] == data_set_name)]
         df = df.sort_values(by=['total_protons'])
@@ -206,9 +208,11 @@ def flow_plots():
                     zorder=1, color='green', alpha=0.8, label='Mix / Binomial')
         ax.axhline(1, zorder=0, color='black', ls='-')
         ax.text(0, 1.023, data_set_name_labels[data_set_name])
-        ax.set_xlabel('Total Protons in Event')
-        if ax_i == 0:
+        if ax_i >= 3:
+            ax.set_xlabel('Total Protons in Event')
+        if ax_i in [0, 3]:
             ax.set_ylabel('Standard Deviation Ratio')
+        if ax_i == 0:
             ax.legend()
     fig.suptitle(f'Flow Simulation, {divs}° Partitions, {samples} Samples per Event')
     fig.tight_layout()
