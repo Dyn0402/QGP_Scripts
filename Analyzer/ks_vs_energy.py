@@ -30,7 +30,8 @@ def main():
 def from_dataframe():
     base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
     # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
-    df_name = 'binom_slice_stats_cent8_no_sim.csv'
+    df_name = 'binom_slice_stats_ampt_noprerot.csv'
+    # df_name = 'binom_slice_stats_cent8_no_sim.csv'
     # df_name = 'binom_slice_stats_cents.csv'
     # df_name = 'binom_slice_stats_flow.csv'
     divs = 120
@@ -39,7 +40,8 @@ def from_dataframe():
     samples = 72  # For title only
     data_set = 'CF'
     if data_set == 'AMPT':
-        data_set_name = 'ampt_new_coal_resample_def'
+        # data_set_name = 'ampt_new_coal_resample_def'
+        data_set_name = 'ampt_new_coal_resample_def_noprerot'
     elif data_set == 'BES':
         data_set_name = 'bes_resample_def'
     elif data_set == 'Flow':
