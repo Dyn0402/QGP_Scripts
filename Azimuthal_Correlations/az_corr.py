@@ -143,8 +143,8 @@ def get_ampt_ref3_edges(ampt_cent_path, energy):
 
 
 def cent_test():
-    # base_path = 'F:/Research/'
-    base_path = '/media/ucla/Research/'
+    base_path = 'F:/Research/'
+    # base_path = '/media/ucla/Research/'
     # base_path = '/media/ucla/Research/AMPT_Trees_New_Coalescence/min_bias/string_melting/'
     data_path = f'{base_path}AMPT_Trees_New_Coalescence/min_bias/string_melting/'
     ampt_cent_path = f'{base_path}Ampt_Centralities_New_Coalescence/string_melting/'
@@ -156,9 +156,9 @@ def cent_test():
     pid = 2212  # Proton?
     n_bootstraps = 100
     seed = 45
-    bin_width = np.deg2rad(120)
+    bin_width = np.deg2rad(180)
     plot = False
-    threads = 14
+    threads = 12
     read_branches = ['pid', 'px', 'py', 'pz', 'refmult3']
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '60-70%', 1: '70-80%',
                 0: '80-90%', -1: '90-100%'}

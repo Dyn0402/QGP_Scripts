@@ -22,33 +22,41 @@ from Measure import Measure
 def main():
     # from_hist_files()
     # from_hist_files_simple()
-    # from_dataframe()
-    flow_plots()
+    from_dataframe()
+    # flow_plots()
     print('donzo')
 
 
 def from_dataframe():
     base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
     # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
-    df_name = 'binom_slice_stats_ampt_noprerot.csv'
-    # df_name = 'binom_slice_stats_cent8_no_sim.csv'
-    # df_name = 'binom_slice_stats_cents.csv'
-    # df_name = 'binom_slice_stats_flow.csv'
+
     divs = 120
     energy = 62
-    cent = 6
+    cent = 4
     samples = 72  # For title only
-    data_set = 'AMPT'
+    data_set = 'AMPT_noprerot_rp'
     if data_set == 'AMPT':
-        # data_set_name = 'ampt_new_coal_resample_def'
+        df_name = 'binom_slice_stats_cents.csv'
+        data_set_name = 'ampt_new_coal_resample_def'
+    elif data_set == 'AMPT_noprerot':
+        df_name = 'binom_slice_stats_ampt_noprerot.csv'
         data_set_name = 'ampt_new_coal_resample_def_noprerot'
+    elif data_set == 'AMPT_noprerot_rp':
+        df_name = 'binom_slice_stats_ampt_noprerot_rp.csv'
+        data_set_name = 'ampt_new_coal_resample_def_noprerot_rp'
     elif data_set == 'BES':
+        df_name = 'binom_slice_stats_cents.csv'
         data_set_name = 'bes_resample_def'
     elif data_set == 'Flow':
+        df_name = 'binom_slice_stats_flow.csv'
         data_set_name = 'flow_resample_res15_v205'
     elif data_set == 'CF':
+        df_name = 'binom_slice_stats_cents.csv'
         data_set_name = 'cf_resample_def'
     stat = 'standard deviation'
+
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '60-70%', 1: '70-80%'}
 
     df_path = base_path + df_name
     df = pd.read_csv(df_path)
@@ -72,7 +80,8 @@ def from_dataframe():
     ax1.plot(df_mix['total_protons'], y_binom_mix, color='red', alpha=0.8, zorder=0, label='Binomial')
     ax1.set_xlabel('Total Protons in Event')
     ax1.set_ylabel('Standard Deviation of Slice')
-    ax1.set_title(f'{data_set} {energy}GeV, 0-5% Centrality, {divs}° Partitions, {samples} Samples per Event')
+    ax1.set_title(f'{data_set} {energy}GeV, {cent_map[cent]} Centrality, {divs}° Partitions, '
+                  f'{samples} Samples per Event')
     ax1.legend()
     fig1.tight_layout()
 
@@ -86,7 +95,7 @@ def from_dataframe():
     ax2.axhline(1, zorder=0, color='red', ls='--')
     ax2.set_xlabel('Total Protons in Event')
     ax2.set_ylabel('Standard Deviation Ratio')
-    ax2.set_title(f'{data_set} {energy}GeV, 0-5% Centrality, {divs}° Partitions, {samples} Samples per Event')
+    ax2.set_title(f'{data_set} {energy}GeV, {cent_map[cent]} Centrality, {divs}° Partitions, {samples} Samples per Event')
     ax2.legend()
     fig2.tight_layout()
 
@@ -100,7 +109,7 @@ def from_dataframe():
     ax3.axhline(0, color='red', ls='--')
     ax3.set_xlabel('Total Protons in Event')
     ax3.set_ylabel('Standard Deviation Difference')
-    ax3.set_title(f'{data_set} {energy}GeV, 0-5% Centrality, {divs}° Partitions, {samples} Samples per Event')
+    ax3.set_title(f'{data_set} {energy}GeV, {cent_map[cent]} Centrality, {divs}° Partitions, {samples} Samples per Event')
     ax3.legend()
     fig3.tight_layout()
 
