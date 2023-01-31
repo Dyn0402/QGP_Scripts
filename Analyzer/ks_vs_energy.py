@@ -8,15 +8,16 @@ Created as QGP_Scripts/ks_vs_energy.py
 @author: Dylan Neff, dylan
 """
 
-from AzimuthBinData import AzimuthBinData as AzData
-from BootstrapAzBin import BootstrapAzBin as BsData
-from DistStats import DistStats
-from scipy import stats
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from scipy import stats
+from scipy.optimize import curve_fit as cf
 
 from Measure import Measure
+from AzimuthBinData import AzimuthBinData as AzData
+from BootstrapAzBin import BootstrapAzBin as BsData
+from DistStats import DistStats
 
 
 def main():
@@ -28,15 +29,15 @@ def main():
 
 
 def from_dataframe():
-    base_path = '/media/ucla/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
-    # base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+    # base_path = '/media/ucla/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+    base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
     # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
 
-    divs = 180
-    energy = 27
-    cent = 8
+    divs = 120
+    energy = 39
+    cent = 4
     samples = 72  # For title only
-    data_set = 'BES'
+    data_set = 'AMPT_noprerot_rp'
     if data_set == 'AMPT':
         df_name = 'binom_slice_stats_cents.csv'
         data_set_name = 'ampt_new_coal_resample_def'
@@ -49,6 +50,9 @@ def from_dataframe():
     elif data_set == 'BES':
         df_name = 'binom_slice_stats_cents.csv'
         data_set_name = 'bes_resample_def'
+    elif data_set == 'BES_epbins1':
+        df_name = 'binom_slice_stats_bes_epbins1.csv'
+        data_set_name = 'bes_resample_epbins1'
     elif data_set == 'Flow':
         df_name = 'binom_slice_stats_flow.csv'
         data_set_name = 'flow_resample_res15_v205'
@@ -89,14 +93,27 @@ def from_dataframe():
     fig2, ax2 = plt.subplots(figsize=(6.66, 5), dpi=144)
     raw_ratio = [Measure(val, err) / binom for val, err, binom in zip(df_raw['val'], df_raw['err'], y_binom_raw)]
     mix_ratio = [Measure(val, err) / binom for val, err, binom in zip(df_mix['val'], df_mix['err'], y_binom_mix)]
-    ax2.errorbar(df_raw['total_protons'], [x.val for x in raw_ratio], [x.err for x in raw_ratio], ls='', marker='o',
-                 zorder=2, color='blue', alpha=0.8, label='Raw / Binomial')
-    ax2.errorbar(df_mix['total_protons'], [x.val for x in mix_ratio], [x.err for x in mix_ratio], ls='', marker='o',
-                 zorder=1, color='green', alpha=0.8, label='Mix / Binomial')
+    raw_ratio_vals, raw_ratio_errs = [x.val for x in raw_ratio], [x.err for x in raw_ratio]
+    mix_ratio_vals, mix_ratio_errs = [x.val for x in mix_ratio], [x.err for x in mix_ratio]
     ax2.axhline(1, zorder=0, color='red', ls='--')
+    ax2.errorbar(df_raw['total_protons'], raw_ratio_vals, raw_ratio_errs, ls='', marker='o',
+                 zorder=2, color='blue', alpha=0.8, label='Raw / Binomial')
+    ax2.errorbar(df_mix['total_protons'], mix_ratio_vals, mix_ratio_errs, ls='', marker='o',
+                 zorder=1, color='green', alpha=0.8, label='Mix / Binomial')
+    popt_raw, pcov_raw = cf(line_xy11, df_raw['total_protons'], raw_ratio_vals, sigma=raw_ratio_errs,
+                            absolute_sigma=True)
+    popt_mix, pcov_mix = cf(line_xy11, df_mix['total_protons'], mix_ratio_vals, sigma=mix_ratio_errs,
+                            absolute_sigma=True)
+    x_plot = np.array([0, max(max(df_raw['total_protons']), max(df_mix['total_protons']))])
+    ax2.plot(x_plot, line_xy11(x_plot, *popt_raw), ls=':', color='blue', alpha=0.6)
+    ax2.plot(x_plot, line_xy11(x_plot, *popt_mix), ls=':', color='green', alpha=0.6)
+    ax2.annotate(f'raw slope: {popt_raw[0]:.6f}+-{np.sqrt(np.diag(pcov_raw))[0]:.6f}\n'
+                 f'mix slope: {popt_mix[0]:.6f}+-{np.sqrt(np.diag(pcov_mix))[0]:.6f}',
+                 xy=(0.05, 0.1), xycoords='axes fraction')
     ax2.set_xlabel('Total Protons in Event')
     ax2.set_ylabel('Standard Deviation Ratio')
-    ax2.set_title(f'{data_set} {energy}GeV, {cent_map[cent]} Centrality, {divs}° Partitions, {samples} Samples per Event')
+    ax2.set_title(
+        f'{data_set} {energy}GeV, {cent_map[cent]} Centrality, {divs}° Partitions, {samples} Samples per Event')
     ax2.legend()
     fig2.tight_layout()
 
@@ -110,7 +127,8 @@ def from_dataframe():
     ax3.axhline(0, color='red', ls='--')
     ax3.set_xlabel('Total Protons in Event')
     ax3.set_ylabel('Standard Deviation Difference')
-    ax3.set_title(f'{data_set} {energy}GeV, {cent_map[cent]} Centrality, {divs}° Partitions, {samples} Samples per Event')
+    ax3.set_title(
+        f'{data_set} {energy}GeV, {cent_map[cent]} Centrality, {divs}° Partitions, {samples} Samples per Event')
     ax3.legend()
     fig3.tight_layout()
 
@@ -149,12 +167,25 @@ def flow_plots():
 
         raw_ratio = [Measure(val, err) / binom for val, err, binom in zip(df_raw['val'], df_raw['err'], y_binom_raw)]
         mix_ratio = [Measure(val, err) / binom for val, err, binom in zip(df_mix['val'], df_mix['err'], y_binom_mix)]
-        ax.errorbar(df_raw['total_protons'], [x.val for x in raw_ratio], [x.err for x in raw_ratio], ls='', marker='o',
-                    zorder=2, color='blue', alpha=0.8, label='Raw / Binomial')
-        ax.errorbar(df_mix['total_protons'], [x.val for x in mix_ratio], [x.err for x in mix_ratio], ls='', marker='o',
-                    zorder=1, color='green', alpha=0.8, label='Mix / Binomial')
+        raw_ratio_vals, raw_ratio_errs = [x.val for x in raw_ratio], [x.err for x in raw_ratio]
+        mix_ratio_vals, mix_ratio_errs = [x.val for x in mix_ratio], [x.err for x in mix_ratio]
         ax.axhline(1, zorder=0, color='black', ls='-')
-        ax.text(0, 1.023, data_set_name_labels[data_set_name])
+        ax.errorbar(df_raw['total_protons'], raw_ratio_vals, raw_ratio_errs, ls='', marker='o',
+                    zorder=2, color='blue', alpha=0.8, label='Raw / Binomial')
+        ax.errorbar(df_mix['total_protons'], mix_ratio_vals, mix_ratio_errs, ls='', marker='o',
+                    zorder=1, color='green', alpha=0.8, label='Mix / Binomial')
+        popt_raw, pcov_raw = cf(line_xy11, df_raw['total_protons'], raw_ratio_vals, sigma=raw_ratio_errs,
+                                absolute_sigma=True)
+        popt_mix, pcov_mix = cf(line_xy11, df_mix['total_protons'], mix_ratio_vals, sigma=mix_ratio_errs,
+                                absolute_sigma=True)
+        x_plot = np.array([0, max(max(df_raw['total_protons']), max(df_mix['total_protons']))])
+        ax.plot(x_plot, line_xy11(x_plot, *popt_raw), ls=':', color='blue', alpha=0.6)
+        ax.plot(x_plot, line_xy11(x_plot, *popt_mix), ls=':', color='green', alpha=0.6)
+        ax.annotate(f'raw slope: {popt_raw[0]:.6f}+-{np.sqrt(np.diag(pcov_raw))[0]:.6f}\n'
+                    f'mix slope: {popt_mix[0]:.6f}+-{np.sqrt(np.diag(pcov_mix))[0]:.6f}',
+                    xy=(0.01, 0.6), xycoords='axes fraction')
+        # ax.text(0, 1.023, data_set_name_labels[data_set_name])
+        ax.annotate(data_set_name_labels[data_set_name], xy=(0.01, 0.7), xycoords='axes fraction')
         if ax_i >= 3:
             ax.set_xlabel('Total Protons in Event')
         if ax_i in [0, 3]:
@@ -182,7 +213,8 @@ def flow_plots():
         ax.errorbar(df_raw['total_protons'], [x.val for x in ratio_diff], [x.err for x in raw_ratio], ls='', marker='o',
                     zorder=2, color='blue', alpha=0.8, label='Raw')
         ax.axhline(1, zorder=0, color='black', ls='-')
-        ax.text(0, 1.023, data_set_name_labels[data_set_name])
+        # ax.text(0, 1.023, data_set_name_labels[data_set_name])
+        ax.annotate(data_set_name_labels[data_set_name], xy=(0.01, 0.73), xycoords='axes fraction')
         if ax_i >= 3:
             ax.set_xlabel('Total Protons in Event')
         if ax_i in [0, 3]:
@@ -212,12 +244,25 @@ def flow_plots():
 
         raw_ratio = [Measure(val, err) / binom for val, err, binom in zip(df_raw['val'], df_raw['err'], y_binom_raw)]
         mix_ratio = [Measure(val, err) / binom for val, err, binom in zip(df_mix['val'], df_mix['err'], y_binom_mix)]
-        ax.errorbar(df_raw['total_protons'], [x.val for x in raw_ratio], [x.err for x in raw_ratio], ls='', marker='o',
-                    zorder=2, color='blue', alpha=0.8, label='Raw / Binomial')
-        ax.errorbar(df_mix['total_protons'], [x.val for x in mix_ratio], [x.err for x in mix_ratio], ls='', marker='o',
-                    zorder=1, color='green', alpha=0.8, label='Mix / Binomial')
+        raw_ratio_vals, raw_ratio_errs = [x.val for x in raw_ratio], [x.err for x in raw_ratio]
+        mix_ratio_vals, mix_ratio_errs = [x.val for x in mix_ratio], [x.err for x in mix_ratio]
         ax.axhline(1, zorder=0, color='black', ls='-')
-        ax.text(0, 1.023, data_set_name_labels[data_set_name])
+        ax.errorbar(df_raw['total_protons'], raw_ratio_vals, raw_ratio_errs, ls='', marker='o',
+                    zorder=2, color='blue', alpha=0.8, label='Raw / Binomial')
+        ax.errorbar(df_mix['total_protons'], mix_ratio_vals, mix_ratio_errs, ls='', marker='o',
+                    zorder=1, color='green', alpha=0.8, label='Mix / Binomial')
+        popt_raw, pcov_raw = cf(line_xy11, df_raw['total_protons'], raw_ratio_vals, sigma=raw_ratio_errs,
+                                absolute_sigma=True)
+        popt_mix, pcov_mix = cf(line_xy11, df_mix['total_protons'], mix_ratio_vals, sigma=mix_ratio_errs,
+                                absolute_sigma=True)
+        x_plot = np.array([0, max(max(df_raw['total_protons']), max(df_mix['total_protons']))])
+        ax.plot(x_plot, line_xy11(x_plot, *popt_raw), ls=':', color='blue', alpha=0.6)
+        ax.plot(x_plot, line_xy11(x_plot, *popt_mix), ls=':', color='green', alpha=0.6)
+        ax.annotate(f'raw slope: {popt_raw[0]:.6f}+-{np.sqrt(np.diag(pcov_raw))[0]:.6f}\n'
+                    f'mix slope: {popt_mix[0]:.6f}+-{np.sqrt(np.diag(pcov_mix))[0]:.6f}',
+                    xy=(0.01, 0.6), xycoords='axes fraction')
+        # ax.text(0, 1.023, data_set_name_labels[data_set_name])
+        ax.annotate(data_set_name_labels[data_set_name], xy=(0.01, 0.73), xycoords='axes fraction')
         if ax_i >= 3:
             ax.set_xlabel('Total Protons in Event')
         if ax_i in [0, 3]:
@@ -331,7 +376,7 @@ def from_hist_files_simple():
 
         ax3.errorbar(raw_mix_tps, raw_mix_diff_vals, raw_mix_diff_errs, alpha=0.8, ls='none', marker=marker,
                      color=color, label=f'{div}°')
-        ax3.axhline(raw_mix_diff_mean, color=color, alpha=0.7)
+        ax3.axhline(raw_mix_diff_mean, color=color, alpha=0.73)
         # ax3.axhspan(raw_mix_diff_mean.val - raw_mix_diff_mean.err, raw_mix_diff_mean.val + raw_mix_diff_mean.err,
         #             color=color, alpha=0.4)
         print(f'{div}° Mean: {raw_mix_diff_mean}')
@@ -566,6 +611,10 @@ def hist_sd(x, y):
 def hist_mean(x, y):
     mean = sum(np.asarray(x) * np.asarray(y)) / sum(y)
     return mean
+
+
+def line_xy11(x, m):
+    return m * (x - 1) + 1
 
 
 if __name__ == '__main__':
