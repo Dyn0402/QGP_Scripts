@@ -68,7 +68,6 @@ def finest_binning():
             for eta in tracks[particle_type][cent]:
                 runs = list(tracks[particle_type][cent][eta].keys())
                 num_tracks = list(tracks[particle_type][cent][eta].values())
-                num_tracks_list.extend(num_tracks)
                 fig, ax = plt.subplots()
                 ax.set_yscale('log')
                 ax.grid()
@@ -90,7 +89,6 @@ def coarse_binning():
     eta_bins = np.arange(0, eta_bin_num, 1)
     tracks = {'protons': {cent: {eta: {} for eta in eta_bins} for cent in cents},
               'non-protons': {cent: {eta: {} for eta in eta_bins} for cent in cents}}
-    num_tracks_list = []
     with uproot.open(path) as file:
         # print(file.keys())
         num_keys = len(file.keys())
@@ -108,12 +106,21 @@ def coarse_binning():
             cent = int(name_split[4])
             eta = eta_rebin(int(name_split[7]), eta_bin_num)
             num_tracks = prof.counts()[1]
-            tracks[particle_type][cent][eta].update({run: num_tracks})
-            num_tracks_list.append(num_tracks)
-            # print(prof.name, name, name_split, run, prof.counts()[1])
+            if run in tracks[particle_type][cent][eta]:
+                tracks[particle_type][cent][eta][run] += num_tracks
+            else:
+                tracks[particle_type][cent][eta].update({run: num_tracks})
+            # print(prof.name, name, name_split, run, eta, prof.counts()[1])
             # input()
         # prof = file['sine_terms_non-protons_cent_-1_eta_bin_13_runkey_1113906;1']
         # print(prof.counts())
+    num_tracks_list = []
+    for particle_type in tracks:
+        for cent in tracks[particle_type]:
+            for eta in tracks[particle_type][cent]:
+                num_tracks = list(tracks[particle_type][cent][eta].values())
+                print(particle_type, cent, eta, tracks[particle_type][cent][eta])
+                num_tracks_list.extend(num_tracks)
     max_num_tracks = max(num_tracks_list)
     fig, ax = plt.subplots()
     ax.hist(num_tracks_list, bins=100)
@@ -128,7 +135,6 @@ def coarse_binning():
             for eta in tracks[particle_type][cent]:
                 runs = list(tracks[particle_type][cent][eta].keys())
                 num_tracks = list(tracks[particle_type][cent][eta].values())
-                num_tracks_list.extend(num_tracks)
                 fig, ax = plt.subplots()
                 ax.set_yscale('log')
                 ax.grid()
