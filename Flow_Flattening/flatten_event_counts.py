@@ -18,16 +18,19 @@ import vector
 
 
 def main():
-    # finest_binning()
-    coarse_binning()
+    finest_binning()
+    # coarse_binning()
     print('donzo')
 
 
 def finest_binning():
-    path = 'C:/Users/Dylan/phi_coefs_7GeV.root'
-    pp = PdfPages('C:/Users/Dylan/Desktop/flattener_counts.pdf')
+    energy = 27
+    path = f'C:/Users/Dylan/phi_coefs_{energy}GeV.root'
+    pp = PdfPages(f'C:/Users/Dylan/Desktop/flattener_counts_{energy}GeV.pdf')
     cents = np.arange(-1, 9, 1)
-    eta_bins = np.arange(0, 20, 1)
+    eta_bin_num = 4
+    eta_bins = np.arange(0, eta_bin_num, 1)
+    hist_small_max = 1000
     tracks = {'protons': {cent: {eta: {} for eta in eta_bins} for cent in cents},
               'non-protons': {cent: {eta: {} for eta in eta_bins} for cent in cents}}
     num_tracks_list = []
@@ -59,6 +62,17 @@ def finest_binning():
     ax.hist(num_tracks_list, bins=100)
     ax.set_yscale('log')
     ax.set_xlabel('Number of tracks in phi flattening distribution')
+    ax.set_title(f'{energy}GeV Tracks per Flattening Distribution Distribution')
+    pp.savefig(fig)
+    ax.set_yscale('linear')
+    pp.savefig(fig)
+    n_few_track = np.array(num_tracks_list)
+    n_few_track = n_few_track[n_few_track < hist_small_max]
+    fig, ax = plt.subplots()
+    ax.hist(n_few_track, bins=100)
+    ax.set_yscale('log')
+    ax.set_xlabel('Number of tracks in phi flattening distribution')
+    ax.set_title(f'{energy}GeV Truncated Tracks per Flattening Distribution Distribution')
     pp.savefig(fig)
     ax.set_yscale('linear')
     pp.savefig(fig)
@@ -73,9 +87,9 @@ def finest_binning():
                 ax.grid()
                 ax.scatter(runs, num_tracks)
                 ax.set_ylim(bottom=0.8, top=max_num_tracks)
-                ax.set_xlabel('Run Number % 10')
+                ax.set_xlabel('Run Number % 1000')
                 ax.set_ylabel('Number of Tracks in Flattening Distribution')
-                ax.set_title(f'{particle_type} {cent_convert(cent)} centrality {eta_bin_convert(eta)} eta')
+                ax.set_title(f'{particle_type} {cent_convert(cent)} centrality {eta_bin_convert(eta, eta_bin_num)} eta')
                 fig.tight_layout()
                 pp.savefig(fig)
     pp.close()
