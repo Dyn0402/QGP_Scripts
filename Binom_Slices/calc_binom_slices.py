@@ -48,7 +48,7 @@ def init_pars():
         # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
         'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': False,  # If True check csv_path and only run missing datasets, else run all datasets
-        'threads': 11,
+        'threads': 16,
         'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
         'min_events': 100,  # Min number of total events per total_proton. Skip total_proton if fewer
@@ -89,12 +89,10 @@ def define_datasets(base_path):
         #  all_divs],
         # ['ampt_new_coal_resample_def', '_Ampt_New_Coal', ['default', 'resample'], [], ['alg3'], [0], all_energies,
         #  all_cents, all_divs],
-        ['ampt_new_coal_rp', '_Ampt_New_Coal',
-         ['default', 'resample', 'noprerotate', 'reactionplane'],
+        ['ampt_new_coal_rp', '_Ampt_New_Coal', ['default', 'resample', 'noprerotate', 'reactionplane'],
          [], ['alg3'], [0], all_energies, all_cents, all_divs],
-        ['ampt_new_coal_epbins1', '_Ampt_New_Coal',
-         ['default', 'resample', 'noprerotate', 'epbins1'],
-         [], ['alg3'], [0], all_energies, all_cents, all_divs],
+        ['ampt_new_coal_epbins1', '_Ampt_New_Coal', ['default', 'resample', 'epbins1'],
+         [], ['alg3', 'noprerotate'], [0], all_energies, all_cents, all_divs],
         # ['ampt_new_coal_resample_eff1', '_Ampt_New_Coal', ['resample', 'eff1'], [], ['alg3'], [0],
         #  all_energies, all_cents, all_divs],
         # ['ampt_new_coal_resample_eff2', '_Ampt_New_Coal', ['resample', 'eff2'], [], ['alg3'], [0],
