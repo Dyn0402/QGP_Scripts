@@ -7,6 +7,7 @@ Created as QGP_Scripts/analyze_binom_slices
 
 @author: Dylan Neff, dylan
 """
+import os
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -329,6 +330,10 @@ def inv_invx_odr(pars, x):
 
 def quad(x, a, b, c):
     return a * x ** 2 + b * x + c
+
+
+def x2(x, a):
+    return a * x ** 2
 
 
 def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False, fit=False,
@@ -2012,7 +2017,7 @@ def plot_base_zeros(df, data_sets_plt, data_sets_labels, data_sets_colors):
     fig_amp_base.canvas.manager.set_window_title('Zeros vs Baselines')
 
 
-def flow_vs_v2(df, div, res):
+def flow_vs_v2(df, div, res, out_dir=None):
     df = df[df['name'].str.contains(f'res{res}')]
     df = df[(df['stat'] == 'standard deviation') & (df['divs'] == div) & (df['data_type'] == 'raw')]
     v2s, slope_vals, slope_errs = [], [], []
@@ -2045,10 +2050,63 @@ def flow_vs_v2(df, div, res):
     ax.axvline(0, color='black')
     ax.errorbar(v2s, slope_vals, slope_errs, marker='o', ls='none', alpha=0.8)
     popt, pcov = cf(quad, v2s, slope_vals, sigma=slope_errs, absolute_sigma=True)
-    print([f'{val} +- {err}' for val, err in zip(popt, np.sqrt(np.diag(pcov)))])
+    print('With constant and linear terms: ', [f'{val} +- {err}' for val, err in zip(popt, np.sqrt(np.diag(pcov)))])
+    popt2, pcov2 = cf(x2, v2s, slope_vals, sigma=slope_errs, absolute_sigma=True)
+    print('Just quadratic term: ', [f'{val} +- {err}' for val, err in zip(popt2, np.sqrt(np.diag(pcov2)))])
     xs = np.linspace(0, 0.07, 200)
-    ax.plot(xs, quad(xs, *popt), ls='--', color='red')
+    ax.plot(xs, quad(xs, *popt), ls='--', color='red', label='3 Parameter')
+    ax.plot(xs, x2(xs, *popt2), ls='--', color='green', label='1 Parameter')
+    ax.legend()
     ax.grid()
+    fig.tight_layout()
+    if out_dir:
+        fig.savefig(f'{out_dir}slope_vs_v2_div_{div}.png')
+        with open(f'{out_dir}slope_vs_v2_data_div_{div}.txt', 'w') as file:
+            file.write(f'y=a*x^2 fit:\t{popt2[0]} {np.sqrt(pcov2[0][0])}\n')
+            fit_string = '\t'.join([f'{val} {err}' for val, err in zip(popt, np.sqrt(np.diag(pcov)))])
+            file.write(f'y=a*x^2+bx+c fit:\t{fit_string}\n\n')
+            file.write('v2\tslope slope_err\n')
+            for v2, slope_val, slope_err in zip(v2s, slope_vals, slope_errs):
+                file.write(f'{v2}\t{slope_val} {slope_err}\n')
+
+
+def read_v2_slope_coefs(in_dir):
+    coefs = {}
+    files = os.listdir(in_dir)
+    for file_name in files:
+        if 'slope_vs_v2_data_' in file_name:
+            div = int(file_name.split('.')[0].split('_')[-1])
+            with open(f'{in_dir}{file_name}', 'r') as file:
+                coef = file.readlines()[0].split('\t')[-1].split(' ')
+                coef_val, coef_err = float(coef[0]), float(coef[1])
+            coefs.update({div: Measure(coef_val, coef_err)})
+    return coefs
+
+
+def read_v2_values(in_dir, v2_type='v2'):
+    v2s = {}
+    dir_names = os.listdir(in_dir)
+    for dir_name in dir_names:
+        with open(f'{in_dir}{dir_name}/{v2_type}.txt', 'r') as file:
+            lines = file.readlines()[1:]  # Skip column headers
+            for line in lines:
+                line = line.split('\t')
+                if len(line) > 2:
+                    cent = int(line[0])
+                    line = line[1].split(' ')
+                    v2_val = float(line[0])
+                    v2_err = float(line[1])
+                    v2s.update({cent: Measure(v2_val, v2_err)})
+    return v2s
+
+
+def ampt_v2_closure_sub(slope_df, data_set_name, new_name, v2, coef):
+    df_new = slope_df[slope_df['name'] == data_set_name]
+    df_new['name'] = new_name
+    new_slope = [Measure(val, err) - coef * v2**2 for val, err in zip(df_new['slope'], df_new['slope_err'])]
+    df_new['slope'], df_new['slope_err'] = list(zip(*[(slope.val, slope.err) for slope in new_slope]))
+
+    return pd.concat([slope_df, df_new], ignore_index=True)
 
 
 def map_to_sim(baseline, zeros, interpolations):

@@ -30,7 +30,8 @@ def main():
     # plot_vs_cent_fittest()
     # plot_all_zero_base()
     # plot_ampt_efficiency()
-    plot_flow()
+    # plot_flow()
+    plot_ampt_v2_closure()
     print('donzo')
 
 
@@ -522,7 +523,6 @@ def plot_vs_cent():
                           data_sets_labels=data_sets_labels, title=None, fit=False, cent_ref=cent_ref_df,
                           ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
 
-
     plt.show()
 
 
@@ -835,6 +835,7 @@ def plot_flow():
     # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
     df_name = 'binom_slice_stats_flow.csv'
     save_fits = False
+    v2_fit_out_dir = 'F:/Research/Results/Flow_Correction/'
     fits_out_base = 'Base_Zero_Fits/'
     df_tproton_fits_name = 'flow_tprotons_fits.csv'
     df_partitions_fits_name = 'flow_partitions_fits.csv'
@@ -872,7 +873,7 @@ def plot_flow():
     #     stat_vs_protons(df_set, stat_plot, div_plt, cent_plt, [62], ['raw', 'mix'], all_sets_plt, plot=True, fit=False,
     #                     data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels, star_prelim=False)
 
-    flow_vs_v2(df, div_plt, '15')
+    # flow_vs_v2(df, div_plt, '15', v2_fit_out_dir)
 
     # plt.show()
     # return
@@ -892,9 +893,11 @@ def plot_flow():
     protons_fits = []
     for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
         print(f'Div {div}')
+        flow_vs_v2(df, div, '15', v2_fit_out_dir)
         protons_fits_div = stat_vs_protons(df, stat_plot, div, cent_plt, energies_fit, data_types_plt, all_sets_plt,
                                            plot=False, fit=True)
         protons_fits.append(protons_fits_div)
+    return
     protons_fits = pd.concat(protons_fits, ignore_index=True)
     if save_fits:
         protons_fits.to_csv(f'{base_path}{fits_out_base}{df_tproton_fits_name}', index=False)
@@ -907,6 +910,75 @@ def plot_flow():
         df_fits.to_csv(f'{base_path}{fits_out_base}{df_partitions_fits_name}', index=False)
     # print(df_fits)
     # plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
+
+    plt.show()
+
+
+def plot_ampt_v2_closure():
+    plt.rcParams["figure.figsize"] = (6.66, 5)
+    plt.rcParams["figure.dpi"] = 144
+    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
+    df_name = 'Binomial_Slice_Moments/binom_slice_stats_ampt_v2_closure.csv'
+    flow_cor_dir = 'F:/Research/Results/Flow_Correction/'
+    v2_in_dir = f'F:/Research/Data_Ampt_New_Coal/default_resample_noprerotate_epbins1/' \
+                f'Ampt_rapid05_resample_norotate_noprerotate_epbins1_0/'
+    fits_out_base = 'Base_Zero_Fits'
+    df_tproton_fits_name = None  # 'cf_tprotons_fits.csv'
+    df_partitions_fits_name = None  # 'cf_partitions_fits.csv'
+    df_path = base_path + df_name
+    sim_sets = []
+
+    stat_plot = 'standard deviation'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
+    div_plt = 120
+    exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
+    cent_plt = 8
+    energies_fit = [7, 11, 19, 27, 39, 62]
+    data_types_plt = ['divide']
+    samples = 72  # For title purposes only
+
+    data_sets_plt = ['ampt_new_coal_rp', 'ampt_new_coal_epbins1', 'ampt_new_coal_epbins1_v2cor']
+    data_sets_colors = dict(zip(data_sets_plt, ['green', 'blue', 'red']))
+    data_sets_labels = dict(zip(data_sets_plt, ['Reaction Plane', 'Flow Included', 'Flow Corrected']))
+
+    all_sets_plt = data_sets_plt + sim_sets[:]
+
+    flow_cor_coefs = read_v2_slope_coefs(flow_cor_dir)  # Dictionary of {div: coef}
+    v2_vals = read_v2_values(v2_in_dir)  # Dictionary of {cent: v2}
+
+    df = pd.read_csv(df_path)
+    df = df.dropna()
+    print(pd.unique(df['name']))
+
+    df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
+
+    stat_vs_protons(df, stat_plot, div_plt, cent_plt, [39], data_types_plt, all_sets_plt, plot=True, fit=False,
+                    data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels, star_prelim=True,
+                    y_ranges={'standard deviation': [0.946, 1.045]})
+    stat_vs_protons_energies(df, stat_plot, [120], cent_plt, [7, 11, 19, 27, 39, 62], data_types_plt, all_sets_plt,
+                             plot=True, fit=True, plot_fit=True, data_sets_colors=data_sets_colors,
+                             data_sets_labels=data_sets_labels, star_prelim=True)
+
+    protons_fits = []
+    for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
+        print(f'Div {div}')
+        protons_fits_div = stat_vs_protons(df, stat_plot, div, cent_plt, energies_fit, data_types_plt, all_sets_plt,
+                                           plot=False, fit=True)
+        protons_fits_div = ampt_v2_closure_sub(protons_fits_div, 'ampt_new_coal_epbins1', 'ampt_new_coal_epbins1_v2cor',
+                                               v2_vals[cent_plt], flow_cor_coefs[div])
+        protons_fits.append(protons_fits_div)
+    protons_fits = pd.concat(protons_fits, ignore_index=True)
+    if df_tproton_fits_name:
+        protons_fits.to_csv(f'{base_path}{fits_out_base}{df_tproton_fits_name}', index=False)
+    print(protons_fits)
+    print(pd.unique(protons_fits['amp']))
+    print(pd.unique(protons_fits['spread']))
+    df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
+                                     data_sets_labels=data_sets_labels)
+    df_fits.to_csv(f'{base_path}{fits_out_base}{df_partitions_fits_name}', index=False)
+    # print(df_fits)
+    plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
+    # plot_slope_div_fits_simpars(df_fits)
 
     plt.show()
 
