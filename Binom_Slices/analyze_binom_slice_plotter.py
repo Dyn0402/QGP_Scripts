@@ -943,8 +943,8 @@ def plot_ampt_v2_closure():
 
     all_sets_plt = data_sets_plt + sim_sets[:]
 
-    flow_cor_coefs = read_v2_slope_coefs(flow_cor_dir)  # Dictionary of {div: coef}
-    v2_vals = read_v2_values(v2_in_dir)  # Dictionary of {cent: v2}
+    # flow_cor_coefs = read_v2_slope_coefs(flow_cor_dir)  # Dictionary of {div: coef}
+    # v2_vals = read_v2_values(v2_in_dir)  # Dictionary of {cent: v2}
     # v2_rp_vals = read_v2_values(v2_in_dir, 'v2_rp')  # Dictionary of {cent: v2}
 
     df = pd.read_csv(df_path)
@@ -965,8 +965,8 @@ def plot_ampt_v2_closure():
         print(f'Div {div}')
         protons_fits_div = stat_vs_protons(df, stat_plot, div, cent_plt, energies_fit, data_types_plt, all_sets_plt,
                                            plot=False, fit=True)
-        protons_fits_div = ampt_v2_closure_sub(protons_fits_div, 'ampt_new_coal_epbins1', 'ampt_new_coal_epbins1_v2cor',
-                                               v2_vals[cent_plt], flow_cor_coefs[div])
+        # protons_fits_div = ampt_v2_closure_sub(protons_fits_div, 'ampt_new_coal_epbins1', 'ampt_new_coal_epbins1_v2cor',
+        #                                        v2_vals[cent_plt], flow_cor_coefs[div])
         protons_fits.append(protons_fits_div)
     protons_fits = pd.concat(protons_fits, ignore_index=True)
     if df_tproton_fits_name:
