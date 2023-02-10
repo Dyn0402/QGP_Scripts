@@ -49,7 +49,7 @@ def calculate_v2():
     calc_quantities = {'v2_ep_sum': 0, 'v2_ep_sum2': 0, 'v2_rp_sum': 0, 'v2_rp_sum2': 0, 'n_v2': 0,
                        'ep_res_sum': 0, 'ep_res_sum2': 0, 'n_psi': 0}
     read_branches = ['pid', 'px', 'py', 'pz', 'refmult3']
-    threads = 11
+    threads = 10
 
     for energy in energies:
         print(f'Starting {energy}GeV')
@@ -110,7 +110,7 @@ def calculate_v2():
             out_path = f'{out_dir}{energy}GeV/v2.txt'
             write_v2(out_path, cents, v2_avgs, v2_avg_err, reses, res_err)
             out_path_rp = f'{out_dir}{energy}GeV/v2_rp.txt'
-            write_v2(out_path, cents, v2_rp_avgs, v2_rp_avg_err, reses, res_err)
+            write_v2(out_path_rp, cents, v2_rp_avgs, v2_rp_avg_err, reses, res_err)
 
     plt.show()
 
@@ -136,6 +136,7 @@ def read_file(file_path, read_branches, cents, ref3_edges, pid, max_rapid, min_p
             non_protons = ak.concatenate(non_protons, axis=1)
             non_protons_west = non_protons[non_protons.eta < -0.2]
             non_protons_east = non_protons[non_protons.eta > 0.2]
+
 
             qx_west = ak.mean(non_protons_west.pt * np.cos(2 * non_protons_west.phi), axis=1)
             qy_west = ak.mean(non_protons_west.pt * np.sin(2 * non_protons_west.phi), axis=1)

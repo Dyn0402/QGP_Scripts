@@ -945,6 +945,7 @@ def plot_ampt_v2_closure():
 
     flow_cor_coefs = read_v2_slope_coefs(flow_cor_dir)  # Dictionary of {div: coef}
     v2_vals = read_v2_values(v2_in_dir)  # Dictionary of {cent: v2}
+    # v2_rp_vals = read_v2_values(v2_in_dir, 'v2_rp')  # Dictionary of {cent: v2}
 
     df = pd.read_csv(df_path)
     df = df.dropna()
