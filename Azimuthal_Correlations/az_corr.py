@@ -21,10 +21,13 @@ import uproot
 import awkward as ak
 import vector
 
+from Measure import Measure
+
 
 def main():
     # corr_test()
-    cent_test()
+    # cent_test()
+    random_test()
     print('donzo')
 
 
@@ -221,6 +224,22 @@ def cent_test():
     plt.show()
 
 
+def random_test():
+    n_tracks = 10
+    n_events = 100000
+    n_bootstraps = 100
+    bin_upper_a = 1.0 / 3
+    bin_upper_b = 2.0 / 3
+
+    tracks = np.random.random((n_events, n_tracks))
+    nas = np.sum(tracks < bin_upper_a, axis=1)
+    nbs = np.sum((bin_upper_a <= tracks) & (tracks < bin_upper_b), axis=1)
+    sigma = Measure(*calc_bootstraps(nas, nbs, n_bootstraps)[:-1])
+    r = Measure(*calc_bootstraps(nas, nbs, n_bootstraps, func=calc_pearson_r)[:-1])
+    print(f'sigma = {sigma}')
+    print(f'r = {r}')
+
+
 def read_file(file_path, read_branches, cents, ref3_edges, bin_width, pid, max_eta, min_pt, max_pt, phi_bins, seed):
     rng = np.random.default_rng(seed)
     vector.register_awkward()
@@ -269,7 +288,15 @@ def calc_corr(na, nb):
     return 1 - sigma_c_2
 
 
-def calc_bootstraps(na, nb, nbs=50, cent=0):
+def calc_pearson_r(na, nb):
+    na_cent = na - np.mean(na)
+    nb_cent = nb - np.mean(nb)
+    r = np.sum(na_cent * nb_cent) / np.sqrt(np.sum(na_cent**2) * np.sum(nb_cent**2))
+
+    return r
+
+
+def calc_bootstraps(na, nb, nbs=50, cent=0, func=calc_corr):
     corrs = []
     data_size = len(na)
     for bs_i in range(nbs):
@@ -278,9 +305,9 @@ def calc_bootstraps(na, nb, nbs=50, cent=0):
             index = np.random.randint(0, data_size)
             nabs.append(na[index])
             nbbs.append(nb[index])
-        corrs.append(calc_corr(np.array(nabs), np.array(nbbs)))
+        corrs.append(func(np.array(nabs), np.array(nbbs)))
 
-    return calc_corr(na, nb), np.std(corrs), cent
+    return func(na, nb), np.std(corrs), cent
 
 
 # def calc_bootstrap(na, nb):
