@@ -29,8 +29,8 @@ def main():
 
 
 def from_dataframe():
-    # base_path = '/media/ucla/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
-    base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+    base_path = '/media/ucla/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+    # base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
     # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
 
     divs = 120
