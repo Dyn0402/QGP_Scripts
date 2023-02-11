@@ -34,10 +34,10 @@ def from_dataframe():
     # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
 
     divs = 120
-    energy = 39
-    cent = 4
+    energy = 62
+    cent = 8
     samples = 72  # For title only
-    data_set = 'AMPT_noprerot_rp'
+    data_set = 'Flow_epbins1_test'
     if data_set == 'AMPT':
         df_name = 'binom_slice_stats_cents.csv'
         data_set_name = 'ampt_new_coal_resample_def'
@@ -47,6 +47,12 @@ def from_dataframe():
     elif data_set == 'AMPT_noprerot_rp':
         df_name = 'binom_slice_stats_ampt_noprerot_rp.csv'
         data_set_name = 'ampt_new_coal_resample_def_noprerot_rp'
+    elif data_set == 'AMPT_close_rp':
+        df_name = 'binom_slice_stats_ampt_v2_closure.csv'
+        data_set_name = 'ampt_new_coal_rp'
+    elif data_set == 'AMPT_close_epbins1':
+        df_name = 'binom_slice_stats_ampt_v2_closure.csv'
+        data_set_name = 'ampt_new_coal_epbins1'
     elif data_set == 'BES':
         df_name = 'binom_slice_stats_cents.csv'
         data_set_name = 'bes_resample_def'
@@ -56,6 +62,12 @@ def from_dataframe():
     elif data_set == 'Flow':
         df_name = 'binom_slice_stats_flow.csv'
         data_set_name = 'flow_resample_res15_v205'
+    elif data_set == 'Flow_epbins1':
+        df_name = 'binom_slice_stats_flow_epbins1.csv'
+        data_set_name = 'flow_resample_res9_v207'
+    elif data_set == 'Flow_epbins1_test':
+        df_name = 'binom_slice_stats_flow_epbins1_test.csv'
+        data_set_name = 'flow_resample_res9_v207'
     elif data_set == 'CF':
         df_name = 'binom_slice_stats_cents.csv'
         data_set_name = 'cf_resample_def'

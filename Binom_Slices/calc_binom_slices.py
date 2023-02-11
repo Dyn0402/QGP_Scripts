@@ -38,17 +38,18 @@ def init_pars():
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_cfev.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_stats_ampt_eff.csv',
-        # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_stats_flow.csv',
+        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+                    'binom_slice_stats_flow_epbins1_test.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_stats_bes_epbins1.csv',
-        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
-                    'binom_slice_stats_ampt_v2_closure.csv',
+        # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+        #             'binom_slice_stats_ampt_v2_closure_clean.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cents.csv',
         # 'csv_path': 'D:/Transfer/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim_new.csv',
         # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
         'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': True,  # If True check csv_path and only run missing datasets, else run all datasets
-        'threads': 11,
+        'threads': 8,
         'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
         'min_events': 100,  # Min number of total events per total_proton. Skip total_proton if fewer
@@ -89,10 +90,10 @@ def define_datasets(base_path):
         #  all_divs],
         # ['ampt_new_coal_resample_def', '_Ampt_New_Coal', ['default', 'resample'], [], ['alg3'], [0], all_energies,
         #  all_cents, all_divs],
-        ['ampt_new_coal_rp', '_Ampt_New_Coal', ['default', 'resample', 'rp', 'epbins1'],
-         [], ['alg3'], [0], all_energies, all_cents, all_divs],
-        ['ampt_new_coal_epbins1', '_Ampt_New_Coal', ['default', 'resample', 'epbins1'],
-         [], ['alg3', 'rp'], [0], all_energies, all_cents, all_divs],
+        # ['ampt_new_coal_rp', '_Ampt_New_Coal', ['default', 'resample', 'rp', 'epbins1'],
+        #  [], ['alg3'], [0], all_energies, all_cents, all_divs],
+        # ['ampt_new_coal_epbins1', '_Ampt_New_Coal', ['default', 'resample', 'epbins1'],
+        #  [], ['alg3', 'rp', 'noprerotate'], [0], all_energies, all_cents, all_divs],
         # ['ampt_new_coal_resample_eff1', '_Ampt_New_Coal', ['resample', 'eff1'], [], ['alg3'], [0],
         #  all_energies, all_cents, all_divs],
         # ['ampt_new_coal_resample_eff2', '_Ampt_New_Coal', ['resample', 'eff2'], [], ['alg3'], [0],
@@ -121,7 +122,10 @@ def define_datasets(base_path):
         # ['cfev_resample_def', '_CFEV', ['default', 'resample'], [], ['alg3'], [0], all_energies, all_cents, all_divs],
         # ['cfevb342_resample_def', '_CFEVb342', ['default', 'resample'], [], ['alg3'], [0], all_energies, all_cents,
         #  all_divs],
-        # ['flow_resample_res1_v207', '_Sim_Flow', ['resample', 'res1', 'v207'], [], [], [0], [62], [8], all_divs],
+        # ['flow_resample_res9_v207', '_Sim_Flow', ['resample', 'res9', 'v207', 'epbins1'],
+        #  [], [], [0], [62], [8], all_divs],
+        ['flow_resample_res9_v207', '_Sim_tests', ['resample', 'res9', 'v207', 'epbins1'],
+         [], [], [0], [62], [8], all_divs],
     ]
 
     # reses = ['1', '15', '2', '3', '4', '5', '6', '75', '9', '99']
