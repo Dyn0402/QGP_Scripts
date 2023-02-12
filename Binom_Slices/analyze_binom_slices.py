@@ -2087,7 +2087,10 @@ def read_v2_values(in_dir, v2_type='v2'):
     v2s = {}
     dir_names = os.listdir(in_dir)
     for dir_name in dir_names:
-        with open(f'{in_dir}{dir_name}/{v2_type}.txt', 'r') as file:
+        file_path = f'{in_dir}{dir_name}/{v2_type}.txt'
+        if not os.path.isfile(file_path):
+            continue
+        with open(file_path, 'r') as file:
             lines = file.readlines()[1:]  # Skip column headers
             for line in lines:
                 line = line.split('\t')
@@ -2102,9 +2105,11 @@ def read_v2_values(in_dir, v2_type='v2'):
 
 def ampt_v2_closure_sub(slope_df, data_set_name, new_name, v2, coef):
     df_new = slope_df[slope_df['name'] == data_set_name]
-    df_new['name'] = new_name
+    df_new = df_new.assign(name=new_name)
     new_slope = [Measure(val, err) - coef * v2**2 for val, err in zip(df_new['slope'], df_new['slope_err'])]
-    df_new['slope'], df_new['slope_err'] = list(zip(*[(slope.val, slope.err) for slope in new_slope]))
+    new_slope_vals, new_slope_errs = list(zip(*[(slope.val, slope.err) for slope in new_slope]))
+    df_new = df_new.assign(slope=new_slope_vals)
+    df_new = df_new.assign(slope_err=new_slope_errs)
 
     return pd.concat([slope_df, df_new], ignore_index=True)
 

@@ -29,15 +29,15 @@ def main():
 
 
 def from_dataframe():
-    base_path = '/media/ucla/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
-    # base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+    # base_path = '/media/ucla/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+    base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
     # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
 
     divs = 120
     energy = 62
     cent = 8
     samples = 72  # For title only
-    data_set = 'Flow_epbins1_test'
+    data_set = 'AMPT_noprerot_rp'
     if data_set == 'AMPT':
         df_name = 'binom_slice_stats_cents.csv'
         data_set_name = 'ampt_new_coal_resample_def'

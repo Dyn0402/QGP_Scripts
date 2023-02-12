@@ -917,13 +917,13 @@ def plot_flow():
 def plot_ampt_v2_closure():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
-    # base_path = 'F:/Research/Results/Azimuth_Analysis/'
-    base_path = '/media/ucla/Research/Results/Azimuth_Analysis/'
+    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    # base_path = '/media/ucla/Research/Results/Azimuth_Analysis/'
     # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
     df_name = 'Binomial_Slice_Moments/binom_slice_stats_ampt_v2_closure.csv'
     flow_cor_dir = 'F:/Research/Results/Flow_Correction/'
-    v2_in_dir = f'F:/Research/Data_Ampt_New_Coal/default_resample_noprerotate_epbins1/' \
-                f'Ampt_rapid05_resample_norotate_noprerotate_epbins1_0/'
+    v2_in_dir = f'F:/Research/Data_Ampt_New_Coal/default_resample_epbins1/' \
+                f'Ampt_rapid05_resample_norotate_epbins1_0/'
     fits_out_base = 'Base_Zero_Fits'
     df_tproton_fits_name = None  # 'cf_tprotons_fits.csv'
     df_partitions_fits_name = None  # 'cf_partitions_fits.csv'
@@ -935,18 +935,21 @@ def plot_ampt_v2_closure():
     exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
     cent_plt = 6
     energies_fit = [7, 11, 19, 27, 39, 62]
+    energies_fit = [7, 11, 19, 27]
     data_types_plt = ['divide']
     samples = 72  # For title purposes only
 
-    data_sets_plt = ['ampt_new_coal_rp', 'ampt_new_coal_epbins1', 'ampt_new_coal_epbins1_v2cor']
-    data_sets_colors = dict(zip(data_sets_plt, ['green', 'blue', 'red']))
-    data_sets_labels = dict(zip(data_sets_plt, ['Reaction Plane', 'Flow Included', 'Flow Corrected']))
+    data_sets_plt = ['ampt_new_coal_rp', 'ampt_new_coal_epbins1', 'ampt_new_coal_epbins1_v2cor',
+                     'ampt_new_coal_epbins1_v2rpcor']
+    data_sets_colors = dict(zip(data_sets_plt, ['green', 'blue', 'red', 'purple']))
+    data_sets_labels = dict(zip(data_sets_plt, ['Reaction Plane', 'Flow Included', 'Flow Corrected ep',
+                                                'Flow Corrected rp']))
 
     all_sets_plt = data_sets_plt + sim_sets[:]
 
-    # flow_cor_coefs = read_v2_slope_coefs(flow_cor_dir)  # Dictionary of {div: coef}
-    # v2_vals = read_v2_values(v2_in_dir)  # Dictionary of {cent: v2}
-    # v2_rp_vals = read_v2_values(v2_in_dir, 'v2_rp')  # Dictionary of {cent: v2}
+    flow_cor_coefs = read_v2_slope_coefs(flow_cor_dir)  # Dictionary of {div: coef}
+    v2_vals = read_v2_values(v2_in_dir)  # Dictionary of {cent: v2}
+    v2_rp_vals = read_v2_values(v2_in_dir, 'v2_rp')  # Dictionary of {cent: v2}
 
     df = pd.read_csv(df_path)
     df = df.dropna()
@@ -966,8 +969,11 @@ def plot_ampt_v2_closure():
         print(f'Div {div}')
         protons_fits_div = stat_vs_protons(df, stat_plot, div, cent_plt, energies_fit, data_types_plt, all_sets_plt,
                                            plot=False, fit=True)
-        # protons_fits_div = ampt_v2_closure_sub(protons_fits_div, 'ampt_new_coal_epbins1', 'ampt_new_coal_epbins1_v2cor',
-        #                                        v2_vals[cent_plt], flow_cor_coefs[div])
+        protons_fits_div = ampt_v2_closure_sub(protons_fits_div, 'ampt_new_coal_epbins1',
+                                               'ampt_new_coal_epbins1_v2rpcor', v2_rp_vals[cent_plt],
+                                               flow_cor_coefs[div])
+        protons_fits_div = ampt_v2_closure_sub(protons_fits_div, 'ampt_new_coal_epbins1', 'ampt_new_coal_epbins1_v2cor',
+                                               v2_vals[cent_plt], flow_cor_coefs[div])
         protons_fits.append(protons_fits_div)
     protons_fits = pd.concat(protons_fits, ignore_index=True)
     if df_tproton_fits_name:
