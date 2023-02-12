@@ -33,17 +33,19 @@ def calculate_v2():
     base_path = 'F:/Research/'
     data_path = f'{base_path}AMPT_Trees_New_Coalescence/min_bias/string_melting/'
     ampt_cent_path = f'{base_path}Ampt_Centralities_New_Coalescence/string_melting/'
-    out_dir = f'{base_path}Data_Ampt_New_Coal/default_resample_noprerotate_epbins1/' \
-              f'Ampt_rapid05_resample_norotate_noprerotate_epbins1_0/'
-    # out_dir = None
+    out_dir = f'{base_path}Data_Ampt_New_Coal/default_resample_epbins1/' \
+              f'Ampt_rapid05_resample_norotate_epbins1_0/'
+    out_dir = None
     plot_out_dir = 'F:/Research/Results/AMPT_New_Coal_QA_Plots/Flow/'
+    # plot_out_dir = None
     energies = [7, 11, 19, 27, 39, 62]
     max_rapid = 0.5
     min_pt = 0.4  # GeV
     max_pt = 2.0  # GeV
     max_p = 3.0  # GeV
     proton_pid = 2212
-    pids = [211, 321, -211, -321, 2212, -2212]  # Proton?
+    pids = [211, 321, -211, -321, 2212, -2212]
+    # pids = [2212]
     cents = [-1, 0, 1, 2, 3, 4, 5, 6, 7, 8]
     # cents = [8]
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '60-70%', 1: '70-80%',
@@ -51,7 +53,7 @@ def calculate_v2():
     calc_quantities = {'v2_ep_sum': 0, 'v2_ep_sum2': 0, 'v2_rp_sum': 0, 'v2_rp_sum2': 0, 'n_v2': 0,
                        'ep_res_sum': 0, 'ep_res_sum2': 0, 'n_psi': 0}
     read_branches = ['pid', 'px', 'py', 'pz', 'refmult3']
-    threads = 12
+    threads = 11
 
     for energy in energies:
         print(f'Starting {energy}GeV')
@@ -93,21 +95,22 @@ def calculate_v2():
                 v2_rp_avg_err.append(v2_rp_sds[-1] / np.sqrt(data['n_v2']))
                 cent_labels.append(cent_map[cent])
 
-            fig, ax = plt.subplots(dpi=144)
-            ax.grid()
-            ax.axhline(0, color='black', ls='--')
-            ax.errorbar(cent_labels, v2_avgs, yerr=v2_avg_err, ls='none', color='blue', marker='o', label='Event Plane')
-            ax.errorbar(cent_labels, v2_rp_avgs, yerr=v2_rp_avg_err, ls='none', color='red', marker='o',
-                        label='Reaction Plane')
-
-            ax.set_ylabel('v2')
-            ax.set_xlabel('Centrality')
-            plt.xticks(rotation=30)
-            ax.legend()
-            ax.set_title(f'AMPT {energy} GeV PID {pid} Elliptic Flow')
-            fig.tight_layout()
-
             if plot_out_dir:
+                fig, ax = plt.subplots(dpi=144)
+                ax.grid()
+                ax.axhline(0, color='black', ls='--')
+                ax.errorbar(cent_labels, v2_avgs, yerr=v2_avg_err, ls='none', color='blue', marker='o',
+                            label='Event Plane')
+                ax.errorbar(cent_labels, v2_rp_avgs, yerr=v2_rp_avg_err, ls='none', color='red', marker='o',
+                            label='Reaction Plane')
+
+                ax.set_ylabel('v2')
+                ax.set_xlabel('Centrality')
+                plt.xticks(rotation=30)
+                ax.legend()
+                ax.set_title(f'AMPT {energy} GeV PID {pid} Elliptic Flow')
+                fig.tight_layout()
+
                 fig.savefig(f'{plot_out_dir}Ampt_{energy}GeV_pid_{pid}_v2.png')
                 ax.set_ylim(bottom=-0.01, top=0.1)
                 fig.savefig(f'{plot_out_dir}Ampt_{energy}GeV_pid_{pid}_v2_zoom.png')
@@ -117,8 +120,6 @@ def calculate_v2():
                 write_v2(out_path, cents, v2_avgs, v2_avg_err, reses, res_err)
                 out_path_rp = f'{out_dir}{energy}GeV/v2_rp.txt'
                 write_v2(out_path_rp, cents, v2_rp_avgs, v2_rp_avg_err, reses, res_err)
-
-    plt.show()
 
 
 def read_file(file_path, read_branches, cents, pids, ref3_edges, max_rapid, min_pt, max_pt, max_p,
