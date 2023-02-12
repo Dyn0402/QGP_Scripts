@@ -917,7 +917,8 @@ def plot_flow():
 def plot_ampt_v2_closure():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
-    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    # base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    base_path = '/media/ucla/Research/Results/Azimuth_Analysis/'
     # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
     df_name = 'Binomial_Slice_Moments/binom_slice_stats_ampt_v2_closure.csv'
     flow_cor_dir = 'F:/Research/Results/Flow_Correction/'
@@ -932,7 +933,7 @@ def plot_ampt_v2_closure():
     stat_plot = 'standard deviation'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
     div_plt = 120
     exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
-    cent_plt = 8
+    cent_plt = 6
     energies_fit = [7, 11, 19, 27, 39, 62]
     data_types_plt = ['divide']
     samples = 72  # For title purposes only
