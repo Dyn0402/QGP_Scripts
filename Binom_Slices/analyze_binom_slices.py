@@ -416,6 +416,7 @@ def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_
             pcov = np.array(((pcov[0][0], 0), (0, 0)))
             fits.append({'name': data_set, 'energy': energy, 'divs': div, 'amp': amp, 'spread': spread, 'ap': ap,
                          'am': am, 'sp': sp, 'sm': sm, 'slope': popt[0], 'slope_err': np.sqrt(np.diag(pcov))[0],
+                         'slope_meas': Measure(popt[0], np.sqrt(np.diag(pcov))[0]),
                          'int': popt[1], 'int_err': np.sqrt(np.diag(pcov))[1]})
             if plot:
                 ax.plot(df['total_protons'], line(df['total_protons'], *popt), ls='--', color=c)
@@ -808,7 +809,8 @@ def stat_vs_protons_cents(df, stat, divs, cents, energy, data_types, data_sets_p
     return pd.DataFrame(fits)
 
 
-def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, data_sets_labels=None, exclude_divs=[]):
+def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, data_sets_labels=None, exclude_divs=[],
+                           verbose=True):
     fig, ax = plt.subplots()
     fig.canvas.manager.set_window_title(f'Slope vs Width All Energies')
     ax.axhline(0, ls='-', color='black')
@@ -873,12 +875,14 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
                         perr2 = np.sqrt(np.diag(pcov2))
                         fit_pars[-1].update({'zero_mag': popt2[0], 'zero_mag_err': perr2[0], 'baseline': popt2[1],
                                              'base_err': perr2[1]})
-                        print(f'{data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\nz-c fit: {popt2}\n'
-                              f'z-c covariance: {pcov2}')
-                        print()
+                        if verbose:
+                            print(f'{data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\nz-c fit: {popt2}\n'
+                                  f'z-c covariance: {pcov2}')
+                            print()
                     else:
-                        print(f'No Zeros! {data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\n')
-                        print()
+                        if verbose:
+                            print(f'No Zeros! {data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\n')
+                            print()
                 except RuntimeError as e:
                     print(f'Fitting Error, skipping data_set {data_set}, {e}')
 
@@ -2087,6 +2091,8 @@ def read_v2_values(in_dir, v2_type='v2'):
     v2s = {}
     dir_names = os.listdir(in_dir)
     for dir_name in dir_names:
+        energy = int(dir_name.strip('GeV'))
+        v2s.update({energy: {}})
         file_path = f'{in_dir}{dir_name}/{v2_type}.txt'
         if not os.path.isfile(file_path):
             continue
@@ -2099,14 +2105,14 @@ def read_v2_values(in_dir, v2_type='v2'):
                     line = line[1].split(' ')
                     v2_val = float(line[0])
                     v2_err = float(line[1])
-                    v2s.update({cent: Measure(v2_val, v2_err)})
+                    v2s[energy].update({cent: Measure(v2_val, v2_err)})
     return v2s
 
 
-def ampt_v2_closure_sub(slope_df, data_set_name, new_name, v2, coef):
+def ampt_v2_closure_sub(slope_df, data_set_name, new_name, v2, coef, cent):
     df_new = slope_df[slope_df['name'] == data_set_name]
     df_new = df_new.assign(name=new_name)
-    new_slope = [Measure(val, err) - coef * v2**2 for val, err in zip(df_new['slope'], df_new['slope_err'])]
+    new_slope = [slope - coef * v2[energy][cent]**2 for energy, slope in zip(df_new['energy'], df_new['slope_meas'])]
     new_slope_vals, new_slope_errs = list(zip(*[(slope.val, slope.err) for slope in new_slope]))
     df_new = df_new.assign(slope=new_slope_vals)
     df_new = df_new.assign(slope_err=new_slope_errs)
