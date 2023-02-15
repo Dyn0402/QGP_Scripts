@@ -43,6 +43,7 @@ def calculate_v2():
     min_pt = 0.4  # GeV
     max_pt = 2.0  # GeV
     max_p = 3.0  # GeV
+    eta_gap = 0.4  # Was 0.2 in first run
     proton_pid = 2212
     pids = [211, 321, -211, -321, 2212, -2212]
     # pids = [2212]
@@ -62,7 +63,7 @@ def calculate_v2():
 
         ref3_edges = get_ampt_ref3_edges(ampt_cent_path, energy)
 
-        jobs = [(f'{file_dir}{path}', read_branches, cents, pids, ref3_edges, max_rapid, min_pt, max_pt, max_p,
+        jobs = [(f'{file_dir}{path}', read_branches, cents, pids, ref3_edges, max_rapid, min_pt, max_pt, max_p, eta_gap,
                  calc_quantities) for path in file_paths]
 
         v2_data = {pid: {cent: calc_quantities.copy() for cent in cents} for pid in pids}
@@ -116,13 +117,13 @@ def calculate_v2():
                 fig.savefig(f'{plot_out_dir}Ampt_{energy}GeV_pid_{pid}_v2_zoom.png')
 
             if out_dir and pid == proton_pid:
-                out_path = f'{out_dir}{energy}GeV/v2.txt'
+                out_path = f'{out_dir}{energy}GeV/v2_04gap.txt'
                 write_v2(out_path, cents, v2_avgs, v2_avg_err, reses, res_err)
-                out_path_rp = f'{out_dir}{energy}GeV/v2_rp.txt'
+                out_path_rp = f'{out_dir}{energy}GeV/v2_rp_04gap.txt'
                 write_v2(out_path_rp, cents, v2_rp_avgs, v2_rp_avg_err, reses, res_err)
 
 
-def read_file(file_path, read_branches, cents, pids, ref3_edges, max_rapid, min_pt, max_pt, max_p,
+def read_file(file_path, read_branches, cents, pids, ref3_edges, max_rapid, min_pt, max_pt, max_p, eta_gap,
               calc_quantities):
     vector.register_awkward()
     v2_data = {pid: {cent: calc_quantities.copy() for cent in cents} for pid in pids}
@@ -144,8 +145,8 @@ def read_file(file_path, read_branches, cents, pids, ref3_edges, max_rapid, min_
                 for ep_pid in ep_pids_hold:  # Probably a columnar way to do this but dimension is too high for my head
                     non_protons.append(tracks[tracks['pid'] == ep_pid])
                 non_protons = ak.concatenate(non_protons, axis=1)
-                non_protons_west = non_protons[non_protons.eta < -0.2]
-                non_protons_east = non_protons[non_protons.eta > 0.2]
+                non_protons_west = non_protons[non_protons.eta < -eta_gap]
+                non_protons_east = non_protons[non_protons.eta > eta_gap]
 
                 qx_west = ak.mean(non_protons_west.pt * np.cos(2 * non_protons_west.phi), axis=1)
                 qy_west = ak.mean(non_protons_west.pt * np.sin(2 * non_protons_west.phi), axis=1)

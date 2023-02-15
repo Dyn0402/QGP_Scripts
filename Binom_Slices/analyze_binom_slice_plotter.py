@@ -937,7 +937,7 @@ def plot_ampt_v2_closure():
     stat_plot = 'standard deviation'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
     div_plt = 120
     exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
-    cent_plt = 8
+    cent_plt = 7
     energies_fit = [7, 11, 19, 27, 39, 62]
     data_types_plt = ['divide']
     samples = 72  # For title purposes only
