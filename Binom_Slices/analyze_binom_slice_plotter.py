@@ -7,7 +7,7 @@ Created as QGP_Scripts/analyze_binom_slice_plotter
 
 @author: Dylan Neff, Dyn04
 """
-
+import matplotlib.pyplot as plt
 import pandas as pd
 import pickle
 
@@ -186,7 +186,7 @@ def plot_sims():
     # plt.show()
     # print(df_fits)
     sigma_fits = plot_slope_div_fits_simpars(df_fits)
-    # plt.show()
+    plt.show()
     plot_sigma_fits_interp(sigma_fits)
 
     plt.show()
@@ -989,6 +989,56 @@ def plot_ampt_v2_closure():
                                                v2_vals, flow_cor_coefs[div], cent_plt)
         protons_fits.append(protons_fits_div)
     protons_fits = pd.concat(protons_fits, ignore_index=True)
+
+    proton_fits_w_flow = protons_fits[protons_fits['name'] == 'ampt_new_coal_epbins1']
+    v2_ep_e_vals, v2_ep_e_errs, v2_rp_e_vals, v2_rp_e_errs, v2_op_e_vals = [], [], [], [], []
+    for energy in energies_fit:
+        df_e = proton_fits_w_flow[proton_fits_w_flow['energy'] == energy]
+        # print(df_e)
+        divs, slopes = np.array(df_e['divs']), np.array(df_e['slope_meas'])
+        # print(divs, slopes)
+        coefs = np.array([flow_cor_coefs[div] for div in divs])
+        v2 = v2_vals[energy][cent_plt].val
+        v2_rp = v2_rp_vals[energy][cent_plt].val
+        fig, ax = plt.subplots()
+        v2s, chi_2s = [], []
+        x_divs = np.linspace(60, 300, 1000)
+        for v2_i in np.linspace(v2 * 0.75, v2 * 1.25, 8):
+            cor_slopes = slopes - coefs * v2_i**2
+            cor_slope_vals, cor_slope_errs = [x.val for x in cor_slopes], [x.err for x in cor_slopes]
+            popt, pcov = cf(quad_180, divs, cor_slope_vals, sigma=cor_slope_errs, absolute_sigma=True)
+            chi_2 = np.sum((cor_slope_vals - quad_180(divs, *popt))**2 / cor_slope_errs)
+            ax.scatter(divs, cor_slope_vals)
+            ax.plot(x_divs, quad_180(x_divs, *popt))
+            v2s.append(v2_i)
+            chi_2s.append(chi_2)
+        chi_2s, v2s = zip(*sorted(zip(chi_2s, v2s)))
+        v2_op_e_vals.append(v2s[0])
+        v2_ep_e_vals.append(v2)
+        v2_ep_e_errs.append(v2_vals[energy][cent_plt].err)
+        v2_rp_e_vals.append(v2_rp)
+        v2_rp_e_errs.append(v2_rp_vals[energy][cent_plt].err)
+
+        fig2, ax2 = plt.subplots()
+        ax2.scatter(v2s, chi_2s)
+        ax2.set_title(f'{energy}GeV')
+        ax2.axvline(v2, color='green', ls='--', label='v2_ep')
+        ax2.axvline(v2_rp, color='red', ls='--', label='v2_rp')
+        ax2.legend()
+        plt.show()
+    fig3, ax3 = plt.subplots()
+    ax3.grid()
+    ax3.set_xlabel('Energy (GeV)')
+    ax3.set_ylabel('v2')
+    ax3.errorbar(energies_fit, v2_ep_e_vals, v2_ep_e_errs, ls='none', marker='o', color='green', label='v2_ep')
+    ax3.errorbar(energies_fit, v2_rp_e_vals, v2_rp_e_errs, ls='none', marker='o', color='red', label='v2_rp')
+    ax3.scatter(energies_fit, v2_op_e_vals, color='blue', label='v2_op')
+    ax3.legend()
+    plt.show()
+
+
+    # plt.show()
+    return
 
     fig, ax = plt.subplots(dpi=144)
     ax.grid()

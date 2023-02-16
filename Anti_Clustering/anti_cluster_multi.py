@@ -173,13 +173,13 @@ def clustered_tracks():
 
 def clustered_tracks_ani():
     # gif_dir = 'C:/Users/Dylan/Desktop/pdf_test3.gif'
-    gif_dir = 'F:/Research/Results/Presentations/10-3-22/cluster_example.gif'
+    gif_dir = 'F:/Research/Results/GausModelGifs/anticluster_example.gif'
     # gif_dir = 'C:/Users/Dyn04/Desktop/pdf_test.gif'
     fps = 0.8
     n_tracks = 25
-    sd = 1.0  # np.pi
+    sd = 0.5  # np.pi
     wrap_num = 5
-    cl_amp = 0.5
+    cl_amp = -0.5
     x = np.linspace(0, 2 * np.pi, 1000)
     gif_path = f'{gif_dir}'
 
