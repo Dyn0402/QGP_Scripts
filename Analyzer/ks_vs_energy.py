@@ -23,7 +23,8 @@ from DistStats import DistStats
 def main():
     # from_hist_files()
     # from_hist_files_simple()
-    from_dataframe()
+    from_hist_files_simple_k2()
+    # from_dataframe()
     # flow_plots()
     print('donzo')
 
@@ -409,6 +410,137 @@ def from_hist_files_simple():
     ax3.set_ylabel('(C2 / C1 - q) / n - Mix')
     ax3.legend()
     fig3.tight_layout()
+
+    plt.show()
+
+
+def from_hist_files_simple_k2():
+    base_path = 'F:/Research/'
+    energy = 62
+    divs = [60, 180]
+    cent = 8
+    min_bs = 200  # of 250
+    # data_name = 'Ampt_New_Coal'
+    # set_group = 'default_resample'
+    # set_name = 'Ampt_rapid05_resample_norotate_'
+    # data_name = 'CF'
+    # set_group = 'default_resample'
+    # set_name = 'CF_rapid05_resample_norotate_'
+    data_name = 'Sim_Flow'
+    set_group = 'flow_flat80_res6_v207_resample'
+    set_name = 'Sim_flow_flat80_res6_v207_resample_norotate_'
+    set_number = 0
+
+    plot_data = []
+    for div in divs:
+        file_name = f'ratios_divisions_{div}_centrality_{cent}_local.txt'
+
+        raw_path = f'{base_path}Data_{data_name}/{set_group}/{set_name}{set_number}/{energy}GeV/{file_name}'
+        mix_path = f'{base_path}Data_{data_name}_Mix/{set_group}/{set_name}{set_number}/{energy}GeV/{file_name}'
+        raw = BsData(div, raw_path)
+        mix = BsData(div, mix_path)
+
+        raw_stats = {tp: DistStats(x) for tp, x in raw.data.data.items()}
+        mix_stats = {tp: DistStats(x) for tp, x in mix.data.data.items()}
+        raw_bs_stats = [{tp: DistStats(y) for tp, y in x.data.items()} for x in raw.data_bs]
+        mix_bs_stats = [{tp: DistStats(y) for tp, y in x.data.items()} for x in mix.data_bs]
+
+        raw_tps, raw_k2_vals, raw_k2_errs = [], [], []
+        for tp, raw_stat in raw_stats.items():
+            val = raw_stat.get_k_stat(2).val
+            bs_k2 = []
+            for bs in raw_bs_stats:
+                if tp in bs:
+                    bs_k2.append(bs[tp].get_k_stat(2).val)
+            if len(bs_k2) > min_bs:
+                raw_tps.append(tp)
+                raw_k2_vals.append(val)
+                raw_k2_errs.append(np.std(bs_k2))
+
+        mix_tps, mix_k2_vals, mix_k2_errs = [], [], []
+        for tp, mix_stat in mix_stats.items():
+            val = mix_stat.get_k_stat(2).val
+            bs_k2s = []
+            for bs in mix_bs_stats:
+                if tp in bs:
+                    bs_k2s.append(bs[tp].get_k_stat(2).val)
+            if len(bs_k2s) > min_bs:
+                mix_tps.append(tp)
+                mix_k2_vals.append(val)
+                mix_k2_errs.append(np.std(bs_k2s))
+
+        p = (float(div) / 360)
+        q = 1 - p
+        raw_y_vals = np.array(raw_k2_vals) / (np.array(raw_tps) * p * q)
+        raw_y_errs = np.array(raw_k2_errs) / (np.array(raw_tps) * p * q)
+        mix_y_vals = np.array(mix_k2_vals) / (np.array(mix_tps) * p * q)
+        mix_y_errs = np.array(mix_k2_errs) / (np.array(mix_tps) * p * q)
+
+        raw_mix_tps = []
+        # raw_mix_diff_vals, raw_mix_diff_errs = [], [], []
+        # raw_mix_diff_mean = 0
+        for raw_index, raw_tp in enumerate(raw_tps):
+            if raw_tp in mix_tps:
+                # mix_index = mix_tps.index(raw_tp)
+                raw_mix_tps.append(raw_tp)
+                # raw_mix_diff = Measure(raw_y_vals[raw_index], raw_y_errs[raw_index]) - \
+                #                Measure(mix_y_vals[mix_index], mix_y_errs[mix_index])
+                # raw_mix_diff_mean += raw_mix_diff.val * 1 / raw_mix_diff.err ** 2
+                # raw_mix_diff_vals.append(raw_mix_diff.val)
+                # raw_mix_diff_errs.append(raw_mix_diff.err)
+
+        # raw_mix_diff_mean /= np.sum(1 / np.array(raw_mix_diff_errs) ** 2)
+
+        plot_data.append((q, raw_tps, raw_k2_vals, raw_k2_errs, mix_tps, mix_k2_vals,
+                          mix_k2_errs, raw_y_vals, raw_y_errs, mix_y_vals, mix_y_errs,
+                          raw_mix_tps))
+                          # ,raw_mix_diff_vals, raw_mix_diff_errs, raw_mix_diff_mean))
+
+    fig1, ax1 = plt.subplots(figsize=(6.66, 5), dpi=144)
+    fig2, ax2 = plt.subplots(figsize=(6.66, 5), dpi=144)
+    # fig3, ax3 = plt.subplots(figsize=(6.66, 5), dpi=144)
+    markers = iter(['o', 's', 'p'])
+    colors = iter(['b', 'g', 'r', 'm', 'c', 'k'])
+    for div, plot_data in zip(divs, plot_data):
+        marker, color = next(markers), next(colors)
+        q, raw_tps, raw_c2_div_c1_vals, raw_c2_div_c1_errs, mix_tps, mix_c2_div_c1_vals, mix_c2_div_c1_errs, \
+        raw_y_vals, raw_y_errs, mix_y_vals, mix_y_errs, raw_mix_tps = plot_data
+            # , raw_mix_diff_vals, raw_mix_diff_errs, raw_mix_diff_mean = plot_data
+
+        ax1.errorbar(raw_tps, raw_c2_div_c1_vals, raw_c2_div_c1_errs, marker=marker, ls='none', color='blue', alpha=0.8,
+                     label=f'Raw {div}°')
+        ax1.errorbar(mix_tps, mix_c2_div_c1_vals, mix_c2_div_c1_errs, marker=marker, ls='none', color='green',
+                     alpha=0.8, label=f'Mix {div}°')
+        ax1.axhline(q, color='red', ls='--', label=f'Binomial {div}°')
+
+        ax2.errorbar(raw_tps, raw_y_vals, raw_y_errs, marker=marker, ls='none', color='blue', alpha=0.8,
+                     label=f'Raw {div}°')
+        ax2.errorbar(mix_tps, mix_y_vals, mix_y_errs, marker=marker, ls='none', color='green', alpha=0.8,
+                     label=f'Mix {div}°')
+
+        # ax3.errorbar(raw_mix_tps, raw_mix_diff_vals, raw_mix_diff_errs, alpha=0.8, ls='none', marker=marker,
+        #              color=color, label=f'{div}°')
+        # ax3.axhline(raw_mix_diff_mean, color=color, alpha=0.73)
+        # # ax3.axhspan(raw_mix_diff_mean.val - raw_mix_diff_mean.err, raw_mix_diff_mean.val + raw_mix_diff_mean.err,
+        # #             color=color, alpha=0.4)
+        # print(f'{div}° Mean: {raw_mix_diff_mean}')
+
+    ax1.set_xlabel('Total Protons in Event')
+    ax1.set_ylabel('C2 / C1')
+    ax1.legend()
+    fig1.tight_layout()
+
+    ax2.axhline(0, color='black', ls='--')
+    ax2.set_xlabel('Total Protons in Event')
+    ax2.set_ylabel('(C2 / C1 - q) / n')
+    ax2.legend()
+    fig2.tight_layout()
+
+    # ax3.axhline(0, color='black', ls='--')
+    # ax3.set_xlabel('Total Protons in Event')
+    # ax3.set_ylabel('(C2 / C1 - q) / n - Mix')
+    # ax3.legend()
+    # fig3.tight_layout()
 
     plt.show()
 
