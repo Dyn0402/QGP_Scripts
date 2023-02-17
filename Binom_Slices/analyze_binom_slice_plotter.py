@@ -838,6 +838,7 @@ def plot_flow():
     df_name = 'binom_slice_stats_flow.csv'
     save_fits = False
     v2_fit_out_dir = 'F:/Research/Results/Flow_Correction/'
+    v2_fit_out_dir = None
     fits_out_base = 'Base_Zero_Fits/'
     df_tproton_fits_name = 'flow_tprotons_fits.csv'
     df_partitions_fits_name = 'flow_partitions_fits.csv'
@@ -895,18 +896,19 @@ def plot_flow():
     protons_fits = []
     for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
         print(f'Div {div}')
-        flow_vs_v2(df, div, '15', v2_fit_out_dir)
+        if v2_fit_out_dir:
+            flow_vs_v2(df, div, '15', v2_fit_out_dir)
         protons_fits_div = stat_vs_protons(df, stat_plot, div, cent_plt, energies_fit, data_types_plt, all_sets_plt,
                                            plot=False, fit=True)
         protons_fits.append(protons_fits_div)
-    return
+    # return
     protons_fits = pd.concat(protons_fits, ignore_index=True)
     if save_fits:
         protons_fits.to_csv(f'{base_path}{fits_out_base}{df_tproton_fits_name}', index=False)
     print(protons_fits)
     print(pd.unique(protons_fits['amp']))
     print(pd.unique(protons_fits['spread']))
-    df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
+    df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=False,
                                      data_sets_labels=data_sets_labels)
     if save_fits:
         df_fits.to_csv(f'{base_path}{fits_out_base}{df_partitions_fits_name}', index=False)
@@ -990,6 +992,8 @@ def plot_ampt_v2_closure():
         protons_fits.append(protons_fits_div)
     protons_fits = pd.concat(protons_fits, ignore_index=True)
 
+    # plt.show()
+
     proton_fits_w_flow = protons_fits[protons_fits['name'] == 'ampt_new_coal_epbins1']
     v2_ep_e_vals, v2_ep_e_errs, v2_rp_e_vals, v2_rp_e_errs, v2_op_e_vals = [], [], [], [], []
     for energy in energies_fit:
@@ -1034,11 +1038,11 @@ def plot_ampt_v2_closure():
     ax3.errorbar(energies_fit, v2_rp_e_vals, v2_rp_e_errs, ls='none', marker='o', color='red', label='v2_rp')
     ax3.scatter(energies_fit, v2_op_e_vals, color='blue', label='v2_op')
     ax3.legend()
-    plt.show()
+    # plt.show()
 
 
     # plt.show()
-    return
+    # return
 
     fig, ax = plt.subplots(dpi=144)
     ax.grid()
