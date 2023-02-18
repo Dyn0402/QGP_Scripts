@@ -336,6 +336,10 @@ def x2(x, a):
     return a * x ** 2
 
 
+def v2_divs(w, v2):
+    return v2**2 * np.sin(w)**2 / (np.pi * w * (1 - w / (2 * np.pi)))
+
+
 def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False, fit=False,
                     hist=False, data_sets_colors=None, data_sets_labels=None, star_prelim=False):
     data = []
@@ -921,6 +925,36 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
     fig.tight_layout()
     fig_panels.tight_layout()
     fig_panels.subplots_adjust(wspace=0.0, hspace=0.0)
+
+    return pd.DataFrame(fit_pars)
+
+
+def plot_protons_fits_divs_flow(df, data_sets_plt, data_sets_colors=None):
+    fig, ax = plt.subplots(dpi=144)
+    colors = iter(plt.cm.rainbow(np.linspace(0, 1, len(data_sets_plt))))
+    ax.axhline(0, color='black')
+    x_divs = np.linspace(0, 360, 1000)
+    fit_pars = []
+    for data_set in data_sets_plt:
+        df_set = df[df['name'] == data_set]
+        df_set.sort_values(by='divs')
+        if data_sets_colors is None:
+            color = next(colors)
+        else:
+            color = data_sets_colors[data_set]
+        v2 = float('0.' + data_set.split('_')[-1][2:])
+        lab = f'v2={v2:.2f}'
+        ax.errorbar(df_set['divs'], df_set['slope'], yerr=df_set['slope_err'], ls='none',
+                    marker='o', label=lab, color=color)
+        ax.plot(x_divs, v2_divs(x_divs / 180 * np.pi, v2), color=color)
+
+    ax.set_title('V2 vs Partition Width')
+    ax.set_ylabel('Slope of Raw/Mix SD vs Total Protons per Event')
+    ax.set_xlabel('Azimuthal Partition Width')
+    ax.legend()
+
+    fig.canvas.manager.set_window_title('V2 vs Partition Width')
+    fig.tight_layout()
 
     return pd.DataFrame(fit_pars)
 

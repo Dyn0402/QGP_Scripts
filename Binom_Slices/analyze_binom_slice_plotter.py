@@ -31,8 +31,9 @@ def main():
     # plot_all_zero_base()
     # plot_ampt_efficiency()
     # plot_flow()
-    plot_ampt_v2_closure()
-    # plot_flow_v2_closure()
+    plot_flow_k2()
+    # plot_ampt_v2_closure()
+    # plot_flow_vs2_closure()
     # plot_flow_v2_closure_raw()
     print('donzo')
 
@@ -870,7 +871,7 @@ def plot_flow():
     print(pd.unique(df['name']))
 
     df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
-
+    df_raw_div = df[df['data_type'] == 'raw']
     # for data_set in data_sets_plt:
     #     df_set = df[df['name'] == data_set]
     #     stat_vs_protons(df_set, stat_plot, div_plt, cent_plt, [62], ['raw', 'mix'], all_sets_plt, plot=True, fit=False,
@@ -908,10 +909,79 @@ def plot_flow():
     print(protons_fits)
     print(pd.unique(protons_fits['amp']))
     print(pd.unique(protons_fits['spread']))
-    df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=False,
-                                     data_sets_labels=data_sets_labels)
+    plot_protons_fits_divs_flow(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors,
+                                data_sets_labels=data_sets_labels)
+    # df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=False,
+    #                                  data_sets_labels=data_sets_labels)
+    # if save_fits:
+    #     df_fits.to_csv(f'{base_path}{fits_out_base}{df_partitions_fits_name}', index=False)
+    # print(df_fits)
+    # plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
+
+    plt.show()
+
+
+def plot_flow_k2():
+    plt.rcParams["figure.figsize"] = (6.66, 5)
+    plt.rcParams["figure.dpi"] = 144
+    base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+    # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
+    df_name = 'binom_slice_v2_ck2.csv'
+    save_fits = False
+    v2_fit_out_dir = 'F:/Research/Results/Flow_Correction/'
+    v2_fit_out_dir = None
+    fits_out_base = 'Base_Zero_Fits/'
+    df_tproton_fits_name = None  # 'flow_tprotons_fits.csv'
+    df_partitions_fits_name = 'flow_partitions_fits.csv'
+    df_path = base_path + df_name
+    sim_sets = []
+
+    stat_plot = 'k2'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
+    div_plt = 120
+    exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
+    cent_plt = 8
+    energies_fit = [62]
+    data_types_plt = ['raw']
+    samples = 72  # For title purposes only
+
+    data_sets_plt = ['flow_resample_res15_v207', 'flow_resample_res15_v205', 'flow_resample_res15_v202']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue']))
+    data_sets_labels = dict(zip(data_sets_plt, ['v2=0.07', 'v2=0.05', 'v2=0.02']))
+
+    all_sets_plt = data_sets_plt + sim_sets[:]
+
+    df = pd.read_csv(df_path)
+    df = df.dropna()
+    print(pd.unique(df['name']))
+
+    df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
+    df = df[(df['data_type'] == 'raw') & ((df['stat'] == 'k2') | (df['stat'] == 'c2'))]
+    df['val'] = df['val'] / (df['total_protons'] * df['divs'] / 360 * (1 - df['divs'] / 360))
+    df['err'] = df['err'] / (df['total_protons'] * df['divs'] / 360 * (1 - df['divs'] / 360))
+
+    stat_vs_protons(df, stat_plot, 120, cent_plt, energies_fit, data_types_plt, all_sets_plt,
+                    plot=True, fit=True)
+
+    protons_fits = []
+    for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
+        print(f'Div {div}')
+        # if v2_fit_out_dir:
+        #     flow_vs_v2(df, div, '15', v2_fit_out_dir)
+        protons_fits_div = stat_vs_protons(df, stat_plot, div, cent_plt, energies_fit, data_types_plt, all_sets_plt,
+                                           plot=False, fit=True)
+        protons_fits.append(protons_fits_div)
+    # return
+    protons_fits = pd.concat(protons_fits, ignore_index=True)
     if save_fits:
-        df_fits.to_csv(f'{base_path}{fits_out_base}{df_partitions_fits_name}', index=False)
+        protons_fits.to_csv(f'{base_path}{fits_out_base}{df_tproton_fits_name}', index=False)
+    print(protons_fits)
+    print(pd.unique(protons_fits['amp']))
+    print(pd.unique(protons_fits['spread']))
+    plot_protons_fits_divs_flow(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors)
+    # df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=False,
+    #                                  data_sets_labels=data_sets_labels)
+    # if save_fits:
+    #     df_fits.to_csv(f'{base_path}{fits_out_base}{df_partitions_fits_name}', index=False)
     # print(df_fits)
     # plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
 
@@ -1008,10 +1078,10 @@ def plot_ampt_v2_closure():
         v2s, chi_2s = [], []
         x_divs = np.linspace(60, 300, 1000)
         for v2_i in np.linspace(v2 * 0.75, v2 * 1.25, 8):
-            cor_slopes = slopes - coefs * v2_i**2
+            cor_slopes = slopes - coefs * v2_i ** 2
             cor_slope_vals, cor_slope_errs = [x.val for x in cor_slopes], [x.err for x in cor_slopes]
             popt, pcov = cf(quad_180, divs, cor_slope_vals, sigma=cor_slope_errs, absolute_sigma=True)
-            chi_2 = np.sum((cor_slope_vals - quad_180(divs, *popt))**2 / cor_slope_errs)
+            chi_2 = np.sum((cor_slope_vals - quad_180(divs, *popt)) ** 2 / cor_slope_errs)
             ax.scatter(divs, cor_slope_vals)
             ax.plot(x_divs, quad_180(x_divs, *popt))
             v2s.append(v2_i)
@@ -1039,7 +1109,6 @@ def plot_ampt_v2_closure():
     ax3.scatter(energies_fit, v2_op_e_vals, color='blue', label='v2_op')
     ax3.legend()
     # plt.show()
-
 
     # plt.show()
     # return

@@ -38,19 +38,21 @@ def init_pars():
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_cfev.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_stats_ampt_eff.csv',
-        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
-                    'binom_slice_stats_flow_epbins1_test.csv',
+        # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+        #             'binom_slice_stats_flow_epbins1_test.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_stats_bes_epbins1.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_stats_ampt_v2_closure_clean.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cents.csv',
+        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_v2_ck2.csv',
         # 'csv_path': 'D:/Transfer/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim_new.csv',
         # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
         'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': True,  # If True check csv_path and only run missing datasets, else run all datasets
         'threads': 8,
-        'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
+        # 'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
+        'stats': define_stats(['standard deviation', 'k2', 'c2']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
         'min_events': 100,  # Min number of total events per total_proton. Skip total_proton if fewer
         'min_bs': 100,  # Min number of bootstrap sets of total_proton. Skip if fewer
@@ -124,17 +126,18 @@ def define_datasets(base_path):
         #  all_divs],
         # ['flow_resample_res9_v207', '_Sim_Flow', ['resample', 'res9', 'v207', 'epbins1'],
         #  [], [], [0], [62], [8], all_divs],
-        ['flow_resample_res9_v207', '_Sim_tests', ['resample', 'res9', 'v207', 'epbins1'],
-         [], [], [0], [62], [8], all_divs],
+        # ['flow_resample_res9_v207', '_Sim_tests', ['resample', 'res9', 'v207', 'epbins1'],
+        #  [], [], [0], [62], [8], all_divs],
     ]
 
     # reses = ['1', '15', '2', '3', '4', '5', '6', '75', '9', '99']
     # v2s = ['01', '02', '03', '04', '05', '06', '07']
-    # # reses = ['1', '15', '3', '5', '75', '99']
-    # for v2 in v2s:
-    #     for res in reses:
-    #         entry_vals.append([f'flow_resample_res{res}_v2{v2}', '_Sim_Flow', ['resample', f'res{res}', f'v2{v2}'], [],
-    #                            [], [0], [62], [8], all_divs])
+    v2s = ['02', '05', '07']
+    reses = ['15']
+    for v2 in v2s:
+        for res in reses:
+            entry_vals.append([f'flow_resample_res{res}_v2{v2}', '_Sim_Flow', ['resample', f'res{res}', f'v2{v2}'], [],
+                               [], [0], [62], [8], all_divs])
     # entry_vals.append(['flow_resample_res15_v205', '_Sim_Flow', ['resample', 'res15', 'v205'], [], [], [0], [62], [8],
     #                    all_divs])
     # entry_vals.append(['flow_resample_res15_v202', '_Sim_Flow', ['resample', 'res15', 'v202'], [], [], [0], [62], [8],
