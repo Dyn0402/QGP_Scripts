@@ -15,20 +15,22 @@ from scipy.stats import norm
 
 
 def main():
-    # vn_test()
-    gaus_test()
+    vn_test()
+    # gaus_test()
     print('donzo')
 
 
 def vn_test():
     func = vn_pdf
     n = 3
-    v2 = 0.02
+    v2 = 0.1
     psi = np.pi / 3
     func_args = (v2, psi, n)
     width = np.pi / 3
 
-    plot_pdf(func, func_args)
+    # plot_pdf(func, func_args)
+    plot_az_bin_example(func, func_args, 2, 2 + np.pi / 3)
+    plt.show()
     widths = np.linspace(0, 2 * np.pi, 100)
     lin_terms, const_terms = [], []
     for width in widths:
@@ -65,11 +67,22 @@ def gaus_test():
     plt.show()
 
 
-def plot_pdf(func, pars):
-    xs = np.linspace(0, 2 * np.pi, 1000)
+def plot_pdf(func, pars, xs=None):
+    if xs is None:
+        xs = np.linspace(0, 2 * np.pi, 1000)
     plt.plot(xs, func(xs, *pars))
     plt.xlabel('phi')
     plt.ylabel('Probability')
+
+
+def plot_az_bin_example(func, pars, bin_low, bin_high):
+    xs = np.linspace(0, 2 * np.pi, 1000)
+    # plt.axhline(0, color='black')
+    plot_pdf(func, pars, xs=xs)
+    xs_bin = np.linspace(bin_low, bin_high, 1000)
+    plt.fill_between(xs_bin, func(xs_bin, *pars), color='gray')
+    plt.xlim(0, 2 * np.pi)
+    plt.ylim(bottom=0)
 
 
 def get_partition_variance_scipy(width, p, p_args):
