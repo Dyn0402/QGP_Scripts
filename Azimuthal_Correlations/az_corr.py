@@ -26,8 +26,8 @@ from Measure import Measure
 
 def main():
     # corr_test()
-    # cent_test()
-    random_test()
+    sigma_vs_mult()
+    # random_test()
     print('donzo')
 
 
@@ -145,23 +145,26 @@ def get_ampt_ref3_edges(ampt_cent_path, energy):
     return ref3_edges
 
 
-def cent_test():
+def sigma_vs_mult():
     base_path = 'F:/Research/'
     # base_path = '/media/ucla/Research/'
     # base_path = '/media/ucla/Research/AMPT_Trees_New_Coalescence/min_bias/string_melting/'
     data_path = f'{base_path}AMPT_Trees_New_Coalescence/min_bias/string_melting/'
     ampt_cent_path = f'{base_path}Ampt_Centralities_New_Coalescence/string_melting/'
+    fig_out_path = f'{base_path}Results/Two_Partition_Corr/'
     cents = [-1, 0, 1, 2, 3, 4, 5, 6, 7, 8]
     energies = [7, 11, 19, 27, 39, 62]
-    max_eta = 0.5
+    max_rapid = 0.5
     min_pt = 0.2  # GeV
     max_pt = 2.0  # GeV
     pid = 2212  # Proton?
     n_bootstraps = 100
+    min_events = 3
     seed = 45
-    bin_width = np.deg2rad(180)
+    bin_width = np.deg2rad(120)
+    bin_sep = np.deg2rad(180)
     plot = False
-    threads = 12
+    threads = 15
     read_branches = ['pid', 'px', 'py', 'pz', 'refmult3']
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '60-70%', 1: '70-80%',
                 0: '80-90%', -1: '90-100%'}
@@ -176,52 +179,77 @@ def cent_test():
         print(f'\nStarting {energy}GeV:')
         ref3_edges = get_ampt_ref3_edges(ampt_cent_path, energy)
 
-        nas, nbs = {cent: [] for cent in cents}, {cent: [] for cent in cents}
-        phi_hists = {cent: np.histogram([], bins=phi_bins)[0] for cent in cents}
+        nas, nbs = {cent: {} for cent in cents}, {cent: {} for cent in cents}
+        phi_hists = {cent: {} for cent in cents}
 
         file_dir = f'{data_path}{energy}GeV/'
         files_paths = os.listdir(file_dir)
 
         seeds = iter(np.random.SeedSequence(seed).spawn(len(files_paths)))
-        jobs = [(f'{file_dir}{path}', read_branches, cents, ref3_edges, bin_width, pid, max_eta, min_pt, max_pt,
-                 phi_bins, next(seeds)) for path in files_paths]
+        jobs = [(f'{file_dir}{path}', read_branches, cents, ref3_edges, bin_width, bin_sep, pid, max_rapid, min_pt,
+                 max_pt, phi_bins, next(seeds)) for path in files_paths]
 
         with Pool(threads) as pool:
             for file_nas, file_nbs, file_phi_hists in tqdm.tqdm(pool.istarmap(read_file, jobs), total=len(jobs)):
                 for cent in cents:
-                    nas[cent].extend(file_nas[cent])
-                    nbs[cent].extend(file_nbs[cent])
-                    phi_hists[cent] += file_phi_hists[cent]
+                    for n_proton in file_nas[cent]:
+                        if n_proton in nas[cent]:
+                            nas[cent][n_proton].extend(file_nas[cent][n_proton])
+                            nbs[cent][n_proton].extend(file_nbs[cent][n_proton])
+                            phi_hists[cent][n_proton] += file_phi_hists[cent][n_proton]
+                        else:
+                            nas[cent].update({n_proton: file_nas[cent][n_proton]})
+                            nbs[cent].update({n_proton: file_nbs[cent][n_proton]})
+                            phi_hists[cent].update({n_proton: file_phi_hists[cent][n_proton]})
 
-        for cent in cents:
-            na, nb = np.array(nas[cent]), np.array(nbs[cent])
-            if plot:
-                plt.figure()
-                plt.bar(phi_bin_centers, width=phi_bin_widths, height=phi_hists[cent])
+        if plot:
+            for cent in cents:
+                for n_proton in nas:
+                    na, nb = np.array(nas[cent][n_proton]), np.array(nbs[cent][n_proton])
 
-                plt.figure()
-                plt.hist2d(na, nb, bins=(np.arange(-0.5, max(na) + 1), np.arange(-0.5, max(nb) + 1)), cmin=1,
-                           cmap='jet')
+                    plt.figure()
+                    plt.bar(phi_bin_centers, width=phi_bin_widths, height=phi_hists[cent][n_proton])
 
-        jobs = [(np.array(nas[cent]), np.array(nbs[cent]), n_bootstraps, cent) for cent in cents]
+                    plt.figure()
+                    plt.hist2d(na, nb, bins=(np.arange(-0.5, max(na) + 1), np.arange(-0.5, max(nb) + 1)), cmin=1,
+                               cmap='jet')
+
+        jobs = [(np.array(nas[cent][n_proton]), np.array(nbs[cent][n_proton]), n_bootstraps, cent, n_proton)
+                for cent in cents for n_proton in nas[cent] if len(nas[cent][n_proton]) >= min_events]
         with Pool(threads) as pool:
-            for corr, corr_err, cent in tqdm.tqdm(pool.istarmap(calc_bootstraps, jobs), total=len(jobs)):
-                df.append({'energy': energy, 'cent': cent_map[cent], 'corr': corr, 'corr_err': corr_err})
+            for sig, sig_err, cent, n_proton in tqdm.tqdm(pool.istarmap(calc_bootstraps, jobs), total=len(jobs)):
+                df.append({'energy': energy, 'cent': cent, 'n': n_proton, 'sig': sig, 'sig_err': sig_err})
 
     df = pd.DataFrame(df)
-    fig, ax = plt.subplots(dpi=144)
-    ax.axhline(0, color='black', ls='--')
-    ax.set_xlabel('Centrality')
-    ax.set_ylabel(r'1 - $\sigma(c)^2$')
-    ax.set_title('Ampt New Coalescence String Melting')
-    for energy in pd.unique(df['energy']):
+    for energy in energies:
         df_energy = df[df['energy'] == energy]
-        ax.errorbar(df_energy['cent'], df_energy['corr'], yerr=df_energy['corr_err'], ls='-', marker='o', alpha=0.8,
-                    label=f'{energy}GeV')
-    ax.legend()
-    fig.tight_layout()
+        for cent in cents:
+            df_cent = df_energy[df_energy['cent'] == cent]
+            df_cent = df_cent.sort_values(by=['n'])
+            fig, ax = plt.subplots(dpi=144)
+            ax.errorbar(df_cent['n'], df_cent['sig'], yerr=df_cent['sig_err'], ls='none', marker='o')
+            ax.axhline(1, color='black', ls='--')
+            ax.axhline(0, color='black', ls='-')
+            ax.grid()
+            ax.set_xlabel('Total Protons in Event')
+            ax.set_ylabel(r'$\sigma(c)^2$')
+            ax.set_title(f'Ampt New Coalescence String Melting {energy}GeV {cent_map[cent]} Centrality')
+            # ax.legend()
+            fig.tight_layout()
+            fig.savefig(f'{fig_out_path}/Ampt_New_Coal_{energy}GeV_{cent}_cent.png')
+    # fig, ax = plt.subplots(dpi=144)
+    # ax.axhline(0, color='black', ls='--')
+    # ax.set_xlabel('Centrality')
+    # ax.set_ylabel(r'1 - $\sigma(c)^2$')
+    # ax.set_title('Ampt New Coalescence String Melting')
+    # for energy in pd.unique(df['energy']):
+    #     df_energy = df[df['energy'] == energy]
+    #     ax.errorbar(df_energy['cent'], df_energy['corr'], yerr=df_energy['corr_err'], ls='-', marker='o', alpha=0.8,
+    #                 label=f'{energy}GeV')
+    # ax.legend()
+    # fig.tight_layout()
 
-    plt.show()
+    # plt.show()
 
 
 def random_test():
@@ -240,26 +268,50 @@ def random_test():
     print(f'r = {r}')
 
 
-def read_file(file_path, read_branches, cents, ref3_edges, bin_width, pid, max_eta, min_pt, max_pt, phi_bins, seed):
+def read_file(file_path, read_branches, cents, ref3_edges, bin_width, bin_sep, pid, max_rapid, min_pt, max_pt, phi_bins,
+              seed):
     rng = np.random.default_rng(seed)
     vector.register_awkward()
-    nas, nbs = {cent: [] for cent in cents}, {cent: [] for cent in cents}
-    phi_hists = {cent: np.histogram([], bins=phi_bins)[0] for cent in cents}
+    proton_mass = 0.09382721  # GeV
+    nas, nbs = {cent: {} for cent in cents}, {cent: {} for cent in cents}
+    phi_hists = {cent: {} for cent in cents}
     with uproot.open(file_path) as file:
         tracks_all = file['tree'].arrays(read_branches)
         for cent in cents:
             tracks = tracks_all[(tracks_all.refmult3 <= ref3_edges[cent][0]) &
                                 (tracks_all.refmult3 > ref3_edges[cent][1])]
-            n_protons_a, n_protons_b, phi_hist = bin_events(tracks, bin_width, pid, max_eta, min_pt, max_pt, phi_bins,
-                                                            rng)
-            nas[cent].extend(n_protons_a)
-            nbs[cent].extend(n_protons_b)
-            phi_hists[cent] += phi_hist
+            tracks = ak.zip({'pid': tracks['pid'], 'px': tracks['px'], 'py': tracks['py'], 'pz': tracks['pz']},
+                            with_name='Momentum3D')
+            protons = tracks[(tracks['pid'] == pid) & (tracks.pt > min_pt) & (tracks.pt < max_pt)]
+            proton_rapid = rapidity(protons.px, protons.py, protons.pz, protons.px * 0 + proton_mass)
+            protons = protons[abs(proton_rapid) < max_rapid]
+            n_protons = ak.count(protons.pid, axis=1)
+            for n_proton in np.unique(n_protons):
+                protons_np = protons[n_protons == n_proton]
+                n_protons_a, n_protons_b, phi_hist = bin_events(protons_np, bin_width, bin_sep, phi_bins, rng)
+                nas[cent].update({n_proton: list(n_protons_a)})
+                nbs[cent].update({n_proton: list(n_protons_b)})
+                phi_hists[cent].update({n_proton: phi_hist})
 
     return nas, nbs, phi_hists
 
 
-def bin_events(tracks, bin_width, pid, max_eta, min_pt, max_pt, phi_bins, rng):
+def bin_events(tracks, bin_width, bin_sep, phi_bins, rng):
+    phi_hist = np.histogram(ak.flatten(tracks.phi), bins=phi_bins)[0]
+    num_events = len(tracks)
+    bins_a = rng.random(num_events) * 2 * np.pi - np.pi
+    bins_b = bins_a + bin_sep
+    n_protons_a = ak.sum(((tracks.phi > bins_a) & (tracks.phi <= bins_a + bin_width)) |
+                         (tracks.phi + 2 * np.pi > bins_a) & (tracks.phi + 2 * np.pi <= bins_a + bin_width),
+                         axis=1)
+    n_protons_b = ak.sum(((tracks.phi > bins_b) & (tracks.phi <= bins_b + bin_width)) |
+                         (tracks.phi + 2 * np.pi > bins_b) & (tracks.phi + 2 * np.pi <= bins_b + bin_width),
+                         axis=1)
+
+    return n_protons_a, n_protons_b, phi_hist
+
+
+def bin_events_old(tracks, bin_width, pid, max_eta, min_pt, max_pt, phi_bins, rng):
     tracks = ak.zip({'pid': tracks['pid'], 'px': tracks['px'], 'py': tracks['py'], 'pz': tracks['pz']},
                     with_name='Momentum3D')
     tracks = tracks[(tracks['pid'] == pid) & (abs(tracks.eta) < max_eta) & (tracks.pt > min_pt) & (tracks.pt < max_pt)]
@@ -280,12 +332,16 @@ def bin_events(tracks, bin_width, pid, max_eta, min_pt, max_pt, phi_bins, rng):
 
 
 def calc_corr(na, nb):
+    return 1 - calc_sigma(na, nb)
+
+
+def calc_sigma(na, nb):
     daa = np.mean(na ** 2) - np.mean(na) ** 2
     dbb = np.mean(nb ** 2) - np.mean(nb) ** 2
     dab = np.mean(na * nb) - np.mean(na) * np.mean(nb)
     sigma_c_2 = (daa + dbb - 2 * dab) / (np.mean(na + nb))
 
-    return 1 - sigma_c_2
+    return sigma_c_2
 
 
 def calc_pearson_r(na, nb):
@@ -296,7 +352,7 @@ def calc_pearson_r(na, nb):
     return r
 
 
-def calc_bootstraps(na, nb, nbs=50, cent=0, func=calc_corr):
+def calc_bootstraps(na, nb, nbs=50, cent=0, n_proton=0, func=calc_sigma):
     corrs = []
     data_size = len(na)
     for bs_i in range(nbs):
@@ -307,7 +363,7 @@ def calc_bootstraps(na, nb, nbs=50, cent=0, func=calc_corr):
             nbbs.append(nb[index])
         corrs.append(func(np.array(nabs), np.array(nbbs)))
 
-    return func(na, nb), np.std(corrs), cent
+    return func(na, nb), np.std(corrs), cent, n_proton
 
 
 # def calc_bootstrap(na, nb):
@@ -334,6 +390,11 @@ def ampt_str_edges_to_9(ref_str_edges):
         edge_index += 2
 
     return edges_9bin
+
+
+def rapidity(px, py, pz, m):
+    e = np.sqrt(m ** 2 + px ** 2 + py ** 2 + pz ** 2)
+    return np.arctanh(pz / e)
 
 
 if __name__ == '__main__':
