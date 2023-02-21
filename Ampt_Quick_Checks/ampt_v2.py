@@ -34,12 +34,11 @@ def calculate_v2():
     data_path = f'{base_path}AMPT_Trees_New_Coalescence/min_bias/string_melting/'
     ampt_cent_path = f'{base_path}Ampt_Centralities_New_Coalescence/string_melting/'
     out_dir = f'{base_path}Data_Ampt_New_Coal/default_resample_epbins1/' \
-              f'Ampt_rapid05_resample_norotate_epbins1_test_0/'
+              f'Ampt_rapid05_resample_norotate_epbins1_0/'
     # out_dir = None
     plot_out_dir = 'F:/Research/Results/AMPT_New_Coal_QA_Plots/Flow/'
     # plot_out_dir = None
     energies = [7, 11, 19, 27, 39, 62]
-    energies = [7]
     max_rapid = 0.5
     min_pt = 0.4  # GeV
     max_pt = 2.0  # GeV
@@ -57,7 +56,7 @@ def calculate_v2():
     for n in rp_harmonics:
         calc_quantities.update({f'v{n}_rp_sum': 0, f'v{n}_rp_sum2': 0})
     read_branches = ['pid', 'px', 'py', 'pz', 'refmult3']
-    threads = 8
+    threads = 12
 
     for energy in energies:
         print(f'Starting {energy}GeV')
@@ -67,7 +66,7 @@ def calculate_v2():
         ref3_edges = get_ampt_ref3_edges(ampt_cent_path, energy)
 
         jobs = [(f'{file_dir}{path}', read_branches, cents, pids, ref3_edges, max_rapid, min_pt, max_pt, max_p, eta_gap,
-                 calc_quantities, rp_harmonics) for path in file_paths[:20]]
+                 calc_quantities, rp_harmonics) for path in file_paths]
 
         v2_data = {pid: {cent: calc_quantities.copy() for cent in cents} for pid in pids}
         with Pool(threads) as pool:
