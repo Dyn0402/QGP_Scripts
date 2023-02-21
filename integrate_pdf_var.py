@@ -149,6 +149,49 @@ def get_partition_variance(func, func_pars, width):
     return ep2 - ep**2, epq
 
 
+def get_partitions_covariance(func, func_pars, width, sep):
+    points = 1000
+    bounds = (0, 2 * np.pi)
+    xs = np.linspace(*bounds, points)
+    bound_range = bounds[-1] - bounds[0]
+    dx = bound_range / points
+    pdf = func(xs, *func_pars)
+    norm = np.sum(func(xs, *func_pars)) * dx
+    pdf /= norm
+    pdf_wrap = np.append([pdf, pdf, pdf])  # To represent a periodic boundary glue duplicate array to end
+
+    width_points = round(width / bound_range * points)
+    sep_points = round(sep / bound_range * points)
+    probs_a = [np.sum(pdf_wrap[:width_points])]
+    probs_b = [np.sum(pdf_wrap[sep_points:sep_points + width_points])]
+    mids = [width / 2]
+    for index in range(points):
+        probs_a.append(probs_a[-1] - pdf_wrap[index] + pdf_wrap[index + width_points])
+        probs_b.append(probs_b[-1] - pdf_wrap[index + sep_points] + pdf_wrap[index + sep_points + width_points])
+        mids.append(mids[-1] + bound_range / points)
+    probs_a = np.array(probs_a) * width / width_points
+    probs_b = np.array(probs_b) * width / width_points
+    # probs_a2 = probs_a**2
+    # probs_b2 = probs_b**2
+    np.mean((probs_a - probs_b)**2)
+    # pqs = probs * (1 - probs)
+    # epq = np.mean(pqs)
+    # ep = np.mean(probs)
+    # ep2 = np.mean(probs2)
+
+    # fig, ax = plt.subplots()
+    # ax.plot(np.linspace(bounds[0], 2 * bounds[1], 2 * points), pdf_wrap, color='blue', label='pdf')
+    # ax.plot(mids, probs, color='green', label='bin probs')
+    # ax.plot(mids, probs2, color='red', label='bin probs squared')
+    # ax.axhline(ep, color='green', ls='--', label='expectation of p')
+    # ax.axhline(ep**2, color='olive', label='(expectation of p)^2')
+    # ax.axhline(ep2, color='red', ls='--', label='expectation of p^2')
+    # ax.legend()
+    # print(ep2, ep**2)
+
+    # return ep2 - ep**2, epq
+
+
 def vn_pdf(phi, vn, psi, n=2):
     return (1 + 2 * vn * np.cos(n * (phi - psi))) / (2 * np.pi)
 
