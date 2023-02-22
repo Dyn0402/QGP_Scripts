@@ -223,9 +223,20 @@ def sigma_vs_mult():
     df = pd.DataFrame(df)
     for energy in energies:
         df_energy = df[df['energy'] == energy]
+        fig_energy, ax_energy = plt.subplots(dpi=144)
+        ax_energy.grid()
+        ax_energy.axhline(1, color='black', ls='--')
+        ax_energy.axhline(0, color='black', ls='-')
+        ax_energy.set_xlabel('Total Protons in Event')
+        ax_energy.set_ylabel(r'$\sigma(c)^2$')
+        ax_energy.set_title(f'Ampt New Coalescence String Melting {energy}GeV')
         for cent in cents:
             df_cent = df_energy[df_energy['cent'] == cent]
             df_cent = df_cent.sort_values(by=['n'])
+
+            ax_energy.errorbar(df_cent['n'], df_cent['sig'], yerr=df_cent['sig_err'], ls='none', alpha=0.7, marker='o',
+                               label=cent_map[cent])
+
             fig, ax = plt.subplots(dpi=144)
             ax.errorbar(df_cent['n'], df_cent['sig'], yerr=df_cent['sig_err'], ls='none', marker='o')
             ax.axhline(1, color='black', ls='--')
@@ -234,9 +245,11 @@ def sigma_vs_mult():
             ax.set_xlabel('Total Protons in Event')
             ax.set_ylabel(r'$\sigma(c)^2$')
             ax.set_title(f'Ampt New Coalescence String Melting {energy}GeV {cent_map[cent]} Centrality')
-            # ax.legend()
             fig.tight_layout()
             fig.savefig(f'{fig_out_path}/Ampt_New_Coal_{energy}GeV_{cent}_cent.png')
+        ax_energy.legend()
+        fig_energy.tight_layout()
+        fig_energy.savefig(f'{fig_out_path}/Ampt_New_Coal_{energy}GeV_allcents.png')
     # fig, ax = plt.subplots(dpi=144)
     # ax.axhline(0, color='black', ls='--')
     # ax.set_xlabel('Centrality')
