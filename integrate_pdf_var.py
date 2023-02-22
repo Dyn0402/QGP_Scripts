@@ -15,8 +15,9 @@ from scipy.stats import norm
 
 
 def main():
-    vn_test()
+    # vn_test()
     # gaus_test()
+    convo_test()
     print('donzo')
 
 
@@ -67,6 +68,44 @@ def gaus_test():
     plt.show()
 
 
+def convo_test():
+    mu = np.pi
+    sigma = 0.1
+    amp = 0.5
+    func1 = base_gaus_pdf
+    func1_args = (mu, sigma, amp, 1. / get_norm(func1, (mu, sigma, amp, 1)))
+    # fig, ax = plt.subplots()
+    plot_pdf(func1, func1_args)
+
+    func2 = vn_pdf
+    n = 2
+    v2 = 0.01
+    psi = np.pi / 3
+    func2_args = (v2, psi, n)
+    plot_pdf(func2, func2_args)
+
+    func3 = lambda x, mu_, sigma_, base_, c_, v2_, psi_, n_, c_combo_: \
+        c_combo_ * base_gaus_pdf(x, mu_, sigma_, base_, c_) * vn_pdf(x, v2_, psi_, n_)
+    func3_args = (*func1_args, *func2_args, 1. / get_norm(func3, (*func1_args, *func2_args, 1)))
+    plot_pdf(func3, func3_args)
+
+    fig, ax = plt.subplots()
+    fig2, ax2 = plt.subplots()
+    ax.axhline(0, color='black')
+    widths = np.linspace(0, 2 * np.pi, 100)
+    for func, func_args in [(func1, func1_args), (func2, func2_args), (func3, func3_args)]:
+        lin_terms = []
+        for width in widths:
+            lin, const = get_partition_variance(func, func_args, width)
+            lin_terms.append(lin)
+        ax.plot(widths, lin_terms, label=func.__name__)
+    ax.legend()
+    fig.tight_layout()
+    fig2.tight_layout()
+    # var = get_partition_variance(func, func_args, width)
+    plt.show()
+
+
 def plot_pdf(func, pars, xs=None):
     if xs is None:
         xs = np.linspace(0, 2 * np.pi, 1000)
@@ -112,15 +151,15 @@ def int_pdf2(low_bound, width, func, func_args):
     return quad(func, low_bound, low_bound + width, args=func_args)[0]**2
 
 
-def get_partition_variance(func, func_pars, width):
+def get_partition_variance(func, func_args, width):
     points = 1000
     bounds = (0, 2 * np.pi)
     xs = np.linspace(*bounds, points)
     bound_range = bounds[-1] - bounds[0]
     dx = bound_range / points
-    pdf = func(xs, *func_pars)
-    norm = np.sum(func(xs, *func_pars)) * dx
-    pdf /= norm
+    pdf = func(xs, *func_args)
+    pdf_norm = np.sum(func(xs, *func_args)) * dx
+    pdf /= pdf_norm
     pdf_wrap = np.append(pdf, pdf)  # To represent a periodic boundary glue duplicate array to end
 
     width_points = round(width / bound_range * points)
@@ -147,6 +186,18 @@ def get_partition_variance(func, func_pars, width):
     # print(ep2, ep**2)
 
     return ep2 - ep**2, epq
+
+
+def get_norm(func, func_args):
+    points = 1000
+    bounds = (0, 2 * np.pi)
+    xs = np.linspace(*bounds, points)
+    bound_range = bounds[-1] - bounds[0]
+    dx = bound_range / points
+    pdf = func(xs, *func_args)
+    pdf_norm = np.sum(func(xs, *func_args)) * dx
+
+    return pdf_norm
 
 
 def get_partitions_covariance(func, func_pars, width, sep):
@@ -196,8 +247,12 @@ def vn_pdf(phi, vn, psi, n=2):
     return (1 + 2 * vn * np.cos(n * (phi - psi))) / (2 * np.pi)
 
 
-def gaus(x, a, b, c):
-    pass
+def gaus_pdf(phi, mu, sigma):
+    return np.exp(-0.5 * ((phi - mu) / sigma)**2) / (sigma * np.sqrt(2 * np.pi))
+
+
+def base_gaus_pdf(phi, mu, sigma, amp, normalization):
+    return normalization * (1 + amp * np.exp(-0.5 * ((phi - mu) / sigma)**2))
 
 
 if __name__ == '__main__':
