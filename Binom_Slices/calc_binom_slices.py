@@ -45,7 +45,9 @@ def init_pars():
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_stats_ampt_v2_closure_clean.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cents.csv',
-        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_v2_ck2.csv',
+        # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_v2_ck2.csv',
+        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+                    'binom_slice_flow_anticl_convo_test.csv',
         # 'csv_path': 'D:/Transfer/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim_new.csv',
         # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
         'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
@@ -126,18 +128,22 @@ def define_datasets(base_path):
         #  all_divs],
         # ['flow_resample_res9_v207', '_Sim_Flow', ['resample', 'res9', 'v207', 'epbins1'],
         #  [], [], [0], [62], [8], all_divs],
-        # ['flow_resample_res9_v207', '_Sim_tests', ['resample', 'res9', 'v207', 'epbins1'],
-        #  [], [], [0], [62], [8], all_divs],
+        ['flow_resample_res15_v207', '_Sim_tests', ['flow', 'resample', 'res15', 'v207'],
+         [], [], [0], [62], [8], all_divs],
+        ['anticlmulti_resample_s05_a05', '_Sim_tests', ['resample', 'anticlmulti', 'spread05', 'amp05'],
+         [], [], [0], [62], [8], all_divs],
+        ['anticlflow_resample_res15_v207_s05_a05', '_Sim_tests',
+         ['resample', 'anticlflow', 'spread05', 'amp05', 'res15', 'v207'], [], [], [0], [62], [8], all_divs],
     ]
 
     # reses = ['1', '15', '2', '3', '4', '5', '6', '75', '9', '99']
     # v2s = ['01', '02', '03', '04', '05', '06', '07']
-    v2s = ['02', '05', '07']
-    reses = ['15']
-    for v2 in v2s:
-        for res in reses:
-            entry_vals.append([f'flow_resample_res{res}_v2{v2}', '_Sim_Flow', ['resample', f'res{res}', f'v2{v2}'], [],
-                               [], [0], [62], [8], all_divs])
+    # v2s = ['02', '05', '07']
+    # reses = ['15']
+    # for v2 in v2s:
+    #     for res in reses:
+    #         entry_vals.append([f'flow_resample_res{res}_v2{v2}', '_Sim_Flow', ['resample', f'res{res}', f'v2{v2}'], [],
+    #                            [], [0], [62], [8], all_divs])
     # entry_vals.append(['flow_resample_res15_v205', '_Sim_Flow', ['resample', 'res15', 'v205'], [], [], [0], [62], [8],
     #                    all_divs])
     # entry_vals.append(['flow_resample_res15_v202', '_Sim_Flow', ['resample', 'res15', 'v202'], [], [], [0], [62], [8],

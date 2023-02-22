@@ -31,7 +31,8 @@ def main():
     # plot_all_zero_base()
     # plot_ampt_efficiency()
     # plot_flow()
-    plot_flow_k2()
+    # plot_flow_k2()
+    plot_anticl_flow_convolution()
     # plot_ampt_v2_closure()
     # plot_flow_vs2_closure()
     # plot_flow_v2_closure_raw()
@@ -988,6 +989,103 @@ def plot_flow_k2():
     plt.show()
 
 
+def plot_anticl_flow_convolution():
+    plt.rcParams["figure.figsize"] = (6.66, 5)
+    plt.rcParams["figure.dpi"] = 144
+    base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+    # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
+    df_name = 'binom_slice_flow_anticl_convo_test.csv'
+    save_fits = False
+    v2_fit_out_dir = 'F:/Research/Results/Flow_Correction/'
+    v2_fit_out_dir = None
+    fits_out_base = 'Base_Zero_Fits/'
+    df_tproton_fits_name = None  # 'flow_tprotons_fits.csv'
+    df_partitions_fits_name = 'flow_partitions_fits.csv'
+    df_path = base_path + df_name
+    sim_sets = []
+
+    stat_plot = 'k2'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
+    div_plt = 120
+    exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
+    cent_plt = 8
+    energies_fit = [62]
+    data_types_plt = ['raw']
+    samples = 72  # For title purposes only
+
+    data_sets_plt = ['flow_resample_res15_v207', 'anticlmulti_resample_s05_a05',
+                     'anticlflow_resample_res15_v207_s05_a05']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue']))
+    data_sets_labels = dict(zip(data_sets_plt, ['flow', 'anticlustering', 'both']))
+
+    all_sets_plt = data_sets_plt + sim_sets[:]
+
+    df = pd.read_csv(df_path)
+    df = df.dropna()
+    print(pd.unique(df['name']))
+
+    df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
+    df = df[(df['data_type'] == 'raw') & ((df['stat'] == 'k2') | (df['stat'] == 'c2'))]
+    df['val'] = df['val'] / (df['total_protons'] * df['divs'] / 360 * (1 - df['divs'] / 360))
+    df['err'] = df['err'] / (df['total_protons'] * df['divs'] / 360 * (1 - df['divs'] / 360))
+
+    stat_vs_protons(df, stat_plot, 120, cent_plt, energies_fit, data_types_plt, all_sets_plt,
+                    plot=True, fit=True)
+
+    protons_fits = []
+    for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
+        print(f'Div {div}')
+        # if v2_fit_out_dir:
+        #     flow_vs_v2(df, div, '15', v2_fit_out_dir)
+        protons_fits_div = stat_vs_protons(df, stat_plot, div, cent_plt, energies_fit, data_types_plt, all_sets_plt,
+                                           plot=False, fit=True)
+        protons_fits.append(protons_fits_div)
+    # return
+    protons_fits = pd.concat(protons_fits, ignore_index=True)
+    if save_fits:
+        protons_fits.to_csv(f'{base_path}{fits_out_base}{df_tproton_fits_name}', index=False)
+    print(protons_fits)
+    print(pd.unique(protons_fits['amp']))
+    print(pd.unique(protons_fits['spread']))
+    plot_protons_fits_divs_flow(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors)
+    # df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=False,
+    #                                  data_sets_labels=data_sets_labels)
+
+    anticl_plus_v2 = protons_fits[protons_fits['name'] == 'anticlflow_resample_res15_v207_s05_a05']
+    divs, slopes = np.array(anticl_plus_v2['divs']), np.array(anticl_plus_v2['slope_meas'])
+    print(divs, slopes)
+    fig, ax = plt.subplots()
+    fig2, ax2 = plt.subplots()
+    v2 = 0.07
+    v2s, chi_2s = [], []
+    x_divs = np.linspace(60, 300, 1000)
+    for v2_i in np.linspace(0, v2 * 1.25, 50):
+        cor_slopes = slopes - v2_divs(divs * np.pi / 180, v2_i)
+        print(v2_divs(divs * np.pi / 180, v2_i))
+        print(cor_slopes)
+        cor_slope_vals, cor_slope_errs = [x.val for x in cor_slopes], [x.err for x in cor_slopes]
+        ax2.errorbar(divs, cor_slope_vals, yerr=cor_slope_errs, ls='none', alpha=0.4, marker='o')
+        popt, pcov = cf(quad_180, divs, cor_slope_vals, sigma=cor_slope_errs, absolute_sigma=True)
+        chi_2 = np.sum((cor_slope_vals - quad_180(divs, *popt)) ** 2 / cor_slope_errs)
+        ax.scatter(divs, cor_slope_vals)
+        ax.plot(x_divs, quad_180(x_divs, *popt))
+        v2s.append(v2_i)
+        chi_2s.append(chi_2)
+    fig2, ax2 = plt.subplots()
+    ax2.axhline(0, color='black')
+    ax2.scatter(v2s, chi_2s)
+    chi_2s, v2s = zip(*sorted(zip(chi_2s, v2s)))
+    # anticl_plus_v2['name'] = f'corrected_v2{str(v2s[0])[2:]}_'
+    anticl_plus_v2['name'] = f'corrected_v2'
+    anticl_plus_v2.loc['slope'] = anticl_plus_v2['slope'] - v2_divs(anticl_plus_v2['divs'] * np.pi / 180, v2s[0])
+    print(anticl_plus_v2)
+    protons_fits = pd.concat([protons_fits, anticl_plus_v2], ignore_index=True)
+    data_sets_colors.update({f'anticlflow_resample_res15_v2{str(v2s[0])[2:]}_s05_a05': 'olive'})
+    plot_protons_fits_divs_flow(protons_fits, all_sets_plt + [f'anticlflow_resample_res15_v2{str(v2s[0])[2:]}_s05_a05'],
+                                data_sets_colors=data_sets_colors)
+
+    plt.show()
+
+
 def plot_ampt_v2_closure():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
@@ -1077,7 +1175,7 @@ def plot_ampt_v2_closure():
         fig, ax = plt.subplots()
         v2s, chi_2s = [], []
         x_divs = np.linspace(60, 300, 1000)
-        for v2_i in np.linspace(v2 * 0.75, v2 * 1.25, 8):
+        for v2_i in np.linspace(v2 * 0, v2 * 1.25, 50):
             cor_slopes = slopes - coefs * v2_i ** 2
             cor_slope_vals, cor_slope_errs = [x.val for x in cor_slopes], [x.err for x in cor_slopes]
             popt, pcov = cf(quad_180, divs, cor_slope_vals, sigma=cor_slope_errs, absolute_sigma=True)
@@ -1094,6 +1192,7 @@ def plot_ampt_v2_closure():
         v2_rp_e_errs.append(v2_rp_vals[energy][cent_plt].err)
 
         fig2, ax2 = plt.subplots()
+        ax2.axhline(0, color='black')
         ax2.scatter(v2s, chi_2s)
         ax2.set_title(f'{energy}GeV')
         ax2.axvline(v2, color='green', ls='--', label='v2_ep')

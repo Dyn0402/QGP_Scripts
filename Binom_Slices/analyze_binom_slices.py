@@ -942,11 +942,25 @@ def plot_protons_fits_divs_flow(df, data_sets_plt, data_sets_colors=None):
             color = next(colors)
         else:
             color = data_sets_colors[data_set]
-        v2 = float('0.' + data_set.split('_')[-1][2:])
-        lab = f'v2={v2:.2f}'
+        if 'anticlflow_' in data_set:
+            v2 = float('0.' + data_set.split('_')[-3][2:])
+            lab = f'anticl + v2={v2:.2f}'
+        elif 'flow_' in data_set:
+            v2 = float('0.' + data_set.split('_')[-1][2:])
+            lab = f'v2={v2:.2f}'
+            ax.plot(x_divs, v2_divs(x_divs / 180 * np.pi, v2), color=color)
+        else:
+            lab = data_set
+
         ax.errorbar(df_set['divs'], df_set['slope'], yerr=df_set['slope_err'], ls='none',
                     marker='o', label=lab, color=color)
-        ax.plot(x_divs, v2_divs(x_divs / 180 * np.pi, v2), color=color)
+
+        if 'anticlflow_' in data_set:
+            divs = np.array(df_set['divs'])
+            slopes = np.array(df_set['slope'])
+            y_sub = slopes - v2_divs(divs / 180 * np.pi, v2)
+            ax.errorbar(divs, y_sub, yerr=df_set['slope_err'], ls='none',
+                        marker='x', label=f'{lab} - v2(div)', color=color)
 
     ax.set_title('V2 vs Partition Width')
     ax.set_ylabel('Slope of Raw/Mix SD vs Total Protons per Event')
