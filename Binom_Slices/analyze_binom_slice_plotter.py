@@ -992,7 +992,8 @@ def plot_flow_k2():
 def plot_anticl_flow_convolution():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
-    base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+    # base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+    base_path = 'C:/Users/Dylan/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
     # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
     df_name = 'binom_slice_flow_anticl_convo_test.csv'
     save_fits = False
@@ -1060,8 +1061,8 @@ def plot_anticl_flow_convolution():
     x_divs = np.linspace(60, 300, 1000)
     for v2_i in np.linspace(0, v2 * 1.25, 50):
         cor_slopes = slopes - v2_divs(divs * np.pi / 180, v2_i)
-        print(v2_divs(divs * np.pi / 180, v2_i))
-        print(cor_slopes)
+        # print(v2_divs(divs * np.pi / 180, v2_i))
+        # print(cor_slopes)
         cor_slope_vals, cor_slope_errs = [x.val for x in cor_slopes], [x.err for x in cor_slopes]
         ax2.errorbar(divs, cor_slope_vals, yerr=cor_slope_errs, ls='none', alpha=0.4, marker='o')
         popt, pcov = cf(quad_180, divs, cor_slope_vals, sigma=cor_slope_errs, absolute_sigma=True)
@@ -1076,12 +1077,13 @@ def plot_anticl_flow_convolution():
     chi_2s, v2s = zip(*sorted(zip(chi_2s, v2s)))
     # anticl_plus_v2['name'] = f'corrected_v2{str(v2s[0])[2:]}_'
     anticl_plus_v2['name'] = f'corrected_v2'
-    anticl_plus_v2.loc['slope'] = anticl_plus_v2['slope'] - v2_divs(anticl_plus_v2['divs'] * np.pi / 180, v2s[0])
+    new_slope = anticl_plus_v2['slope'] - v2_divs(anticl_plus_v2['divs'] * np.pi / 180, v2s[0])
+    anticl_plus_v2 = anticl_plus_v2.assign(slope=new_slope)
     print(anticl_plus_v2)
+    print(v2s[0], chi_2s[0])
     protons_fits = pd.concat([protons_fits, anticl_plus_v2], ignore_index=True)
-    data_sets_colors.update({f'anticlflow_resample_res15_v2{str(v2s[0])[2:]}_s05_a05': 'olive'})
-    plot_protons_fits_divs_flow(protons_fits, all_sets_plt + [f'anticlflow_resample_res15_v2{str(v2s[0])[2:]}_s05_a05'],
-                                data_sets_colors=data_sets_colors)
+    data_sets_colors.update({'corrected_v2': 'olive'})
+    plot_protons_fits_divs_flow(protons_fits, all_sets_plt + ['corrected_v2'], data_sets_colors=data_sets_colors)
 
     plt.show()
 
