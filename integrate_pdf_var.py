@@ -115,7 +115,7 @@ def convo_test():
 
     func2 = vn_pdf
     n = 2
-    v2 = 0.01
+    v2 = 0.07
     psi = np.pi / 3
     func2_args = (v2, psi, n)
     fig, ax = plt.subplots(dpi=144, figsize=(6, 3))
@@ -138,8 +138,8 @@ def convo_test():
     for func, func_args in [(func1, func1_args), (func2, func2_args), (func3, func3_args)]:
         lin_terms = []
         for width in widths:
-            lin, const = get_partition_variance(func, func_args, width)
-            lin_terms.append(lin)
+            full_lin, p2 = get_partition_variance(func, func_args, width)
+            lin_terms.append(full_lin)
         ax.plot(widths, lin_terms, label=func.__name__)
     ax.legend()
     fig.tight_layout()
@@ -211,8 +211,6 @@ def get_partition_variance(func, func_args, width, bounds=(0, 2 * np.pi)):
         mids.append(mids[-1] + bound_range / points)
     probs = np.array(probs) * width / width_points
     probs2 = probs**2
-    pqs = probs * (1 - probs)
-    epq = np.mean(pqs)
     ep = np.mean(probs)
     ep2 = np.mean(probs2)
 
@@ -226,7 +224,7 @@ def get_partition_variance(func, func_args, width, bounds=(0, 2 * np.pi)):
     # ax.legend()
     # print(ep2, ep**2)
 
-    return ep2 - ep**2, epq
+    return ep2 - ep**2, ep2
 
 
 def get_norm(func, func_args):
