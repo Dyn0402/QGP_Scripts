@@ -19,8 +19,8 @@ from Binom_Slices.analyze_binom_slices import quad_180
 
 def main():
     # vn_test()
-    gaus_test()
-    # convo_test()
+    # gaus_test()
+    convo_test()
     print('donzo')
 
 
@@ -108,20 +108,28 @@ def convo_test():
     amp = 0.5
     func1 = base_gaus_pdf
     func1_args = (mu, sigma, amp, 1. / get_norm(func1, (mu, sigma, amp, 1)))
-    # fig, ax = plt.subplots()
+    fig, ax = plt.subplots(dpi=144, figsize=(6, 3))
     plot_pdf(func1, func1_args)
+    ax.set_ylim(bottom=0)
+    fig.tight_layout()
 
     func2 = vn_pdf
     n = 2
     v2 = 0.01
     psi = np.pi / 3
     func2_args = (v2, psi, n)
+    fig, ax = plt.subplots(dpi=144, figsize=(6, 3))
     plot_pdf(func2, func2_args)
+    ax.set_ylim(bottom=0)
+    fig.tight_layout()
 
     func3 = lambda x, mu_, sigma_, base_, c_, v2_, psi_, n_, c_combo_: \
         c_combo_ * base_gaus_pdf(x, mu_, sigma_, base_, c_) * vn_pdf(x, v2_, psi_, n_)
     func3_args = (*func1_args, *func2_args, 1. / get_norm(func3, (*func1_args, *func2_args, 1)))
+    fig, ax = plt.subplots(dpi=144, figsize=(6, 3))
     plot_pdf(func3, func3_args)
+    ax.set_ylim(bottom=0)
+    fig.tight_layout()
 
     fig, ax = plt.subplots()
     fig2, ax2 = plt.subplots()
