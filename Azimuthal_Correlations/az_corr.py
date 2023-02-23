@@ -164,10 +164,10 @@ def sigma_vs_mult():
     bin_width = np.deg2rad(120)
     bin_sep = np.deg2rad(180)
     plot = False
-    threads = 15
+    threads = 12
     read_branches = ['pid', 'px', 'py', 'pz', 'refmult3']
-    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '60-70%', 1: '70-80%',
-                0: '80-90%', -1: '90-100%'}
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
+                0: '70-80%', -1: '80-90%'}
     vector.register_awkward()
 
     df = []
@@ -234,8 +234,9 @@ def sigma_vs_mult():
             df_cent = df_energy[df_energy['cent'] == cent]
             df_cent = df_cent.sort_values(by=['n'])
 
-            ax_energy.errorbar(df_cent['n'], df_cent['sig'], yerr=df_cent['sig_err'], ls='none', alpha=0.7, marker='o',
-                               label=cent_map[cent])
+            if cent > 0:
+                ax_energy.errorbar(df_cent['n'], df_cent['sig'], yerr=df_cent['sig_err'], ls='none', alpha=0.7,
+                                   marker='o', label=cent_map[cent])
 
             fig, ax = plt.subplots(dpi=144)
             ax.errorbar(df_cent['n'], df_cent['sig'], yerr=df_cent['sig_err'], ls='none', marker='o')
@@ -250,6 +251,8 @@ def sigma_vs_mult():
         ax_energy.legend()
         fig_energy.tight_layout()
         fig_energy.savefig(f'{fig_out_path}/Ampt_New_Coal_{energy}GeV_allcents.png')
+        ax_energy.set_ylim(0.75, 1.1)
+        fig_energy.savefig(f'{fig_out_path}/Ampt_New_Coal_{energy}GeV_allcents_zoom.png')
     # fig, ax = plt.subplots(dpi=144)
     # ax.axhline(0, color='black', ls='--')
     # ax.set_xlabel('Centrality')
@@ -360,7 +363,7 @@ def calc_sigma(na, nb):
 def calc_pearson_r(na, nb):
     na_cent = na - np.mean(na)
     nb_cent = nb - np.mean(nb)
-    r = np.sum(na_cent * nb_cent) / np.sqrt(np.sum(na_cent**2) * np.sum(nb_cent**2))
+    r = np.sum(na_cent * nb_cent) / np.sqrt(np.sum(na_cent ** 2) * np.sum(nb_cent ** 2))
 
     return r
 
@@ -387,7 +390,6 @@ def calc_bootstraps(na, nb, nbs=50, cent=0, n_proton=0, func=calc_sigma):
 #         nabs.append(na[index])
 #         nbbs.append(nb[index])
 #     return calc_corr(np.array(nabs), np.array(nbbs))
-
 
 
 def ampt_str_edges_to_9(ref_str_edges):
