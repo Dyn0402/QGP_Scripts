@@ -12,12 +12,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import quad
 from scipy.stats import norm
+from scipy.optimize import curve_fit as cf
+
+from Binom_Slices.analyze_binom_slices import quad_180
 
 
 def main():
     # vn_test()
-    # gaus_test()
-    convo_test()
+    gaus_test()
+    # convo_test()
     print('donzo')
 
 
@@ -49,21 +52,52 @@ def vn_test():
 
 def gaus_test():
     mu = 3
-    sigma = 0.5
-    func = norm(mu, sigma).pdf
-    func_args = ()
+    sigma = 1.5
+    # func = norm(mu, sigma).pdf
+    # func_args = ()
+    func = base_gaus_pdf
+    func_args = (mu, sigma, )
+    bounds = (0, 2 * np.pi)
 
     plot_pdf(func, func_args)
-    widths = np.linspace(0, 2 * np.pi, 100)
+    widths = np.linspace(*bounds, 100)
     lin_terms, const_terms = [], []
     for width in widths:
-        lin, const = get_partition_variance(func, func_args, width)
+        lin, const = get_partition_variance(func, func_args, width, bounds)
         lin_terms.append(lin)
         const_terms.append(const)
     fig, ax = plt.subplots()
+    ax.axhline(0, color='black')
     ax.plot(widths, lin_terms)
-    fig, ax = plt.subplots()
-    ax.plot(widths, const_terms)
+    ax.set_ylabel('Linear Terms')
+
+    width_fit_low, width_fit_high = 60, 300
+    fig, ax = plt.subplots(dpi=144)
+    ax.axhline(0, color='black')
+    ax.scatter(widths, lin_terms)
+    ax.set_ylabel('Linear Terms')
+    width_filter = (np.deg2rad(width_fit_low) < widths) & (widths < np.deg2rad(width_fit_high))
+    # print(widths[width_filter], np.array(lin_terms)[width_filter])
+    popt, pcov = cf(quad_180, np.rad2deg(widths[width_filter]), np.array(lin_terms)[width_filter])
+    xs_fit_plot = np.linspace(min(widths), max(widths), 1000)
+    ax.plot(xs_fit_plot, quad_180(np.rad2deg(xs_fit_plot), *popt), color='red', label='Quadratic')
+    ax.axvline(np.deg2rad(width_fit_low), ls='--', color='orange', label='Fit Range')
+    ax.axvline(np.deg2rad(width_fit_high), ls='--', color='orange')
+    ax.set_ylim(bottom=-ax.get_ylim()[-1] * 0.05)
+    fig.tight_layout()
+
+    p0 = (0.075, 0.2)
+    popt, pcov = cf(cos_pi, widths[width_filter], np.array(lin_terms)[width_filter], p0=p0)
+    # ax.plot(xs_fit_plot, cos_pi(xs_fit_plot, *p0), color='purple', alpha=0.3, label='Sine p0')
+    ax.plot(xs_fit_plot, cos_pi(xs_fit_plot, *popt), color='purple', label='Sine')
+    # ax.plot(xs_fit_plot, 5 * cos_pi(xs_fit_plot, *popt)**2, color='green', label='Sine**2')
+
+    ax.legend()
+
+    # fig, ax = plt.subplots()
+    # ax.axhline(0, color='black')
+    # ax.plot(widths, const_terms)
+    # ax.set_ylabel('Constant Terms')
     # var = get_partition_variance(func, func_args, width)
     plt.show()
 
@@ -151,9 +185,8 @@ def int_pdf2(low_bound, width, func, func_args):
     return quad(func, low_bound, low_bound + width, args=func_args)[0]**2
 
 
-def get_partition_variance(func, func_args, width):
+def get_partition_variance(func, func_args, width, bounds=(0, 2 * np.pi)):
     points = 1000
-    bounds = (0, 2 * np.pi)
     xs = np.linspace(*bounds, points)
     bound_range = bounds[-1] - bounds[0]
     dx = bound_range / points
@@ -253,6 +286,19 @@ def gaus_pdf(phi, mu, sigma):
 
 def base_gaus_pdf(phi, mu, sigma, amp, normalization):
     return normalization * (1 + amp * np.exp(-0.5 * ((phi - mu) / sigma)**2))
+
+
+# def quad_180_sin(x, a, c, )
+def sin(x, a, f):
+    return a * (1 + np.sin(2 * np.pi * f * x))
+
+
+def cos(x, a, f):
+    return a * (1 + np.cos(2 * np.pi * f * x))
+
+
+def cos_pi(x, a, f):
+    return a * (1 + np.cos(2 * np.pi * f * x + np.pi))
 
 
 if __name__ == '__main__':
