@@ -363,6 +363,9 @@ def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_
                 # print(f'4.2 {df_pre[(df_pre["divs"] == div)].size}')
                 # print(f'4.3 {df_pre[(df_pre["energy"] == energy)].size}')
                 df_set = df_pre[(df_pre['name'] == data_set) & (df_pre['divs'] == div) & (df_pre['energy'] == energy)]
+                # pd.set_option('display.max_columns', None)
+                # pd.set_option('display.max_rows', None)
+                # print(df_set)
                 # print(f'5 {df_set.size}')
                 if len(df_set) == 0:
                     # print('Empty!!@#@')
