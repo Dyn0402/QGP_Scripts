@@ -22,7 +22,7 @@ def main():
     # plot_sims()
     # get_sim_mapping()
     # get_sim_mapping_pm()
-    # plot_star_model()
+    plot_star_model()
     # plot_star_model_onediv()
     # plot_vs_cent()
     # plot_closest_sims()
@@ -40,6 +40,74 @@ def main():
 
 
 def plot_star_model():
+    plt.rcParams["figure.figsize"] = (6.66, 5)
+    plt.rcParams["figure.dpi"] = 144
+    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
+    df_name = 'binom_slice_stats_cent8_no_sim.csv'
+    fits_out_base = 'Base_Zero_Fits'
+    df_tproton_fits_name = 'cf_tprotons_fits.csv'
+    df_partitions_fits_name = 'cf_partitions_fits.csv'
+    df_path = base_path + df_name
+    sim_sets = []
+
+    stat_plot = 'standard deviation'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
+    div_plt = 120
+    exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
+    cent_plt = 8
+    energies_fit = [7, 11, 19, 27, 39, 62]
+    data_types_plt = ['divide']
+    samples = 72  # For title purposes only
+
+    # data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def', 'cf_resample_def', 'cfev_resample_def']
+    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple']))
+    # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST', 'MUSIC+FIST EV $1fm^3$']))
+
+    data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def', 'cfev_resample_def']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'purple']))
+    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST EV $1fm^3$']))
+
+    # data_sets_plt = ['cf_resample_def', 'cfev_resample_def']
+    # data_sets_colors = dict(zip(data_sets_plt, ['blue', 'purple']))
+    # data_sets_labels = dict(zip(data_sets_plt, ['MUSIC+FIST', 'MUSIC+FIST EV']))
+
+    all_sets_plt = data_sets_plt + sim_sets[:]
+
+    df = pd.read_csv(df_path)
+    df = df.dropna()
+    print(pd.unique(df['name']))
+
+    df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
+
+    stat_vs_protons(df, stat_plot, div_plt, cent_plt, [39], data_types_plt, all_sets_plt, plot=True, fit=False,
+                    data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels, star_prelim=True,
+                    y_ranges={'standard deviation': [0.946, 1.045]})
+    stat_vs_protons_energies(df, stat_plot, [120], cent_plt, [7, 11, 19, 27, 39, 62], data_types_plt, all_sets_plt,
+                             plot=True, fit=True, plot_fit=True, data_sets_colors=data_sets_colors,
+                             data_sets_labels=data_sets_labels, star_prelim=True)
+
+    protons_fits = []
+    for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
+        print(f'Div {div}')
+        protons_fits_div = stat_vs_protons(df, stat_plot, div, cent_plt, energies_fit, data_types_plt, all_sets_plt,
+                                           plot=False, fit=True)
+        protons_fits.append(protons_fits_div)
+    protons_fits = pd.concat(protons_fits, ignore_index=True)
+    protons_fits.to_csv(f'{base_path}{fits_out_base}{df_tproton_fits_name}', index=False)
+    print(protons_fits)
+    print(pd.unique(protons_fits['amp']))
+    print(pd.unique(protons_fits['spread']))
+    df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
+                                     data_sets_labels=data_sets_labels)
+    df_fits.to_csv(f'{base_path}{fits_out_base}{df_partitions_fits_name}', index=False)
+    # print(df_fits)
+    plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
+    # plot_slope_div_fits_simpars(df_fits)
+
+    plt.show()
+
+
+def plot_star_model_var():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
     base_path = 'F:/Research/Results/Azimuth_Analysis/'
