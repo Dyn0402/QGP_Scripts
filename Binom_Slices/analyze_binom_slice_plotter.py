@@ -112,6 +112,7 @@ def plot_star_model_var():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
     base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+    base_path = 'C:/Users/Dylan/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
     # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
     # df_name = 'binom_slice_stats_cent8_no_sim.csv'
     df_name = 'binom_slice_stats_cent8_var.csv'
@@ -168,8 +169,8 @@ def plot_star_model_var():
     stat_vs_protons_energies(df_raw, stat_plot, [120], cent_plt, [7, 11, 19, 27, 39, 62], data_types_plt, all_sets_plt,
                              plot=True, fit=True, plot_fit=True, data_sets_colors=data_sets_colors,
                              data_sets_labels=data_sets_labels)
-    plt.show()
-    return
+    # plt.show()
+    # return
 
     protons_fits = []
     for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
@@ -183,12 +184,12 @@ def plot_star_model_var():
     print(protons_fits)
     print(pd.unique(protons_fits['amp']))
     print(pd.unique(protons_fits['spread']))
-    df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
+    df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=False,
                                      data_sets_labels=data_sets_labels)
     if df_partitions_fits_name:
         df_fits.to_csv(f'{base_path}{fits_out_base}{df_partitions_fits_name}', index=False)
     # print(df_fits)
-    plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
+    # plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
     # plot_slope_div_fits_simpars(df_fits)
 
     plt.show()
