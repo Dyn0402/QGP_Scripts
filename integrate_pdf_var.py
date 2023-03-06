@@ -26,37 +26,34 @@ def main():
 
 def vn_test():
     func = vn_pdf
-    n = 3
-    v2 = 0.1
+    n = 2
+    v = 0.07
     psi = np.pi / 3
-    func_args = (v2, psi, n)
-    width = np.pi / 3
+    func_args = (v, psi, n)
 
-    # plot_pdf(func, func_args)
-    plot_az_bin_example(func, func_args, 2, 2 + np.pi / 3)
-    plt.show()
-    widths = np.linspace(0, 2 * np.pi, 100)
-    lin_terms, const_terms = [], []
-    for width in widths:
-        # vars_a.append(get_partition_variance_scipy(width, func, func_args))
-        lin, const = get_partition_variance(func, func_args, width)
-        lin_terms.append(lin)
-        const_terms.append(const)
-    fig, ax = plt.subplots()
-    ax.plot(widths, lin_terms)
-    fig, ax = plt.subplots()
-    ax.plot(widths, const_terms)
-    # var = get_partition_variance(func, func_args, width)
-    plt.show()
+    plot_variance(func, func_args)
 
 
 def gaus_test():
-    mu = 3
-    sigma = 1.5
+    mu = np.pi
+    sigma = 0.1
+    amp = 0.5
+
+    func = base_gaus_pdf
+    func_args = (mu, sigma, amp, 1. / get_norm(func, (mu, sigma, amp, 1)))
+
+    plot_variance(func, func_args)
+
+
+def gaus_fit():
+    mu = np.pi
+    sigma = 1.0
+    amp = 0.5
+
     # func = norm(mu, sigma).pdf
     # func_args = ()
     func = base_gaus_pdf
-    func_args = (mu, sigma, )
+    func_args = (mu, sigma, amp, 1. / get_norm(func, (mu, sigma, amp, 1)))
     bounds = (0, 2 * np.pi)
 
     plot_pdf(func, func_args)
@@ -78,21 +75,46 @@ def gaus_test():
     ax.set_ylabel('Linear Terms')
     width_filter = (np.deg2rad(width_fit_low) < widths) & (widths < np.deg2rad(width_fit_high))
     # print(widths[width_filter], np.array(lin_terms)[width_filter])
-    popt, pcov = cf(quad_180, np.rad2deg(widths[width_filter]), np.array(lin_terms)[width_filter])
+    popt_cos, pcov = cf(quad_180, np.rad2deg(widths[width_filter]), np.array(lin_terms)[width_filter])
     xs_fit_plot = np.linspace(min(widths), max(widths), 1000)
-    ax.plot(xs_fit_plot, quad_180(np.rad2deg(xs_fit_plot), *popt), color='red', label='Quadratic')
+    ax.plot(xs_fit_plot, quad_180(np.rad2deg(xs_fit_plot), *popt_cos), color='red', label='Quadratic')
     ax.axvline(np.deg2rad(width_fit_low), ls='--', color='orange', label='Fit Range')
     ax.axvline(np.deg2rad(width_fit_high), ls='--', color='orange')
     ax.set_ylim(bottom=-ax.get_ylim()[-1] * 0.05)
-    fig.tight_layout()
 
     p0 = (0.075, 0.2)
-    popt, pcov = cf(cos_pi, widths[width_filter], np.array(lin_terms)[width_filter], p0=p0)
+    popt_quad, pcov = cf(cos_pi, widths[width_filter], np.array(lin_terms)[width_filter], p0=p0)
     # ax.plot(xs_fit_plot, cos_pi(xs_fit_plot, *p0), color='purple', alpha=0.3, label='Sine p0')
-    ax.plot(xs_fit_plot, cos_pi(xs_fit_plot, *popt), color='purple', label='Sine')
+    ax.plot(xs_fit_plot, cos_pi(xs_fit_plot, *popt_quad), color='purple', label='Sine')
     # ax.plot(xs_fit_plot, 5 * cos_pi(xs_fit_plot, *popt)**2, color='green', label='Sine**2')
 
+    p0 = (*popt_quad, *popt_quad, 0.5)
+    popt, pcov = cf(quad_cos, widths[width_filter], np.array(lin_terms)[width_filter], p0=p0)
+    ax.plot(xs_fit_plot, quad_cos(xs_fit_plot, *popt), color='olive', label='Combo')
     ax.legend()
+    fig.tight_layout()
+
+    fig, ax = plt.subplots(dpi=144)
+    ax.axhline(0, color='black')
+    ax.scatter(widths, lin_terms)
+    ax.set_ylabel('Linear Terms')
+    # width_filter = (np.deg2rad(width_fit_low) < widths) & (widths < np.deg2rad(width_fit_high))
+    # print(widths[width_filter], np.array(lin_terms)[width_filter])
+    # popt_cos, pcov = cf(quad_180, np.rad2deg(widths[width_filter]), np.array(lin_terms)[width_filter])
+    # xs_fit_plot = np.linspace(min(widths), max(widths), 1000)
+    # ax.plot(xs_fit_plot, quad_180(np.rad2deg(xs_fit_plot), *popt_cos), color='red', label='Quadratic')
+    ax.axvline(np.deg2rad(width_fit_low), ls='--', color='orange', label='Fit Range')
+    ax.axvline(np.deg2rad(width_fit_high), ls='--', color='orange')
+    ax.set_ylim(bottom=-ax.get_ylim()[-1] * 0.05)
+    # ax.plot(xs_fit_plot, quad_180(np.rad2deg(xs_fit_plot), *popt[2:4]), color='red', label='Quadratic')
+    # ax.plot(xs_fit_plot, cos_pi(xs_fit_plot, *popt[:2]), color='purple', label='Sine')
+    width_fit_low, width_fit_high = 10, 350
+    width_filter = (np.deg2rad(width_fit_low) < widths) & (widths < np.deg2rad(width_fit_high))
+    p0 = (*popt_quad, 1, 0.5)
+    popt, pcov = cf(quad_gaus, widths[width_filter], np.array(lin_terms)[width_filter], p0=p0)
+    ax.plot(xs_fit_plot, quad_gaus(xs_fit_plot, *popt), color='olive', label='Combo')
+    ax.legend()
+    fig.tight_layout()
 
     # fig, ax = plt.subplots()
     # ax.axhline(0, color='black')
@@ -108,6 +130,7 @@ def convo_test():
     amp = 0.5
     func1 = base_gaus_pdf
     func1_args = (mu, sigma, amp, 1. / get_norm(func1, (mu, sigma, amp, 1)))
+    func1_name = 'Gaussian Cluster'
     fig, ax = plt.subplots(dpi=144, figsize=(6, 3))
     plot_pdf(func1, func1_args)
     ax.set_ylim(bottom=0)
@@ -118,6 +141,7 @@ def convo_test():
     v2 = 0.07
     psi = np.pi / 3
     func2_args = (v2, psi, n)
+    func2_name = 'Elliptic Flow'
     fig, ax = plt.subplots(dpi=144, figsize=(6, 3))
     plot_pdf(func2, func2_args)
     ax.set_ylim(bottom=0)
@@ -126,25 +150,33 @@ def convo_test():
     func3 = lambda x, mu_, sigma_, base_, c_, v2_, psi_, n_, c_combo_: \
         c_combo_ * base_gaus_pdf(x, mu_, sigma_, base_, c_) * vn_pdf(x, v2_, psi_, n_)
     func3_args = (*func1_args, *func2_args, 1. / get_norm(func3, (*func1_args, *func2_args, 1)))
+    func3_name = 'Convolution'
     fig, ax = plt.subplots(dpi=144, figsize=(6, 3))
     plot_pdf(func3, func3_args)
     ax.set_ylim(bottom=0)
     fig.tight_layout()
 
-    fig, ax = plt.subplots()
-    fig2, ax2 = plt.subplots()
+    fig_pp, ax_pp = plt.subplots(dpi=144, figsize=(6, 3))
+    fig, ax = plt.subplots(dpi=144, figsize=(7, 3))
     ax.axhline(0, color='black')
     widths = np.linspace(0, 2 * np.pi, 100)
-    for func, func_args in [(func1, func1_args), (func2, func2_args), (func3, func3_args)]:
-        lin_terms = []
+    for func, func_args, func_name in \
+            [(func1, func1_args, func1_name), (func2, func2_args, func2_name), (func3, func3_args, func3_name)]:
+        pp_terms, pp_minus_p2_terms = [], []
         for width in widths:
-            full_lin, p2 = get_partition_variance(func, func_args, width)
-            lin_terms.append(full_lin)
-        ax.plot(widths, lin_terms, label=func.__name__)
+            pp_minus_p2, pp = get_partition_variance(func, func_args, width)
+            p = width / (2 * np.pi)
+            pp_terms.append(pp)
+            pp_minus_p2_terms.append(pp_minus_p2 / (p * (1 - p)))
+        ax.plot(widths, pp_minus_p2_terms, label=func_name)
+        ax_pp.plot(widths, pp_terms, label=func_name)
+    ax.set_xlabel('Partition Width (w)')
+    ax.set_ylabel(r'$\left[\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
     ax.legend()
     fig.tight_layout()
-    fig2.tight_layout()
-    # var = get_partition_variance(func, func_args, width)
+    ax_pp.legend()
+    fig_pp.tight_layout()
+
     plt.show()
 
 
@@ -164,6 +196,32 @@ def plot_az_bin_example(func, pars, bin_low, bin_high):
     plt.fill_between(xs_bin, func(xs_bin, *pars), color='gray')
     plt.xlim(0, 2 * np.pi)
     plt.ylim(bottom=0)
+
+
+def plot_variance(func, func_args):
+    fig, ax = plt.subplots(dpi=144, figsize=(6, 3))
+    plot_pdf(func, func_args)
+    ax.set_ylim(bottom=0)
+    fig.tight_layout()
+    plot_az_bin_example(func, func_args, 2, 2 + np.pi / 3)
+    widths = np.linspace(0, 2 * np.pi, 100)
+    pp_terms, pp_minus_p2_terms = [], []
+    for width in widths:
+        pp_minus_p2, pp = get_partition_variance(func, func_args, width)
+        p = width / (2 * np.pi)
+        pp_terms.append(pp)
+        pp_minus_p2_terms.append(pp_minus_p2 / (p * (1 - p)))
+    fig, ax = plt.subplots(dpi=144, figsize=(6, 3))
+    ax.plot(widths, pp_terms)
+    fig, ax = plt.subplots(dpi=144, figsize=(6, 3.5))
+    ax.axhline(0, color='black')
+    ax.plot(widths, pp_minus_p2_terms)
+    ax.set_xlabel('Partition Width (w)')
+    ax.set_ylabel(r'$\left[\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
+    fig.tight_layout()
+
+    # var = get_partition_variance(func, func_args, width)
+    plt.show()
 
 
 def get_partition_variance_scipy(width, p, p_args):
@@ -305,6 +363,19 @@ def cos(x, a, f):
 
 def cos_pi(x, a, f):
     return a * (1 + np.cos(2 * np.pi * f * x + np.pi))
+
+
+def quad_cos(x, a1, c, a2, f, sigma):
+    gaus_mod = np.exp(((x - np.pi) / sigma)**2) / np.sqrt(2 * np.pi * sigma)
+    gaus_mod = np.exp(((x - np.pi) / sigma)**2)
+    quad_mod = quad_180(np.rad2deg(x), a1, c) * gaus_mod
+    cos_mod = cos_pi(x, a2, f) * (1 - gaus_mod)
+
+    return quad_mod + cos_mod
+
+
+def quad_gaus(x, a, c, c2, sigma):
+    return quad_180(x, a, c) * np.exp(((x - np.pi) / sigma)**2) + c2
 
 
 if __name__ == '__main__':
