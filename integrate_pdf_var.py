@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from scipy.integrate import quad
 from scipy.stats import norm
 from scipy.optimize import curve_fit as cf
+from scipy.fft import fft, ifft, fftfreq
 
 from Binom_Slices.analyze_binom_slices import quad_180
 
@@ -157,25 +158,57 @@ def convo_test():
     fig.tight_layout()
 
     fig_pp, ax_pp = plt.subplots(dpi=144, figsize=(6, 3))
+    fig_norm, ax_norm = plt.subplots(dpi=144, figsize=(7, 3))
     fig, ax = plt.subplots(dpi=144, figsize=(7, 3))
+    ax_norm.axhline(0, color='black')
     ax.axhline(0, color='black')
     widths = np.linspace(0, 2 * np.pi, 100)
+    pp_minus_p2_dict = {}
     for func, func_args, func_name in \
             [(func1, func1_args, func1_name), (func2, func2_args, func2_name), (func3, func3_args, func3_name)]:
-        pp_terms, pp_minus_p2_terms = [], []
+        pp_terms, pp_minus_p2_terms, pp_minus_p2_norm_terms = [], [], []
         for width in widths:
             pp_minus_p2, pp = get_partition_variance(func, func_args, width)
             p = width / (2 * np.pi)
             pp_terms.append(pp)
-            pp_minus_p2_terms.append(pp_minus_p2 / (p * (1 - p)))
+            pp_minus_p2_terms.append(pp_minus_p2)
+            pp_minus_p2_norm_terms.append(pp_minus_p2 / (p * (1 - p)))
+        ax_norm.plot(widths, pp_minus_p2_norm_terms, label=func_name)
         ax.plot(widths, pp_minus_p2_terms, label=func_name)
         ax_pp.plot(widths, pp_terms, label=func_name)
+        pp_minus_p2_dict.update({func_name: pp_minus_p2_terms})
+        # pp_minus_p2_dict.update({func_name: pp_terms})
+    ax_norm.set_xlabel('Partition Width (w)')
+    ax_norm.set_ylabel(r'$\left[\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
+    ax_norm.legend()
     ax.set_xlabel('Partition Width (w)')
-    ax.set_ylabel(r'$\left[\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
+    ax.set_ylabel(r'$\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2$')
     ax.legend()
-    fig.tight_layout()
     ax_pp.legend()
+    fig_norm.tight_layout()
+    fig.tight_layout()
     fig_pp.tight_layout()
+
+    fig_ft, ax_ft = plt.subplots(dpi=144)
+    yf_dict, yf_plt_dict = {}, {}
+    for func_name, y in pp_minus_p2_dict.items():
+        # print(f'{func_name}:\n{y}')
+        y = np.nan_to_num(y)
+        # print(f'{func_name}:\n{y}')
+        n = len(y)
+        yf = fft(y)
+        xf = fftfreq(n, 2 * np.pi / n)[:n//2]
+        ax_ft.plot(xf, 2.0 / n * np.abs(yf[0:n//2]), label=func_name)
+        yf_dict.update({func_name: yf})
+        yf_plt_dict.update({func_name: 2.0 / n * np.abs(yf[0:n//2])})
+    # ax_ft.plot(xf, 2.0 / n * np.abs((yf_dict['Convolution'] / yf_dict['Elliptic Flow'])[0:n//2]),
+    #            label='Convolution / Flow')
+    # ax_ft.plot(xf, yf_plt_dict['Convolution'] / yf_plt_dict['Elliptic Flow'], label='Convolution / Flow')
+    ax_ft.legend()
+    ax_ft.grid()
+    ax_ft.set_xlabel('Frequency')
+    ax_ft.set_ylabel('Power')
+    fig_ft.tight_layout()
 
     plt.show()
 
