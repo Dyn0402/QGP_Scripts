@@ -15,13 +15,18 @@ from scipy.stats import norm
 from scipy.optimize import curve_fit as cf
 from scipy.fft import fft, ifft, fftfreq
 
+import uproot
+from scipy.interpolate import CubicSpline
+
 from Binom_Slices.analyze_binom_slices import quad_180
+
 
 
 def main():
     # vn_test()
     # gaus_test()
-    convo_test()
+    # convo_test()
+    eff_v2_combo()
     print('donzo')
 
 
@@ -159,8 +164,10 @@ def convo_test():
 
     fig_pp, ax_pp = plt.subplots(dpi=144, figsize=(6, 3))
     fig_norm, ax_norm = plt.subplots(dpi=144, figsize=(7, 3))
+    fig_norm_convo, ax_norm_convo = plt.subplots(dpi=144, figsize=(7, 3))
     fig, ax = plt.subplots(dpi=144, figsize=(7, 3))
     ax_norm.axhline(0, color='black')
+    ax_norm_convo.axhline(0, color='black')
     ax.axhline(0, color='black')
     widths = np.linspace(0, 2 * np.pi, 100)
     pp_minus_p2_dict = {}
@@ -174,6 +181,8 @@ def convo_test():
             pp_minus_p2_terms.append(pp_minus_p2)
             pp_minus_p2_norm_terms.append(pp_minus_p2 / (p * (1 - p)))
         ax_norm.plot(widths, pp_minus_p2_norm_terms, label=func_name)
+        if func_name == 'Convolution':
+            ax_norm_convo.plot(widths, pp_minus_p2_norm_terms, color='green', label=func_name)
         ax.plot(widths, pp_minus_p2_terms, label=func_name)
         ax_pp.plot(widths, pp_terms, label=func_name)
         pp_minus_p2_dict.update({func_name: pp_minus_p2_terms})
@@ -181,13 +190,122 @@ def convo_test():
     ax_norm.set_xlabel('Partition Width (w)')
     ax_norm.set_ylabel(r'$\left[\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
     ax_norm.legend()
+    ax_norm_convo.set_xlabel('Partition Width (w)')
+    ax_norm_convo.set_ylabel(r'$\left[\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
+    ax_norm_convo.legend()
     ax.set_xlabel('Partition Width (w)')
     ax.set_ylabel(r'$\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2$')
     ax.legend()
     ax_pp.legend()
     fig_norm.tight_layout()
+    fig_norm_convo.tight_layout()
     fig.tight_layout()
     fig_pp.tight_layout()
+
+    fig_ft, ax_ft = plt.subplots(dpi=144)
+    yf_dict, yf_plt_dict = {}, {}
+    for func_name, y in pp_minus_p2_dict.items():
+        # print(f'{func_name}:\n{y}')
+        y = np.nan_to_num(y)
+        # print(f'{func_name}:\n{y}')
+        n = len(y)
+        yf = fft(y)
+        xf = fftfreq(n, 2 * np.pi / n)[:n//2]
+        ax_ft.plot(xf, 2.0 / n * np.abs(yf[0:n//2]), label=func_name)
+        yf_dict.update({func_name: yf})
+        yf_plt_dict.update({func_name: 2.0 / n * np.abs(yf[0:n//2])})
+    # ax_ft.plot(xf, 2.0 / n * np.abs((yf_dict['Convolution'] / yf_dict['Elliptic Flow'])[0:n//2]),
+    #            label='Convolution / Flow')
+    # ax_ft.plot(xf, yf_plt_dict['Convolution'] / yf_plt_dict['Elliptic Flow'], label='Convolution / Flow')
+    ax_ft.legend()
+    ax_ft.grid()
+    ax_ft.set_xlabel('Frequency')
+    ax_ft.set_ylabel('Power')
+    fig_ft.tight_layout()
+
+    plt.show()
+
+
+def eff_v2_combo():
+    func1_pre = get_efficiency_pdf()
+    func1_norm = get_norm(func1_pre, ())
+    func1 = lambda x: func1_pre(x) / func1_norm
+    func1_args = ()
+    func1_name = 'Efficiency'
+    fig, ax = plt.subplots(dpi=144, figsize=(6, 3))
+    plot_pdf(func1, func1_args)
+    ax.set_ylim(bottom=0)
+    fig.tight_layout()
+
+    func2 = vn_pdf
+    n = 2
+    v2 = 0.07
+    psi = np.pi / 3
+    func2_args = (v2, psi, n)
+    func2_name = 'Elliptic Flow'
+    fig, ax = plt.subplots(dpi=144, figsize=(6, 3))
+    plot_pdf(func2, func2_args)
+    ax.set_ylim(bottom=0)
+    fig.tight_layout()
+
+    func3 = lambda x, v2_, psi_, n_, c_combo_: c_combo_ * func1(x) * vn_pdf(x, v2_, psi_, n_)
+    func3_args = (*func1_args, *func2_args, 1. / get_norm(func3, (*func1_args, *func2_args, 1)))
+    func3_name = 'Combination'
+    fig, ax = plt.subplots(dpi=144, figsize=(6, 3))
+    plot_pdf(func3, func3_args)
+    ax.set_ylim(bottom=0)
+    fig.tight_layout()
+
+    fig_pp, ax_pp = plt.subplots(dpi=144, figsize=(6, 3))
+    fig_norm, ax_norm = plt.subplots(dpi=144, figsize=(7, 3))
+    fig_norm_convo, ax_norm_convo = plt.subplots(dpi=144, figsize=(7, 3))
+    fig, ax = plt.subplots(dpi=144, figsize=(7, 3))
+    ax_norm.axhline(0, color='black')
+    ax_norm_convo.axhline(0, color='black')
+    ax.axhline(0, color='black')
+    widths = np.linspace(0, 2 * np.pi, 100)
+    pp_minus_p2_dict = {}
+    for func, func_args, func_name in \
+            [(func1, func1_args, func1_name), (func2, func2_args, func2_name), (func3, func3_args, func3_name)]:
+        pp_terms, pp_minus_p2_terms, pp_minus_p2_norm_terms = [], [], []
+        for width in widths:
+            pp_minus_p2, pp = get_partition_variance(func, func_args, width)
+            p = width / (2 * np.pi)
+            pp_terms.append(pp)
+            pp_minus_p2_terms.append(pp_minus_p2)
+            pp_minus_p2_norm_terms.append(pp_minus_p2 / (p * (1 - p)))
+        ax_norm.plot(widths, pp_minus_p2_norm_terms, label=func_name)
+        if func_name == 'Combination':
+            ax_norm_convo.plot(widths, pp_minus_p2_norm_terms, color='green', label=func_name)
+        ax.plot(widths, pp_minus_p2_terms, label=func_name)
+        ax_pp.plot(widths, pp_terms, label=func_name)
+        pp_minus_p2_dict.update({func_name: pp_minus_p2_terms})
+        # pp_minus_p2_dict.update({func_name: pp_terms})
+    ax_norm.set_xlabel('Partition Width (w)')
+    ax_norm.set_ylabel(r'$\left[\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
+    ax_norm.legend()
+    ax_norm_convo.set_xlabel('Partition Width (w)')
+    ax_norm_convo.set_ylabel(r'$\left[\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
+    ax_norm_convo.legend()
+    ax.set_xlabel('Partition Width (w)')
+    ax.set_ylabel(r'$\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2$')
+    ax.legend()
+    ax_pp.legend()
+    fig_norm.tight_layout()
+    fig_norm_convo.tight_layout()
+    fig.tight_layout()
+    fig_pp.tight_layout()
+
+    fig_v2_div_eff, ax_v2_div_eff = plt.subplots(dpi=144, figsize=(7, 3))
+    ax_v2_div_eff.axhline(0, color='black')
+    for func_name, y in pp_minus_p2_dict.items():
+        ax_v2_div_eff.plot(widths, y, label=func_name)
+    combo_div_eff = np.array(pp_minus_p2_dict['Combination']) - np.array(pp_minus_p2_dict['Efficiency'])
+    ax_v2_div_eff.plot(widths, combo_div_eff, label='Combo / Eff')
+    ax_v2_div_eff.set_xlabel('Partition Width (w)')
+    ax_v2_div_eff.set_ylabel(r'$\left[\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
+    ax_v2_div_eff.legend()
+    fig_v2_div_eff.tight_layout()
 
     fig_ft, ax_ft = plt.subplots(dpi=144)
     yf_dict, yf_plt_dict = {}, {}
@@ -371,6 +489,31 @@ def get_partitions_covariance(func, func_pars, width, sep):
     # print(ep2, ep**2)
 
     # return ep2 - ep**2, epq
+
+
+def get_efficiency_pdf(plot=False):
+    energy = 62
+    set_name = 'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0'
+    qa_path = f'F:/Research/Data/default_resample/{set_name}/{energy}GeV/QA_{energy}GeV.root'
+    with uproot.open(qa_path) as file:
+        hist_name = f'post_phi_{set_name}_{energy}'
+        hist = file[hist_name]
+        hist_centers, hist_vals = hist.axis().centers(), hist.values()
+    interp = get_periodic_interp(hist_centers, hist_vals)
+    if plot:
+        plt.scatter(hist_centers, hist_vals, color='blue', marker='.')
+        xs = np.linspace(0, 2 * np.pi, 10000)
+        plt.plot(xs, interp(xs), color='red', alpha=0.6)
+        plt.show()
+    return interp
+
+
+def get_periodic_interp(x, y):
+    x_step = x[-1] - x[-2]
+    x = np.append(x, [x[-1] + x_step])
+    y = np.append(y, [y[0]])
+    interp = CubicSpline(x, y, bc_type='periodic')
+    return interp
 
 
 def vn_pdf(phi, vn, psi, n=2):
