@@ -296,6 +296,10 @@ def quad_180(x, a, c):
     return a * (x - 180) ** 2 + c
 
 
+def quad_180_rad(x, a, c):
+    return a * (x - np.pi) ** 2 + c
+
+
 def quad_180_zparam(x, z, c):
     return -c * ((x - 180) / z) ** 2 + c
 
