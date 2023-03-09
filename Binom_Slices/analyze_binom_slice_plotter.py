@@ -33,7 +33,7 @@ def main():
     # plot_ampt_efficiency()
     # plot_flow()
     # plot_flow_k2()
-    plot_anticl_flow_convolution()
+    # plot_anticl_flow_convolution()
     # plot_ampt_v2_closure()
     # plot_flow_vs2_closure()
     # plot_flow_v2_closure_raw()
@@ -112,7 +112,7 @@ def plot_star_model_var():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
     base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
-    base_path = 'C:/Users/Dylan/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+    # base_path = 'C:/Users/Dylan/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
     # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
     # df_name = 'binom_slice_stats_cent8_no_sim.csv'
     df_name = 'binom_slice_stats_cent8_var.csv'
@@ -175,19 +175,50 @@ def plot_star_model_var():
     protons_fits = []
     for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
         print(f'Div {div}')
-        protons_fits_div = stat_vs_protons(df_raw, stat_plot, div, cent_plt, energies_fit, data_types_plt, all_sets_plt,
-                                           plot=False, fit=True)
-        protons_fits.append(protons_fits_div)
+        protons_fits_div_raw = stat_vs_protons(df_raw, stat_plot, div, cent_plt, energies_fit, ['raw'],
+                                               all_sets_plt, plot=False, fit=True)
+        protons_fits_div_raw.loc[:, 'name'] = protons_fits_div_raw['name'] + '_raw'
+        protons_fits.append(protons_fits_div_raw)
+
+        protons_fits_div_mix = stat_vs_protons(df_mix, stat_plot, div, cent_plt, energies_fit, ['mix'],
+                                               all_sets_plt, plot=False, fit=True)
+        protons_fits_div_mix.loc[:, 'name'] = protons_fits_div_mix['name'] + '_mix'
+        protons_fits.append(protons_fits_div_mix)
+
+        # raw_meas = np.array([Measure(row['val'], row['err']) for i, row in protons_fits_div_raw.iterrows()])
+        # mix_meas = np.array([Measure(row['val'], row['err']) for i, row in protons_fits_div_mix.iterrows()])
+        sub_meas = protons_fits_div_raw['slope_meas'] - protons_fits_div_mix['slope_meas']
+        # print(sub_meas, '\n\n')
+        protons_fits_div_sub = protons_fits_div_raw.copy()
+        protons_fits_div_sub.loc[:, 'slope'] = [x.val for x in sub_meas]
+        protons_fits_div_sub.loc[:, 'slope_err'] = [x.err for x in sub_meas]
+        protons_fits_div_sub.loc[:, 'slope_meas'] = sub_meas
+        protons_fits_div_sub.loc[:, 'name'] = protons_fits_div_mix['name'] + '_sub'
+        # print(protons_fits_div_sub)
+        protons_fits.append(protons_fits_div_sub)
+
+        protons_fits_div_div = stat_vs_protons(df, stat_plot, div, cent_plt, energies_fit, ['divide'],
+                                               all_sets_plt, plot=False, fit=True)
+        protons_fits_div_div.loc[:, 'name'] = protons_fits_div_div['name'] + '_div'
+        protons_fits.append(protons_fits_div_div)
     protons_fits = pd.concat(protons_fits, ignore_index=True)
-    if df_tproton_fits_name:
-        protons_fits.to_csv(f'{base_path}{fits_out_base}{df_tproton_fits_name}', index=False)
-    print(protons_fits)
-    print(pd.unique(protons_fits['amp']))
-    print(pd.unique(protons_fits['spread']))
-    df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=False,
-                                     data_sets_labels=data_sets_labels)
-    if df_partitions_fits_name:
-        df_fits.to_csv(f'{base_path}{fits_out_base}{df_partitions_fits_name}', index=False)
+    for data_set in data_sets_plt:
+        data_sets = [data_set + x for x in ['_raw', '_mix', '_div', '_sub']]
+        # pd.set_option('display.max_columns', None)
+        # pd.set_option('display.max_rows', None)
+        # print(protons_fits[protons_fits['name'].str.contains(data_set)])
+        colors = dict(zip(data_sets, ['blue', 'green', 'red', 'purple']))
+        labels = dict(zip(data_sets, [data_sets_labels[data_set] + x for x in [' Raw', ' Mix', ' Div', ' Sub']]))
+        plot_protons_fits_divs(protons_fits, data_sets, data_sets_colors=colors, fit=False, data_sets_labels=labels)
+    # if df_tproton_fits_name:
+    #     protons_fits.to_csv(f'{base_path}{fits_out_base}{df_tproton_fits_name}', index=False)
+    # print(protons_fits)
+    # print(pd.unique(protons_fits['amp']))
+    # print(pd.unique(protons_fits['spread']))
+    # df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=False,
+    #                                  data_sets_labels=data_sets_labels)
+    # if df_partitions_fits_name:
+    #     df_fits.to_csv(f'{base_path}{fits_out_base}{df_partitions_fits_name}', index=False)
     # print(df_fits)
     # plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
     # plot_slope_div_fits_simpars(df_fits)
