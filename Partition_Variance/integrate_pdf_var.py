@@ -24,7 +24,8 @@ from Binom_Slices.analyze_binom_slices import *
 def main():
     # vn_test()
     # gaus_test()
-    gaus_fit()
+    # gaus_fit()
+    gaus_fit_dependence()
     # convo_test()
     # eff_v2_combo()
     # eff_v2_combo2()
@@ -76,13 +77,15 @@ def gaus_fit():
     fig, ax = plt.subplots()
     ax.axhline(0, color='black')
     ax.plot(widths, pp_minus_p2_terms)
-    ax.set_ylabel('Linear Terms')
+    ax.set_xlabel('Partition Width (w)')
+    ax.set_ylabel(r'$\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2$')
 
     width_fit_low, width_fit_high = np.deg2rad([60, 300])
     fig, ax = plt.subplots(dpi=144)
     ax.axhline(0, color='black')
     ax.scatter(widths, pp_minus_p2_terms)
-    ax.set_ylabel('Linear Terms')
+    ax.set_xlabel('Partition Width (w)')
+    ax.set_ylabel(r'$\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2$')
     width_filter = (width_fit_low < widths) & (widths < width_fit_high)
     # print(widths[width_filter], np.array(lin_terms)[width_filter])
     popt_quad, pcov_quad = cf(quad_180_rad, widths[width_filter], np.array(pp_minus_p2_terms)[width_filter])
@@ -103,6 +106,8 @@ def gaus_fit():
     popt, pcov = cf(quad_cos, widths[width_filter], np.array(pp_minus_p2_terms)[width_filter], p0=p0)
     ax.plot(xs_fit_plot, quad_cos(xs_fit_plot, *p0), color='olive', alpha=0.4, label='Combo Initial Guess')
     ax.plot(xs_fit_plot, quad_cos(xs_fit_plot, *popt), color='olive', label='Combo')
+    ax.set_xlabel('Partition Width (w)')
+    ax.set_ylabel(r'$\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2$')
     ax.legend()
     fig.tight_layout()
 
@@ -119,6 +124,8 @@ def gaus_fit():
     popt, pcov = cf(quad_cos, widths[width_filter], np.array(pp_minus_p2_terms)[width_filter], p0=p0)
     ax.plot(xs_fit_plot, quad_cos(xs_fit_plot, *p0), color='olive', alpha=0.7, ls='--', label='Combo Initial Guess')
     ax.plot(xs_fit_plot, quad_cos(xs_fit_plot, *popt), color='olive', label='Combo')
+    ax.set_xlabel('Partition Width (w)')
+    ax.set_ylabel(r'$\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2$')
     ax.legend()
     fig.tight_layout()
 
@@ -132,6 +139,7 @@ def gaus_fit_dependence():
     bounds = (0, 2 * np.pi)
     func = base_gaus_pdf
     widths = np.linspace(*bounds, 100)
+    xs_fit_plot = np.linspace(min(widths), max(widths), 1000)
 
     quad_mags, quad_consts, cos_mags, gaus_sigs = [], [], [], []
     quad_mags_err, quad_consts_err, cos_mags_err, gaus_sigs_err = [], [], [], []
@@ -144,7 +152,8 @@ def gaus_fit_dependence():
             pp_minus_p2_terms.append(pp_minus_p2)
             pp_terms.append(pp)
 
-        p0 = (-3e-4, 0.002, 0.0004, 0.5)
+        p0 = (-3e-4, 0.002, 0.0004, 1)
+        pp_minus_p2_terms = np.nan_to_num(pp_minus_p2_terms)
         popt, pcov = cf(quad_cos, widths, np.array(pp_minus_p2_terms), p0=p0)
         perr = np.sqrt(np.diag(pcov))
         quad_mags.append(popt[0])
@@ -155,6 +164,39 @@ def gaus_fit_dependence():
         quad_consts_err.append(perr[1])
         cos_mags_err.append(perr[2])
         gaus_sigs_err.append(perr[3])
+
+        fig, ax = plt.subplots(dpi=144)
+        ax.axhline(0, color='black')
+        ax.scatter(widths, pp_minus_p2_terms)
+        ax.set_xlabel('Partition Width (w)')
+        ax.set_ylabel(r'$\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2$')
+        ax.set_ylim(bottom=-ax.get_ylim()[-1] * 0.05)
+        ax.plot(xs_fit_plot, quad_cos(xs_fit_plot, *p0), color='olive', alpha=0.7, ls='--', label='Combo Initial Guess')
+        ax.plot(xs_fit_plot, quad_cos(xs_fit_plot, *popt), color='olive', label='Combo')
+        ax.set_title(f'Fit for sigma={sigma:.2f}')
+        ax.legend()
+        fig.tight_layout()
+
+    fig_quad_mag, ax_quad_mag = plt.subplots(dpi=144)
+    fig_quad_consts, ax_quad_consts = plt.subplots(dpi=144)
+    fig_cos_mags, ax_cos_mags = plt.subplots(dpi=144)
+    fig_gaus_sigs, ax_gaus_sigs = plt.subplots(dpi=144)
+    ax_quad_mag.errorbar(sigmas, quad_mags, yerr=quad_mags_err, ls='none', marker='o')
+    ax_quad_consts.errorbar(sigmas, quad_consts, yerr=quad_consts_err, ls='none', marker='o')
+    ax_cos_mags.errorbar(sigmas, cos_mags, yerr=cos_mags_err, ls='none', marker='o')
+    ax_gaus_sigs.errorbar(sigmas, gaus_sigs, yerr=gaus_sigs_err, ls='none', marker='o')
+    ax_quad_mag.set_xlabel('Gaussian Cluster Sigma')
+    ax_quad_consts.set_xlabel('Gaussian Cluster Sigma')
+    ax_cos_mags.set_xlabel('Gaussian Cluster Sigma')
+    ax_gaus_sigs.set_xlabel('Gaussian Cluster Sigma')
+    ax_quad_mag.set_ylabel('Quadratic Magnitude')
+    ax_quad_consts.set_ylabel('Quadratic Constant')
+    ax_cos_mags.set_ylabel('Cosine Magnitude')
+    ax_gaus_sigs.set_ylabel('Mixing Gaussian Sigma')
+    fig_quad_mag.tight_layout()
+    fig_quad_consts.tight_layout()
+    fig_cos_mags.tight_layout()
+    fig_gaus_sigs.tight_layout()
 
     plt.show()
 
