@@ -821,14 +821,15 @@ def stat_vs_protons_cents(df, stat, divs, cents, energy, data_types, data_sets_p
 
 
 def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, data_sets_labels=None, exclude_divs=[],
-                           verbose=True):
-    fig, ax = plt.subplots()
-    fig.canvas.manager.set_window_title(f'Slope vs Width All Energies')
-    ax.axhline(0, ls='-', color='black')
-    fig_panels, ax_panels = plt.subplots(2, 3, sharex=True, sharey=True, dpi=144, figsize=(13.33, 6.16))
-    fig_panels.canvas.manager.set_window_title(f'Slope vs Width Energy Panels')
+                           verbose=True, plt_energies=True):
     energies = pd.unique(df['energy'])
-    ax_panels = dict(zip(energies, ax_panels.flat))
+    if plt_energies:
+        fig, ax = plt.subplots()
+        fig.canvas.manager.set_window_title(f'Slope vs Width All Energies')
+        ax.axhline(0, ls='-', color='black')
+        fig_panels, ax_panels = plt.subplots(2, 3, sharex=True, sharey=True, dpi=144, figsize=(13.33, 6.16))
+        fig_panels.canvas.manager.set_window_title(f'Slope vs Width Energy Panels')
+        ax_panels = dict(zip(energies, ax_panels.flat))
     energy_fig_axs = {energy: plt.subplots() for energy in energies}
     markers = ['o', 's', 'P', 'D', '*', '^', 'p']
     colors = iter(plt.cm.rainbow(np.linspace(0, 1, len(energies) * len(data_sets_plt))))
@@ -839,7 +840,6 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
         for energy_marker, energy in enumerate(energies):
             df_energy = df_set[df_set['energy'] == energy]
             df_energy.sort_values(by='divs')
-            energy_fig, energy_ax = energy_fig_axs[energy]
             if data_sets_labels is None:
                 lab_energy = data_set
             else:
@@ -852,12 +852,14 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
                 color = next(colors)
             else:
                 color = data_sets_colors[data_set]
-            ax.errorbar(df_energy['divs'], df_energy['slope'], yerr=df_energy['slope_err'], ls='none',
-                        marker=markers[energy_marker], label=lab, color=color)
+            energy_fig, energy_ax = energy_fig_axs[energy]
             energy_ax.errorbar(df_energy['divs'], df_energy['slope'], yerr=df_energy['slope_err'], ls='none',
                                marker='o', label=lab_energy, color=color)
-            ax_panels[energy].errorbar(df_energy['divs'], df_energy['slope'], yerr=df_energy['slope_err'], ls='none',
-                                       marker='o', label=lab_energy, color=color)
+            if plt_energies:
+                ax.errorbar(df_energy['divs'], df_energy['slope'], yerr=df_energy['slope_err'], ls='none',
+                            marker=markers[energy_marker], label=lab, color=color)
+                ax_panels[energy].errorbar(df_energy['divs'], df_energy['slope'], yerr=df_energy['slope_err'], ls='none',
+                                           marker='o', label=lab_energy, color=color)
             if fit and df_energy.size > 1:
                 try:
                     df_energy = df_energy[~df_energy.divs.isin(exclude_divs)]
@@ -870,9 +872,10 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
                                      'ap': df_energy['ap'].iloc[0], 'am': df_energy['am'].iloc[0],
                                      'sp': df_energy['sp'].iloc[0], 'sm': df_energy['sm'].iloc[0]})
                     x = np.linspace(0, 360, 100)
-                    ax.plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
                     energy_ax.plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
-                    ax_panels[energy].plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
+                    if plt_energies:
+                        ax.plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
+                        ax_panels[energy].plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
                     # p0 = [*popt, -popt[0], popt[1]]
                     # popt3, pcov3 = cf(double_quad_180_zparam, df_energy['divs'], df_energy['slope'], p0=p0,
                     #                   sigma=df_energy['slope_err'], absolute_sigma=True)
@@ -904,12 +907,13 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
         if title != '':
             title += ' '
         title += f'{energies[0]}GeV'
-    if title != '':
-        ax.set_title(title)
 
-    ax.set_ylabel('Slope of Raw/Mix SD vs Total Protons per Event')
-    ax.set_xlabel('Azimuthal Partition Width')
-    ax.legend()
+    if plt_energies:
+        if title != '':
+            ax.set_title(title)
+        ax.set_ylabel('Slope of Raw/Mix SD vs Total Protons per Event')
+        ax.set_xlabel('Azimuthal Partition Width')
+        ax.legend()
 
     for energy_i, (energy, (energy_fig, energy_ax)) in enumerate(energy_fig_axs.items()):
         energy_ax.set_title(f'{energy} GeV')
@@ -920,18 +924,20 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
         energy_fig.tight_layout()
         energy_fig.canvas.manager.set_window_title(f'Slope vs Width {energy}GeV')
 
-        ax_panels[energy].axhline(0, color='black', zorder=0)
-        ax_panels[energy].text(180, 0.00025, f'{energy} GeV', ha='center', fontsize=14)
-        if energy_i >= 3:
-            ax_panels[energy].set_xlabel('Azimuthal Partition Width')
-        if energy_i in [0, 3]:
-            ax_panels[energy].set_ylabel('Slope of Raw/Mix SD vs Protons/Event')
-        if energy_i == 1:
-            ax_panels[energy].legend(loc='upper center', bbox_to_anchor=(0.5, 0.85), framealpha=1.0)
+        if plt_energies:
+            ax_panels[energy].axhline(0, color='black', zorder=0)
+            ax_panels[energy].text(180, 0.00025, f'{energy} GeV', ha='center', fontsize=14)
+            if energy_i >= 3:
+                ax_panels[energy].set_xlabel('Azimuthal Partition Width')
+            if energy_i in [0, 3]:
+                ax_panels[energy].set_ylabel('Slope of Raw/Mix SD vs Protons/Event')
+            if energy_i == 1:
+                ax_panels[energy].legend(loc='upper center', bbox_to_anchor=(0.5, 0.85), framealpha=1.0)
 
-    fig.tight_layout()
-    fig_panels.tight_layout()
-    fig_panels.subplots_adjust(wspace=0.0, hspace=0.0)
+    if plt_energies:
+        fig.tight_layout()
+        fig_panels.tight_layout()
+        fig_panels.subplots_adjust(wspace=0.0, hspace=0.0)
 
     return pd.DataFrame(fit_pars)
 
@@ -949,11 +955,17 @@ def plot_protons_fits_divs_flow(df, data_sets_plt, data_sets_colors=None):
             color = next(colors)
         else:
             color = data_sets_colors[data_set]
+        v2 = None
+        for element in data_set.split('_'):
+            if 'v2' in element:
+                v2 = float('0.' + element.strip('v2'))
+                break
+        print(data_set, v2)
         if 'anticlflow_' in data_set:
-            v2 = float('0.' + data_set.split('_')[-3][2:])
+            # v2 = float('0.' + data_set.split('_')[-3][2:])
             lab = f'anticl + v2={v2:.2f}'
         elif 'flow_' in data_set:
-            v2 = float('0.' + data_set.split('_')[-1][2:])
+            # v2 = float('0.' + data_set.split('_')[-1][2:])
             lab = f'v2={v2:.2f}'
             ax.plot(x_divs, v2_divs(x_divs / 180 * np.pi, v2), color=color)
         else:
