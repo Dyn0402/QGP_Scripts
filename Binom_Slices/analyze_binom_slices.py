@@ -423,16 +423,16 @@ def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_
         if fit and len(df) > 1:
             # popt, pcov = cf(line, df['total_protons'], df['val'], sigma=df['err'], absolute_sigma=True)
             popt, pcov = cf(line_yint1, df['total_protons'], df['val'], sigma=df['err'], absolute_sigma=True)
-            popt = np.append(popt, 1)
-            pcov = np.array(((pcov[0][0], 0), (0, 0)))
+            # popt = np.append(popt, 1)
+            # pcov = np.array(((pcov[0][0], 0), (0, 0)))
             fits.append({'name': data_set, 'energy': energy, 'divs': div, 'amp': amp, 'spread': spread, 'ap': ap,
                          'am': am, 'sp': sp, 'sm': sm, 'slope': popt[0], 'slope_err': np.sqrt(np.diag(pcov))[0],
                          'slope_meas': Measure(popt[0], np.sqrt(np.diag(pcov))[0]),
-                         'int': popt[1], 'int_err': np.sqrt(np.diag(pcov))[1]})
+                         'int': 1, 'int_err': 0})
             if plot:
-                ax.plot(df['total_protons'], line(df['total_protons'], *popt), ls='--', color=c)
+                ax.plot(df['total_protons'], line_yint1(df['total_protons'], *popt), ls='--', color=c)
                 if hist:
-                    sigs = (df['val'] - line(df['total_protons'], *popt)) / df['err']
+                    sigs = (df['val'] - line_yint1(df['total_protons'], *popt)) / df['err']
                     fig_hist, ax_hist = plt.subplots()
                     ax_hist.set_title(f'{lab}')
                     ax_hist.set_xlabel('Standard Deviations from Linear Fit')
@@ -821,7 +821,7 @@ def stat_vs_protons_cents(df, stat, divs, cents, energy, data_types, data_sets_p
 
 
 def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, data_sets_labels=None, exclude_divs=[],
-                           verbose=True, plt_energies=True):
+                           verbose=True, plt_energies=True, title=None, alpha=1):
     energies = pd.unique(df['energy'])
     if plt_energies:
         fig, ax = plt.subplots()
@@ -854,12 +854,12 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
                 color = data_sets_colors[data_set]
             energy_fig, energy_ax = energy_fig_axs[energy]
             energy_ax.errorbar(df_energy['divs'], df_energy['slope'], yerr=df_energy['slope_err'], ls='none',
-                               marker='o', label=lab_energy, color=color)
+                               marker='o', label=lab_energy, color=color, alpha=alpha)
             if plt_energies:
                 ax.errorbar(df_energy['divs'], df_energy['slope'], yerr=df_energy['slope_err'], ls='none',
-                            marker=markers[energy_marker], label=lab, color=color)
+                            marker=markers[energy_marker], label=lab, color=color, alpha=alpha)
                 ax_panels[energy].errorbar(df_energy['divs'], df_energy['slope'], yerr=df_energy['slope_err'], ls='none',
-                                           marker='o', label=lab_energy, color=color)
+                                           marker='o', label=lab_energy, color=color, alpha=alpha)
             if fit and df_energy.size > 1:
                 try:
                     df_energy = df_energy[~df_energy.divs.isin(exclude_divs)]
@@ -900,29 +900,36 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
                 except RuntimeError as e:
                     print(f'Fitting Error, skipping data_set {data_set}, {e}')
 
-    title = ''
-    if len(data_sets_plt) == 1:
-        title += f'{data_set}'
-    if len(energies) == 1:
-        if title != '':
-            title += ' '
-        title += f'{energies[0]}GeV'
+    if title is None:
+        title = ''
+        if len(data_sets_plt) == 1:
+            title += f'{data_set}'
+        if len(energies) == 1:
+            if title != '':
+                title += ' '
+            title += f'{energies[0]}GeV'
 
     if plt_energies:
-        if title != '':
+        if title != '' and title is not None:
             ax.set_title(title)
         ax.set_ylabel('Slope of Raw/Mix SD vs Total Protons per Event')
         ax.set_xlabel('Azimuthal Partition Width')
         ax.legend()
 
     for energy_i, (energy, (energy_fig, energy_ax)) in enumerate(energy_fig_axs.items()):
-        energy_ax.set_title(f'{energy} GeV')
-        energy_ax.set_xlabel('Azimuthal Partition Width')
-        energy_ax.set_ylabel('Slope of Raw/Mix SD vs Total Protons per Event')
+        if title is None:
+            energy_ax.set_title(f'{energy} GeV')
+        else:
+            energy_ax.set_title(title)
+        energy_ax.set_xlabel('Azimuthal Partition Width (w)')
+        energy_ax.set_ylabel('Slope of k2 vs Total Protons per Event')
         energy_ax.axhline(0, color='black', zorder=0)
         energy_ax.legend()
         energy_fig.tight_layout()
-        energy_fig.canvas.manager.set_window_title(f'Slope vs Width {energy}GeV')
+        if title is None:
+            energy_fig.canvas.manager.set_window_title(f'Slope vs Width {energy}GeV')
+        else:
+            energy_fig.canvas.manager.set_window_title(f'Slope vs Width {title}')
 
         if plt_energies:
             ax_panels[energy].axhline(0, color='black', zorder=0)

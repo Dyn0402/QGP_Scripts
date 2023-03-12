@@ -37,8 +37,8 @@ def main():
     # plot_flow_vs2_closure()
     # plot_flow_v2_closure_raw()
     # plot_flow_eff_test()
-    plot_anticl_flow_convolution()
-    # plot_efficiency_closure_tests()
+    # plot_anticl_flow_convolution()
+    plot_efficiency_closure_tests()
     print('donzo')
 
 
@@ -1669,7 +1669,7 @@ def plot_efficiency_closure_tests():
     base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
     # base_path = 'C:/Users/Dylan/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
     # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
-    df_name = 'binom_slice_var_cent8_2source_closure_tests.csv'
+    df_name = 'binom_slice_var_cent8_efficiency_closure.csv'
     # df_name = 'binom_slice_var_cent8_simpleclust_test.csv'
     df_path = base_path + df_name
 
@@ -1683,6 +1683,9 @@ def plot_efficiency_closure_tests():
 
     df = pd.read_csv(df_path)
     df = df.dropna()
+
+    # df = df[df['name'].str.contains('simpleclust')]
+
     all_sets = pd.unique(df['name'])
     print(all_sets)
 
@@ -1698,16 +1701,12 @@ def plot_efficiency_closure_tests():
     df_mix.loc[:, 'err'] = df_mix['err'] / (df_mix['total_protons'] * p * (1 - p))
 
     stat_vs_protons(df_raw, stat_plot, div_plt, cent_plt, [62], ['raw'], all_sets, plot=True, fit=True,
-                    # data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels,
-                    y_ranges={'k2': [0.5, 1.09]})
+                    y_ranges={'k2': [0.5, 3]})
+    stat_vs_protons(df_mix, stat_plot, div_plt, cent_plt, [62], ['mix'], all_sets, plot=True, fit=True,
+                    y_ranges={'k2': [0.5, 3]})
     stat_vs_protons(df, stat_plot, div_plt, cent_plt, [62], ['divide'], all_sets, plot=True, fit=True,
-                    # data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels,
-                    y_ranges={'k2': [0.5, 1.09]})
-    stat_vs_protons(df_raw, 'standard deviation', div_plt, cent_plt, [62], ['raw'], all_sets, plot=True, fit=True,
-                    # data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels,
-                    y_ranges={'standard deviation': [-0.5, 1.09]})
+                    y_ranges={'k2': [0.5, 3]})
     stat_vs_protons(df, 'standard deviation', div_plt, cent_plt, [62], ['divide'], all_sets, plot=True, fit=True,
-                    # data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels,
                     y_ranges={'standard deviation': [0.5, 1.09]})
 
     protons_fits = []
@@ -1723,12 +1722,18 @@ def plot_efficiency_closure_tests():
         protons_fits_div_mix.loc[:, 'name'] = protons_fits_div_mix['name'] + '_mix'
         protons_fits.append(protons_fits_div_mix)
 
-        sub_meas = protons_fits_div_raw['slope_meas'] - protons_fits_div_mix['slope_meas']
-        protons_fits_div_sub = protons_fits_div_raw.copy()
-        protons_fits_div_sub.loc[:, 'slope'] = [x.val for x in sub_meas]
-        protons_fits_div_sub.loc[:, 'slope_err'] = [x.err for x in sub_meas]
-        protons_fits_div_sub.loc[:, 'slope_meas'] = sub_meas
-        protons_fits_div_sub.loc[:, 'name'] = protons_fits_div_mix['name'] + '_sub'
+        protons_fits_div_sub = []
+        for data_set in pd.unique(protons_fits_div_raw['name']):
+            df_set_raw = protons_fits_div_raw[protons_fits_div_raw['name'] == data_set]
+            df_set_mix = protons_fits_div_mix[protons_fits_div_mix['name'] == data_set.replace('_raw', '_mix')]
+            sub_meas = df_set_raw['slope_meas'].iloc[0] - df_set_mix['slope_meas'].iloc[0]
+            df_set_sub = df_set_raw.copy()
+            df_set_sub.iloc[0, df_set_sub.columns.get_indexer(['slope'])] = sub_meas.val
+            df_set_sub.iloc[0, df_set_sub.columns.get_indexer(['slope_err'])] = sub_meas.err
+            df_set_sub.iloc[0, df_set_sub.columns.get_indexer(['slope_meas'])] = sub_meas
+            df_set_sub.iloc[0, df_set_sub.columns.get_indexer(['name'])] = data_set.replace('_raw', '_sub')
+            protons_fits_div_sub.append(df_set_sub)
+        protons_fits_div_sub = pd.concat(protons_fits_div_sub, ignore_index=True)
         protons_fits.append(protons_fits_div_sub)
 
         protons_fits_div_div = stat_vs_protons(df, stat_plot, div, cent_plt, energies_fit, ['divide'],
@@ -1740,23 +1745,33 @@ def plot_efficiency_closure_tests():
     for data_set in all_sets:
         data_sets = [data_set + x for x in ['_raw', '_mix', '_div', '_sub']]
         colors = dict(zip(data_sets, ['blue', 'green', 'red', 'purple']))
-        # labels = dict(zip(data_sets, [data_sets_labels[data_set] + x for x in [' Raw', ' Mix', ' Div', ' Sub']]))
         labels = dict(zip(data_sets, [data_set + x for x in [' Raw', ' Mix', ' Div', ' Sub']]))
         plot_protons_fits_divs(protons_fits, data_sets, data_sets_colors=colors, fit=False, data_sets_labels=labels,
-                               plt_energies=False)
+                               plt_energies=False, title=data_set)
 
-    data_sets = ['flow_eff_res15_v207_raw', 'flow_eff_res15_v207_div', 'flow_res15_v207_raw']
-    colors = dict(zip(data_sets, ['blue', 'red', 'orange']))
-    labels = dict(zip(data_sets, ['Flow + Efficiency Raw', 'Flow + Efficiency Raw/Mix', 'Flow Raw']))
+    data_sets = ['flow_eff_res15_v207_raw', 'flow_eff_res15_v207_div', 'flow_eff_res15_v207_sub', 'flow_res15_v207_raw']
+    colors = dict(zip(data_sets, ['blue', 'red', 'purple', 'orange']))
+    labels = dict(zip(data_sets, ['Flow + Efficiency Raw', 'Flow + Efficiency Raw/Mix', 'Flow + Efficiency Raw-Mix',
+                                  'Flow Raw']))
     plot_protons_fits_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
-                           plt_energies=False)
+                           plt_energies=False, alpha=0.8, title='Flow v2=0.07 Efficiency Correction')
 
-    data_sets = ['simpleclust_eff_raw', 'simplecust_eff_div', 'simpleclust_raw']
-    colors = dict(zip(data_sets, ['blue', 'red', 'orange']))
+    data_sets = ['simpleclust_eff_raw', 'simpleclust_eff_div', 'simpleclust_eff_sub', 'simpleclust_raw']
+    colors = dict(zip(data_sets, ['blue', 'red', 'purple', 'orange']))
     labels = dict(zip(data_sets, ['Simple Clustering + Efficiency Raw', 'Simple Clustering + Efficiency Raw/Mix',
-                                  'Simple Clustering Raw']))
+                                  'Simple Clustering + Efficiency Raw-Mix', 'Simple Clustering Raw']))
     plot_protons_fits_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
-                           plt_energies=False)
+                           plt_energies=False, alpha=0.8, title='Simple Clustering (s05, a2) Efficiency Correction')
+
+    for s, a in [('1', '01'), ('08', '01'), ('05', '01'), ('01', '01')]:
+        data_sets = [f'anticlflow_eff_s{s}_a{a}_raw', f'anticlflow_eff_s{s}_a{a}_div', f'anticlflow_eff_s{s}_a{a}_sub',
+                     f'anticlmulti_s{s}_a{a}_raw']
+        colors = dict(zip(data_sets, ['blue', 'red', 'purple', 'orange']))
+        labels = dict(zip(data_sets, ['Anti-Clustering + Efficiency Raw', 'Anti-Clustering + Efficiency Raw/Mix',
+                                      'Anti-Clustering + Efficiency Raw-Mix', 'Anti-Clustering Raw']))
+        plot_protons_fits_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
+                               plt_energies=False, alpha=0.8,
+                               title=f'Anti-Clustering (s{s}, a{a}) Efficiency Correction')
 
     plt.show()
 
