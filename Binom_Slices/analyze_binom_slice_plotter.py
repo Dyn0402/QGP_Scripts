@@ -154,64 +154,62 @@ def plot_star_model_var():
 
     df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
 
-    df_raw = df[df['data_type'] == 'raw']
-    p = df_raw['divs'] / 360
-    df_raw.loc[:, 'val'] = df_raw['val'] / (df_raw['total_protons'] * p * (1 - p))
-    df_raw.loc[:, 'err'] = df_raw['err'] / (df_raw['total_protons'] * p * (1 - p))
-    df_mix = df[df['data_type'] == 'mix']
-    p = df_mix['divs'] / 360
-    df_mix.loc[:, 'val'] = df_mix['val'] / (df_mix['total_protons'] * p * (1 - p))
-    df_mix.loc[:, 'err'] = df_mix['err'] / (df_mix['total_protons'] * p * (1 - p))
-    print(df)
-    print(df_raw)
+    # df = df[df['name'].str.contains('bes')]
 
-    stat_vs_protons(df_raw, stat_plot, div_plt, cent_plt, [39], data_types_plt, all_sets_plt, plot=True, fit=False,
-                    data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels,
-                    y_ranges={'k2': [0.88, 1.09]})
-    stat_vs_protons_energies(df_raw, stat_plot, [120], cent_plt, [7, 11, 19, 27, 39, 62], data_types_plt, all_sets_plt,
-                             plot=True, fit=True, plot_fit=True, data_sets_colors=data_sets_colors,
-                             data_sets_labels=data_sets_labels)
-    # plt.show()
-    # return
+    df_raw = df[(df['data_type'] == 'raw') & (df['stat'] == stat_plot)]
+    p, tp = df_raw['divs'] / 360, df_raw['total_protons']
+    df_raw.loc[:, 'val'] = (df_raw['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
+    df_raw.loc[:, 'err'] = df_raw['err'] / (tp * (tp - 1))
+    df_mix = df[(df['data_type'] == 'mix') & (df['stat'] == stat_plot)]
+    p, tp = df_mix['divs'] / 360, df_mix['total_protons']
+    df_mix.loc[:, 'val'] = (df_mix['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
+    df_mix.loc[:, 'err'] = df_mix['err'] / (tp * (tp - 1))
+
+    stat_binom_vs_protons(df, stat_plot, div_plt, cent_plt, 39, ['raw', 'mix'], 'bes_resample_def')
+
+    dvar_vs_protons(df_raw, div_plt, cent_plt, [39], ['raw'], all_sets_plt, plot=True, avg=True,
+                    data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
+    dvar_vs_protons(df_mix, div_plt, cent_plt, [39], ['mix'], all_sets_plt, plot=True, avg=True,
+                    data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
+    df_sub = subtract_avgs(df_raw.drop(columns=['data_type']), df_mix.drop(columns=['data_type']),
+                           val_col='val', err_col='err')
+    df_sub['data_type'] = 'sub'
+    dvar_vs_protons(df_sub, div_plt, cent_plt, [39], ['sub'], all_sets_plt, plot=True, avg=True,
+                    data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
+    dvar_vs_protons(pd.concat([df_raw, df_mix, df_sub], ignore_index=True), div_plt, cent_plt, [39],
+                    ['raw', 'mix', 'sub'], all_sets_plt, plot=True, avg=True,
+                    data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
+
+    dvar_vs_protons_energies(df_sub, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['sub'], all_sets_plt,
+                             plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
+                             data_sets_labels=data_sets_labels, y_ranges=[-0.0014, 0.0011])
 
     protons_fits = []
     for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
         print(f'Div {div}')
-        protons_fits_div_raw = stat_vs_protons(df_raw, stat_plot, div, cent_plt, energies_fit, ['raw'],
-                                               all_sets_plt, plot=False, fit=True)
+        protons_fits_div_raw = dvar_vs_protons(df_raw, div, cent_plt, energies_fit, ['raw'], all_sets_plt, plot=False,
+                                               avg=True)
         protons_fits_div_raw.loc[:, 'name'] = protons_fits_div_raw['name'] + '_raw'
         protons_fits.append(protons_fits_div_raw)
 
-        protons_fits_div_mix = stat_vs_protons(df_mix, stat_plot, div, cent_plt, energies_fit, ['mix'],
-                                               all_sets_plt, plot=False, fit=True)
+        protons_fits_div_mix = dvar_vs_protons(df_mix, div, cent_plt, energies_fit, ['mix'], all_sets_plt, plot=False,
+                                               avg=True)
         protons_fits_div_mix.loc[:, 'name'] = protons_fits_div_mix['name'] + '_mix'
         protons_fits.append(protons_fits_div_mix)
 
-        # raw_meas = np.array([Measure(row['val'], row['err']) for i, row in protons_fits_div_raw.iterrows()])
-        # mix_meas = np.array([Measure(row['val'], row['err']) for i, row in protons_fits_div_mix.iterrows()])
-        sub_meas = protons_fits_div_raw['slope_meas'] - protons_fits_div_mix['slope_meas']
-        # print(sub_meas, '\n\n')
-        protons_fits_div_sub = protons_fits_div_raw.copy()
-        protons_fits_div_sub.loc[:, 'slope'] = [x.val for x in sub_meas]
-        protons_fits_div_sub.loc[:, 'slope_err'] = [x.err for x in sub_meas]
-        protons_fits_div_sub.loc[:, 'slope_meas'] = sub_meas
-        protons_fits_div_sub.loc[:, 'name'] = protons_fits_div_mix['name'] + '_sub'
-        # print(protons_fits_div_sub)
+        protons_fits_div_sub = dvar_vs_protons(df_sub, div, cent_plt, energies_fit, ['sub'], all_sets_plt, plot=False,
+                                               avg=True)
+        protons_fits.append(protons_fits_div_sub.copy())
+        protons_fits_div_sub.loc[:, 'name'] = protons_fits_div_sub['name'] + '_sub'
         protons_fits.append(protons_fits_div_sub)
-
-        protons_fits_div_div = stat_vs_protons(df, stat_plot, div, cent_plt, energies_fit, ['divide'],
-                                               all_sets_plt, plot=False, fit=True)
-        protons_fits_div_div.loc[:, 'name'] = protons_fits_div_div['name'] + '_div'
-        protons_fits.append(protons_fits_div_div)
     protons_fits = pd.concat(protons_fits, ignore_index=True)
     for data_set in data_sets_plt:
-        data_sets = [data_set + x for x in ['_raw', '_mix', '_div', '_sub']]
-        # pd.set_option('display.max_columns', None)
-        # pd.set_option('display.max_rows', None)
-        # print(protons_fits[protons_fits['name'].str.contains(data_set)])
-        colors = dict(zip(data_sets, ['blue', 'green', 'red', 'purple']))
-        labels = dict(zip(data_sets, [data_sets_labels[data_set] + x for x in [' Raw', ' Mix', ' Div', ' Sub']]))
-        plot_protons_fits_divs(protons_fits, data_sets, data_sets_colors=colors, fit=False, data_sets_labels=labels)
+        data_sets = [data_set + x for x in ['_raw', '_mix', '_sub']]
+        colors = dict(zip(data_sets, ['blue', 'green', 'red']))
+        labels = dict(zip(data_sets, [data_sets_labels[data_set] + x for x in [' Raw', ' Mix', ' Sub']]))
+        plot_dvar_avgs_divs(protons_fits, data_sets, data_sets_colors=colors, fit=False, data_sets_labels=labels)
+    plot_dvar_avgs_divs(protons_fits, data_sets_plt, data_sets_colors=data_sets_colors, fit=False,
+                        data_sets_labels=data_sets_labels)
     # if df_tproton_fits_name:
     #     protons_fits.to_csv(f'{base_path}{fits_out_base}{df_tproton_fits_name}', index=False)
     # print(protons_fits)
@@ -1678,7 +1676,6 @@ def plot_efficiency_closure_tests():
     exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
     cent_plt = 8
     energies_fit = [62]
-    data_types_plt = ['raw']
     samples = 72  # For title purposes only
 
     df = pd.read_csv(df_path)
@@ -1691,87 +1688,79 @@ def plot_efficiency_closure_tests():
 
     df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
 
-    df_raw = df[df['data_type'] == 'raw']
-    p = df_raw['divs'] / 360
-    df_raw.loc[:, 'val'] = df_raw['val'] / (df_raw['total_protons'] * p * (1 - p))
-    df_raw.loc[:, 'err'] = df_raw['err'] / (df_raw['total_protons'] * p * (1 - p))
-    df_mix = df[df['data_type'] == 'mix']
-    p = df_mix['divs'] / 360
-    df_mix.loc[:, 'val'] = df_mix['val'] / (df_mix['total_protons'] * p * (1 - p))
-    df_mix.loc[:, 'err'] = df_mix['err'] / (df_mix['total_protons'] * p * (1 - p))
+    df_raw = df[(df['data_type'] == 'raw') & (df['stat'] == stat_plot)]
+    p, tp = df_raw['divs'] / 360, df_raw['total_protons']
+    df_raw.loc[:, 'val'] = (df_raw['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
+    df_raw.loc[:, 'err'] = df_raw['err'] / (tp * (tp - 1))
+    df_mix = df[(df['data_type'] == 'mix') & (df['stat'] == stat_plot)]
+    p, tp = df_mix['divs'] / 360, df_mix['total_protons']
+    df_mix.loc[:, 'val'] = (df_mix['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
+    df_mix.loc[:, 'err'] = df_mix['err'] / (tp * (tp - 1))
 
-    stat_vs_protons(df_raw, stat_plot, div_plt, cent_plt, [62], ['raw'], all_sets, plot=True, fit=True,
-                    y_ranges={'k2': [0.5, 3]})
-    stat_vs_protons(df_mix, stat_plot, div_plt, cent_plt, [62], ['mix'], all_sets, plot=True, fit=True,
-                    y_ranges={'k2': [0.5, 3]})
-    stat_vs_protons(df, stat_plot, div_plt, cent_plt, [62], ['divide'], all_sets, plot=True, fit=True,
-                    y_ranges={'k2': [0.5, 3]})
-    stat_vs_protons(df, 'standard deviation', div_plt, cent_plt, [62], ['divide'], all_sets, plot=True, fit=True,
-                    y_ranges={'standard deviation': [0.5, 1.09]})
+    dvar_vs_protons(df_raw, div_plt, cent_plt, [62], ['raw'], all_sets, plot=True, avg=True)
+    dvar_vs_protons(df_mix, div_plt, cent_plt, [62], ['mix'], all_sets, plot=True, avg=True)
+    df_sub = subtract_avgs(df_raw.drop(columns=['data_type']), df_mix.drop(columns=['data_type']),
+                           val_col='val', err_col='err')
+    df_sub['data_type'] = 'sub'
+    dvar_vs_protons(df_sub, div_plt, cent_plt, [62], ['sub'], all_sets, plot=True, avg=True)
+    dvar_vs_protons(pd.concat([df_raw, df_mix, df_sub], ignore_index=True), div_plt, cent_plt, [62],
+                    ['raw', 'mix', 'sub'], all_sets, plot=True, avg=True)
 
     protons_fits = []
     for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
         print(f'Div {div}')
-        protons_fits_div_raw = stat_vs_protons(df_raw, stat_plot, div, cent_plt, energies_fit, ['raw'],
-                                               all_sets, plot=False, fit=True)
+        protons_fits_div_raw = dvar_vs_protons(df_raw, div, cent_plt, energies_fit, ['raw'], all_sets, plot=False,
+                                               avg=True)
         protons_fits_div_raw.loc[:, 'name'] = protons_fits_div_raw['name'] + '_raw'
         protons_fits.append(protons_fits_div_raw)
 
-        protons_fits_div_mix = stat_vs_protons(df_mix, stat_plot, div, cent_plt, energies_fit, ['mix'],
-                                               all_sets, plot=False, fit=True)
+        protons_fits_div_mix = dvar_vs_protons(df_mix, div, cent_plt, energies_fit, ['mix'], all_sets, plot=False,
+                                               avg=True)
         protons_fits_div_mix.loc[:, 'name'] = protons_fits_div_mix['name'] + '_mix'
         protons_fits.append(protons_fits_div_mix)
 
-        protons_fits_div_sub = []
-        for data_set in pd.unique(protons_fits_div_raw['name']):
-            df_set_raw = protons_fits_div_raw[protons_fits_div_raw['name'] == data_set]
-            df_set_mix = protons_fits_div_mix[protons_fits_div_mix['name'] == data_set.replace('_raw', '_mix')]
-            sub_meas = df_set_raw['slope_meas'].iloc[0] - df_set_mix['slope_meas'].iloc[0]
-            df_set_sub = df_set_raw.copy()
-            df_set_sub.iloc[0, df_set_sub.columns.get_indexer(['slope'])] = sub_meas.val
-            df_set_sub.iloc[0, df_set_sub.columns.get_indexer(['slope_err'])] = sub_meas.err
-            df_set_sub.iloc[0, df_set_sub.columns.get_indexer(['slope_meas'])] = sub_meas
-            df_set_sub.iloc[0, df_set_sub.columns.get_indexer(['name'])] = data_set.replace('_raw', '_sub')
-            protons_fits_div_sub.append(df_set_sub)
-        protons_fits_div_sub = pd.concat(protons_fits_div_sub, ignore_index=True)
+        protons_fits_div_sub = dvar_vs_protons(df_sub, div, cent_plt, energies_fit, ['sub'], all_sets, plot=False,
+                                               avg=True)
+        protons_fits.append(protons_fits_div_sub.copy())
+        protons_fits_div_sub.loc[:, 'name'] = protons_fits_div_sub['name'] + '_sub'
         protons_fits.append(protons_fits_div_sub)
-
-        protons_fits_div_div = stat_vs_protons(df, stat_plot, div, cent_plt, energies_fit, ['divide'],
-                                               all_sets, plot=False, fit=True)
-        protons_fits_div_div.loc[:, 'name'] = protons_fits_div_div['name'] + '_div'
-        protons_fits.append(protons_fits_div_div)
     protons_fits = pd.concat(protons_fits, ignore_index=True)
 
     for data_set in all_sets:
-        data_sets = [data_set + x for x in ['_raw', '_mix', '_div', '_sub']]
-        colors = dict(zip(data_sets, ['blue', 'green', 'red', 'purple']))
-        labels = dict(zip(data_sets, [data_set + x for x in [' Raw', ' Mix', ' Div', ' Sub']]))
-        plot_protons_fits_divs(protons_fits, data_sets, data_sets_colors=colors, fit=False, data_sets_labels=labels,
-                               plt_energies=False, title=data_set)
+        data_sets = [data_set + x for x in ['_raw', '_mix', '_sub']]
+        colors = dict(zip(data_sets, ['blue', 'green', 'red']))
+        labels = dict(zip(data_sets, [data_set + x for x in [' Raw', ' Mix', ' Sub']]))
+        plot_dvar_avgs_divs(protons_fits, data_sets, data_sets_colors=colors, fit=False, data_sets_labels=labels,
+                            plt_energies=False, title=data_set)
 
-    data_sets = ['flow_eff_res15_v207_raw', 'flow_eff_res15_v207_div', 'flow_eff_res15_v207_sub', 'flow_res15_v207_raw']
-    colors = dict(zip(data_sets, ['blue', 'red', 'purple', 'orange']))
-    labels = dict(zip(data_sets, ['Flow + Efficiency Raw', 'Flow + Efficiency Raw/Mix', 'Flow + Efficiency Raw-Mix',
-                                  'Flow Raw']))
-    plot_protons_fits_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
-                           plt_energies=False, alpha=0.8, title='Flow v2=0.07 Efficiency Correction')
+    data_sets = ['flow_eff_res15_v207_raw', 'flow_eff_res15_v207_sub', 'flow_res15_v207_raw']
+    colors = dict(zip(data_sets, ['blue', 'red', 'orange']))
+    labels = dict(zip(data_sets, ['Flow + Efficiency Raw', 'Flow + Efficiency Raw-Mix', 'Flow Raw']))
+    plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
+                        plt_energies=False, alpha=0.6, title='Flow v2=0.07 Efficiency Correction')
 
-    data_sets = ['simpleclust_eff_raw', 'simpleclust_eff_div', 'simpleclust_eff_sub', 'simpleclust_raw']
-    colors = dict(zip(data_sets, ['blue', 'red', 'purple', 'orange']))
-    labels = dict(zip(data_sets, ['Simple Clustering + Efficiency Raw', 'Simple Clustering + Efficiency Raw/Mix',
-                                  'Simple Clustering + Efficiency Raw-Mix', 'Simple Clustering Raw']))
-    plot_protons_fits_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
-                           plt_energies=False, alpha=0.8, title='Simple Clustering (s05, a2) Efficiency Correction')
+    data_sets = ['simpleclust_eff_raw', 'simpleclust_eff_sub', 'simpleclust_raw']
+    colors = dict(zip(data_sets, ['blue', 'red', 'orange']))
+    labels = dict(zip(data_sets, ['Simple Clustering + Efficiency Raw', 'Simple Clustering + Efficiency Raw-Mix',
+                                  'Simple Clustering Raw']))
+    plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
+                        plt_energies=False, alpha=0.6, title='Simple Clustering (s05, a2) Efficiency Correction')
 
     for s, a in [('1', '01'), ('08', '01'), ('05', '01'), ('01', '01')]:
-        data_sets = [f'anticlflow_eff_s{s}_a{a}_raw', f'anticlflow_eff_s{s}_a{a}_div', f'anticlflow_eff_s{s}_a{a}_sub',
-                     f'anticlmulti_s{s}_a{a}_raw']
-        colors = dict(zip(data_sets, ['blue', 'red', 'purple', 'orange']))
-        labels = dict(zip(data_sets, ['Anti-Clustering + Efficiency Raw', 'Anti-Clustering + Efficiency Raw/Mix',
-                                      'Anti-Clustering + Efficiency Raw-Mix', 'Anti-Clustering Raw']))
-        plot_protons_fits_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
-                               plt_energies=False, alpha=0.8,
-                               title=f'Anti-Clustering (s{s}, a{a}) Efficiency Correction')
+        data_sets = [f'anticlflow_eff_s{s}_a{a}_raw', f'anticlflow_eff_s{s}_a{a}_sub', f'anticlmulti_s{s}_a{a}_raw']
+        colors = dict(zip(data_sets, ['blue', 'red', 'orange']))
+        labels = dict(zip(data_sets, ['Anti-Clustering + Efficiency Raw', 'Anti-Clustering + Efficiency Raw-Mix',
+                                      'Anti-Clustering Raw']))
+        plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
+                            plt_energies=False, alpha=0.6,
+                            title=f'Anti-Clustering (s{s}, a{a}) Efficiency Correction')
+
+    # data_sets = ['anticlflow_eff_s1_a01_v207_raw', 'anticlflow_eff_s1_a01_v207_sub', '']
+    # colors = dict(zip(data_sets, ['blue', 'red', 'orange']))
+    # labels = dict(zip(data_sets, ['Anti-Clustering + Flow + Efficiency Raw',
+    #                               'Anti-Clustering + Flow + Efficiency Raw-Mix', 'Anti-Clustering + Flow Raw']))
+    # plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
+    #                     plt_energies=False, alpha=0.6, title='Flow v2=0.07 Efficiency Correction')
 
     plt.show()
 
