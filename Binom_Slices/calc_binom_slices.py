@@ -52,8 +52,10 @@ def init_pars():
         #             'binom_slice_var_cent8_2source_closure_tests.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_var_cent8_efficiency_closure.csv',
+        # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+        #             'binom_slice_var_cent8_v2_anticl_closure.csv',
         'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
-                    'binom_slice_var_cent8_v2_anticl_closure.csv',
+                    'binom_slice_var_cent8_v2_anticlindep_closure.csv',
         # 'csv_path': 'D:/Transfer/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim_new.csv',
         # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
         'csv_append': False,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
@@ -155,8 +157,8 @@ def define_datasets(base_path):
         # ['simpleclust_eff', '_Sim_2source_Tests',
         #  ['simpleclust', 'Eff', 'resample'], [], ['anticlflow'], [0], [62], [8], all_divs],
 
-        ['anticlflow_eff_s1_a01', '_Sim_2source_Tests', ['resample', 'anticlflow', 'Eff', 'spread1', 'amp01', 'v20'],
-         [], [], [0], [62], [8], all_divs],
+        # ['anticlflow_eff_s1_a01', '_Sim_2source_Tests', ['resample', 'anticlflow', 'Eff', 'spread1', 'amp01', 'v20'],
+        #  [], [], [0], [62], [8], all_divs],
         # ['anticlflow_eff_s08_a01', '_Sim_2source_Tests', ['resample', 'anticlflow', 'Eff', 'spread08', 'amp01', 'v20'],
         #  [], [], [0], [62], [8], all_divs],
         # ['anticlflow_eff_s05_a01', '_Sim_2source_Tests', ['resample', 'anticlflow', 'Eff', 'spread05', 'amp01', 'v20'],
@@ -164,26 +166,47 @@ def define_datasets(base_path):
         # ['anticlflow_eff_s01_a01', '_Sim_2source_Tests', ['resample', 'anticlflow', 'Eff', 'spread01', 'amp01', 'v20'],
         #  [], [], [0], [62], [8], all_divs],
 
-        ['anticlmulti_s1_a01', '_Sim_2source_Tests', ['resample', 'anticlmulti', 'spread1', 'amp01'],
-         [], ['Eff'], [0], [62], [8], all_divs],
-        ['anticlmulti_s08_a01', '_Sim_2source_Tests', ['resample', 'anticlmulti', 'spread08', 'amp01'],
-         [], ['Eff'], [0], [62], [8], all_divs],
-        ['anticlmulti_s05_a01', '_Sim_2source_Tests', ['resample', 'anticlmulti', 'spread05', 'amp01'],
-         [], ['Eff'], [0], [62], [8], all_divs],
-        ['anticlmulti_s01_a01', '_Sim_2source_Tests', ['resample', 'anticlmulti', 'spread01', 'amp01'],
-         [], ['Eff'], [0], [62], [8], all_divs],
+        # ['anticlmulti_s1_a01', '_Sim_2source_Tests', ['resample', 'anticlmulti', 'spread1', 'amp01'],
+        #  [], ['Eff'], [0], [62], [8], all_divs],
+        # ['anticlmulti_s08_a01', '_Sim_2source_Tests', ['resample', 'anticlmulti', 'spread08', 'amp01'],
+        #  [], ['Eff'], [0], [62], [8], all_divs],
+        # ['anticlmulti_s05_a01', '_Sim_2source_Tests', ['resample', 'anticlmulti', 'spread05', 'amp01'],
+        #  [], ['Eff'], [0], [62], [8], all_divs],
+        # ['anticlmulti_s01_a01', '_Sim_2source_Tests', ['resample', 'anticlmulti', 'spread01', 'amp01'],
+        #  [], ['Eff'], [0], [62], [8], all_divs],
+        #
+        # ['anticlflow_s1_a01_v207', '_Sim_2source_Tests', ['resample', 'anticlflow', 'spread1', 'amp01'],
+        #  [], ['Eff'], [0], [62], [8], all_divs],
+        # ['anticlflow_s08_a01_v207', '_Sim_2source_Tests', ['resample', 'anticlflow', 'spread08', 'amp01'],
+        #  [], ['Eff'], [0], [62], [8], all_divs],
+        # ['anticlflow_s05_a01_v207', '_Sim_2source_Tests', ['resample', 'anticlflow', 'spread05', 'amp01'],
+        #  [], ['Eff'], [0], [62], [8], all_divs],
+        # ['anticlflow_s01_a01_v207', '_Sim_2source_Tests', ['resample', 'anticlflow', 'spread01', 'amp01'],
+        #  [], ['Eff'], [0], [62], [8], all_divs],
+        #
+        # ['anticlflow_eff_s1_a01_v207', '_Sim_2source_Tests', ['resample', 'anticlflow', 'spread1', 'amp01', 'Eff'],
+        #  [], [], [0], [62], [8], all_divs],
 
-        ['anticlflow_s1_a01_v207', '_Sim_2source_Tests', ['resample', 'anticlflow', 'spread1', 'amp01'],
-         [], ['Eff'], [0], [62], [8], all_divs],
-        ['anticlflow_s08_a01_v207', '_Sim_2source_Tests', ['resample', 'anticlflow', 'spread08', 'amp01'],
-         [], ['Eff'], [0], [62], [8], all_divs],
-        ['anticlflow_s05_a01_v207', '_Sim_2source_Tests', ['resample', 'anticlflow', 'spread05', 'amp01'],
-         [], ['Eff'], [0], [62], [8], all_divs],
-        ['anticlflow_s01_a01_v207', '_Sim_2source_Tests', ['resample', 'anticlflow', 'spread01', 'amp01'],
-         [], ['Eff'], [0], [62], [8], all_divs],
+        ['anticlflowindep_eff_s1_a01', '_Sim_2source_Tests',
+         ['resample', 'anticlflowindep', 'Eff', 'spread1', 'amp01', 'v20'], [], [], [0], [62], [8], all_divs],
+        ['anticlflowindep_eff_s08_a01', '_Sim_2source_Tests',
+         ['resample', 'anticlflowindep', 'Eff', 'spread08', 'amp01', 'v20'], [], [], [0], [62], [8], all_divs],
+        ['anticlflowindep_eff_s05_a01', '_Sim_2source_Tests',
+         ['resample', 'anticlflowindep', 'Eff', 'spread05', 'amp01', 'v20'], [], [], [0], [62], [8], all_divs],
+        ['anticlflowindep_eff_s01_a01', '_Sim_2source_Tests',
+         ['resample', 'anticlflowindep', 'Eff', 'spread01', 'amp01', 'v20'], [], [], [0], [62], [8], all_divs],
 
-        ['anticlflow_eff_s1_a01_v207', '_Sim_2source_Tests', ['resample', 'anticlflow', 'spread1', 'amp01', 'Eff'],
-         [], [], [0], [62], [8], all_divs],
+        ['anticlflowindep_eff_s05_a01_v207', '_Sim_2source_Tests',
+         ['resample', 'anticlflowindep', 'Eff', 'spread05', 'amp01', 'v207'], [], [], [0], [62], [8], all_divs],
+
+        ['anticlflowindep_s1_a01_v207', '_Sim_2source_Tests',
+         ['resample', 'anticlflowindep', 'spread1', 'amp01', 'v207'], [], ['Eff'], [0], [62], [8], all_divs],
+        ['anticlflowindep_s08_a01_v207', '_Sim_2source_Tests',
+         ['resample', 'anticlflowindep', 'spread08', 'amp01', 'v207'], [], ['Eff'], [0], [62], [8], all_divs],
+        ['anticlflowindep_s05_a01_v207', '_Sim_2source_Tests',
+         ['resample', 'anticlflowindep', 'spread05', 'amp01', 'v207'], [], ['Eff'], [0], [62], [8], all_divs],
+        ['anticlflowindep_s01_a01_v207', '_Sim_2source_Tests',
+         ['resample', 'anticlflowindep', 'spread01', 'amp01', 'v207'], [], ['Eff'], [0], [62], [8], all_divs],
     ]
 
     # reses = ['1', '15', '2', '3', '4', '5', '6', '75', '9', '99']
