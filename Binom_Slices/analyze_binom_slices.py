@@ -340,8 +340,12 @@ def x2(x, a):
     return a * x ** 2
 
 
-def v2_divs(w, v2):
+def v2_divs_binom_norm(w, v2):
     return v2 ** 2 * np.sin(w) ** 2 / (np.pi * w * (1 - w / (2 * np.pi)))
+
+
+def v2_divs(w, v2):
+    return v2 ** 2 * np.sin(w) ** 2 / (2 * np.pi**2)
 
 
 def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False, fit=False,
@@ -1367,6 +1371,56 @@ def plot_protons_fits_divs_flow(df, data_sets_plt, data_sets_colors=None):
 
     ax.set_title('V2 vs Partition Width')
     ax.set_ylabel('Slope of Raw/Mix SD vs Total Protons per Event')
+    ax.set_xlabel('Azimuthal Partition Width')
+    ax.legend()
+
+    fig.canvas.manager.set_window_title('V2 vs Partition Width')
+    fig.tight_layout()
+
+    return pd.DataFrame(fit_pars)
+
+
+def plot_dsigma_fits_divs_flow(df, data_sets_plt, data_sets_colors=None):
+    fig, ax = plt.subplots(dpi=144)
+    colors = iter(plt.cm.rainbow(np.linspace(0, 1, len(data_sets_plt))))
+    ax.axhline(0, color='black')
+    x_divs = np.linspace(0, 360, 1000)
+    fit_pars = []
+    for data_set in data_sets_plt:
+        df_set = df[df['name'] == data_set]
+        df_set.sort_values(by='divs')
+        if data_sets_colors is None:
+            color = next(colors)
+        else:
+            color = data_sets_colors[data_set]
+        v2 = 0
+        for element in data_set.split('_'):
+            if 'v2' in element:
+                v2 = float('0.' + element.strip('v2'))
+                break
+        print(data_set, v2)
+        if 'anticlflow_' in data_set:
+            # v2 = float('0.' + data_set.split('_')[-3][2:])
+            lab = f'anticl + v2={v2:.2f}'
+        elif 'flow_' in data_set and abs(v2) > 0:
+            # v2 = float('0.' + data_set.split('_')[-1][2:])
+            lab = f'v2={v2:.2f}'
+            ax.plot(x_divs, v2_divs(x_divs / 180 * np.pi, v2), color=color)
+        else:
+            lab = data_set
+
+        ax.errorbar(df_set['divs'], df_set['avg'], yerr=df_set['avg_err'], ls='none',
+                    marker='o', label=lab, color=color)
+
+        if 'anticlflow_' in data_set:
+            divs = np.array(df_set['divs'])
+            avgs = np.array(df_set['avg'])
+            y_sub = avgs - v2_divs(divs / 180 * np.pi, v2)
+            ax.errorbar(divs, y_sub, yerr=df_set['avg_err'], ls='none',
+                        marker='x', label=f'{lab} - v2(div)', color=color)
+
+    ax.set_title('V2 vs Partition Width')
+    ax.set_ylabel(r'$\Delta\sigma^2$')
     ax.set_xlabel('Azimuthal Partition Width')
     ax.legend()
 

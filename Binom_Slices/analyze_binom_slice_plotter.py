@@ -23,7 +23,7 @@ def main():
     # get_sim_mapping()
     # get_sim_mapping_pm()
     # plot_star_model()
-    # plot_star_model_var()
+    plot_star_model_var()
     # plot_star_model_onediv()
     # plot_vs_cent()
     # plot_closest_sims()
@@ -37,8 +37,8 @@ def main():
     # plot_flow_vs2_closure()
     # plot_flow_v2_closure_raw()
     # plot_flow_eff_test()
-    # plot_anticl_flow_convolution()
-    plot_efficiency_closure_tests()
+    # plot_anticl_flow_closure_test()
+    # plot_efficiency_closure_tests()
     print('donzo')
 
 
@@ -118,6 +118,7 @@ def plot_star_model_var():
     # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
     # df_name = 'binom_slice_stats_cent8_no_sim.csv'
     df_name = 'binom_slice_stats_cent8_var.csv'
+    df_name = 'binom_slice_stats_ampt_diff_test.csv'
     fits_out_base = 'Base_Zero_Fits'
     df_tproton_fits_name = 'cf_tprotons_fits.csv'
     df_tproton_fits_name = None
@@ -138,7 +139,8 @@ def plot_star_model_var():
     # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple']))
     # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST', 'MUSIC+FIST EV $1fm^3$']))
 
-    data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def', 'cfev_resample_def']
+    # data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def', 'cfev_resample_def']
+    data_sets_plt = ['bes_resample_def', 'ampt_new_coal_epbins1', 'cfev_resample_def']
     data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'purple']))
     data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST EV $1fm^3$']))
 
@@ -164,8 +166,14 @@ def plot_star_model_var():
     p, tp = df_mix['divs'] / 360, df_mix['total_protons']
     df_mix.loc[:, 'val'] = (df_mix['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
     df_mix.loc[:, 'err'] = df_mix['err'] / (tp * (tp - 1))
+    df_diff = df[(df['data_type'] == 'diff') & (df['stat'] == stat_plot)]
+    p, tp = df_diff['divs'] / 360, df_diff['total_protons']
+    df_diff.loc[:, 'val'] = df_diff['val'] / (tp * (tp - 1))
+    df_diff.loc[:, 'err'] = df_diff['err'] / (tp * (tp - 1))
 
-    stat_binom_vs_protons(df, stat_plot, div_plt, cent_plt, 39, ['raw', 'mix'], 'bes_resample_def')
+    # stat_binom_vs_protons(df, stat_plot, div_plt, cent_plt, 39, ['raw', 'mix'], 'bes_resample_def')
+    stat_binom_vs_protons(df, stat_plot, div_plt, cent_plt, 39, ['raw', 'mix'], 'ampt_new_coal_epbins1')
+    # plt.show()
 
     dvar_vs_protons(df_raw, div_plt, cent_plt, [39], ['raw'], all_sets_plt, plot=True, avg=True,
                     data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
@@ -180,9 +188,31 @@ def plot_star_model_var():
                     ['raw', 'mix', 'sub'], all_sets_plt, plot=True, avg=True,
                     data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
 
+    dvar_vs_protons(pd.concat([df_diff, df_raw, df_mix, df_sub], ignore_index=True), div_plt, cent_plt, [39],
+                    ['raw', 'mix', 'sub', 'diff'], all_sets_plt, plot=True, avg=True,
+                    data_sets_labels=data_sets_labels)
+
     dvar_vs_protons_energies(df_sub, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['sub'], all_sets_plt,
                              plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
                              data_sets_labels=data_sets_labels, y_ranges=[-0.0014, 0.0011])
+
+    print(df_sub['val'])
+    print(df_diff['val'])
+    val_diff = np.array(df_diff['val']) - np.array(df_sub['val'])
+    err_diff = np.array(df_diff['err']) - np.array(df_sub['err'])
+    print(val_diff)
+    print(err_diff)
+    print(np.mean(val_diff))
+    print(np.mean(err_diff))
+    tp = np.array(df_diff['total_protons'])
+    fig, ax = plt.subplots()
+    ax.scatter(tp, val_diff)
+    ax.set_title('Value Difference')
+    fig, ax = plt.subplots()
+    ax.scatter(tp, err_diff)
+    ax.set_title('Error Difference')
+
+    plt.show()
 
     protons_fits = []
     for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
@@ -1555,7 +1585,7 @@ def plot_flow_eff_test():
     plt.show()
 
 
-def plot_anticl_flow_convolution():
+def plot_anticl_flow_closure_test():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
     base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
@@ -1563,6 +1593,7 @@ def plot_anticl_flow_convolution():
     # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
     df_name = 'binom_slice_flow_anticl_convo_test.csv'
     df_name = 'binom_slice_var_cent8_2source_closure_tests.csv'
+    df_name = 'binom_slice_var_cent8_v2_anticl_closure.csv'
     # save_fits = False
     # v2_fit_out_dir = 'F:/Research/Results/Flow_Correction/'
     # v2_fit_out_dir = None
@@ -1588,58 +1619,79 @@ def plot_anticl_flow_convolution():
     df = df.dropna()
 
     # Delete this block if I append v2 value to end of name in calc script
-    df_no_flow = df[df['name'].str.contains('anticlmulti')]
-    df_flow = df[df['name'].str.contains('anticlflow')]
-    df_flow.loc[:, 'name'] = df_flow['name'] + '_v207'
-    df = pd.concat([df_flow, df_no_flow], ignore_index=True)
+    # df_no_flow = df[df['name'].str.contains('anticlmulti')]
+    # df_flow = df[df['name'].str.contains('anticlflow')]
+    # df_flow.loc[:, 'name'] = df_flow['name'] + '_v207'
+    # df = pd.concat([df_flow, df_no_flow], ignore_index=True)
 
     all_sets = pd.unique(df['name'])
     print(all_sets)
 
     df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
 
-    df_raw = df[df['data_type'] == 'raw']
-    p = df_raw['divs'] / 360
-    df_raw.loc[:, 'val'] = df_raw['val'] / (df_raw['total_protons'] * p * (1 - p))
-    df_raw.loc[:, 'err'] = df_raw['err'] / (df_raw['total_protons'] * p * (1 - p))
+    df_raw = df[(df['data_type'] == 'raw') & (df['stat'] == stat_plot)]
+    p, tp = df_raw['divs'] / 360, df_raw['total_protons']
+    df_raw.loc[:, 'val'] = (df_raw['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
+    df_raw.loc[:, 'err'] = df_raw['err'] / (tp * (tp - 1))
+    df_mix = df[(df['data_type'] == 'mix') & (df['stat'] == stat_plot)]
+    p, tp = df_mix['divs'] / 360, df_mix['total_protons']
+    df_mix.loc[:, 'val'] = (df_mix['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
+    df_mix.loc[:, 'err'] = df_mix['err'] / (tp * (tp - 1))
 
-    stat_vs_protons(df_raw, stat_plot, div_plt, cent_plt, [62], ['raw'], all_sets, plot=True, fit=True,
-                    # data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels,
-                    y_ranges={'k2': [0.5, 1.09]})
+    dvar_vs_protons(df_raw, div_plt, cent_plt, [62], ['raw'], all_sets, plot=True, avg=True)
+    dvar_vs_protons(df_mix, div_plt, cent_plt, [62], ['mix'], all_sets, plot=True, avg=True)
+    df_sub = subtract_avgs(df_raw.drop(columns=['data_type']), df_mix.drop(columns=['data_type']),
+                           val_col='val', err_col='err')
+    df_sub['data_type'] = 'sub'
+    dvar_vs_protons(df_sub, div_plt, cent_plt, [62], ['sub'], all_sets, plot=True, avg=True)
+    dvar_vs_protons(pd.concat([df_raw, df_mix, df_sub], ignore_index=True), div_plt, cent_plt, [62],
+                    ['raw', 'mix', 'sub'], all_sets, plot=True, avg=True)
 
     protons_fits = []
     for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
         print(f'Div {div}')
-        protons_fits_div_raw = stat_vs_protons(df_raw, stat_plot, div, cent_plt, energies_fit, ['raw'],
-                                               all_sets, plot=False, fit=True)
+        protons_fits_div_raw = dvar_vs_protons(df_raw, div, cent_plt, energies_fit, ['raw'], all_sets, plot=False,
+                                               avg=True)
+        # protons_fits_div_raw.loc[:, 'name'] = protons_fits_div_raw['name'] + '_raw'
         protons_fits.append(protons_fits_div_raw)
+
+        # protons_fits_div_mix = dvar_vs_protons(df_mix, div, cent_plt, energies_fit, ['mix'], all_sets, plot=False,
+        #                                        avg=True)
+        # protons_fits_div_mix.loc[:, 'name'] = protons_fits_div_mix['name'] + '_mix'
+        # protons_fits.append(protons_fits_div_mix)
+        #
+        # protons_fits_div_sub = dvar_vs_protons(df_sub, div, cent_plt, energies_fit, ['sub'], all_sets, plot=False,
+        #                                        avg=True)
+        # protons_fits.append(protons_fits_div_sub.copy())
+        # protons_fits_div_sub.loc[:, 'name'] = protons_fits_div_sub['name'] + '_sub'
+        # protons_fits.append(protons_fits_div_sub)
     protons_fits = pd.concat(protons_fits, ignore_index=True)
 
     # plot_protons_fits_divs_flow(protons_fits, all_sets)
 
-    for flow_set in [set_name for set_name in all_sets if 'anticlflow' in set_name]:
-        no_flow_set = flow_set.replace('anticlflow', 'anticlmulti')[:-5]
+    for flow_set in [set_name for set_name in all_sets if 'anticlflow' in set_name and '_eff_' not in set_name]:
+        no_flow_set = flow_set[:flow_set.find('_v2')].replace('anticlflow', 'anticlmulti')
 
         print(pd.unique(protons_fits['name']))
         print(flow_set)
         anticl_plus_v2 = protons_fits[protons_fits['name'] == flow_set]
         fits = [anticl_plus_v2.copy(), protons_fits[protons_fits['name'] == no_flow_set]]
-        divs, slopes = np.array(anticl_plus_v2['divs']), np.array(anticl_plus_v2['slope_meas'])
-        print(divs, slopes)
+        divs, avgs = np.array(anticl_plus_v2['divs']), np.array(anticl_plus_v2['avg_meas'])
+        print(divs, avgs)
         fig, ax = plt.subplots()
         fig2, ax2 = plt.subplots()
         v2 = 0.07
         v2s, chi_2s = [], []
         x_divs = np.linspace(60, 300, 1000)
         for v2_i in np.linspace(0, v2 * 1.25, 50):
-            cor_slopes = slopes - v2_divs(divs * np.pi / 180, v2_i)
+            cor_avgs = avgs - v2_divs(divs * np.pi / 180, v2_i)
             # print(v2_divs(divs * np.pi / 180, v2_i))
             # print(cor_slopes)
-            cor_slope_vals, cor_slope_errs = [x.val for x in cor_slopes], [x.err for x in cor_slopes]
-            ax2.errorbar(divs, cor_slope_vals, yerr=cor_slope_errs, ls='none', alpha=0.4, marker='o')
-            popt, pcov = cf(quad_180, divs, cor_slope_vals, sigma=cor_slope_errs, absolute_sigma=True)
-            chi_2 = np.sum((cor_slope_vals - quad_180(divs, *popt)) ** 2 / cor_slope_errs)
-            ax.scatter(divs, cor_slope_vals)
+            cor_avg_vals, cor_avg_errs = [x.val for x in cor_avgs], [x.err for x in cor_avgs]
+            ax2.errorbar(divs, cor_avg_vals, yerr=cor_avg_errs, ls='none', alpha=0.4, marker='o')
+            popt, pcov = cf(quad_180, divs, cor_avg_vals, sigma=cor_avg_errs, absolute_sigma=True)
+            chi_2 = np.sum((cor_avg_vals - quad_180(divs, *popt)) ** 2 / cor_avg_errs)
+            ax.scatter(divs, cor_avg_vals)
             ax.plot(x_divs, quad_180(x_divs, *popt))
             v2s.append(v2_i)
             chi_2s.append(chi_2)
@@ -1651,12 +1703,12 @@ def plot_anticl_flow_convolution():
         anticl_plus_v2.loc[:, 'name'] = 'corrected_v2'
         # new_slope = anticl_plus_v2['slope'] - v2_divs(anticl_plus_v2['divs'] * np.pi / 180, v2s[0])
         # anticl_plus_v2 = anticl_plus_v2.assign(slope=new_slope)
-        anticl_plus_v2.loc[:, 'slope'] = anticl_plus_v2['slope'] - v2_divs(anticl_plus_v2['divs'] * np.pi / 180, v2s[0])
+        anticl_plus_v2.loc[:, 'avg'] = anticl_plus_v2['avg'] - v2_divs(anticl_plus_v2['divs'] * np.pi / 180, v2s[0])
         print(anticl_plus_v2)
         print(v2s[0], chi_2s[0])
         fits = pd.concat([*fits, anticl_plus_v2], ignore_index=True)
         # data_sets_colors.update({'corrected_v2': 'olive'})
-        plot_protons_fits_divs_flow(fits, [flow_set, no_flow_set] + ['corrected_v2'])
+        plot_dsigma_fits_divs_flow(fits, [flow_set, no_flow_set] + ['corrected_v2'])
 
     plt.show()
 
