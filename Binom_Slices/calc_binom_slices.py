@@ -54,24 +54,27 @@ def init_pars():
         #             'binom_slice_var_cent8_efficiency_closure.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_var_cent8_v2_anticl_closure.csv',
+        # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+        #             'binom_slice_var_cent8_v2_anticlindep_closure.csv',
         'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
-                    'binom_slice_var_cent8_v2_anticlindep_closure.csv',
+                    'binom_slice_stats_ampt_diff_test.csv',
         # 'csv_path': 'D:/Transfer/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim_new.csv',
         # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
         'csv_append': False,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': False,  # If True check csv_path and only run missing datasets, else run all datasets
-        'threads': 16,
+        'threads': 10,
         # 'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
-        'stats': define_stats(['standard deviation', 'k2', 'c2']),
+        'stats': define_stats(['k2']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
         'min_events': 100,  # Min number of total events per total_proton. Skip total_proton if fewer
         'min_bs': 100,  # Min number of bootstrap sets of total_proton. Skip if fewer
-        'div_bs': 0,  # Number of bootstrap divide values to get
+        'out_bs': 0,  # Number of bootstrap divide values to get
         'save_cent': True,  # Include centrality column in output dataframe
         'save_data_type': True,  # Include data_type column in output dataframe
         'save_stat': True,  # Include statistic column in output dataframe
         'save_set_num': False,  # Don't save set num if False. Currently not compatible with set nums!
         'systematics': False,  # If True run/save systematics. Currently not implemented!
+        'diff': True,  # If True get difference between raw and mixed raw-mix, otherwise get their division raw/mix
     }
 
     pars.update({'datasets': define_datasets(pars['base_path'])})
@@ -105,8 +108,8 @@ def define_datasets(base_path):
         #  all_energies, all_cents, all_divs],
         # ['ampt_new_coal_rp', '_Ampt_New_Coal', ['default', 'resample', 'rp', 'epbins1'],
         #  [], ['alg3'], [0], all_energies, all_cents, all_divs],
-        # ['ampt_new_coal_epbins1', '_Ampt_New_Coal', ['default', 'resample', 'epbins1'],
-        #  [], ['alg3', 'rp', 'noprerotate'], [0], all_energies, all_cents, all_divs],
+        ['ampt_new_coal_epbins1', '_Ampt_New_Coal', ['default', 'resample', 'epbins1'],
+         [], ['alg3', 'rp', 'noprerotate'], [0], all_energies, all_cents, all_divs],
         # ['ampt_new_coal_resample_eff1', '_Ampt_New_Coal', ['resample', 'eff1'], [], ['alg3'], [0],
         #  all_energies, all_cents, all_divs],
         # ['ampt_new_coal_resample_eff2', '_Ampt_New_Coal', ['resample', 'eff2'], [], ['alg3'], [0],
@@ -187,26 +190,26 @@ def define_datasets(base_path):
         # ['anticlflow_eff_s1_a01_v207', '_Sim_2source_Tests', ['resample', 'anticlflow', 'spread1', 'amp01', 'Eff'],
         #  [], [], [0], [62], [8], all_divs],
 
-        ['anticlflowindep_eff_s1_a01', '_Sim_2source_Tests',
-         ['resample', 'anticlflowindep', 'Eff', 'spread1', 'amp01', 'v20'], [], [], [0], [62], [8], all_divs],
-        ['anticlflowindep_eff_s08_a01', '_Sim_2source_Tests',
-         ['resample', 'anticlflowindep', 'Eff', 'spread08', 'amp01', 'v20'], [], [], [0], [62], [8], all_divs],
-        ['anticlflowindep_eff_s05_a01', '_Sim_2source_Tests',
-         ['resample', 'anticlflowindep', 'Eff', 'spread05', 'amp01', 'v20'], [], [], [0], [62], [8], all_divs],
-        ['anticlflowindep_eff_s01_a01', '_Sim_2source_Tests',
-         ['resample', 'anticlflowindep', 'Eff', 'spread01', 'amp01', 'v20'], [], [], [0], [62], [8], all_divs],
-
-        ['anticlflowindep_eff_s05_a01_v207', '_Sim_2source_Tests',
-         ['resample', 'anticlflowindep', 'Eff', 'spread05', 'amp01', 'v207'], [], [], [0], [62], [8], all_divs],
-
-        ['anticlflowindep_s1_a01_v207', '_Sim_2source_Tests',
-         ['resample', 'anticlflowindep', 'spread1', 'amp01', 'v207'], [], ['Eff'], [0], [62], [8], all_divs],
-        ['anticlflowindep_s08_a01_v207', '_Sim_2source_Tests',
-         ['resample', 'anticlflowindep', 'spread08', 'amp01', 'v207'], [], ['Eff'], [0], [62], [8], all_divs],
-        ['anticlflowindep_s05_a01_v207', '_Sim_2source_Tests',
-         ['resample', 'anticlflowindep', 'spread05', 'amp01', 'v207'], [], ['Eff'], [0], [62], [8], all_divs],
-        ['anticlflowindep_s01_a01_v207', '_Sim_2source_Tests',
-         ['resample', 'anticlflowindep', 'spread01', 'amp01', 'v207'], [], ['Eff'], [0], [62], [8], all_divs],
+        # ['anticlflowindep_eff_s1_a01', '_Sim_2source_Tests',
+        #  ['resample', 'anticlflowindep', 'Eff', 'spread1', 'amp01', 'v20'], [], [], [0], [62], [8], all_divs],
+        # ['anticlflowindep_eff_s08_a01', '_Sim_2source_Tests',
+        #  ['resample', 'anticlflowindep', 'Eff', 'spread08', 'amp01', 'v20'], [], [], [0], [62], [8], all_divs],
+        # ['anticlflowindep_eff_s05_a01', '_Sim_2source_Tests',
+        #  ['resample', 'anticlflowindep', 'Eff', 'spread05', 'amp01', 'v20'], [], [], [0], [62], [8], all_divs],
+        # ['anticlflowindep_eff_s01_a01', '_Sim_2source_Tests',
+        #  ['resample', 'anticlflowindep', 'Eff', 'spread01', 'amp01', 'v20'], [], [], [0], [62], [8], all_divs],
+        #
+        # ['anticlflowindep_eff_s05_a01_v207', '_Sim_2source_Tests',
+        #  ['resample', 'anticlflowindep', 'Eff', 'spread05', 'amp01', 'v207'], [], [], [0], [62], [8], all_divs],
+        #
+        # ['anticlflowindep_s1_a01_v207', '_Sim_2source_Tests',
+        #  ['resample', 'anticlflowindep', 'spread1', 'amp01', 'v207'], [], ['Eff'], [0], [62], [8], all_divs],
+        # ['anticlflowindep_s08_a01_v207', '_Sim_2source_Tests',
+        #  ['resample', 'anticlflowindep', 'spread08', 'amp01', 'v207'], [], ['Eff'], [0], [62], [8], all_divs],
+        # ['anticlflowindep_s05_a01_v207', '_Sim_2source_Tests',
+        #  ['resample', 'anticlflowindep', 'spread05', 'amp01', 'v207'], [], ['Eff'], [0], [62], [8], all_divs],
+        # ['anticlflowindep_s01_a01_v207', '_Sim_2source_Tests',
+        #  ['resample', 'anticlflowindep', 'spread01', 'amp01', 'v207'], [], ['Eff'], [0], [62], [8], all_divs],
     ]
 
     # reses = ['1', '15', '2', '3', '4', '5', '6', '75', '9', '99']
@@ -427,13 +430,12 @@ def get_dataset_jobs(dataset, pars):
             good = False
         if good:
             new_job = get_set_jobs(dataset, set_dir, {'raw': path + '/', 'mix': path + '_Mix/'}, pars)
-            # pars['stats'], pars['min_events'], pars['min_bs'], pars['div_bs'])
             dataset_jobs.extend(new_job)
 
     return dataset_jobs
 
 
-def get_set_jobs(dataset, set_dir, base_paths, pars):  # stats, min_events, min_bs, div_bs):
+def get_set_jobs(dataset, set_dir, base_paths, pars):
     subset_jobs = []
     for energy in dataset['energies']:
         for div in dataset['divs']:
@@ -463,14 +465,14 @@ def get_set_jobs(dataset, set_dir, base_paths, pars):  # stats, min_events, min_
                             other_columns.update({'amp': 0, 'spread': 0})
                         subset_jobs.append((f'{base_paths["raw"]}{path}', f'{base_paths["mix"]}{path}',
                                             f'{base_paths["raw"]}{info_path}', div, pars["stats"], other_columns,
-                                            pars["min_events"], pars["min_bs"], pars["div_bs"],
-                                            pars["save_data_type"], pars["save_stat"]))
+                                            pars["min_events"], pars["min_bs"], pars["out_bs"],
+                                            pars["save_data_type"], pars["save_stat"], pars["diff"]))
 
     return subset_jobs
 
 
-def read_subset(raw_path, mix_path, info_path, div, stats, other_columns, min_events, min_bs, div_bs,
-                save_data_type, save_stat):
+def read_subset(raw_path, mix_path, info_path, div, stats, other_columns, min_events, min_bs, out_bs,
+                save_data_type, save_stat, diff):
     """
     Read a single raw/mix file pair. Calculate stats with bootstrap or delta errors depending on bootstrap's existence.
     Calculate raw divided by mixed. Return as entries to convert to dataframe.
@@ -482,9 +484,10 @@ def read_subset(raw_path, mix_path, info_path, div, stats, other_columns, min_ev
     :param other_columns: Other columns characterizing this job, to be added to dataframe
     :param min_events: Minimum required events for total_proton dataset to be kept, otherwise don't process
     :param min_bs: Minimum required bootstrap sets for total_proton dataset to be kept
-    :param div_bs: If true get divide bootstraps
+    :param out_bs: If true get divide or difference bootstraps to output
     :param save_data_type: If True save datatype as column in output dataframe. If false only save divide data
     :param save_stat: If True save statistic as column in output dataframe.
+    :param diff: If True get raw-mix difference instead of raw/mix division
     :return:
     """
     df_subset = []
@@ -492,6 +495,7 @@ def read_subset(raw_path, mix_path, info_path, div, stats, other_columns, min_ev
     mix_az_data = BootstrapAzBin(div, mix_path)
 
     min_counts = get_min_counts(info_path, min_events, div)
+    div_diff = 'diff' if diff else 'divide'
 
     for total_protons in raw_az_data.get_dist():
         if total_protons in mix_az_data.get_dist():
@@ -499,28 +503,32 @@ def read_subset(raw_path, mix_path, info_path, div, stats, other_columns, min_ev
                 other_columns.update({'total_protons': total_protons})
                 if save_stat:
                     other_columns.update({'stat': stat})
-                measures = get_div(raw_az_data, mix_az_data, total_protons, stat_method, min_counts, min_bs, div_bs)
-                measures, div_bs_sets = measures[:3], measures[-1]
+                if diff:  # Get raw-mix difference
+                    measures = get_diff(raw_az_data, mix_az_data, total_protons, stat_method, min_counts, min_bs,
+                                        out_bs)
+                else:  # Get raw/mix division
+                    measures = get_div(raw_az_data, mix_az_data, total_protons, stat_method, min_counts, min_bs, out_bs)
+                measures, out_bs_sets = measures[:3], measures[-1]
                 if any(x is None for x in measures):
                     continue
                 if save_data_type:
-                    for data_type, meas in zip(['raw', 'mix', 'divide'], measures):
+                    for data_type, meas in zip(['raw', 'mix', div_diff], measures):
                         df_new = {'data_type': data_type, 'val': meas.val, 'err': meas.err}
-                        if div_bs:
+                        if out_bs:
                             df_new.update({'bs_index': -1})
                         df_new.update(other_columns)
                         df_subset.append(df_new)
-                else:  # Only save divide val/err
+                else:  # Only save diff val/err
                     df_new = {'val': measures[-1].val, 'err': measures[-1].err}
-                    if div_bs:
+                    if out_bs:
                         df_new.update({'bs_index': -1})
                     df_new.update(other_columns)
                     df_subset.append(df_new)
-                if div_bs:
-                    for bs_index, div_bs_meas in enumerate(div_bs_sets):
-                        df_new = {'val': div_bs_meas.val, 'err': div_bs_meas.err}  # 'data_type': f'divide_{bs_index}',
+                if out_bs:
+                    for bs_index, out_bs_meas in enumerate(out_bs_sets):
+                        df_new = {'val': out_bs_meas.val, 'err': out_bs_meas.err}
                         if save_data_type:
-                            df_new.update({'data_type': 'divide'})
+                            df_new.update({'data_type': div_diff})
                         df_new.update(other_columns)
                         df_new.update({'bs_index': bs_index})
                         df_subset.append(df_new)
@@ -531,7 +539,7 @@ def read_subset(raw_path, mix_path, info_path, div, stats, other_columns, min_ev
     return df_subset
 
 
-def check_subset(raw_path, mix_path, info_path, div, stats, other_columns, min_events, min_bs, div_bs,
+def check_subset(raw_path, mix_path, info_path, div, stats, other_columns, min_events, min_bs, out_bs,
                  save_data_type, save_stat):
     """
     Just read files to see if all are able to be read. If not hopefully get print to screen with bad path
@@ -635,6 +643,59 @@ def get_div(raw_az_data, mix_az_data, total_protons, stat_method, min_counts, mi
         div_stat_bs_list = None
 
     return raw_stat_meas, mix_stat_meas, div_stat_meas, div_stat_bs_list
+
+
+def get_diff(raw_az_data, mix_az_data, total_protons, stat_method, min_counts, min_bs, diff_bs):
+    """
+    Calculate raw minus mixed data for given statistic.
+    :param raw_az_data: Raw binning histogram data, default and possibly bootstrap sets
+    :param mix_az_data: Mixed binning histogram data, default and possibly bootstrap sets
+    :param total_protons: Total proton number (bin) to calculate statistics for. Only one per function call
+    :param stat_method: Method for calculating desired statistic on the raw and mixed distributions
+    :param min_counts: Minimum number of counts in a total_protons bin necessary. Otherwise discard bin
+    :param min_bs: Minimum nuber of bootstrap sets necessary. Otherwise discard
+    :param diff_bs: If greater than 0 get difference bootstraps. Value corresponds to number of bootstraps to get
+    :return: raw, mixed, and difference measures for given statistic on distributions.
+             Use raw_bs(x)-mix_bs(x) for default, std(raw_bs(x)-mix_bs(y), for all y) as err
+    """
+    raw_stat_meas, raw_bs_stats = get_stat(raw_az_data, total_protons, stat_method, min_counts, min_bs)
+    mix_stat_meas, mix_bs_stats = get_stat(mix_az_data, total_protons, stat_method, min_counts, min_bs)
+
+    if raw_stat_meas and mix_stat_meas:
+        diff_stat_meas = raw_stat_meas - mix_stat_meas
+        if raw_bs_stats and mix_bs_stats:
+            diff_list = [raw - mix for raw in raw_bs_stats for mix in mix_bs_stats]
+            ds = DistStats(diff_list, unbinned=True)
+            print()
+            diff_stat_meas.err = ds.get_sd().val
+            if diff_bs:
+                diff_stat_bs_list = []
+                n_vals = ds.get_total_counts()
+                raw2_sum = ds.get_raw_moment(2) * n_vals
+                raw1_sum = ds.get_raw_moment(1) * n_vals  # Total Sum (mean * n_vals)
+                n_bs = len(raw_bs_stats)
+                for i in range(n_bs)[:diff_bs]:  # Assume raw_bs_stats and mix_bs_stats same size. Get first diff_bs
+                    raw_i, mix_i = raw_bs_stats[i], mix_bs_stats[i]
+                    if not abs(mix_i) > 0:
+                        continue
+                    diff_stat_bs_meas = Measure(raw_i - mix_i)
+                    raw_remove_list = [raw_i - mix_bs_stats[j] for j in range(n_bs) if j != i]
+                    mix_remove_list = [raw_bs_stats[j] - mix_i for j in range(n_bs) if j != i]
+                    remove_array = np.array(raw_remove_list + mix_remove_list)
+                    n_vals_new = n_vals - remove_array.size
+                    raw_1 = (raw1_sum - np.sum(remove_array)) / n_vals_new
+                    raw_2 = (raw2_sum - np.sum(remove_array ** 2)) / n_vals_new
+                    diff_stat_bs_meas.err = np.sqrt(raw_2 - raw_1 ** 2)
+                    diff_stat_bs_list.append(diff_stat_bs_meas)
+            else:
+                diff_stat_bs_list = None
+        else:
+            diff_stat_bs_list = None
+    else:
+        diff_stat_meas = None
+        diff_stat_bs_list = None
+
+    return raw_stat_meas, mix_stat_meas, diff_stat_meas, diff_stat_bs_list
 
 
 def get_stat(az_data, total_protons, stat_method, min_counts, min_bs):
