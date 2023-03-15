@@ -525,7 +525,7 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
                     lab += f' {data_type.capitalize()}'
                 df_set = df_set.sort_values(by=['total_protons'])
                 amp, spread = df_set['amp'].iloc[0], df_set['spread'].iloc[0]
-                data.append((df_set, lab, data_set, amp, spread, energy))
+                data.append((df_set, lab, data_set, data_type, amp, spread, energy))
 
     if plot:
         fig, ax = plt.subplots(figsize=(6.66, 5), dpi=144)
@@ -547,11 +547,19 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
         color = iter(plt.cm.rainbow(np.linspace(0, 1, len(data))))
 
     avgs = []
-    for i, (df, lab, data_set, amp, spread, energy) in enumerate(data):
+    for i, (df, lab, data_set, data_type, amp, spread, energy) in enumerate(data):
         zo = len(data) - i + 4
         if plot:
             if data_sets_colors is None:
-                c = next(color)
+                if len(data_types) > 1:
+                    if data_type == 'raw':
+                        c = 'blue'
+                    elif data_type == 'mix':
+                        c = 'green'
+                    elif data_type in ['diff', 'sub']:
+                        c = 'red'
+                else:
+                    c = next(color)
             else:
                 c = data_sets_colors[data_set]
             if 'sim_' in data_set:

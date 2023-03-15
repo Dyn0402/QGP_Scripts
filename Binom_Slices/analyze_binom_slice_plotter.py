@@ -23,7 +23,7 @@ def main():
     # get_sim_mapping()
     # get_sim_mapping_pm()
     # plot_star_model()
-    plot_star_model_var()
+    # plot_star_model_var()
     # plot_star_model_onediv()
     # plot_vs_cent()
     # plot_closest_sims()
@@ -38,7 +38,7 @@ def main():
     # plot_flow_v2_closure_raw()
     # plot_flow_eff_test()
     # plot_anticl_flow_closure_test()
-    # plot_efficiency_closure_tests()
+    plot_efficiency_closure_tests()
     print('donzo')
 
 
@@ -184,9 +184,9 @@ def plot_star_model_var():
     df_sub['data_type'] = 'sub'
     dvar_vs_protons(df_sub, div_plt, cent_plt, [39], ['sub'], all_sets_plt, plot=True, avg=True,
                     data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
-    dvar_vs_protons(pd.concat([df_raw, df_mix, df_sub], ignore_index=True), div_plt, cent_plt, [39],
-                    ['raw', 'mix', 'sub'], all_sets_plt, plot=True, avg=True,
-                    data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
+    dvar_vs_protons(pd.concat([df_raw, df_mix, df_diff], ignore_index=True), div_plt, cent_plt, [39],
+                    ['raw', 'mix', 'diff'], all_sets_plt, plot=True, avg=True,
+                    data_sets_labels=data_sets_labels)
 
     dvar_vs_protons(pd.concat([df_diff, df_raw, df_mix, df_sub], ignore_index=True), div_plt, cent_plt, [39],
                     ['raw', 'mix', 'sub', 'diff'], all_sets_plt, plot=True, avg=True,
@@ -1720,8 +1720,10 @@ def plot_efficiency_closure_tests():
     # base_path = 'C:/Users/Dylan/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
     # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
     df_name = 'binom_slice_var_cent8_efficiency_closure.csv'
+    df2_name = 'binom_slice_var_cent8_v2_anticlindep_closure.csv'
     # df_name = 'binom_slice_var_cent8_simpleclust_test.csv'
     df_path = base_path + df_name
+    df2_path = base_path + df2_name
 
     stat_plot = 'k2'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
     div_plt = 120
@@ -1731,9 +1733,10 @@ def plot_efficiency_closure_tests():
     samples = 72  # For title purposes only
 
     df = pd.read_csv(df_path)
+    df = pd.concat([df, pd.read_csv(df2_path)], ignore_index=True)
     df = df.dropna()
 
-    # df = df[df['name'].str.contains('simpleclust')]
+    # df = df[df['name'].str.contains('simpleclust_eff')]
 
     all_sets = pd.unique(df['name'])
     print(all_sets)
@@ -1806,6 +1809,26 @@ def plot_efficiency_closure_tests():
         plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
                             plt_energies=False, alpha=0.6,
                             title=f'Anti-Clustering (s{s}, a{a}) Efficiency Correction')
+
+    for s, a in [('1', '01'), ('08', '01'), ('05', '01'), ('01', '01')]:
+        data_sets = [f'anticlflowindep_eff_s{s}_a{a}_raw', f'anticlflowindep_eff_s{s}_a{a}_sub',
+                     f'anticlmulti_s{s}_a{a}_raw']
+        colors = dict(zip(data_sets, ['blue', 'red', 'orange']))
+        labels = dict(zip(data_sets, ['Anti-Clustering (Independent) + Efficiency Raw',
+                                      'Anti-Clustering (Independent) + Efficiency Raw-Mix', 'Anti-Clustering Raw']))
+        plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
+                            plt_energies=False, alpha=0.6,
+                            title=f'Anti-Clustering (Independent) (s{s}, a{a}) Efficiency Correction')
+
+    data_sets = [f'anticlflowindep_eff_s05_a01_v207_raw', f'anticlflowindep_eff_s05_a01_v207_sub',
+                 f'anticlflowindep_s05_a01_v207_raw']
+    colors = dict(zip(data_sets, ['blue', 'red', 'orange']))
+    labels = dict(zip(data_sets, ['Anti-Clustering (Independent) + Efficiency + Flow Raw',
+                                  'Anti-Clustering (Independent) + Efficiency + Flow Raw-Mix',
+                                  'Anti-Clustering + Flow Raw']))
+    plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
+                        plt_energies=False, alpha=0.6,
+                        title=f'Anti-Clustering (Independent) (s{s}, a{a}) + Flow v2=0.07 Efficiency Correction')
 
     # data_sets = ['anticlflow_eff_s1_a01_v207_raw', 'anticlflow_eff_s1_a01_v207_sub', '']
     # colors = dict(zip(data_sets, ['blue', 'red', 'orange']))
