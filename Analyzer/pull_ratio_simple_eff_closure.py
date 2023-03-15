@@ -17,12 +17,21 @@ from Measure import Measure
 
 
 def main():
-    base_path = 'F:/Research/Data_Sim_2source_Tests'
+    base_path = 'F:/Research/'
+    dir_names = ['Data_Sim_2source_Tests',
+                 'Data_Sim_2source_Tests']
     group_names = ['flat80_simpleclust_spread05_amp2_resample_epbins1_test',
                    'flat80_Eff_simpleclust_spread05_amp2_resample_epbins1_test']
     set_names = ['Sim_flat80_simpleclust_spread05_amp2_norotate_resample_epbins1_0',
                  'Sim_flat80_Eff_simpleclust_spread05_amp2_norotate_resample_epbins1_0']
     set_titles = ['Simple Clustering', 'Simple Clustering + Efficiency']
+    # dir_names = ['Data_Sim_Flow',
+    #              'Data_Sim_2source_Tests']
+    # group_names = ['flow_flat80_res15_v207_resample',
+    #                'flat80_Eff_flow_res15_v207_resample_epbins1_test']
+    # set_names = ['Sim_flow_flat80_res15_v207_resample_norotate_0',
+    #              'Sim_flat80_Eff_flow_res15_v207_norotate_resample_epbins1_0']
+    # set_titles = ['Flow', 'Flow + Efficiency']
     energy = 62
     divs = [60, 72, 89, 90, 180, 240, 270, 288, 300]
     cent = 8
@@ -36,12 +45,13 @@ def main():
         fig_ratio, ax_ratio = plt.subplots(dpi=144)
         fig_pull, ax_pull = plt.subplots(dpi=144)
 
-        for set_name, group_name, set_title in zip(set_names, group_names, set_titles):
+        for set_name, group_name, dir_name, set_title in zip(set_names, group_names, dir_names, set_titles):
             ratio_raw, ratio_mix, pull_raw, pull_mix = [], [], [], []
             for div in divs:
-                group_file_path = f'{group_name}/{set_name}/{energy}GeV/ratios_divisions_{div}_centrality_{cent}_local.txt'
-                path = f'{base_path}/{group_file_path}'
-                path_mix = f'{base_path}_Mix/{group_file_path}'
+                set_dir_path = f'{group_name}/{set_name}/'
+                file_path = f'{set_dir_path}{energy}GeV/ratios_divisions_{div}_centrality_{cent}_local.txt'
+                path = f'{base_path}/{dir_name}/{file_path}'
+                path_mix = f'{base_path}/{dir_name}_Mix/{file_path}'
 
                 # print(path)
                 # print(path_mix)
