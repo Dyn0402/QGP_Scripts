@@ -168,6 +168,13 @@ class DistStats:
 
         return Measure(val, err)
 
+    def get_variance(self):
+        """
+        Get variance of distribution with error from delta theorem
+        :return: Variance as a Measure
+        """
+        return self.get_cumulant(2)
+
     def get_skewness(self):
         """
         Get skewness of distribution with error from delta theorem
@@ -300,7 +307,7 @@ class DistStats:
         """
         self.calc_cent_moments(2*order)
         # Maybe try to find analytical formula later
-        n = self.total_counts
+        n = int(self.total_counts)  # ints should be unlimited in size?
         cm = self.cent_moments
         if n < order:  # Will get /0 errors
             print(f'Too few entries ({n}) for {order} order k-statistic!')
