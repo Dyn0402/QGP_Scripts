@@ -25,13 +25,16 @@ def main():
     # vn_test()
     # gaus_test()
     # gaus_fit()
-    gaus_fit_dependence()
+    # gaus_test_fits()
+    # gaus_fourier_decomp()
+    # flow_fourier_decomp()
+    # gaus_fit_dependence()
     # convo_test()
     # eff_v2_combo()
     # eff_v2_combo2()
     # eff_gaus_combo()
     # eff_gaus_combo2()
-    # gaus_v2_combo2()
+    gaus_v2_combo2()
     print('donzo')
 
 
@@ -58,7 +61,7 @@ def gaus_test():
 
 def gaus_fit():
     mu = np.pi
-    sigma = 0.8
+    sigma = 0.3
     amp = 0.5
 
     # func = norm(mu, sigma).pdf
@@ -114,7 +117,6 @@ def gaus_fit():
     fig, ax = plt.subplots(dpi=144)
     ax.axhline(0, color='black')
     ax.scatter(widths, pp_minus_p2_terms)
-    ax.set_ylabel('Linear Terms')
     width_fit_low, width_fit_high = np.deg2rad([0, 360])
     width_filter = (width_fit_low < widths) & (widths < width_fit_high)
     ax.axvline(width_fit_low, ls='--', color='orange', label='Fit Range')
@@ -132,14 +134,205 @@ def gaus_fit():
     plt.show()
 
 
+def gaus_fourier_decomp():
+    mu = np.pi
+    sigmas = [0.3, 0.8]
+    amp = 0.5
+
+    bounds = (0, 2 * np.pi)
+    width_points = 100
+    integration_points = 100000  # 100000
+
+    fig, ax = plt.subplots(dpi=144)
+    fig2, ax2 = plt.subplots(dpi=144)
+    fig3, ax3 = plt.subplots(dpi=144)
+    colors = iter(plt.rcParams['axes.prop_cycle'].by_key()['color'])
+
+    for sigma in sigmas:
+        func = base_gaus_pdf
+        func_args = (mu, sigma, amp, 1. / get_norm(func, (mu, sigma, amp, 1)))
+
+        widths = np.linspace(*bounds, width_points)
+        pp_minus_p2_terms, pp_terms = [], []
+        for width in widths:
+            pp_minus_p2, pp = get_partition_variance(func, func_args, width, bounds, points=integration_points)
+            pp_minus_p2_terms.append(pp_minus_p2)
+            pp_terms.append(pp)
+        pp_minus_p2_terms = np.nan_to_num(pp_minus_p2_terms)
+
+        # pp_minus_p2_norm = pp_minus_p2_terms - pp_minus_p2_terms.max() / 2
+        # pp_minus_p2_norm = np.int16((pp_minus_p2_norm / pp_minus_p2_norm.max()) * 32767)
+        pp_minus_p2_norm = pp_minus_p2_terms
+
+        n_points = (width_points - 1)
+
+        yf = fft(pp_minus_p2_norm[:-1])
+        xf = fftfreq(n_points, widths[1] - widths[0])
+        xt = 1 / xf
+
+        def fit_f(x, a, b):
+            return a * (np.exp(b * abs(x)) - 1)
+
+        p0 = [100, 1.2]
+        x_filter = (abs(xt) > 1.5) & np.isfinite(abs(xt))
+        popt, pcov = cf(fit_f, xt[x_filter], abs(yf[x_filter]), p0=p0)
+
+        c = next(colors)
+        ax.scatter(xt, np.abs(yf), label=f'sigma={sigma}', color=c)
+        xs_fit = np.linspace(-7, 7, 1000)
+        ax.plot(xs_fit, fit_f(xs_fit, *popt), ls='--', color=c)
+        print(sigma, popt)
+        # ax.plot(xs_fit, fit_f(xs_fit, *p0), ls='-', alpha=0.3, color=c)
+
+        def fit_f(x, a, b):
+            return a * np.exp(-(x / b)**2)
+
+        p0 = [0.003, 0.1]
+        # x_filter = (abs(xf) > 1.5) & np.isfinite(abs(xt))
+        popt, pcov = cf(fit_f, xf, abs(yf), p0=p0)
+
+        c = next(colors)
+        ax2.scatter(xf, np.abs(yf), label=f'sigma={sigma}', color=c)
+        xs_fit = np.linspace(-1, 1, 1000)
+        ax2.plot(xs_fit, fit_f(xs_fit, *popt), ls='--', color=c)
+        ax2.plot(xs_fit, fit_f(xs_fit, *p0), ls='-', alpha=0.2, color=c)
+        print(sigma, popt)
+
+        ax3.plot(xf, np.abs(yf) - fit_f(xf, *popt), marker='o', alpha=0.6, color=c)
+
+    ax.set_xlim(-7, 7)
+    ax.legend()
+    fig.tight_layout()
+
+    ax2.set_xlim(-1, 1)
+    ax2.legend()
+    fig2.tight_layout()
+
+    plt.show()
+
+
+def flow_fourier_decomp():
+    n = 3
+    v = 0.07
+    psi = np.pi / 3
+
+    bounds = (0, 2 * np.pi)
+    width_points = 100
+
+    func = vn_pdf
+    func_args = (v, psi, n)
+
+    widths = np.linspace(*bounds, width_points)
+    pp_minus_p2_terms, pp_terms = [], []
+    for width in widths:
+        pp_minus_p2, pp = get_partition_variance(func, func_args, width, bounds, points=100000)
+        pp_minus_p2_terms.append(pp_minus_p2)
+        pp_terms.append(pp)
+    pp_minus_p2_terms = np.nan_to_num(pp_minus_p2_terms)
+
+    pp_minus_p2_norm = pp_minus_p2_terms - pp_minus_p2_terms.max() / 2
+    pp_minus_p2_norm = np.int16((pp_minus_p2_norm / pp_minus_p2_norm.max()) * 32767)
+
+    fig, ax = plt.subplots(dpi=144)
+
+    n_points = width_points - 1  # == len(widths[:-1]) == len(pp_minus_p2_norm[:-1])
+
+    # fig, ax = plt.subplots(dpi=144)
+    # ax.plot(rep_widths, rep_pp_m_p2)
+
+    yf = fft(pp_minus_p2_norm[:-1])
+    xf = fftfreq(n_points, widths[1] - widths[0])
+
+    # fig, ax = plt.subplots(dpi=144)
+    # ax.plot(xf, np.abs(yf))
+
+    # fig, ax = plt.subplots(dpi=144)
+    ax.scatter(1 / xf, np.abs(yf))
+
+    ax.set_xlim(-7, 7)
+    ax.legend()
+    fig.tight_layout()
+
+    plt.show()
+
+
+def gaus_test_fits():
+    mu = np.pi
+    sigma = 0.8
+    amp = 0.5
+
+    func = base_gaus_pdf
+    func_args = (mu, sigma, amp, 1. / get_norm(func, (mu, sigma, amp, 1)))
+    bounds = (0, 2 * np.pi)
+
+    widths = np.linspace(*bounds, 100)
+    pp_minus_p2_terms, pp_terms = [], []
+    for width in widths:
+        pp_minus_p2, pp = get_partition_variance(func, func_args, width, bounds, points=100000)
+        pp_minus_p2_terms.append(pp_minus_p2)
+        pp_terms.append(pp)
+    pp_minus_p2_terms = np.nan_to_num(pp_minus_p2_terms)
+
+    xs_fit_plot = np.linspace(min(widths), max(widths), 1000)
+
+    # p0 = [-3e-4, 0.002, 0.0004, 0.5]  # quad_cos
+    # p0 = [0.0003, 0.1, 5]  # cos_sin_gaus
+    # p0 = [0.0003]  # cos_pi_fixed
+    p0 = [0.0003, 0.2]  # cos_pi_fixed
+    func_fit = cos_sin
+
+    fig, ax = plt.subplots(dpi=144)
+    ax.axhline(0, color='black')
+    ax.scatter(widths, pp_minus_p2_terms)
+    ax.set_ylim(bottom=-ax.get_ylim()[-1] * 0.05)
+    # popt, pcov = cf(quad_cos, widths, np.array(pp_minus_p2_terms), p0=p0)
+
+    popt, pcov = cf(func_fit, widths, pp_minus_p2_terms, p0=p0)
+    ax.plot(xs_fit_plot, func_fit(xs_fit_plot, *p0), color='olive', alpha=0.7, ls='--', label='Combo Initial Guess')
+    ax.plot(xs_fit_plot, func_fit(xs_fit_plot, *popt), color='olive', label='Combo')
+    ax.set_xlabel('Partition Width (w)')
+    ax.set_ylabel(r'$\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2$')
+    ax.legend()
+    fig.tight_layout()
+
+    fig, ax = plt.subplots(dpi=144)
+    ax.axhline(0, color='black')
+    ax.scatter(widths, pp_minus_p2_terms - func_fit(widths, *popt))
+
+    pp_minus_p2_terms, pp_terms = [], []
+    for width in widths:
+        pp_minus_p2, pp = get_partition_variance(func, func_args, width, bounds, points=10000)
+        pp_minus_p2_terms.append(pp_minus_p2)
+        pp_terms.append(pp)
+    pp_minus_p2_terms = np.nan_to_num(pp_minus_p2_terms)
+    ax.scatter(widths, pp_minus_p2_terms - func_fit(widths, *popt))
+
+    pp_minus_p2_terms, pp_terms = [], []
+    for width in widths:
+        pp_minus_p2, pp = get_partition_variance(func, func_args, width, bounds, points=1000)
+        pp_minus_p2_terms.append(pp_minus_p2)
+        pp_terms.append(pp)
+    pp_minus_p2_terms = np.nan_to_num(pp_minus_p2_terms)
+    ax.scatter(widths, pp_minus_p2_terms - func_fit(widths, *popt))
+
+    ax.set_xlabel('Partition Width (w)')
+    ax.set_ylabel('Fit Deviation')
+    ax.grid()
+    fig.tight_layout()
+
+    plt.show()
+
+
 def gaus_fit_dependence():
     mu = np.pi
-    sigmas = np.linspace(0.3, 1.0, 10)
+    # sigmas = np.linspace(0.3, 1.0, 10)
+    sigmas = [0.3]
     amp = 0.5
     bounds = (0, 2 * np.pi)
     func = base_gaus_pdf
     widths = np.linspace(*bounds, 100)
     xs_fit_plot = np.linspace(min(widths), max(widths), 1000)
+    plot_pars = False
 
     quad_mags, quad_consts, cos_mags, gaus_sigs = [], [], [], []
     quad_mags_err, quad_consts_err, cos_mags_err, gaus_sigs_err = [], [], [], []
@@ -152,7 +345,7 @@ def gaus_fit_dependence():
             pp_minus_p2_terms.append(pp_minus_p2)
             pp_terms.append(pp)
 
-        p0 = (-3e-4, 0.002, 0.0004, 1)
+        p0 = (-1e-4, 0.0006, 0.004, 3)
         pp_minus_p2_terms = np.nan_to_num(pp_minus_p2_terms)
         popt, pcov = cf(quad_cos, widths, np.array(pp_minus_p2_terms), p0=p0)
         perr = np.sqrt(np.diag(pcov))
@@ -177,26 +370,27 @@ def gaus_fit_dependence():
         ax.legend()
         fig.tight_layout()
 
-    fig_quad_mag, ax_quad_mag = plt.subplots(dpi=144)
-    fig_quad_consts, ax_quad_consts = plt.subplots(dpi=144)
-    fig_cos_mags, ax_cos_mags = plt.subplots(dpi=144)
-    fig_gaus_sigs, ax_gaus_sigs = plt.subplots(dpi=144)
-    ax_quad_mag.errorbar(sigmas, quad_mags, yerr=quad_mags_err, ls='none', marker='o')
-    ax_quad_consts.errorbar(sigmas, quad_consts, yerr=quad_consts_err, ls='none', marker='o')
-    ax_cos_mags.errorbar(sigmas, cos_mags, yerr=cos_mags_err, ls='none', marker='o')
-    ax_gaus_sigs.errorbar(sigmas, gaus_sigs, yerr=gaus_sigs_err, ls='none', marker='o')
-    ax_quad_mag.set_xlabel('Gaussian Cluster Sigma')
-    ax_quad_consts.set_xlabel('Gaussian Cluster Sigma')
-    ax_cos_mags.set_xlabel('Gaussian Cluster Sigma')
-    ax_gaus_sigs.set_xlabel('Gaussian Cluster Sigma')
-    ax_quad_mag.set_ylabel('Quadratic Magnitude')
-    ax_quad_consts.set_ylabel('Quadratic Constant')
-    ax_cos_mags.set_ylabel('Cosine Magnitude')
-    ax_gaus_sigs.set_ylabel('Mixing Gaussian Sigma')
-    fig_quad_mag.tight_layout()
-    fig_quad_consts.tight_layout()
-    fig_cos_mags.tight_layout()
-    fig_gaus_sigs.tight_layout()
+    if plot_pars:
+        fig_quad_mag, ax_quad_mag = plt.subplots(dpi=144)
+        fig_quad_consts, ax_quad_consts = plt.subplots(dpi=144)
+        fig_cos_mags, ax_cos_mags = plt.subplots(dpi=144)
+        fig_gaus_sigs, ax_gaus_sigs = plt.subplots(dpi=144)
+        ax_quad_mag.errorbar(sigmas, quad_mags, yerr=quad_mags_err, ls='none', marker='o')
+        ax_quad_consts.errorbar(sigmas, quad_consts, yerr=quad_consts_err, ls='none', marker='o')
+        ax_cos_mags.errorbar(sigmas, cos_mags, yerr=cos_mags_err, ls='none', marker='o')
+        ax_gaus_sigs.errorbar(sigmas, gaus_sigs, yerr=gaus_sigs_err, ls='none', marker='o')
+        ax_quad_mag.set_xlabel('Gaussian Cluster Sigma')
+        ax_quad_consts.set_xlabel('Gaussian Cluster Sigma')
+        ax_cos_mags.set_xlabel('Gaussian Cluster Sigma')
+        ax_gaus_sigs.set_xlabel('Gaussian Cluster Sigma')
+        ax_quad_mag.set_ylabel('Quadratic Magnitude')
+        ax_quad_consts.set_ylabel('Quadratic Constant')
+        ax_cos_mags.set_ylabel('Cosine Magnitude')
+        ax_gaus_sigs.set_ylabel('Mixing Gaussian Sigma')
+        fig_quad_mag.tight_layout()
+        fig_quad_consts.tight_layout()
+        fig_cos_mags.tight_layout()
+        fig_gaus_sigs.tight_layout()
 
     plt.show()
 
@@ -827,7 +1021,7 @@ def gaus_v2_combo2():
     combo_div_eff = np.array(pp_minus_p2_dict['Combination']) - np.array(pp_minus_p2_dict['Elliptic Flow'])
     ax_v2_div_eff.plot(widths, combo_div_eff, label='Combo - Ellpitic Flow')
     ax_v2_div_eff.set_xlabel('Partition Width (w)')
-    ax_v2_div_eff.set_ylabel(r'$\left[\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
+    ax_v2_div_eff.set_ylabel(r'$\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2$')
     ax_v2_div_eff.legend()
     fig_v2_div_eff.tight_layout()
 
@@ -840,16 +1034,18 @@ def gaus_v2_combo2():
         n = len(y)
         yf = fft(y)
         xf = fftfreq(n, 2 * np.pi / n)[:n//2]
-        ax_ft.plot(xf, 2.0 / n * np.abs(yf[0:n//2]), label=func_name)
+        ax_ft.plot(xf, 2.0 / n * np.abs(yf[0:n//2]), alpha=0.6, marker='o', label=func_name)
         yf_dict.update({func_name: yf})
         yf_plt_dict.update({func_name: 2.0 / n * np.abs(yf[0:n//2])})
     # ax_ft.plot(xf, 2.0 / n * np.abs((yf_dict['Convolution'] / yf_dict['Elliptic Flow'])[0:n//2]),
     #            label='Convolution / Flow')
-    # ax_ft.plot(xf, yf_plt_dict['Convolution'] / yf_plt_dict['Elliptic Flow'], label='Convolution / Flow')
+    ax_ft.plot(xf, yf_plt_dict['Combination'] - yf_plt_dict['Elliptic Flow'], alpha=0.6, marker='o',
+               label='Combination - Flow')
     ax_ft.legend()
     ax_ft.grid()
     ax_ft.set_xlabel('Frequency')
     ax_ft.set_ylabel('Power')
+    ax_ft.set_xlim(-0.1, 2.5)
     fig_ft.tight_layout()
 
     plt.show()
@@ -926,8 +1122,7 @@ def int_pdf2(low_bound, width, func, func_args):
     return quad(func, low_bound, low_bound + width, args=func_args)[0]**2
 
 
-def get_partition_variance(func, func_args, width, bounds=(0, 2 * np.pi)):
-    points = 1000
+def get_partition_variance(func, func_args, width, bounds=(0, 2 * np.pi), points=1000):
     xs = np.linspace(*bounds, points)
     bound_range = bounds[-1] - bounds[0]
     dx = bound_range / points
@@ -946,50 +1141,6 @@ def get_partition_variance(func, func_args, width, bounds=(0, 2 * np.pi)):
     probs2 = probs**2
     ep = np.mean(probs)
     ep2 = np.mean(probs2)
-
-    # fig, ax = plt.subplots()
-    # ax.plot(np.linspace(bounds[0], 2 * bounds[1], 2 * points), pdf_wrap, color='blue', label='pdf')
-    # ax.plot(mids, probs, color='green', label='bin probs')
-    # ax.plot(mids, probs2, color='red', label='bin probs squared')
-    # ax.axhline(ep, color='green', ls='--', label='expectation of p')
-    # ax.axhline(ep**2, color='olive', label='(expectation of p)^2')
-    # ax.axhline(ep2, color='red', ls='--', label='expectation of p^2')
-    # ax.legend()
-    # print(ep2, ep**2)
-
-    return ep2 - ep**2, ep2
-
-
-def get_partition_variance(func, func_args, width, bounds=(0, 2 * np.pi)):
-    points = 1000
-    xs = np.linspace(*bounds, points)
-    bound_range = bounds[-1] - bounds[0]
-    dx = bound_range / points
-    pdf = func(xs, *func_args)
-    pdf_norm = np.sum(func(xs, *func_args)) * dx
-    pdf /= pdf_norm
-    pdf_wrap = np.append(pdf, pdf)  # To represent a periodic boundary glue duplicate array to end
-
-    width_points = round(width / bound_range * points)
-    probs = [np.sum(pdf_wrap[:width_points])]
-    mids = [width / 2]
-    for index in range(points):
-        probs.append(probs[-1] - pdf_wrap[index] + pdf_wrap[index + width_points])
-        mids.append(mids[-1] + bound_range / points)
-    probs = np.array(probs) * width / width_points
-    probs2 = probs**2
-    ep = np.mean(probs)
-    ep2 = np.mean(probs2)
-
-    # fig, ax = plt.subplots()
-    # ax.plot(np.linspace(bounds[0], 2 * bounds[1], 2 * points), pdf_wrap, color='blue', label='pdf')
-    # ax.plot(mids, probs, color='green', label='bin probs')
-    # ax.plot(mids, probs2, color='red', label='bin probs squared')
-    # ax.axhline(ep, color='green', ls='--', label='expectation of p')
-    # ax.axhline(ep**2, color='olive', label='(expectation of p)^2')
-    # ax.axhline(ep2, color='red', ls='--', label='expectation of p^2')
-    # ax.legend()
-    # print(ep2, ep**2)
 
     return ep2 - ep**2, ep2
 
@@ -1115,6 +1266,18 @@ def quad_cos(x, a1, c, a2, sigma):
 
 def quad_gaus(x, a, c, c2, sigma):
     return quad_180(x, a, c) * np.exp(((x - np.pi) / sigma)**2) + c2
+
+
+def cos_gaus(x, a, sigma):
+    return a * (1 - np.cos(x)) / np.exp(-((x - np.pi) / sigma)**2)
+
+
+def cos_sin_gaus(x, a, b, sigma):
+    return a * (1 - np.cos(x) + b * np.sin(3.5 * x)) / np.exp(-((x - np.pi) / sigma)**2)
+
+
+def cos_sin(x, a, b):
+    return a * (1 - np.cos(x) + b * np.sin(1.5 * x))
 
 
 if __name__ == '__main__':
