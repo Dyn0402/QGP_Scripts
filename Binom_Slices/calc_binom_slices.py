@@ -43,7 +43,7 @@ def init_pars():
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_stats_bes_epbins1.csv',
         'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
-                    'binom_slice_stats_ampt_v2_closure_clean.csv',
+                    'binom_slice_stats_ampt_flow_closure.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cents.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_v2_ck2.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
@@ -62,7 +62,7 @@ def init_pars():
         # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
         'csv_append': False,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': False,  # If True check csv_path and only run missing datasets, else run all datasets
-        'threads': 10,
+        'threads': 15,
         # 'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'stats': define_stats(['k2']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
@@ -666,7 +666,6 @@ def get_diff(raw_az_data, mix_az_data, total_protons, stat_method, min_counts, m
         if raw_bs_stats and mix_bs_stats:
             diff_list = [raw - mix for raw in raw_bs_stats for mix in mix_bs_stats]
             ds = DistStats(diff_list, unbinned=True)
-            print()
             diff_stat_meas.err = ds.get_sd().val
             if diff_bs:
                 diff_stat_bs_list = []

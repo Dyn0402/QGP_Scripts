@@ -1364,15 +1364,15 @@ def plot_ampt_v2_closure():
 def plot_ampt_v2_closure_var():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
-    base_path = 'F:/Research/Results/Azimuth_Analysis/'
-    df_name = 'Binomial_Slice_Moments/binom_slice_stats_ampt_v2_closure.csv'
+    base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+    df_name = 'binom_slice_stats_ampt_flow_closure.csv'
     vs_in_dir = f'F:/Research/Data_Ampt_New_Coal/default_resample_epbins1/' \
                 f'Ampt_rapid05_resample_norotate_epbins1_0/'
     df_path = base_path + df_name
 
     pd.set_option('max_columns', None)
 
-    stat_plot = 'standard deviation'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
+    stat_plot = 'k2'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
     div_plt = 120
     exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
     cent_plt = 7
@@ -1386,10 +1386,10 @@ def plot_ampt_v2_closure_var():
 
     all_sets_plt = data_sets_plt
 
-    v_orders = [2, 3, 4, 5, 6]
+    v_orders = [2]
 
     # Dictionary of {order: {energy: {cent: v2}}}
-    v_ep_vals = {i: read_flow_values(vs_in_dir, f'v{i}') for i in v_orders}
+    v_ep_vals = {i: read_flow_values(vs_in_dir, f'v{i}') for i in [2]}
     v_rp_vals = {i: read_flow_values(vs_in_dir, f'v{i}_rp') for i in v_orders}
 
     # v2_vals = read_flow_values(vs_in_dir)  # Dictionary of {energy: {cent: v2}}
@@ -1403,28 +1403,28 @@ def plot_ampt_v2_closure_var():
 
     df_raw = df[(df['data_type'] == 'raw') & (df['stat'] == stat_plot)]
     p, tp = df_raw['divs'] / 360, df_raw['total_protons']
-    # df_raw.loc[:, 'val'] = (df_raw['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))  # Placeholder, need k2
-    # df_raw.loc[:, 'err'] = df_raw['err'] / (tp * (tp - 1))
-    df_raw.loc[:, 'err'] = abs(2 * df_raw['val'] * df_raw['err'] / (tp * (tp - 1)))
-    df_raw.loc[:, 'val'] = (df_raw['val']**2 - (tp * p * (1 - p))) / (tp * (tp - 1))
+    df_raw.loc[:, 'val'] = (df_raw['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))  # Placeholder, need k2
+    df_raw.loc[:, 'err'] = df_raw['err'] / (tp * (tp - 1))
+    # df_raw.loc[:, 'err'] = abs(2 * df_raw['val'] * df_raw['err'] / (tp * (tp - 1)))
+    # df_raw.loc[:, 'val'] = (df_raw['val']**2 - (tp * p * (1 - p))) / (tp * (tp - 1))
     df_mix = df[(df['data_type'] == 'mix') & (df['stat'] == stat_plot)]
     p, tp = df_mix['divs'] / 360, df_mix['total_protons']
-    # df_mix.loc[:, 'val'] = (df_mix['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
-    # df_mix.loc[:, 'err'] = df_mix['err'] / (tp * (tp - 1))
-    df_mix.loc[:, 'err'] = abs(2 * df_mix['val'] * df_mix['err'] / (tp * (tp - 1)))
-    df_mix.loc[:, 'val'] = (df_mix['val']**2 - (tp * p * (1 - p))) / (tp * (tp - 1))
-    # df_diff = df[(df['data_type'] == 'diff') & (df['stat'] == stat_plot)]
-    # p, tp = df_diff['divs'] / 360, df_diff['total_protons']
-    # df_diff.loc[:, 'val'] = df_diff['val'] / (tp * (tp - 1))
-    # df_diff.loc[:, 'err'] = df_diff['err'] / (tp * (tp - 1))
+    df_mix.loc[:, 'val'] = (df_mix['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
+    df_mix.loc[:, 'err'] = df_mix['err'] / (tp * (tp - 1))
+    # df_mix.loc[:, 'err'] = abs(2 * df_mix['val'] * df_mix['err'] / (tp * (tp - 1)))
+    # df_mix.loc[:, 'val'] = (df_mix['val']**2 - (tp * p * (1 - p))) / (tp * (tp - 1))
+    df_diff = df[(df['data_type'] == 'diff') & (df['stat'] == stat_plot)]
+    p, tp = df_diff['divs'] / 360, df_diff['total_protons']
+    df_diff.loc[:, 'val'] = df_diff['val'] / (tp * (tp - 1))
+    df_diff.loc[:, 'err'] = df_diff['err'] / (tp * (tp - 1))
     df_sub = subtract_avgs(df_raw.drop(columns=['data_type']), df_mix.drop(columns=['data_type']),
                            val_col='val', err_col='err')
     df_sub['data_type'] = 'sub'
 
     dvar_vs_protons(df_sub, div_plt, cent_plt, [39], ['sub'], all_sets_plt, plot=True, avg=True,
                     data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
-    dvar_vs_protons(pd.concat([df_raw, df_mix, df_sub], ignore_index=True), div_plt, cent_plt, [39],
-                    ['raw', 'mix', 'sub'], all_sets_plt, plot=True, avg=True,
+    dvar_vs_protons(pd.concat([df_raw, df_mix, df_sub, df_diff], ignore_index=True), div_plt, cent_plt, [39],
+                    ['raw', 'mix', 'sub', 'diff'], all_sets_plt, plot=True, avg=True,
                     data_sets_labels=data_sets_labels)
     dvar_vs_protons_energies(df_sub, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['sub'], all_sets_plt,
                              plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
@@ -1440,7 +1440,7 @@ def plot_ampt_v2_closure_var():
                                                       div, cent_plt)
         protons_fits_div = ampt_flow_closure_sub_dsigma(protons_fits_div, 'ampt_new_coal_epbins1',
                                                       'ampt_new_coal_epbins1_v2cor',
-                                                        {2: v_ep_vals[2]}, div, cent_plt)
+                                                        v_ep_vals, div, cent_plt)
         protons_fits_div = ampt_flow_closure_sub_dsigma(protons_fits_div, 'ampt_new_coal_epbins1',
                                                         'ampt_new_coal_epbins1_flow_rpcor', v_rp_vals,
                                                         div, cent_plt)
@@ -1452,12 +1452,6 @@ def plot_ampt_v2_closure_var():
 
     plot_dvar_avgs_divs(protons_fits, data_sets_plt, data_sets_colors=data_sets_colors, fit=False,
                         data_sets_labels=data_sets_labels, alpha=0.6)
-
-    # fig, ax = plt.subplots(dpi=144)
-    # xs = np.linspace(0, 360, 1000)
-    # for energy in energies_fit:
-    #     ax.plot(xs, v2_divs(np.deg2rad(xs), v2_rp_vals[energy][cent_plt].val), label=f'{energy}GeV')
-    # ax.legend()
 
     plt.show()
 
