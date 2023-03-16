@@ -25,7 +25,7 @@ def main():
     # vn_test()
     # gaus_test()
     # gaus_fit()
-    # gaus_test_fits()
+    gaus_test_fits()
     # gaus_fourier_decomp()
     # flow_fourier_decomp()
     # gaus_fit_dependence()
@@ -34,7 +34,7 @@ def main():
     # eff_v2_combo2()
     # eff_gaus_combo()
     # eff_gaus_combo2()
-    gaus_v2_combo2()
+    # gaus_v2_combo2()
     print('donzo')
 
 
@@ -258,7 +258,7 @@ def flow_fourier_decomp():
 
 def gaus_test_fits():
     mu = np.pi
-    sigma = 0.8
+    sigma = 0.3
     amp = 0.5
 
     func = base_gaus_pdf
@@ -272,14 +272,16 @@ def gaus_test_fits():
         pp_minus_p2_terms.append(pp_minus_p2)
         pp_terms.append(pp)
     pp_minus_p2_terms = np.nan_to_num(pp_minus_p2_terms)
+    print(', '.join([str(x) for x in widths]))
+    print(', '.join([str(x) for x in pp_minus_p2_terms]))
 
     xs_fit_plot = np.linspace(min(widths), max(widths), 1000)
 
     # p0 = [-3e-4, 0.002, 0.0004, 0.5]  # quad_cos
     # p0 = [0.0003, 0.1, 5]  # cos_sin_gaus
     # p0 = [0.0003]  # cos_pi_fixed
-    p0 = [0.0003, 0.2]  # cos_pi_fixed
-    func_fit = cos_sin
+    p0 = [0.0003, 0.2, 0.02, 0.002]  # cos_pi_fixed
+    func_fit = cos_sin4
 
     fig, ax = plt.subplots(dpi=144)
     ax.axhline(0, color='black')
@@ -314,6 +316,8 @@ def gaus_test_fits():
         pp_terms.append(pp)
     pp_minus_p2_terms = np.nan_to_num(pp_minus_p2_terms)
     ax.scatter(widths, pp_minus_p2_terms - func_fit(widths, *popt))
+
+    print(popt)
 
     ax.set_xlabel('Partition Width (w)')
     ax.set_ylabel('Fit Deviation')
@@ -1278,6 +1282,10 @@ def cos_sin_gaus(x, a, b, sigma):
 
 def cos_sin(x, a, b):
     return a * (1 - np.cos(x) + b * np.sin(1.5 * x))
+
+
+def cos_sin4(x, a, b, c, d):
+    return a * (1 - np.cos(x) + b * np.sin(1.5 * x) + c * np.sin(2.5 * x) + d * np.sin(3.5 * x))
 
 
 if __name__ == '__main__':
