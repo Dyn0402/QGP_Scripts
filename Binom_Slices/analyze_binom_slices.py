@@ -348,6 +348,26 @@ def v2_divs(w, v2):
     return v2 ** 2 * np.sin(w) ** 2 / (2 * np.pi**2)
 
 
+def v3_divs(w, v3):
+    return 2 * v3 ** 2 * np.sin(3 * w / 2) ** 2 / (9 * np.pi**2)
+
+
+def v4_divs(w, v4):
+    return v4 ** 2 * np.sin(2 * w) ** 2 / (8 * np.pi**2)
+
+
+def v5_divs(w, v5):
+    return 2 * v5 ** 2 * np.sin(5 * w / 2) ** 2 / (25 * np.pi**2)
+
+
+def v6_divs(w, v6):
+    return v6 ** 2 * np.sin(3 * w) ** 2 / (18 * np.pi**2)
+
+
+def vn_divs(w, v, n=2):
+    return 2 * v ** 2 * np.sin(n * w / 2) ** 2 / (n ** 2 * np.pi**2)
+
+
 def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False, fit=False,
                     hist=False, data_sets_colors=None, data_sets_labels=None, star_prelim=False):
     data = []
@@ -2614,13 +2634,13 @@ def read_v2_slope_coefs(in_dir):
     return coefs
 
 
-def read_v2_values(in_dir, v2_type='v2'):
-    v2s = {}
+def read_flow_values(in_dir, v_type='v2'):
+    vs = {}
     dir_names = os.listdir(in_dir)
     for dir_name in dir_names:
         energy = int(dir_name.strip('GeV'))
-        v2s.update({energy: {}})
-        file_path = f'{in_dir}{dir_name}/{v2_type}.txt'
+        vs.update({energy: {}})
+        file_path = f'{in_dir}{dir_name}/{v_type}.txt'
         if not os.path.isfile(file_path):
             continue
         with open(file_path, 'r') as file:
@@ -2630,10 +2650,10 @@ def read_v2_values(in_dir, v2_type='v2'):
                 if len(line) > 2:
                     cent = int(line[0])
                     line = line[1].split(' ')
-                    v2_val = float(line[0])
-                    v2_err = float(line[1])
-                    v2s[energy].update({cent: Measure(v2_val, v2_err)})
-    return v2s
+                    v_val = float(line[0])
+                    v_err = float(line[1])
+                    vs[energy].update({cent: Measure(v_val, v_err)})
+    return vs
 
 
 def ampt_v2_closure_sub(slope_df, data_set_name, new_name, v2, coef, cent):
@@ -2645,6 +2665,36 @@ def ampt_v2_closure_sub(slope_df, data_set_name, new_name, v2, coef, cent):
     df_new = df_new.assign(slope_err=new_slope_errs)
 
     return pd.concat([slope_df, df_new], ignore_index=True)
+
+
+def ampt_v2_closure_sub_dsigma(avg_df, data_set_name, new_name, v2, div, cent):
+    df_new = avg_df[avg_df['name'] == data_set_name]
+    df_new = df_new.assign(name=new_name)
+    new_avg = [avg - v2_divs(np.deg2rad(div), v2[energy][cent]) for energy, avg in zip(df_new['energy'], df_new['avg_meas'])]
+    new_avg_vals, new_avg_errs = list(zip(*[(avg.val, avg.err) for avg in new_avg]))
+    df_new = df_new.assign(avg=new_avg_vals)
+    df_new = df_new.assign(avg_err=new_avg_errs)
+
+    return pd.concat([avg_df, df_new], ignore_index=True)
+
+
+def ampt_flow_closure_sub_dsigma(avg_df, data_set_name, new_name, vs, div, cent):
+    df_new = avg_df[avg_df['name'] == data_set_name]
+    df_new = df_new.assign(name=new_name)
+    new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent)
+               for energy, avg in zip(df_new['energy'], df_new['avg_meas'])]
+    new_avg_vals, new_avg_errs = list(zip(*[(avg.val, avg.err) for avg in new_avg]))
+    df_new = df_new.assign(avg=new_avg_vals)
+    df_new = df_new.assign(avg_err=new_avg_errs)
+
+    return pd.concat([avg_df, df_new], ignore_index=True)
+
+
+def flow_correction(div, vs, energy, cent):
+    correction = 0
+    for order, v in vs.items():
+        correction += vn_divs(div, v[energy][cent], order)
+    return correction
 
 
 def map_to_sim(baseline, zeros, interpolations):
