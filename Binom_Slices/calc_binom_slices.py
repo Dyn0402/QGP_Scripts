@@ -42,8 +42,8 @@ def init_pars():
         #             'binom_slice_stats_flow_epbins1_test.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_stats_bes_epbins1.csv',
-        # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
-        #             'binom_slice_stats_ampt_v2_closure_clean.csv',
+        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+                    'binom_slice_stats_ampt_v2_closure_clean.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cents.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_v2_ck2.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
@@ -56,8 +56,8 @@ def init_pars():
         #             'binom_slice_var_cent8_v2_anticl_closure.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_var_cent8_v2_anticlindep_closure.csv',
-        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
-                    'binom_slice_stats_ampt_diff_test.csv',
+        # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+        #             'binom_slice_stats_ampt_diff_test.csv',
         # 'csv_path': 'D:/Transfer/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim_new.csv',
         # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
         'csv_append': False,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
@@ -96,7 +96,7 @@ def define_datasets(base_path):
     all_energies = [7, 11, 19, 27, 39, 62]
     # all_energies = [11]
     all_cents = [0, 1, 2, 3, 4, 5, 6, 7, 8]  # [8]
-    all_cents = [8]
+    # all_cents = [8]
 
     entry_names = ['name', 'base_ext', 'exact_keys', 'contain_keys', 'exclude_keys',
                    'set_nums', 'energies', 'cents', 'divs']
@@ -106,8 +106,8 @@ def define_datasets(base_path):
         #  all_divs],
         # ['ampt_new_coal_resample_def', '_Ampt_New_Coal', ['default', 'resample'], [], ['alg3', 'epbins1', 'rp'], [0],
         #  all_energies, all_cents, all_divs],
-        # ['ampt_new_coal_rp', '_Ampt_New_Coal', ['default', 'resample', 'rp', 'epbins1'],
-        #  [], ['alg3'], [0], all_energies, all_cents, all_divs],
+        ['ampt_new_coal_rp', '_Ampt_New_Coal', ['default', 'resample', 'rp', 'epbins1'],
+         [], ['alg3'], [0], all_energies, all_cents, all_divs],
         ['ampt_new_coal_epbins1', '_Ampt_New_Coal', ['default', 'resample', 'epbins1'],
          [], ['alg3', 'rp', 'noprerotate'], [0], all_energies, all_cents, all_divs],
         # ['ampt_new_coal_resample_eff1', '_Ampt_New_Coal', ['resample', 'eff1'], [], ['alg3'], [0],
