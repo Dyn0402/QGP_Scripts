@@ -12,17 +12,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from scipy.optimize import curve_fit as cf
+from scipy.special import erf
 
 from Measure import Measure
 
 
 def main():
-    sigma = 0.3
+    sigma = 0.8
     x, y = get_data(sigma)
-    # plot_data(x, y)
+    plot_data(x, y)
 
-    func = cos_1_sin
-    p0 = [1, 0.2]
+    func = cos_1
+    p0 = [0.001]
 
     fit_data(x, y, func, p0)
     plt.show()
@@ -36,6 +37,7 @@ def fit_data(x, y, func, p0):
 
     xs_fit = np.linspace(min(x), max(x), 1000)
     plot_data(x, y)
+    plt.plot(xs_fit, func(xs_fit, *p0), alpha=0.2, color='red')
     plt.plot(xs_fit, func(xs_fit, *popt), color='red')
 
     print(', '.join([str(Measure(val, err)) for val, err in zip(popt, np.sqrt(np.diag(pcov)))]))
@@ -72,6 +74,10 @@ def cos_1(x, a):
 
 def cos_1_sin(x, a, b):
     return a * (1 - np.cos(x) + b * np.sin(1.5 * x))
+
+
+def erf_2(x, a, b):
+    return a * (1 - erf((x - np.pi) / b)**2)
 
 
 if __name__ == '__main__':

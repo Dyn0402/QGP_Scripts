@@ -25,7 +25,7 @@ def main():
     # vn_test()
     # gaus_test()
     # gaus_fit()
-    gaus_test_fits()
+    # gaus_test_fits()
     # gaus_fourier_decomp()
     # flow_fourier_decomp()
     # gaus_fit_dependence()
@@ -34,7 +34,7 @@ def main():
     # eff_v2_combo2()
     # eff_gaus_combo()
     # eff_gaus_combo2()
-    # gaus_v2_combo2()
+    gaus_v2_combo2()
     print('donzo')
 
 
@@ -937,8 +937,8 @@ def eff_gaus_combo2():
 
 def gaus_v2_combo2():
     mu = np.pi
-    sigma = 0.1
-    amp = 0.5
+    sigma = 0.8
+    amp = 0.18
     func1 = base_gaus_pdf
     func1_args = (mu, sigma, amp, 1. / get_norm(func1, (mu, sigma, amp, 1)))
     func1_name = 'Gaussian Cluster'
@@ -949,7 +949,7 @@ def gaus_v2_combo2():
 
     func2 = vn_pdf
     n = 2
-    v2 = 0.07
+    v2 = 0.03
     psi = np.pi / 3
     func2_args = (v2, psi, n)
     func2_name = 'Elliptic Flow'

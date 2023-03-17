@@ -24,7 +24,7 @@ def main():
     # get_sim_mapping()
     # get_sim_mapping_pm()
     # plot_star_model()
-    # plot_star_model_var()
+    plot_star_model_var()
     # plot_star_model_onediv()
     # plot_vs_cent()
     # plot_closest_sims()
@@ -35,7 +35,7 @@ def main():
     # plot_flow()
     # plot_flow_k2()
     # plot_ampt_v2_closure()
-    plot_ampt_v2_closure_var()
+    # plot_ampt_v2_closure_var()
     # plot_flow_v2_closure()
     # plot_flow_v2_closure_raw()
     # plot_flow_eff_test()
@@ -120,7 +120,7 @@ def plot_star_model_var():
     # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
     # df_name = 'binom_slice_stats_cent8_no_sim.csv'
     df_name = 'binom_slice_stats_cent8_var.csv'
-    df_name = 'binom_slice_stats_ampt_diff_test.csv'
+    # df_name = 'binom_slice_stats_ampt_diff_test.csv'
     fits_out_base = 'Base_Zero_Fits'
     df_tproton_fits_name = 'cf_tprotons_fits.csv'
     df_tproton_fits_name = None
@@ -198,22 +198,22 @@ def plot_star_model_var():
                              plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
                              data_sets_labels=data_sets_labels, y_ranges=[-0.0014, 0.0011])
 
-    print(df_sub['val'])
-    print(df_diff['val'])
-    val_diff = np.array(df_diff['val']) - np.array(df_sub['val'])
-    err_diff = np.array(df_diff['err']) - np.array(df_sub['err'])
-    print(val_diff)
-    print(err_diff)
-    print(np.mean(val_diff))
-    print(np.mean(err_diff))
-    tp = np.array(df_diff['total_protons'])
-    fig, ax = plt.subplots()
-    ax.scatter(tp, val_diff)
-    ax.set_title('Value Difference')
-    fig, ax = plt.subplots()
-    ax.scatter(tp, err_diff)
-    ax.set_title('Error Difference')
-
+    # print(df_sub['val'])
+    # print(df_diff['val'])
+    # val_diff = np.array(df_diff['val']) - np.array(df_sub['val'])
+    # err_diff = np.array(df_diff['err']) - np.array(df_sub['err'])
+    # print(val_diff)
+    # print(err_diff)
+    # print(np.mean(val_diff))
+    # print(np.mean(err_diff))
+    # tp = np.array(df_diff['total_protons'])
+    # fig, ax = plt.subplots()
+    # ax.scatter(tp, val_diff)
+    # ax.set_title('Value Difference')
+    # fig, ax = plt.subplots()
+    # ax.scatter(tp, err_diff)
+    # ax.set_title('Error Difference')
+    #
     plt.show()
 
     protons_fits = []
