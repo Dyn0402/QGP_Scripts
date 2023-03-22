@@ -35,7 +35,7 @@ def main():
     # plot_flow()
     # plot_flow_k2()
     # plot_ampt_v2_closure()
-    # plot_ampt_v2_closure_var()
+    plot_ampt_v2_closure_var()
     # plot_flow_v2_closure()
     # plot_flow_v2_closure_raw()
     # plot_flow_eff_test()

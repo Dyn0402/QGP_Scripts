@@ -465,7 +465,8 @@ def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_
 
 
 def stat_binom_vs_protons(df, stat, div, cent, energy, data_types, data_set_plt, y_ranges=None):
-    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '60-70%', 1: '70-80%'}
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
+                0: '70-80%', -1: '80-90%'}
     data = []
     tp_min, tp_max = 1000, -1
     for data_type in data_types:
@@ -521,7 +522,8 @@ def stat_binom_vs_protons(df, stat, div, cent, energy, data_types, data_set_plt,
 
 def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False, avg=False,
                     hist=False, data_sets_colors=None, data_sets_labels=None, star_prelim=False):
-    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '60-70%', 1: '70-80%'}
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
+                0: '70-80%', -1: '80-90%'}
     data = []
     for data_type in data_types:
         for data_set in data_sets_plt:
@@ -870,7 +872,8 @@ def stat_vs_protons_energies(df, stat, divs, cent, energies, data_types, data_se
 def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False,
                              avg=False, plot_avg=False, hist=False, data_sets_colors=None, data_sets_labels=None,
                              star_prelim=False):
-    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '60-70%', 1: '70-80%'}
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
+                0: '70-80%', -1: '80-90%'}
     energy_data = []
     for energy in energies:
         data = []
@@ -986,7 +989,8 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
 
 def stat_vs_protons_cents(df, stat, divs, cents, energy, data_types, data_sets_plt, y_ranges=None, plot=False,
                           fit=False, plot_fit=False, hist=False, data_sets_colors=None, data_sets_labels=None):
-    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '60-70%', 1: '70-80%'}
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
+                0: '70-80%', -1: '80-90%'}
     cent_data = []
     for cent in cents:
         data = []
@@ -2015,7 +2019,8 @@ def plot_protons_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
 
 def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None,
                           fit=False, cent_ref=None, ref_type=None, data_sets_energies_cmaps=None):
-    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '60-70%', 1: '70-80%'}
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
+                0: '70-80%', -1: '80-90%'}
     fig_base, ax_base = plt.subplots(figsize=(6.66, 5), dpi=144)
     ax_base.axhline(0, color='black')
     fig_base.canvas.manager.set_window_title(f'Baselines vs Centrality')

@@ -60,8 +60,8 @@ def download():
                  }
 
     # energies = [7, 11, 19, 27, 39, 62]  # , '2-7TeV_PbPb']
-    energies = [11]
-    bw_limit = 10  # bandwidth limit per energy in Mbps or None
+    energies = [19]
+    bw_limit = None  # bandwidth limit per energy in Mbps or None
     size_tolerance = 0.001  # percentage tolerance between remote and local sizes, re-download if different
     file_delay = 0.1  # seconds to delay between file download calls
 
