@@ -14,6 +14,12 @@ from random import randint
 
 
 def main():
+    # set_run_from_cmd()
+    just_get_input_file()
+    print('donzo')
+
+
+def set_run_from_cmd():
     if len(sys.argv) >= 3:
         hypersurface_name = sys.argv[1]
         nevents = sys.argv[2]
@@ -24,13 +30,13 @@ def main():
     if len(sys.argv) >= 5:
         input_sample_name = sys.argv[4]
     randomseed = randint(1, 2147483647)
-    sampler = {'energy': hypersurface_energy+'_', 'randomseed': randomseed, 'nevents': nevents,
+    sampler = {'energy': hypersurface_energy + '_', 'randomseed': randomseed, 'nevents': nevents,
                'hypersurface_file': hypersurface_name, 'input_sample_name': input_sample_name,
                'cfsampler_name': 'CooperFryeSampler', 'converter_name': 'CFSampleRootConvert.cpp',
                'root_path': '/star/u/dneff/Software/root/root-6.14.06/obj/bin/root'}
-    sampler.update({'output_file': f'{sampler["energy"]}nevents_{sampler["nevents"]}_rand_{sampler["randomseed"]}'})
+    sampler.update({'output_file': f'{sampler["energy"]}nevents_{sampler["nevents"]}_rand_{sampler["randomseed"]}.'
+                                   f'{sampler["input_sample_name"].split(".")[-1]}'})
     run(sampler)
-    print('donzo')
 
 
 def run(sampler):
@@ -39,6 +45,16 @@ def run(sampler):
     output_root = sampler['output_file'] + '.root'
     os.system(f'./{sampler["cfsampler_name"]} {input_path} {dat_name}')
     os.system(f'{sampler["root_path"]} -b -q "{sampler["converter_name"]}(\\"{dat_name}\\", \\"{output_root}\\")"')
+
+
+def just_get_input_file():
+    sampler = {'energy': 'AuAu.7.7' + '_', 'randomseed': 1, 'nevents': '50000',
+               'hypersurface_file': 'surface_eps_0.26.dat', 'input_sample_name': 'input.AuAu.7.7.C0-5.EVHRG',
+               'cfsampler_name': 'CooperFryeSampler', 'converter_name': 'CFSampleRootConvert.cpp',
+               'root_path': '/star/u/dneff/Software/root/root-6.14.06/obj/bin/root'}
+    sampler.update({'output_file': f'{sampler["energy"]}nevents_{sampler["nevents"]}_rand_{sampler["randomseed"]}.'
+                                   f'{sampler["input_sample_name"].split(".")[-1]}'})
+    gen_input_file(sampler)
 
 
 def gen_input_file(sampler):
