@@ -35,7 +35,7 @@ def main():
     # plot_flow()
     # plot_flow_k2()
     # plot_ampt_v2_closure()
-    plot_ampt_v2_closure_var()
+    # plot_ampt_v2_closure_var()
     # plot_flow_v2_closure()
     # plot_flow_v2_closure_raw()
     # plot_flow_eff_test()
@@ -118,8 +118,11 @@ def plot_star_model_var():
     base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
     # base_path = 'C:/Users/Dylan/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
     # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
+    v2_star_in_dir = 'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/' \
+                     'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/'
+    v2_ampt_in_dir = 'F:/Research/Data_Ampt_New_Coal/default_resample_epbins1/Ampt_rapid05_resample_norotate_epbins1_0/'
     # df_name = 'binom_slice_stats_cent8_no_sim.csv'
-    df_name = 'binom_slice_stats_cent8_var.csv'
+    df_name = 'binom_slice_stats_cent8_var_epbins1.csv'
     # df_name = 'binom_slice_stats_ampt_diff_test.csv'
     fits_out_base = 'Base_Zero_Fits'
     df_tproton_fits_name = 'cf_tprotons_fits.csv'
@@ -142,15 +145,22 @@ def plot_star_model_var():
     # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST', 'MUSIC+FIST EV $1fm^3$']))
 
     # data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def', 'cfev_resample_def']
-    data_sets_plt = ['bes_resample_def', 'ampt_new_coal_epbins1', 'cfev_resample_def']
-    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'purple']))
-    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST EV $1fm^3$']))
+    # data_sets_plt = ['bes_resample_def', 'ampt_new_coal_epbins1', 'cfev_resample_def']
+    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'purple']))
+    # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST EV $1fm^3$']))
+
+    data_sets_plt = ['bes_resample_epbins1', 'ampt_new_coal_epbins1']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red']))
+    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT']))
 
     # data_sets_plt = ['cf_resample_def', 'cfev_resample_def']
     # data_sets_colors = dict(zip(data_sets_plt, ['blue', 'purple']))
     # data_sets_labels = dict(zip(data_sets_plt, ['MUSIC+FIST', 'MUSIC+FIST EV']))
 
     all_sets_plt = data_sets_plt + sim_sets[:]
+
+    v2_star_vals = {2: read_flow_values(v2_star_in_dir)}
+    v2_ampt_vals = {2: read_flow_values(v2_ampt_in_dir)}
 
     df = pd.read_csv(df_path)
     df = df.dropna()
@@ -198,23 +208,7 @@ def plot_star_model_var():
                              plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
                              data_sets_labels=data_sets_labels, y_ranges=[-0.0014, 0.0011])
 
-    # print(df_sub['val'])
-    # print(df_diff['val'])
-    # val_diff = np.array(df_diff['val']) - np.array(df_sub['val'])
-    # err_diff = np.array(df_diff['err']) - np.array(df_sub['err'])
-    # print(val_diff)
-    # print(err_diff)
-    # print(np.mean(val_diff))
-    # print(np.mean(err_diff))
-    # tp = np.array(df_diff['total_protons'])
-    # fig, ax = plt.subplots()
-    # ax.scatter(tp, val_diff)
-    # ax.set_title('Value Difference')
-    # fig, ax = plt.subplots()
-    # ax.scatter(tp, err_diff)
-    # ax.set_title('Error Difference')
-    #
-    plt.show()
+    # plt.show()
 
     protons_fits = []
     for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
@@ -231,14 +225,25 @@ def plot_star_model_var():
 
         protons_fits_div_sub = dvar_vs_protons(df_sub, div, cent_plt, energies_fit, ['sub'], all_sets_plt, plot=False,
                                                avg=True)
-        protons_fits.append(protons_fits_div_sub.copy())
+        # protons_fits.append(protons_fits_div_sub.copy())
         protons_fits_div_sub.loc[:, 'name'] = protons_fits_div_sub['name'] + '_sub'
+        protons_fits_div_sub = ampt_flow_closure_sub_dsigma(protons_fits_div_sub, 'ampt_new_coal_epbins1_sub',
+                                                            'ampt_new_coal_epbins1', v2_ampt_vals, div,
+                                                            cent_plt)
+        protons_fits_div_sub = ampt_flow_closure_sub_dsigma(protons_fits_div_sub, 'bes_resample_epbins1_sub',
+                                                            'bes_resample_epbins1', v2_star_vals, div,
+                                                            cent_plt)
         protons_fits.append(protons_fits_div_sub)
     protons_fits = pd.concat(protons_fits, ignore_index=True)
     for data_set in data_sets_plt:
         data_sets = [data_set + x for x in ['_raw', '_mix', '_sub']]
         colors = dict(zip(data_sets, ['blue', 'green', 'red']))
         labels = dict(zip(data_sets, [data_sets_labels[data_set] + x for x in [' Raw', ' Mix', ' Sub']]))
+        plot_dvar_avgs_divs(protons_fits, data_sets, data_sets_colors=colors, fit=False, data_sets_labels=labels)
+    for data_set in data_sets_plt:
+        data_sets = [data_set + x for x in ['_sub', '']]
+        colors = dict(zip(data_sets, ['blue', 'red']))
+        labels = dict(zip(data_sets, [data_sets_labels[data_set] + x for x in [' Original', ' v2 Corrected']]))
         plot_dvar_avgs_divs(protons_fits, data_sets, data_sets_colors=colors, fit=False, data_sets_labels=labels)
     plot_dvar_avgs_divs(protons_fits, data_sets_plt, data_sets_colors=data_sets_colors, fit=False,
                         data_sets_labels=data_sets_labels)
@@ -607,6 +612,117 @@ def plot_vs_cent():
     # data_sets_labels = dict(zip(data_sets_plt, ['STAR']))
 
     all_sets_plt = data_sets_plt + sim_sets[:]
+
+    df = pd.read_csv(df_path)
+    df = df.dropna()
+    print(pd.unique(df['name']))
+
+    df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
+
+    stat_vs_protons(df, stat_plot, div_plt, 8, [energy_plt], ['raw', 'mix'], all_sets_plt, plot=True, fit=False,
+                    data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
+    stat_vs_protons_cents(df, stat_plot, [div_plt], cents, energy_plt, data_types_plt, all_sets_plt, plot=True,
+                          fit=True, plot_fit=True, data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
+
+    df_slope_fits = stat_vs_protons_cents(df, stat_plot, divs_all, cents, energy_plt, data_types_plt, all_sets_plt,
+                                          plot=False, fit=True, plot_fit=False, data_sets_colors=data_sets_colors,
+                                          data_sets_labels=data_sets_labels)
+
+    plot_protons_fits_divs_cents(df_slope_fits, data_sets_plt, fit=True, plot=True, data_sets_colors=data_sets_colors,
+                                 data_sets_labels=data_sets_labels, exclude_divs=exclude_divs)
+
+    df_onediv_fits, df_tp_fits, df_divs_fits = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
+    for energy in energies_fit:
+        df_fit = stat_vs_protons_cents(df, stat_plot, [div_plt], cents, energy, data_types_plt, all_sets_plt,
+                                       plot=False, fit=True, plot_fit=False, data_sets_colors=data_sets_colors,
+                                       data_sets_labels=data_sets_labels)
+        df_onediv_fits = pd.concat([df_onediv_fits, df_fit])
+
+        df_tp_fit = stat_vs_protons_cents(df, stat_plot, divs_all, cents, energy, data_types_plt, all_sets_plt,
+                                          plot=False, fit=True, plot_fit=False, data_sets_colors=data_sets_colors,
+                                          data_sets_labels=data_sets_labels)
+        df_tp_fits = pd.concat([df_tp_fits, df_tp_fit])
+
+        df_fits = plot_protons_fits_divs_cents(df_tp_fit, data_sets_plt, fit=True, data_sets_colors=data_sets_colors,
+                                               data_sets_labels=data_sets_labels, exclude_divs=exclude_divs)
+        # print(f'{energy}GeV {df_fit}')
+        df_divs_fits = pd.concat([df_divs_fits, df_fits])
+
+    if save_fits:
+        df_tp_fits.to_csv(f'{base_path}{fits_out_base}/{df_tproton_fits_name}', index=False)
+        df_divs_fits.to_csv(f'{base_path}{fits_out_base}/{df_partitions_fits_name}', index=False)
+
+    plot_protons_fits_vs_cent(df_onediv_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=False,
+                              data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,
+                              title=f'{div_plt}° Partitions, {samples} Samples per Event',
+                              data_sets_energies_cmaps=data_sets_energies_cmaps)
+
+    plot_protons_fits_vs_cent(df_onediv_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=False,
+                              data_sets_labels=data_sets_labels,
+                              title=f'{div_plt}° Partitions, {samples} Samples per Event',
+                              data_sets_energies_cmaps=data_sets_energies_cmaps)
+
+    plot_protons_fits_vs_cent(df_onediv_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=False,
+                              data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,
+                              title=f'{div_plt}° Partitions, {samples} Samples per Event', ls='none',
+                              data_sets_energies_cmaps=data_sets_energies_cmaps)
+
+    plot_protons_fits_vs_cent(df_onediv_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=False,
+                              data_sets_labels=data_sets_labels,
+                              title=f'{div_plt}° Partitions, {samples} Samples per Event', ls='none',
+                              data_sets_energies_cmaps=data_sets_energies_cmaps)
+
+    plot_div_fits_vs_cent(df_divs_fits, data_sets_plt, data_sets_colors=data_sets_colors,
+                          data_sets_labels=data_sets_labels, title=None, fit=False, cent_ref=None,
+                          ref_type=None, data_sets_energies_cmaps=data_sets_energies_cmaps)
+    plot_div_fits_vs_cent(df_divs_fits, data_sets_plt, data_sets_colors=data_sets_colors,
+                          data_sets_labels=data_sets_labels, title=None, fit=True, cent_ref=cent_ref_df,
+                          ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
+
+    plot_div_fits_vs_cent(df_divs_fits, data_sets_plt, data_sets_colors=data_sets_colors,
+                          data_sets_labels=data_sets_labels, title=None, fit=False, cent_ref=cent_ref_df,
+                          ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
+
+    plt.show()
+
+
+def plot_vs_cent_var():
+    plt.rcParams["figure.figsize"] = (6.66, 5)
+    plt.rcParams["figure.dpi"] = 144
+    base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+    # base_path = '/home/dylan/Research/Results/Azimuth_Analysis/'
+    v2_star_in_dir = 'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/' \
+                     'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/'
+    v2_ampt_in_dir = 'F:/Research/Data_Ampt_New_Coal/default_resample_epbins1/Ampt_rapid05_resample_norotate_epbins1_0/'
+    df_name = 'binom_slice_stats_cent8_var_epbins1.csv'
+    df_path = base_path + df_name
+
+    cent_ref_name = 'mean_cent_ref.csv'
+    cent_ref_df = pd.read_csv(f'F:/Research/Results/Azimuth_Analysis/{cent_ref_name}')
+    ref_type = 'refn'  # 'refn'
+
+    sim_sets = []
+
+    stat_plot = 'k2'
+    div_plt = 120
+    divs_all = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300]
+    exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
+    cents = [1, 2, 3, 4, 5, 6, 7, 8]
+    energy_plt = 39
+    energies_fit = [7, 11, 19, 27, 39, 62]
+    # energies_fit = [energy_plt]
+    data_types_plt = ['diff']
+    samples = 72  # For title purposes only
+
+    data_sets_plt = ['bes_resample_epbins1', 'ampt_new_coal_epbins1']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red']))
+    data_sets_energies_cmaps = dict(zip(data_sets_plt, ['Greys', 'Reds']))
+    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT']))
+
+    all_sets_plt = data_sets_plt + sim_sets[:]
+
+    v2_star_vals = {2: read_flow_values(v2_star_in_dir)}
+    v2_ampt_vals = {2: read_flow_values(v2_ampt_in_dir)}
 
     df = pd.read_csv(df_path)
     df = df.dropna()
@@ -1187,12 +1303,12 @@ def plot_ampt_v2_closure():
     df_raw = df[(df['data_type'] == 'raw') & (df['stat'] == stat_plot)]
     p, tp = df_raw['divs'] / 360, df_raw['total_protons']
     # df_raw.loc[:, 'val'] = (df_raw['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))  # Placeholder, need k2
-    df_raw.loc[:, 'val'] = (df_raw['val']**2 - (tp * p * (1 - p))) / (tp * (tp - 1))
+    df_raw.loc[:, 'val'] = (df_raw['val'] ** 2 - (tp * p * (1 - p))) / (tp * (tp - 1))
     df_raw.loc[:, 'err'] = df_raw['err'] / (tp * (tp - 1))
     df_mix = df[(df['data_type'] == 'mix') & (df['stat'] == stat_plot)]
     p, tp = df_mix['divs'] / 360, df_mix['total_protons']
     # df_mix.loc[:, 'val'] = (df_mix['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
-    df_mix.loc[:, 'val'] = (df_mix['val']**2 - (tp * p * (1 - p))) / (tp * (tp - 1))
+    df_mix.loc[:, 'val'] = (df_mix['val'] ** 2 - (tp * p * (1 - p))) / (tp * (tp - 1))
     df_mix.loc[:, 'err'] = df_mix['err'] / (tp * (tp - 1))
     df_diff = df[(df['data_type'] == 'diff') & (df['stat'] == stat_plot)]
     p, tp = df_diff['divs'] / 360, df_diff['total_protons']
@@ -1436,10 +1552,10 @@ def plot_ampt_v2_closure_var():
         protons_fits_div = dvar_vs_protons(df_sub, div, cent_plt, energies_fit, ['sub'], all_sets_plt, plot=False,
                                            avg=True)
         protons_fits_div = ampt_flow_closure_sub_dsigma(protons_fits_div, 'ampt_new_coal_epbins1',
-                                                      'ampt_new_coal_epbins1_v2rpcor', {2: v_rp_vals[2]},
-                                                      div, cent_plt)
+                                                        'ampt_new_coal_epbins1_v2rpcor', {2: v_rp_vals[2]},
+                                                        div, cent_plt)
         protons_fits_div = ampt_flow_closure_sub_dsigma(protons_fits_div, 'ampt_new_coal_epbins1',
-                                                      'ampt_new_coal_epbins1_v2cor',
+                                                        'ampt_new_coal_epbins1_v2cor',
                                                         v_ep_vals, div, cent_plt)
         protons_fits_div = ampt_flow_closure_sub_dsigma(protons_fits_div, 'ampt_new_coal_epbins1',
                                                         'ampt_new_coal_epbins1_flow_rpcor', v_rp_vals,

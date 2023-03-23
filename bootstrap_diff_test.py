@@ -15,7 +15,7 @@ from Measure import Measure
 
 
 def main():
-    size = 25
+    size = 2500
     raw = norm(5, 0.7).rvs(size)
     mix = norm(3, 0.2).rvs(size)
     raw_err = np.std(raw)

@@ -1324,7 +1324,7 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
     if plt_energies:
         if title != '' and title is not None:
             ax.set_title(title)
-        ax.set_ylabel(r'$\Delta\sigma^2_{single} - \Delta\sigma^2_{mix}$ vs Total Protons per Event')
+        ax.set_ylabel(r'$\widebar{\Delta\sigma^2}_{single} - \widebar{\Delta\sigma^2}_{mix}$')
         ax.set_xlabel('Azimuthal Partition Width')
         ax.legend()
 
@@ -1334,7 +1334,7 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
         else:
             energy_ax.set_title(title)
         energy_ax.set_xlabel('Azimuthal Partition Width (w)')
-        energy_ax.set_ylabel(r'$\Delta\sigma^2_{single} - \Delta\sigma^2_{mix}$ vs Total Protons per Event')
+        energy_ax.set_ylabel(r'$\widebar{\Delta\sigma^2}_{single} - \widebar{\Delta\sigma^2}_{mix}$')
         energy_ax.axhline(0, color='black', zorder=0)
         energy_ax.legend()
         energy_fig.tight_layout()
@@ -1344,15 +1344,16 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
             energy_fig.canvas.manager.set_window_title(f'dsigma^2 vs Width {title}')
 
         if plt_energies:
-            ax_panels[energy].axhline(0, color='black', zorder=0)
-            ax_panels[energy].text(0.5, 0.95, f'{energy} GeV', size='x-large', ha='center', va='top',
+            ax_panels[energy].axhline(0, color='gray', alpha=0.8, zorder=0)
+            ax_panels[energy].text(0.5, 0.9, f'{energy} GeV', size='x-large', ha='center', va='top',
                                    transform=ax_panels[energy].transAxes)
             if energy_i >= 3:
                 ax_panels[energy].set_xlabel('Azimuthal Partition Width')
             if energy_i in [0, 3]:
-                ax_panels[energy].set_ylabel(r'$\Delta\sigma^2_{single} - \Delta\sigma^2_{mix}$ vs Protons/Event')
-            if energy_i == 1:
-                ax_panels[energy].legend(loc='upper center', bbox_to_anchor=(0.5, 0.85), framealpha=1.0)
+                ax_panels[energy].set_ylabel(r'$\widebar{\Delta\sigma^2}_{single} - \widebar{\Delta\sigma^2}_{mix}$')
+            if energy_i == 0:
+                # ax_panels[energy].legend(loc='lower left', bbox_to_anchor=(0.5, 0.85), framealpha=1.0)
+                ax_panels[energy].legend()
 
     if plt_energies:
         fig.tight_layout()
