@@ -25,17 +25,20 @@ def set_run_from_cmd():
         nevents = sys.argv[2]
         hypersurface_energy = 'AuAu.7.7'  # Default to 7GeV
         input_sample_name = 'input.AuAu.7.7.C0-5.EVHRG'  # Default to original 7GeV template
+        save_all_particles = 0  # Only save protons
     if len(sys.argv) >= 4:
         hypersurface_energy = sys.argv[3]
     if len(sys.argv) >= 5:
         input_sample_name = sys.argv[4]
+    if len(sys.argv) >= 6:
+        save_all_particles = int(sys.argv[5])
     randomseed = randint(1, 2147483647)
     sampler = {'energy': hypersurface_energy + '_', 'randomseed': randomseed, 'nevents': nevents,
                'hypersurface_file': hypersurface_name, 'input_sample_name': input_sample_name,
                'cfsampler_name': 'CooperFryeSampler', 'converter_name': 'CFSampleRootConvert.cpp',
-               'root_path': '/star/u/dneff/Software/root/root-6.14.06/obj/bin/root'}
-    sampler.update({'output_file': f'{sampler["energy"]}nevents_{sampler["nevents"]}_rand_{sampler["randomseed"]}.'
-                                   f'{sampler["input_sample_name"].split(".")[-1]}'})
+               'root_path': '/star/u/dneff/Software/root/root-6.14.06/obj/bin/root',
+               'save_all_particles': save_all_particles}
+    sampler.update({'output_file': f'{sampler["energy"]}nevents_{sampler["nevents"]}_rand_{sampler["randomseed"]}'})
     run(sampler)
 
 
@@ -44,7 +47,8 @@ def run(sampler):
     dat_name = sampler['output_file'] + '.dat'
     output_root = sampler['output_file'] + '.root'
     os.system(f'./{sampler["cfsampler_name"]} {input_path} {dat_name}')
-    os.system(f'{sampler["root_path"]} -b -q "{sampler["converter_name"]}(\\"{dat_name}\\", \\"{output_root}\\")"')
+    os.system(f'{sampler["root_path"]} -b -q "{sampler["converter_name"]}(\\"{dat_name}\\", \\"{output_root}\\", '
+              f'\\"{sampler["save_all_particles"]}\\")"')
 
 
 def just_get_input_file():
@@ -52,8 +56,7 @@ def just_get_input_file():
                'hypersurface_file': 'surface_eps_0.26.dat', 'input_sample_name': 'input.AuAu.7.7.C0-5.EVHRG',
                'cfsampler_name': 'CooperFryeSampler', 'converter_name': 'CFSampleRootConvert.cpp',
                'root_path': '/star/u/dneff/Software/root/root-6.14.06/obj/bin/root'}
-    sampler.update({'output_file': f'{sampler["energy"]}nevents_{sampler["nevents"]}_rand_{sampler["randomseed"]}.'
-                                   f'{sampler["input_sample_name"].split(".")[-1]}'})
+    sampler.update({'output_file': f'{sampler["energy"]}nevents_{sampler["nevents"]}_rand_{sampler["randomseed"]}'})
     gen_input_file(sampler)
 
 
