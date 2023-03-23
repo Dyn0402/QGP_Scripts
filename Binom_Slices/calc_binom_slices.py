@@ -42,12 +42,12 @@ def init_pars():
         #             'binom_slice_stats_flow_epbins1_test.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_stats_bes_epbins1.csv',
-        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
-                    'binom_slice_stats_ampt_flow_closure.csv',
+        # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+        #             'binom_slice_stats_ampt_flow_closure.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cents.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_v2_ck2.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
-        #             'binom_slice_stats_cent8_var.csv',
+        #             'binom_slice_stats_cent8_var_epbins1.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_var_cent8_2source_closure_tests.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
@@ -58,11 +58,13 @@ def init_pars():
         #             'binom_slice_var_cent8_v2_anticlindep_closure.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_stats_ampt_diff_test.csv',
+        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+                    'binom_slice_stats_sim.csv',
         # 'csv_path': 'D:/Transfer/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim_new.csv',
         # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
         'csv_append': False,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': False,  # If True check csv_path and only run missing datasets, else run all datasets
-        'threads': 15,
+        'threads': 10,
         # 'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'stats': define_stats(['k2']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
@@ -106,10 +108,10 @@ def define_datasets(base_path):
         #  all_divs],
         # ['ampt_new_coal_resample_def', '_Ampt_New_Coal', ['default', 'resample'], [], ['alg3', 'epbins1', 'rp'], [0],
         #  all_energies, all_cents, all_divs],
-        ['ampt_new_coal_rp', '_Ampt_New_Coal', ['default', 'resample', 'rp', 'epbins1'],
-         [], ['alg3'], [0], all_energies, all_cents, all_divs],
-        ['ampt_new_coal_epbins1', '_Ampt_New_Coal', ['default', 'resample', 'epbins1'],
-         [], ['alg3', 'rp', 'noprerotate'], [0], all_energies, all_cents, all_divs],
+        # ['ampt_new_coal_rp', '_Ampt_New_Coal', ['default', 'resample', 'rp', 'epbins1'],
+        #  [], ['alg3'], [0], all_energies, all_cents, all_divs],
+        # ['ampt_new_coal_epbins1', '_Ampt_New_Coal', ['default', 'resample', 'epbins1'],
+        #  [], ['alg3', 'rp', 'noprerotate'], [0], all_energies, all_cents, all_divs],
         # ['ampt_new_coal_resample_eff1', '_Ampt_New_Coal', ['resample', 'eff1'], [], ['alg3'], [0],
         #  all_energies, all_cents, all_divs],
         # ['ampt_new_coal_resample_eff2', '_Ampt_New_Coal', ['resample', 'eff2'], [], ['alg3'], [0],
@@ -132,8 +134,8 @@ def define_datasets(base_path):
         # ['bes_def', '', ['default'], [], ['resample'], range(60), all_energies, [8], all_divs],
         # ['bes_resample_def', '', ['default', 'resample'], [], ['alg3', 'epbins1'], [0], all_energies, all_cents,
         #  all_divs],
-        # ['bes_resample_epbins1', '', ['default', 'resample', 'epbins1'], [], ['alg3'], [0], all_energies, all_cents,
-        #  all_divs],
+        # ['bes_resample_epbins1', '', ['default', 'resample', 'epbins1'], [], ['alg3', 'calcv2'], [0], all_energies,
+        #  all_cents, all_divs],
         # ['bes_single', '', ['default', 'single'], [], ['alg3'], [0], all_energies, [8], all_divs],
         # ['cf_resample_def', '_CF', ['default', 'resample'], [], ['alg3', 'reactionplane'], [0], all_energies, all_cents,
         #  all_divs],
@@ -241,32 +243,32 @@ def define_datasets(base_path):
     #                                     f'spreadminus{sm}', 'resample'], ['flat'], [], [0], [62], [8], all_divs])
 
     # Anti-clustering
-    # df = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample'], ['test'], True)
-    # # df = find_sim_sets(f'{base_path}Data_Sim_tests/', ['flat80', 'anticlmulti', 'resample'], [], True)
-    # for amp in np.unique(df['amp']):
-    #     amp_float = float(f'0.{amp}')  # For filtering if needed
-    #     # if amp_float not in [0.2, 0.5]:
-    #     #     continue
-    #     df_amp = df[df['amp'] == amp]
-    #     for spread in np.unique(df_amp['spread']):
-    #         spread_float = float(f'0.{spread}') * 10  # For filtering if needed
-    #         # if spread_float not in [0.5, 1]:
-    #         #     continue
-    #         entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
-    #                            ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
-    #                            ['flat'], [], [0], [62], [8], all_divs])
+    df = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample'], ['test'], True)
+    # df = find_sim_sets(f'{base_path}Data_Sim_tests/', ['flat80', 'anticlmulti', 'resample'], [], True)
+    for amp in np.unique(df['amp']):
+        amp_float = float(f'0.{amp}')  # For filtering if needed
+        # if amp_float not in [0.2, 0.5]:
+        #     continue
+        df_amp = df[df['amp'] == amp]
+        for spread in np.unique(df_amp['spread']):
+            spread_float = float(f'0.{spread}') * 10  # For filtering if needed
+            # if spread_float not in [0.5, 1]:
+            #     continue
+            entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
+                               ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
+                               ['flat'], [], [0], [62], [8], all_divs])
 
     # Clustering
-    # df = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'clmulti', 'resample'], ['test'], True)
+    df = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'clmulti', 'resample'], ['test'], True)
     # df = find_sim_sets(f'{base_path}Data_Sim_tests/', ['flat80', 'clmulti', 'resample'], [], True)
-    # for amp in np.unique(df['amp']):
-    #     amp_float = float(f'0.{amp}')  # For filtering if needed
-    #     df_amp = df[df['amp'] == amp]
-    #     for spread in np.unique(df_amp['spread']):
-    #         spread_float = float(f'0.{spread}') * 10  # For filtering if needed
-    #         entry_vals.append([f'sim_clmul_amp{amp}_spread{spread}', '_Sim_tests',
-    #                            ['clmulti', f'amp{amp}', f'spread{spread}', 'resample'],
-    #                            ['flat'], [], [0], [62], [8], all_divs])
+    for amp in np.unique(df['amp']):
+        amp_float = float(f'0.{amp}')  # For filtering if needed
+        df_amp = df[df['amp'] == amp]
+        for spread in np.unique(df_amp['spread']):
+            spread_float = float(f'0.{spread}') * 10  # For filtering if needed
+            entry_vals.append([f'sim_clmul_amp{amp}_spread{spread}', '_Sim_tests',
+                               ['clmulti', f'amp{amp}', f'spread{spread}', 'resample'],
+                               ['flat'], [], [0], [62], [8], all_divs])
 
     datasets = [dict(zip(entry_names, dset)) for dset in entry_vals]
 
@@ -504,8 +506,12 @@ def read_subset(raw_path, mix_path, info_path, div, stats, other_columns, min_ev
                 if save_stat:
                     other_columns.update({'stat': stat})
                 if diff:  # Get raw-mix difference
-                    measures = get_diff(raw_az_data, mix_az_data, total_protons, stat_method, min_counts, min_bs,
-                                        out_bs)
+                    # measures = get_diff(raw_az_data, mix_az_data, total_protons, stat_method, min_counts, min_bs,
+                    #                     out_bs)
+                    raw_stat_meas = get_stat(raw_az_data, total_protons, stat_method, min_counts, min_bs)[0]
+                    mix_stat_meas = get_stat(mix_az_data, total_protons, stat_method, min_counts, min_bs)[0]
+                    diff_stat_meas = raw_stat_meas - mix_stat_meas  # Seems to be equivalent to the bootstrapping
+                    measures = [raw_stat_meas, mix_stat_meas, diff_stat_meas, None]
                 else:  # Get raw/mix division
                     measures = get_div(raw_az_data, mix_az_data, total_protons, stat_method, min_counts, min_bs, out_bs)
                 measures, out_bs_sets = measures[:3], measures[-1]
