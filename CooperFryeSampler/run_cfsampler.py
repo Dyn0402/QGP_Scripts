@@ -48,7 +48,7 @@ def run(sampler):
     output_root = sampler['output_file'] + '.root'
     os.system(f'./{sampler["cfsampler_name"]} {input_path} {dat_name}')
     os.system(f'{sampler["root_path"]} -b -q "{sampler["converter_name"]}(\\"{dat_name}\\", \\"{output_root}\\", '
-              f'\\"{sampler["save_all_particles"]}\\")"')
+              f'{sampler["save_all_particles"]})"')
 
 
 def just_get_input_file():
