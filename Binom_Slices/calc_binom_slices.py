@@ -58,13 +58,12 @@ def init_pars():
         #             'binom_slice_var_cent8_v2_anticlindep_closure.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_stats_ampt_diff_test.csv',
-        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
-                    'binom_slice_stats_sim.csv',
+        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_stats_sim.csv',
         # 'csv_path': 'D:/Transfer/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim_new.csv',
         # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
         'csv_append': False,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': False,  # If True check csv_path and only run missing datasets, else run all datasets
-        'threads': 10,
+        'threads': 16,
         # 'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'stats': define_stats(['k2']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
@@ -258,17 +257,17 @@ def define_datasets(base_path):
                                ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
                                ['flat'], [], [0], [62], [8], all_divs])
 
-    # Clustering
-    df = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'clmulti', 'resample'], ['test'], True)
-    # df = find_sim_sets(f'{base_path}Data_Sim_tests/', ['flat80', 'clmulti', 'resample'], [], True)
-    for amp in np.unique(df['amp']):
-        amp_float = float(f'0.{amp}')  # For filtering if needed
-        df_amp = df[df['amp'] == amp]
-        for spread in np.unique(df_amp['spread']):
-            spread_float = float(f'0.{spread}') * 10  # For filtering if needed
-            entry_vals.append([f'sim_clmul_amp{amp}_spread{spread}', '_Sim_tests',
-                               ['clmulti', f'amp{amp}', f'spread{spread}', 'resample'],
-                               ['flat'], [], [0], [62], [8], all_divs])
+    # # Clustering
+    # df = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'clmulti', 'resample'], ['test'], True)
+    # # df = find_sim_sets(f'{base_path}Data_Sim_tests/', ['flat80', 'clmulti', 'resample'], [], True)
+    # for amp in np.unique(df['amp']):
+    #     amp_float = float(f'0.{amp}')  # For filtering if needed
+    #     df_amp = df[df['amp'] == amp]
+    #     for spread in np.unique(df_amp['spread']):
+    #         spread_float = float(f'0.{spread}') * 10  # For filtering if needed
+    #         entry_vals.append([f'sim_clmul_amp{amp}_spread{spread}', '_Sim_tests',
+    #                            ['clmulti', f'amp{amp}', f'spread{spread}', 'resample'],
+    #                            ['flat'], [], [0], [62], [8], all_divs])
 
     datasets = [dict(zip(entry_names, dset)) for dset in entry_vals]
 
@@ -510,7 +509,10 @@ def read_subset(raw_path, mix_path, info_path, div, stats, other_columns, min_ev
                     #                     out_bs)
                     raw_stat_meas = get_stat(raw_az_data, total_protons, stat_method, min_counts, min_bs)[0]
                     mix_stat_meas = get_stat(mix_az_data, total_protons, stat_method, min_counts, min_bs)[0]
-                    diff_stat_meas = raw_stat_meas - mix_stat_meas  # Seems to be equivalent to the bootstrapping
+                    if raw_stat_meas is not None and mix_stat_meas is not None:
+                        diff_stat_meas = raw_stat_meas - mix_stat_meas  # Seems to be equivalent to the bootstrapping
+                    else:
+                        diff_stat_meas = None
                     measures = [raw_stat_meas, mix_stat_meas, diff_stat_meas, None]
                 else:  # Get raw/mix division
                     measures = get_div(raw_az_data, mix_az_data, total_protons, stat_method, min_counts, min_bs, out_bs)

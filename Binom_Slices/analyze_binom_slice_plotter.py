@@ -24,9 +24,10 @@ def main():
     # get_sim_mapping()
     # get_sim_mapping_pm()
     # plot_star_model()
-    plot_star_model_var()
+    # plot_star_model_var()
     # plot_star_model_onediv()
     # plot_vs_cent()
+    plot_vs_cent_var()
     # plot_closest_sims()
     # plot_vs_cent_nofit()
     # plot_vs_cent_fittest()
@@ -727,20 +728,36 @@ def plot_vs_cent_var():
     df = pd.read_csv(df_path)
     df = df.dropna()
     print(pd.unique(df['name']))
+    # print(df.columns)
 
     df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
 
-    stat_vs_protons(df, stat_plot, div_plt, 8, [energy_plt], ['raw', 'mix'], all_sets_plt, plot=True, fit=False,
+    df_raw = df[(df['data_type'] == 'raw') & (df['stat'] == stat_plot)]
+    p, tp = df_raw['divs'] / 360, df_raw['total_protons']
+    df_raw.loc[:, 'val'] = (df_raw['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
+    df_raw.loc[:, 'err'] = df_raw['err'] / (tp * (tp - 1))
+    df_mix = df[(df['data_type'] == 'mix') & (df['stat'] == stat_plot)]
+    p, tp = df_mix['divs'] / 360, df_mix['total_protons']
+    df_mix.loc[:, 'val'] = (df_mix['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
+    df_mix.loc[:, 'err'] = df_mix['err'] / (tp * (tp - 1))
+    df_diff = df[(df['data_type'] == 'diff') & (df['stat'] == stat_plot)]
+    p, tp = df_diff['divs'] / 360, df_diff['total_protons']
+    df_diff.loc[:, 'val'] = df_diff['val'] / (tp * (tp - 1))
+    df_diff.loc[:, 'err'] = df_diff['err'] / (tp * (tp - 1))
+
+    dvar_vs_protons(df_diff, div_plt, 8, [39], ['diff'], all_sets_plt, plot=True, avg=True,
                     data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
-    stat_vs_protons_cents(df, stat_plot, [div_plt], cents, energy_plt, data_types_plt, all_sets_plt, plot=True,
-                          fit=True, plot_fit=True, data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
+    dvar_vs_protons_cents(df_diff, [div_plt], cents, energy_plt, data_types_plt, all_sets_plt, plot=True,
+                          avg=True, plot_avg=True, data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels,
+                          y_ranges=[-0.0051, 0.0013])
 
-    df_slope_fits = stat_vs_protons_cents(df, stat_plot, divs_all, cents, energy_plt, data_types_plt, all_sets_plt,
-                                          plot=False, fit=True, plot_fit=False, data_sets_colors=data_sets_colors,
-                                          data_sets_labels=data_sets_labels)
+    avgs = dvar_vs_protons_cents(df_diff, divs_all, cents, energy_plt, data_types_plt, all_sets_plt, plot=False,
+                                 avg=True, plot_avg=False, data_sets_colors=data_sets_colors,
+                                 data_sets_labels=data_sets_labels)
 
-    plot_protons_fits_divs_cents(df_slope_fits, data_sets_plt, fit=True, plot=True, data_sets_colors=data_sets_colors,
-                                 data_sets_labels=data_sets_labels, exclude_divs=exclude_divs)
+    plot_dvar_avgs_divs_cents(avgs, data_sets_plt, fit=False, plot=True, data_sets_colors=data_sets_colors,
+                              data_sets_labels=data_sets_labels, exclude_divs=exclude_divs)
+    plt.show()
 
     df_onediv_fits, df_tp_fits, df_divs_fits = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
     for energy in energies_fit:
@@ -758,10 +775,6 @@ def plot_vs_cent_var():
                                                data_sets_labels=data_sets_labels, exclude_divs=exclude_divs)
         # print(f'{energy}GeV {df_fit}')
         df_divs_fits = pd.concat([df_divs_fits, df_fits])
-
-    if save_fits:
-        df_tp_fits.to_csv(f'{base_path}{fits_out_base}/{df_tproton_fits_name}', index=False)
-        df_divs_fits.to_csv(f'{base_path}{fits_out_base}/{df_partitions_fits_name}', index=False)
 
     plot_protons_fits_vs_cent(df_onediv_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=False,
                               data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,
