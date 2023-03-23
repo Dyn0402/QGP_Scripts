@@ -23,7 +23,7 @@ def main():
         for output_dir, input_template in run_types.items():
             replacements = {'CooperFrye_protons': output_dir,
                             'nProcesses="200"': f'nProcesses="{n_jobs}"',
-                            'input.AuAu.7.7.C0-5.EVHRG': {input_template}}
+                            'input.AuAu.7.7.C0-5.EVHRG': input_template}
             template_path = f'/star/u/dneff/git/CooperFryeSamplerRunner/subs/sub{energy}.xml'
             out_path = f'/star/u/dneff/gpfs/data/CooperFrye/gen_subs/sub_{output_dir}_{energy}GeV.xml'
 
