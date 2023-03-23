@@ -13,7 +13,7 @@ import os
 
 def main():
     n_jobs = 20
-    submit = False
+    submit = True
     energies = [7, 19, 27, 39, 62]
     run_types = {'CooperFrye_all': 'input.AuAu.7.7.C0-5',
                  'CooperFrye_EV_all': 'input.AuAu.7.7.C0-5.EVHRG',
