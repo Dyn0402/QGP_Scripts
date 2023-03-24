@@ -1350,7 +1350,7 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
 
 
 def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, data_sets_labels=None, exclude_divs=[],
-                        verbose=True, plt_energies=True, title=None, alpha=1):
+                        verbose=True, plt_energies=True, title=None, alpha=1, ylab=None):
     energies = pd.unique(df['energy'])
     if plt_energies:
         fig, ax = plt.subplots()
@@ -1429,10 +1429,13 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                 title += ' '
             title += f'{energies[0]}GeV'
 
+    if ylab is None:
+        ylab = r'$\widebar{\Delta\sigma^2}_{single} - \widebar{\Delta\sigma^2}_{mix}$'
+
     if plt_energies:
         if title != '' and title is not None:
             ax.set_title(title)
-        ax.set_ylabel(r'$\widebar{\Delta\sigma^2}_{single} - \widebar{\Delta\sigma^2}_{mix}$')
+        ax.set_ylabel(ylab)
         ax.set_xlabel('Azimuthal Partition Width')
         ax.legend()
 
@@ -1442,7 +1445,7 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
         else:
             energy_ax.set_title(title)
         energy_ax.set_xlabel('Azimuthal Partition Width (w)')
-        energy_ax.set_ylabel(r'$\widebar{\Delta\sigma^2}_{single} - \widebar{\Delta\sigma^2}_{mix}$')
+        energy_ax.set_ylabel(ylab)
         energy_ax.axhline(0, color='black', zorder=0)
         energy_ax.legend()
         energy_fig.tight_layout()
@@ -1458,7 +1461,7 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
             if energy_i >= 3:
                 ax_panels[energy].set_xlabel('Azimuthal Partition Width')
             if energy_i in [0, 3]:
-                ax_panels[energy].set_ylabel(r'$\widebar{\Delta\sigma^2}_{single} - \widebar{\Delta\sigma^2}_{mix}$')
+                ax_panels[energy].set_ylabel(ylab)
             if energy_i == 0:
                 # ax_panels[energy].legend(loc='lower left', bbox_to_anchor=(0.5, 0.85), framealpha=1.0)
                 ax_panels[energy].legend()
@@ -1654,7 +1657,7 @@ def plot_dvar_avgs_divs_cents(df, data_sets_plt, plot=False, fit=False, data_set
     if plot:
         fig, axs = plt.subplots(3, 3, sharex=True, sharey=True, figsize=(13.33, 6.16), dpi=144)
         suptitle = r'$\widebar{\Delta\sigma^2}$ vs Partition Width 72 Samples per Event'
-        suptitle = f'{energies[0]}{suptitle}' if len(energies) == 1 else suptitle
+        suptitle = f'{energies[0]}GeV {suptitle}' if len(energies) == 1 else suptitle
         fig.suptitle(suptitle)
         axs = axs.flatten()
         fig.canvas.manager.set_window_title(f'DSigma vs Width All Energies')
@@ -1665,7 +1668,7 @@ def plot_dvar_avgs_divs_cents(df, data_sets_plt, plot=False, fit=False, data_set
         if plot:
             ax = axs[ax_index]
             ax.axhline(0, ls='-', color='black')
-            ax.text(0.5, 0.92, f'Centrality {cent}', size='x-large', ha='center', va='top', transform=ax.transAxes)
+            ax.text(0.02, 0.08, f'Centrality {cent}', size='x-large', ha='left', va='bottom', transform=ax.transAxes)
         df_cent = df[df['cent'] == cent]
         for data_set in data_sets_plt:
             df_set = df_cent[df_cent['name'] == data_set]
@@ -1716,10 +1719,10 @@ def plot_dvar_avgs_divs_cents(df, data_sets_plt, plot=False, fit=False, data_set
 
     if plot:
         for i in [0, 3, 6]:
-            axs[i].set_ylabel(r'$\Delta\sigma^2$')
+            axs[i].set_ylabel(r'$\widebar{\Delta\sigma^2}$')
         for i in [6, 7, 8]:
             axs[i].set_xlabel('Azimuthal Partition Width')
-        ax.legend()
+        ax.legend(loc='lower right')
         fig.tight_layout()
         fig.subplots_adjust(wspace=0.0, hspace=0.0)
         fig.canvas.manager.set_window_title('Dsigmas vs Partition Width Centralities')
@@ -2800,6 +2803,27 @@ def flow_vs_v2(df, div, res, out_dir=None):
                 file.write(f'{v2}\t{slope_val} {slope_err}\n')
 
 
+def calc_dsigma(df, data_types='diff'):
+    if type(data_types) == str:
+        data_types = [data_types]
+    dfs = []
+    for data_type in data_types:
+        df_type = df[df['data_type'] == data_type]
+        p, tp = df_type['divs'] / 360, df_type['total_protons']
+        if data_type in ['raw', 'mix']:
+            df_type.loc[:, 'val'] = (df_type['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
+            df_type.loc[:, 'err'] = df_type['err'] / (tp * (tp - 1))
+        elif data_type == 'diff':
+            df_type.loc[:, 'val'] = df_type['val'] / (tp * (tp - 1))
+            df_type.loc[:, 'err'] = df_type['err'] / (tp * (tp - 1))
+        else:
+            print(f'Don\'t recognize data type: {data_type}')
+            df_type = None
+        dfs.append(df_type)
+
+    return dfs if len(dfs) > 1 else dfs[0]
+
+
 def subtract_avgs(df_a, df_b, val_col='avg', err_col='avg_err', meas_col='avg_meas'):
     if meas_col in df_a.columns:
         index_cols = list(set(df_a.columns) - {val_col, err_col, meas_col})
@@ -2872,11 +2896,21 @@ def ampt_v2_closure_sub_dsigma(avg_df, data_set_name, new_name, v2, div, cent):
     return pd.concat([avg_df, df_new], ignore_index=True)
 
 
-def ampt_flow_closure_sub_dsigma(avg_df, data_set_name, new_name, vs, div, cent):
+def subtract_dsigma_flow(avg_df, data_set_name, new_name, vs, div=None, cent=None):
     df_new = avg_df[avg_df['name'] == data_set_name]
     df_new = df_new.assign(name=new_name)
-    new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent)
-               for energy, avg in zip(df_new['energy'], df_new['avg_meas'])]
+    if div is None and cent is not None:
+        new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent)
+                   for energy, div, avg in zip(df_new['energy'], df_new['divs'], df_new['avg_meas'])]
+    elif cent is None and div is not None:
+        new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent)
+                   for energy, cent, avg in zip(df_new['energy'], df_new['cent'], df_new['avg_meas'])]
+    elif cent is None and div is None:
+        new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent) for energy, cent, div, avg in
+                   zip(df_new['energy'], df_new['cent'], df_new['divs'], df_new['avg_meas'])]
+    else:
+        new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent)
+                   for energy, avg in zip(df_new['energy'], df_new['avg_meas'])]
     new_avg_vals, new_avg_errs = list(zip(*[(avg.val, avg.err) for avg in new_avg]))
     df_new = df_new.assign(avg=new_avg_vals)
     df_new = df_new.assign(avg_err=new_avg_errs)
