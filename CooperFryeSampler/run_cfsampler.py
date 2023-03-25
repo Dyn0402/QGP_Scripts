@@ -14,8 +14,8 @@ from random import randint
 
 
 def main():
-    # set_run_from_cmd()
-    just_get_input_file()
+    set_run_from_cmd()
+    # just_get_input_file()
     print('donzo')
 
 
