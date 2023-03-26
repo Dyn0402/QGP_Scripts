@@ -512,7 +512,7 @@ def get_sim_mapping_var():
     fits_out_base = 'Base_Zero_Fits'
     df_tproton_fits_name = 'sim_tprotons_fits.csv'
     df_partitions_fits_name = 'sim_partitions_fits.csv'
-    threads = 11
+    threads = 10
     df_path = base_path + df_name
     sim_sets = []
 
@@ -563,14 +563,14 @@ def get_sim_mapping_var():
 
     df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
 
-    df_diff = calc_dsigma(df)
+    df_diff = calc_dsigma(df[df['stat'] == stat_plot])
 
     # stat_vs_protons(df, stat_plot, div_plt, cent_plt, [7, 'sim'], data_types_plt, all_sets_plt, plot=True, fit=False,
     #                 data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
 
     dsig_avgs = []
     other_pars = (cent_plt, energies_fit, data_types_plt, all_sets_plt, None, False, True, False, None, None, None)
-    jobs = [(df, div, *other_pars) for div in np.setdiff1d(np.unique(df['divs']), exclude_divs)]
+    jobs = [(df_diff, div, *other_pars) for div in np.setdiff1d(np.unique(df['divs']), exclude_divs)]
     with Pool(threads) as pool:
         for dsig_avgs_div in tqdm.tqdm(pool.istarmap(dvar_vs_protons, jobs), total=len(jobs)):
             print(dsig_avgs_div)
