@@ -26,6 +26,7 @@ from Sub_Resample.sub_event_resample_algorithm import get_resamples4
 
 def main():
     calculate_v2()
+    # calculate_v2_cfmodel()
     print('donzo')
 
 
@@ -64,6 +65,125 @@ def calculate_v2():
         file_paths = os.listdir(file_dir)[:]
 
         ref3_edges = get_ampt_ref3_edges(ampt_cent_path, energy)
+
+        jobs = [(f'{file_dir}{path}', read_branches, cents, pids, ref3_edges, max_rapid, min_pt, max_pt, max_p, eta_gap,
+                 calc_quantities, rp_harmonics) for path in file_paths]
+
+        v2_data = {pid: {cent: calc_quantities.copy() for cent in cents} for pid in pids}
+        with Pool(threads) as pool:
+            for file_v2_data in tqdm.tqdm(pool.istarmap(read_file, jobs), total=len(jobs)):
+                for pid in pids:
+                    for cent in cents:
+                        for quant in v2_data[pid][cent]:
+                            v2_data[pid][cent][quant] += file_v2_data[pid][cent][quant]
+
+        for pid in pids:
+            v2_avgs, v2_sds, v2_avg_err, cent_labels = [], [], [], []
+            vn_rp_avgs, vn_rp_sds, vn_rp_avg_err = {}, {}, {}
+            for n in rp_harmonics:
+                vn_rp_avgs.update({n: []})
+                vn_rp_sds.update({n: []})
+                vn_rp_avg_err.update({n: []})
+            reses, res_err = [], []
+            for cent in cents:
+                data = v2_data[pid][cent]
+                if data['n_v2'] <= 0:
+                    continue
+                res = np.sqrt(data['ep_res_sum'] / data['n_psi'])
+                reses.append(res)
+                res_sum_err = np.sqrt(data['ep_res_sum2'] / data['n_psi'] - res ** 4) / \
+                              np.sqrt(data['n_psi'])
+                res_err.append(res_sum_err / (2 * res))  # Error propagation for sqrt
+                # Assume no error for now, figure out how to deal properly later
+                v2_avgs.append(data['v2_ep_sum'] / data['n_v2'] / res)
+                v2_sds.append(np.sqrt(data['v2_ep_sum2'] / data['n_v2'] - v2_avgs[-1] ** 2) / res)
+                v2_avg_err.append(v2_sds[-1] / np.sqrt(data['n_v2']))
+                for n in rp_harmonics:
+                    vn_rp_avgs[n].append(data[f'v{n}_rp_sum'] / data['n_v2'])
+                    vn_rp_sds[n].append(
+                        np.sqrt(data[f'v{n}_rp_sum2'] / data['n_v2'] - vn_rp_avgs[n][-1] ** 2))
+                    vn_rp_avg_err[n].append(vn_rp_sds[n][-1] / np.sqrt(data['n_v2']))
+                cent_labels.append(cent_map[cent])
+
+            if plot_out_dir:
+                fig, ax = plt.subplots(dpi=144)
+                ax.grid()
+                ax.axhline(0, color='black', ls='--')
+                ax.errorbar(cent_labels, v2_avgs, yerr=v2_avg_err, ls='none', color='blue', marker='o',
+                            label='Event Plane')
+                ax.errorbar(cent_labels, vn_rp_avgs[2], yerr=vn_rp_avg_err[2], ls='none', color='red', marker='o',
+                            label='Reaction Plane')
+
+                ax.set_ylabel('v2')
+                ax.set_xlabel('Centrality')
+                plt.xticks(rotation=30)
+                ax.legend()
+                ax.set_title(f'AMPT {energy} GeV PID {pid} Elliptic Flow')
+                fig.tight_layout()
+
+                fig.savefig(f'{plot_out_dir}Ampt_{energy}GeV_pid_{pid}_v2.png')
+                ax.set_ylim(bottom=-0.01, top=0.1)
+                fig.savefig(f'{plot_out_dir}Ampt_{energy}GeV_pid_{pid}_v2_zoom.png')
+
+                for n in rp_harmonics:
+                    if n == 2:
+                        continue
+                    fig, ax = plt.subplots(dpi=144)
+                    ax.grid()
+                    ax.axhline(0, color='black', ls='--')
+                    ax.errorbar(cent_labels, vn_rp_avgs[n], yerr=vn_rp_avg_err[n], ls='none', color='red', marker='o',
+                                label='Reaction Plane')
+
+                    ax.set_ylabel(f'v{n}')
+                    ax.set_xlabel('Centrality')
+                    plt.xticks(rotation=30)
+                    ax.legend()
+                    ax.set_title(f'AMPT {energy} GeV PID {pid} v{n} Flow')
+                    fig.tight_layout()
+
+                    fig.savefig(f'{plot_out_dir}Ampt_{energy}GeV_pid_{pid}_v{n}.png')
+
+            if out_dir and pid == proton_pid:
+                out_path = f'{out_dir}{energy}GeV/v2.txt'
+                write_vn(out_path, cents, v2_avgs, v2_avg_err, reses, res_err, n=2)
+                for n in rp_harmonics:
+                    out_path_rp = f'{out_dir}{energy}GeV/v{n}_rp.txt'
+                    write_v2(out_path_rp, cents, vn_rp_avgs[n], vn_rp_avg_err[n], reses, res_err)
+
+
+def calculate_v2_cfmodel():
+    base_path = 'F:/Research/'
+    cf_type = ''  # 'EV', 'EVb342'
+    data_path = f'{base_path}Cooper_Frye{cf_type}_Trees/'
+    out_dir = f'{base_path}Data_CF/default_resample/CF_rapid05_resample_norotate_0/'  # Change to epbins1 when it exists
+    # out_dir = None
+    # plot_out_dir = f'F:/Research/Results/Flow_QA/Cooper_Frye/Cooper_Frye{cf_type}/'
+    plot_out_dir = None  # Not really ready for plotting, using AMPT code to plot against centrality
+    energies = [7, 19, 27, 39, 62]
+    max_rapid = 0.5
+    min_pt = 0.4  # GeV
+    max_pt = 2.0  # GeV
+    max_p = 3.0  # GeV
+    eta_gap = 0.2  # Was 0.2 in first run
+    proton_pid = 2212
+    pids = [211, 321, -211, -321, 2212, -2212]
+    # pids = [2212]
+    cents = [8]
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '60-70%', 1: '70-80%',
+                0: '80-90%', -1: '90-100%'}
+    calc_quantities = {'v2_ep_sum': 0, 'v2_ep_sum2': 0, 'n_v2': 0, 'ep_res_sum': 0, 'ep_res_sum2': 0, 'n_psi': 0}
+    rp_harmonics = [2, 3, 4, 5, 6]
+    for n in rp_harmonics:
+        calc_quantities.update({f'v{n}_rp_sum': 0, f'v{n}_rp_sum2': 0})
+    read_branches = ['pid', 'px', 'py', 'pz', 'refmult3']
+    threads = 12
+
+    for energy in energies:
+        print(f'Starting {energy}GeV')
+        file_dir = f'{data_path}{energy}GeV/'
+        file_paths = os.listdir(file_dir)[:]
+
+        ref3_edges = get_cf_ref3_edge()  # Overkill but matches style of AMPT v2 calculation
 
         jobs = [(f'{file_dir}{path}', read_branches, cents, pids, ref3_edges, max_rapid, min_pt, max_pt, max_p, eta_gap,
                  calc_quantities, rp_harmonics) for path in file_paths]
@@ -228,6 +348,12 @@ def write_vn(out_path, cents, vns, vn_errs, reses, res_errs, n=2):
 def rapidity(px, py, pz, m):
     e = np.sqrt(m ** 2 + px ** 2 + py ** 2 + pz ** 2)
     return np.arctanh(pz / e)
+
+
+def get_cf_ref3_edge():
+    edges_9bin = {8: [1000, 0]}  # MUSIC+FIST model only has hypersurfaces for 0-5%
+
+    return edges_9bin
 
 
 if __name__ == '__main__':
