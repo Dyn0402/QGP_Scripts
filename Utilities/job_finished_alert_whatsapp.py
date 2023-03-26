@@ -10,6 +10,7 @@ Created as QGP_Scripts/job_finshed_alert_whatsapp
 
 import os
 import time
+from datetime import datetime
 
 from WAMessenger import WAMessenger
 
@@ -17,21 +18,22 @@ from WAMessenger import WAMessenger
 def main():
     watch_jobs()
     # test_messenger_hello_world()
+    # test_messenger()
     print('donzo')
 
 
 def watch_jobs():
-    check_period = 60  # s
+    check_period = 150  # s
     job_checker = RCFJobChecker()
     jobs_alive = job_checker.get_total_jobs()
     while jobs_alive > 0:
-        print(f'{jobs_alive} jobs still alive. Waiting {check_period} seconds before checking again')
+        time_stamp = datetime.now().strftime('%a %H:%M')
+        print(f'{time_stamp} - {jobs_alive} jobs still alive. Waiting {check_period} seconds before checking again')
         time.sleep(check_period)
         jobs_alive = job_checker.get_total_jobs()
 
     messenger = WAMessenger()
-    # res = messenger.send_message('No more jobs running')
-    res = messenger.send_message(template_name='hello_world')
+    res = messenger.send_message('No more jobs running')
     if res.ok:
         print('Jobs finished and WhatsApp message sent')
     else:
