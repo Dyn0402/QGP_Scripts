@@ -522,10 +522,13 @@ def get_sim_mapping_var():
     # spreads = ['02', '05', '06', '065', '07']
     # amps = ['002', '004', '005', '006', '008', '01', '0125', '015', '0175', '02', '0225', '025', '03', '035', '04']
     # spreads = ['05', '06', '065', '07', '075', '08', '085', '09', '1', '15', '2']
+    # amps = ['002', '004', '005', '006', '008', '01', '0125', '015', '0175', '02', '0225', '025', '03', '035', '04',
+    #         '045', '05', '06', '07', '08', '09', '1', '125', '15', '175', '2', '225', '25', '3', '35', '4', '45', '5']
+    # spreads = ['01', '02', '05', '06', '065', '07', '075', '08', '085', '09', '1', '15', '2', '225', '25', '275', '3',
+    #            '325', '35', '375', '4']
     amps = ['002', '004', '005', '006', '008', '01', '0125', '015', '0175', '02', '0225', '025', '03', '035', '04',
-            '045', '05', '06', '07', '08', '09', '1', '125', '15', '175', '2', '225', '25', '3', '35', '4', '45', '5']
-    spreads = ['01', '02', '05', '06', '065', '07', '075', '08', '085', '09', '1', '15', '2', '225', '25', '275', '3',
-               '325', '35', '375', '4']
+            '045', '05']
+    spreads = ['01', '02', '05', '06', '065', '07', '075', '08', '085', '09', '1', '15', '2']
     for amp in amps:
         for spread in spreads:
             sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}')
@@ -573,7 +576,7 @@ def get_sim_mapping_var():
     jobs = [(df_diff, div, *other_pars) for div in np.setdiff1d(np.unique(df['divs']), exclude_divs)]
     with Pool(threads) as pool:
         for dsig_avgs_div in tqdm.tqdm(pool.istarmap(dvar_vs_protons, jobs), total=len(jobs)):
-            print(dsig_avgs_div)
+            # print(dsig_avgs_div)
             dsig_avgs.append(dsig_avgs_div)
     print(dsig_avgs)
     # for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
@@ -586,14 +589,13 @@ def get_sim_mapping_var():
     print(dsig_avgs)
     print(pd.unique(dsig_avgs['amp']))
     print(pd.unique(dsig_avgs['spread']))
-    plt.show()
-    # df_fits = plot_dvar_avgs_divs(dsig_avgs, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
-    #                               data_sets_labels=data_sets_labels)
+    df_fits = plot_dvar_avgs_divs(dsig_avgs, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
+                                  data_sets_labels=data_sets_labels, plt_energies=False)
     # # df_fits.to_csv(f'{base_path}{fits_out_base}/{df_partitions_fits_name}', index=False)
     #
-    # # print(df_fits)
-    # sigma_fits = plot_slope_div_fits_simpars(df_fits)
-    # interpolations = plot_sigma_fits_interp(sigma_fits)
+    print(df_fits)
+    sigma_fits = plot_slope_div_fits_simpars(df_fits)
+    interpolations = plot_sigma_fits_interp(sigma_fits)
     #
     # with open(f'{base_path}{pickle_map_name}', 'ab') as pickle_file:
     #     pickle.dump(interpolations, pickle_file)
