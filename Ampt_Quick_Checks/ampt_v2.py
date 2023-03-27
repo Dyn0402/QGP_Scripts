@@ -22,11 +22,12 @@ import istarmap  # Needed for tqdm
 
 from Azimuthal_Correlations.az_corr import get_ampt_ref3_edges
 from Sub_Resample.sub_event_resample_algorithm import get_resamples4
+from Measure import Measure
 
 
 def main():
-    calculate_v2()
-    # calculate_v2_cfmodel()
+    # calculate_v2()
+    calculate_v2_cfmodel()
     print('donzo')
 
 
@@ -154,10 +155,10 @@ def calculate_v2():
 def calculate_v2_cfmodel():
     base_path = 'F:/Research/'
     cf_type = ''  # 'EV', 'EVb342'
-    data_path = f'{base_path}Cooper_Frye{cf_type}_Trees/'
+    data_path = f'{base_path}Cooper_Frye{cf_type}_Trees/All_Particles/'
     out_dir = f'{base_path}Data_CF/default_resample/CF_rapid05_resample_norotate_0/'  # Change to epbins1 when it exists
-    # out_dir = None
-    # plot_out_dir = f'F:/Research/Results/Flow_QA/Cooper_Frye/Cooper_Frye{cf_type}/'
+    out_dir = None
+    # plot_out_dir = f'F:/Research/Results/Cooper_Frye{cf_type}_QA/'
     plot_out_dir = None  # Not really ready for plotting, using AMPT code to plot against centrality
     energies = [7, 19, 27, 39, 62]
     max_rapid = 0.5
@@ -176,7 +177,7 @@ def calculate_v2_cfmodel():
     for n in rp_harmonics:
         calc_quantities.update({f'v{n}_rp_sum': 0, f'v{n}_rp_sum2': 0})
     read_branches = ['pid', 'px', 'py', 'pz', 'refmult3']
-    threads = 12
+    threads = 1
 
     for energy in energies:
         print(f'Starting {energy}GeV')
@@ -268,6 +269,9 @@ def calculate_v2_cfmodel():
                 for n in rp_harmonics:
                     out_path_rp = f'{out_dir}{energy}GeV/v{n}_rp.txt'
                     write_v2(out_path_rp, cents, vn_rp_avgs[n], vn_rp_avg_err[n], reses, res_err)
+            else:
+                print(f'pid {pid}:\n{cents}\nv2s: {[Measure(val, err) for val, err in zip(v2_avgs, v2_avg_err)]}'
+                      f'\nresolutions: {[Measure(val, err) for val, err in zip(reses, res_err)]}')
 
 
 def read_file(file_path, read_branches, cents, pids, ref3_edges, max_rapid, min_pt, max_pt, max_p, eta_gap,
