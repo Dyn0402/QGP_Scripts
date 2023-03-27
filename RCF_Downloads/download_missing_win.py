@@ -22,7 +22,8 @@ def download():
     # data_set = 'AMPT_cent_sm'
     # data_set = 'CF'
     # data_set = 'CF_b342_lin'
-    data_set = 'BES1_flow'
+    # data_set = 'BES1_flow'
+    data_set = 'CF_EV_flow'
     data_sets = {'BES1': {'remote_path_suf': 'BES1/', 'remote_tree_pref': 'trees/output',
                           'local_path': 'C:/Users/Dylan/Research/', 'local_tree_pref': 'BES1_Trees'},
                  'BES1_flow': {'remote_path_suf': 'BES1/', 'remote_tree_pref': 'trees/output',
@@ -57,9 +58,16 @@ def download():
                             'local_path': '/media/ucla/Research/', 'local_tree_pref': 'Cooper_Frye_EV_Trees'},
                  'CF_b342_lin': {'remote_path_suf': 'CooperFrye/', 'remote_tree_pref': 'CooperFrye_b342_protons/output',
                                  'local_path': '/media/ucla/Research/', 'local_tree_pref': 'Cooper_Frye_EVb342_Trees'},
+                 'CF_flow': {'remote_path_suf': 'CooperFrye/', 'remote_tree_pref': 'CooperFrye_all/output',
+                             'local_path': 'F:/Research/', 'local_tree_pref': 'Cooper_Frye_Trees/All_Particles'},
+                 'CF_EV_flow': {'remote_path_suf': 'CooperFrye/', 'remote_tree_pref': 'CooperFrye_EV_all/output',
+                                'local_path': 'F:/Research/', 'local_tree_pref': 'Cooper_Frye_EV_Trees/All_Particles'},
+                 'CF_EVb342_flow': {'remote_path_suf': 'CooperFrye/', 'local_path': 'F:/Research/',
+                                    'remote_tree_pref': 'CooperFrye_EVb342_all/output',
+                                    'local_tree_pref': 'Cooper_Frye_EVb342_Trees/All_Particles'},
                  }
 
-    energies = [7, 11, 19, 27, 39, 62]  # , '2-7TeV_PbPb']
+    energies = [7, 19, 27, 39, 62]  # , '2-7TeV_PbPb']
     # energies = [27, 62]
     bw_limit = None  # bandwidth limit per energy in Mbps or None
     size_tolerance = 0.001  # percentage tolerance between remote and local sizes, re-download if different
