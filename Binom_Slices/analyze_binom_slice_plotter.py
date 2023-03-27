@@ -506,29 +506,30 @@ def get_sim_mapping_var():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
     base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
-    df_name = 'binom_slice_stats_sim.csv'
+    # base_path = '/media/ucla/Research/Results/Azimuth_Analysis/'
+    df_name = 'Binomial_Slice_Moments/binom_slice_stats_sim.csv'
     pickle_map_name = 'binom_slice_sim_mapping'
     out_dir = 'F:/Research/Results/Sim_Mapping/'
     fits_out_base = 'Base_Zero_Fits'
-    df_tproton_fits_name = 'sim_tprotons_fits.csv'
+    df_tproton_avgs_name = 'sim_dsig_tprotons_avgs.csv'
     df_partitions_fits_name = 'sim_partitions_fits.csv'
     threads = 10
     df_path = base_path + df_name
     sim_sets = []
 
-    print(f'{base_path}{fits_out_base}{df_tproton_fits_name}')
+    print(f'{base_path}{fits_out_base}{df_tproton_avgs_name}')
 
     # amps = ['002', '004', '006', '008', '01']  # ['002', '006', '01']
     # spreads = ['02', '05', '06', '065', '07']
     # amps = ['002', '004', '005', '006', '008', '01', '0125', '015', '0175', '02', '0225', '025', '03', '035', '04']
     # spreads = ['05', '06', '065', '07', '075', '08', '085', '09', '1', '15', '2']
-    # amps = ['002', '004', '005', '006', '008', '01', '0125', '015', '0175', '02', '0225', '025', '03', '035', '04',
-    #         '045', '05', '06', '07', '08', '09', '1', '125', '15', '175', '2', '225', '25', '3', '35', '4', '45', '5']
-    # spreads = ['01', '02', '05', '06', '065', '07', '075', '08', '085', '09', '1', '15', '2', '225', '25', '275', '3',
-    #            '325', '35', '375', '4']
     amps = ['002', '004', '005', '006', '008', '01', '0125', '015', '0175', '02', '0225', '025', '03', '035', '04',
-            '045', '05']
-    spreads = ['01', '02', '05', '06', '065', '07', '075', '08', '085', '09', '1', '15', '2']
+            '045', '05', '06', '07', '08', '09', '1', '125', '15', '175', '2', '225', '25', '3', '35', '4', '45', '5']
+    spreads = ['01', '02', '05', '06', '065', '07', '075', '08', '085', '09', '1', '15', '2', '225', '25', '275', '3',
+               '325', '35', '375', '4']
+    # amps = ['002', '004', '005', '006', '008', '01', '0125', '015', '0175', '02', '0225', '025', '03', '035', '04',
+    #         '045', '05']
+    # spreads = ['01', '02', '05', '06', '065', '07', '075', '08', '085', '09', '1', '15', '2']
     for amp in amps:
         for spread in spreads:
             sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}')
@@ -585,14 +586,14 @@ def get_sim_mapping_var():
     #                                        plot=False, fit=True)
     #     protons_fits.append(protons_fits_div)
     dsig_avgs = pd.concat(dsig_avgs, ignore_index=True)
-    # dsig_avgs.to_csv(f'{base_path}{fits_out_base}/{df_tproton_fits_name}', index=False)
+    dsig_avgs.to_csv(f'{base_path}{fits_out_base}/{df_tproton_avgs_name}', index=False)
     print(dsig_avgs)
     print(pd.unique(dsig_avgs['amp']))
     print(pd.unique(dsig_avgs['spread']))
     df_fits = plot_dvar_avgs_divs(dsig_avgs, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
                                   data_sets_labels=data_sets_labels, plt_energies=False)
-    # # df_fits.to_csv(f'{base_path}{fits_out_base}/{df_partitions_fits_name}', index=False)
-    #
+    df_fits.to_csv(f'{base_path}{fits_out_base}/{df_partitions_fits_name}', index=False)
+
     print(df_fits)
     sigma_fits = plot_slope_div_fits_simpars(df_fits)
     interpolations = plot_sigma_fits_interp(sigma_fits)
