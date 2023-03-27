@@ -40,8 +40,8 @@ def main():
 
     title_sufx = f'\n{energy}GeV, 0-5% Centrality, {divs}° Partitions, {samples} Sample per Event'
 
-    plot_2d(raw.get_dist(), raw.max_particle, raw.get_max_bin(), divs, data_name, title_sufx)
-    plot_binomial(raw.get_dist(), 31, divs, data_name, title_sufx=title_sufx)
+    # plot_2d(raw.get_dist(), raw.max_particle, raw.get_max_bin(), divs, data_name, title_sufx)
+    plot_binomial(raw.get_dist(), 6, divs, data_name, title_sufx=title_sufx)
     # plot_ratio(raw.get_dist(), raw.max_particle, divs, x_bins=20, title_sufx=title_sufx)
     # plot_pull(raw.get_dist(), raw.max_particle, divs, x_bins=40, title_sufx=title_sufx)
 
@@ -259,13 +259,24 @@ def plot_binomial(data, particles, divs, data_name, title_sufx=''):
     x = range(particles + 1)
     y_binom = sum(y) * binom.pmf(x, particles, float(divs) / 360)
     # y_err = np.sqrt(y)  # No longer a good approximation with multi-sampling
+
+    fig0, ax0 = plt.subplots(figsize=(6.6, 3.3), dpi=144)
+    ax0.bar(x, y, width=1, align='center', zorder=0, label=f'{particles} Proton Events')
+    ax0.set_xticks(range(0, len(y), 2))
+    ax0.set_title(f'{data_name} Protons in {divs}° Partition for {particles} Proton Events' + title_sufx)
+    ax0.set_xlabel('Number of Protons in Azimuthal Partition')
+    ax0.set_ylabel('Partitions')
+    ax0.set_xlim([-0.5, particles + 0.5])
+    ax0.legend()
+    fig0.tight_layout()
+
     fig1, ax1 = plt.subplots(figsize=(6.6, 3.3), dpi=144)
     # fig1, ax1 = plt.subplots(figsize=(6, 2.8), dpi=144)
     ax1.bar(x, y, align='center', zorder=0, label=f'{particles} Proton Events')
     ax1.scatter(x, y_binom, color='red', label='Binomial Distribution')
     ax1.set_xticks(range(0, len(y), 2))
     ax1.set_title(f'{data_name} Protons in {divs}° Partition vs Binomial for {particles} Proton Events' + title_sufx)
-    ax1.set_xlabel('Number of Protons in Partition')
+    ax1.set_xlabel('Number of Protons in Azimuthal Partition')
     ax1.set_ylabel('Partitions')
     ax1.set_xlim([-0.5, particles + 0.5])
     ax1.legend()
