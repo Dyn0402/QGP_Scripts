@@ -11,6 +11,7 @@ Created as QGP_Scripts/ampt_v2
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import math
 
 import uproot
 import awkward as ak
@@ -154,13 +155,17 @@ def calculate_v2():
 
 def calculate_v2_cfmodel():
     base_path = 'F:/Research/'
-    cf_type = ''  # 'EV', 'EVb342'
+    cf_type = '_EVb342'  # '', '_EV', '_EVb342'
     data_path = f'{base_path}Cooper_Frye{cf_type}_Trees/All_Particles/'
-    out_dir = f'{base_path}Data_CF/default_resample/CF_rapid05_resample_norotate_0/'  # Change to epbins1 when it exists
-    out_dir = None
+    cf_type = cf_type.strip('_')
+    out_dir = f'{base_path}Data_CF{cf_type}/default_resample_epbins1/CF{cf_type}_rapid05_resample_norotate_epbins1_0/'
+    # out_dir = None
     # plot_out_dir = f'F:/Research/Results/Cooper_Frye{cf_type}_QA/'
     plot_out_dir = None  # Not really ready for plotting, using AMPT code to plot against centrality
-    energies = [7, 19, 27, 39, 62]
+    batch_size = '40000 kB'
+    print_results = False
+    # energies = [7, 19, 27, 39, 62]
+    energies = [7, 19, 27, 39]
     max_rapid = 0.5
     min_pt = 0.4  # GeV
     max_pt = 2.0  # GeV
@@ -177,21 +182,36 @@ def calculate_v2_cfmodel():
     for n in rp_harmonics:
         calc_quantities.update({f'v{n}_rp_sum': 0, f'v{n}_rp_sum2': 0})
     read_branches = ['pid', 'px', 'py', 'pz', 'refmult3']
-    threads = 1
+    threads = 10
 
     for energy in energies:
-        print(f'Starting {energy}GeV')
+        print(f'\nStarting {energy}GeV')
         file_dir = f'{data_path}{energy}GeV/'
-        file_paths = os.listdir(file_dir)[:]
+        file_paths = [file_dir + file_name for file_name in os.listdir(file_dir)[:]]
+        uproot_batches = uproot.iterate(file_paths, read_branches, step_size=batch_size)
+        # num_events = ak.count([x for x in uproot.iterate(file_paths, ['refmult3'], step_size=batch_size)])
+        test_file = uproot.open(file_paths[0])['tree']
+        events_per_file = test_file.num_entries
+        events_per_batch = test_file.num_entries_for(batch_size, read_branches)
+        num_files = len(file_paths)
+        est_total_batches = math.ceil(num_files * events_per_file / events_per_batch * 1.015)
+        print(f'{num_files} files, {events_per_file} events/file, {events_per_batch} events/batch, '
+              f'{est_total_batches} estimated total batches')
+        # num_batches = len([1 for x in uproot_batches])
 
         ref3_edges = get_cf_ref3_edge()  # Overkill but matches style of AMPT v2 calculation
 
-        jobs = [(f'{file_dir}{path}', read_branches, cents, pids, ref3_edges, max_rapid, min_pt, max_pt, max_p, eta_gap,
-                 calc_quantities, rp_harmonics) for path in file_paths]
+        def gen():
+            for batch in uproot_batches:
+                yield (batch, cents, pids, ref3_edges, max_rapid, min_pt, max_pt, max_p, eta_gap,
+                       calc_quantities, rp_harmonics)
+
+        # jobs = [(batch, cents, pids, ref3_edges, max_rapid, min_pt, max_pt, max_p, eta_gap,
+        #          calc_quantities, rp_harmonics) for batch in uproot_batches]
 
         v2_data = {pid: {cent: calc_quantities.copy() for cent in cents} for pid in pids}
         with Pool(threads) as pool:
-            for file_v2_data in tqdm.tqdm(pool.istarmap(read_file, jobs), total=len(jobs)):
+            for file_v2_data in tqdm.tqdm(pool.istarmap(read_batch, gen()), total=est_total_batches):
                 for pid in pids:
                     for cent in cents:
                         for quant in v2_data[pid][cent]:
@@ -269,7 +289,7 @@ def calculate_v2_cfmodel():
                 for n in rp_harmonics:
                     out_path_rp = f'{out_dir}{energy}GeV/v{n}_rp.txt'
                     write_v2(out_path_rp, cents, vn_rp_avgs[n], vn_rp_avg_err[n], reses, res_err)
-            else:
+            if print_results:
                 print(f'pid {pid}:\n{cents}\nv2s: {[Measure(val, err) for val, err in zip(v2_avgs, v2_avg_err)]}'
                       f'\nresolutions: {[Measure(val, err) for val, err in zip(reses, res_err)]}')
 
@@ -282,6 +302,7 @@ def read_file(file_path, read_branches, cents, pids, ref3_edges, max_rapid, min_
     ep_pids = [211, 321, -211, -321, 2212, -2212]  # Just use pions and kaons for now
     proton_mass = 0.09382721  # GeV
     with uproot.open(file_path) as file:
+        # for batch in file['tree'].iterate(step_size=1000):
         tracks_all = file['tree'].arrays(read_branches)
         for cent in cents:
             tracks = tracks_all[(tracks_all.refmult3 <= ref3_edges[cent][0]) &
@@ -331,6 +352,65 @@ def read_file(file_path, read_branches, cents, pids, ref3_edges, max_rapid, min_
                     vn_rp = np.cos(n * protons.phi)  # AMPT reaction plane always at 0
                     v2_data[pid][cent][f'v{n}_rp_sum'] = ak.sum(vn_rp)
                     v2_data[pid][cent][f'v{n}_rp_sum2'] = ak.sum(vn_rp ** 2)
+
+    return v2_data
+
+
+def read_batch(batch, cents, pids, ref3_edges, max_rapid, min_pt, max_pt, max_p, eta_gap, calc_quantities,
+               rp_harmonics):
+    vector.register_awkward()
+    v2_data = {pid: {cent: calc_quantities.copy() for cent in cents} for pid in pids}
+    # data_nproton = {cent: {n: {'sum': 0, 'sum2': 0, 'n': 0} for n in range(100)} for cent in cents}
+    ep_pids = [211, 321, -211, -321, 2212, -2212]  # Just use pions and kaons for now
+    proton_mass = 0.09382721  # GeV
+
+    for cent in cents:
+        tracks = batch[(batch.refmult3 <= ref3_edges[cent][0]) & (batch.refmult3 > ref3_edges[cent][1])]
+        tracks = ak.zip({'pid': tracks['pid'], 'px': tracks['px'], 'py': tracks['py'], 'pz': tracks['pz']},
+                        with_name='Momentum3D')
+
+        tracks = tracks[(abs(tracks.eta) < 1.) & (tracks.pt > 0.2) & (tracks.pt < 2.0)]
+        for pid in pids:
+            non_protons = []
+            ep_pids_hold = [ep_pid for ep_pid in ep_pids if abs(ep_pid) != abs(pid)]
+            for ep_pid in ep_pids_hold:  # Probably a columnar way to do this but dimension is too high for my head
+                non_protons.append(tracks[tracks['pid'] == ep_pid])
+            non_protons = ak.concatenate(non_protons, axis=1)
+            non_protons_west = non_protons[non_protons.eta < -eta_gap]
+            non_protons_east = non_protons[non_protons.eta > eta_gap]
+
+            qx_west = ak.mean(non_protons_west.pt * np.cos(2 * non_protons_west.phi), axis=1)
+            qy_west = ak.mean(non_protons_west.pt * np.sin(2 * non_protons_west.phi), axis=1)
+            qx_east = ak.mean(non_protons_east.pt * np.cos(2 * non_protons_east.phi), axis=1)
+            qy_east = ak.mean(non_protons_east.pt * np.sin(2 * non_protons_east.phi), axis=1)
+            psi_east = np.arctan2(qy_east, qx_east) / 2.
+            psi_west = np.arctan2(qy_west, qx_west) / 2.
+            psi_res = np.cos(2 * (psi_east - psi_west))
+
+            protons = tracks[(tracks['pid'] == pid)]
+            protons = protons[(protons.pt > min_pt) & (protons.pt < max_pt) & (protons.p < max_p)]
+            if abs(pid) == 2212:
+                proton_rapid = rapidity(protons.px, protons.py, protons.pz, protons.px * 0 + proton_mass)
+                protons = protons[abs(proton_rapid) < max_rapid]
+            else:
+                protons = protons[abs(protons.eta) < max_rapid]
+            protons_west = protons[protons.eta < 0].phi
+            protons_east = protons[protons.eta >= 0].phi
+            v2_west = np.cos(2 * (protons_west - psi_east))
+            v2_east = np.cos(2 * (protons_east - psi_west))
+            v2 = ak.concatenate([v2_east, v2_west], axis=1)
+
+            v2_data[pid][cent]['v2_ep_sum'] = ak.sum(v2)
+            v2_data[pid][cent]['v2_ep_sum2'] = ak.sum(v2 ** 2)
+            v2_data[pid][cent]['n_v2'] = ak.count(v2)
+            v2_data[pid][cent]['ep_res_sum'] = ak.sum(psi_res)
+            v2_data[pid][cent]['ep_res_sum2'] = ak.sum(psi_res ** 2)
+            v2_data[pid][cent]['n_psi'] = ak.count(psi_res)
+
+            for n in rp_harmonics:
+                vn_rp = np.cos(n * protons.phi)  # AMPT reaction plane always at 0
+                v2_data[pid][cent][f'v{n}_rp_sum'] = ak.sum(vn_rp)
+                v2_data[pid][cent][f'v{n}_rp_sum2'] = ak.sum(vn_rp ** 2)
 
     return v2_data
 
