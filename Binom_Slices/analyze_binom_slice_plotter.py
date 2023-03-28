@@ -20,8 +20,8 @@ from analyze_binom_slices import *
 
 
 def main():
-    # plot_star_model_var()
-    # plot_vs_cent_var()
+    plot_star_model_var()
+    plot_vs_cent_var()
     # plot_sims_var()
     get_sim_mapping_var()
 
@@ -34,7 +34,7 @@ def main():
     # plot_closest_sims()
     # plot_vs_cent_nofit()
     # plot_vs_cent_fittest()
-    # plot_all_zero_base()
+    plot_all_zero_base()
     # plot_ampt_efficiency()
     # plot_flow()
     # plot_flow_k2()
@@ -119,11 +119,18 @@ def plot_star_model():
 def plot_star_model_var():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
-    base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+    base_path = 'F:/Research/Results/Azimuth_Analysis/'
     v2_star_in_dir = 'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/' \
                      'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/'
     v2_ampt_in_dir = 'F:/Research/Data_Ampt_New_Coal/default_resample_epbins1/Ampt_rapid05_resample_norotate_epbins1_0/'
-    df_name = 'binom_slice_stats_cent8_var_epbins1.csv'
+    v2_cf_in_dir = 'F:/Research/Data_CF/default_resample_epbins1/CFEVb342_rapid05_resample_norotate_epbins1_0/'
+    v2_cfev_in_dir = 'F:/Research/Data_CFEV/default_resample_epbins1/CFEV_rapid05_resample_norotate_epbins1_0/'
+    v2_cfevb342_in_dir = 'F:/Research/Data_CFEVb342/default_resample_epbins1/' \
+                         'CFEVb342_rapid05_resample_norotate_epbins1_0/'
+    df_name = 'Binomial_Slice_Moments/binom_slice_stats_cent8_var_epbins1.csv'
+    fits_out_base = 'Base_Zero_Fits'
+    df_tproton_avgs_name = 'dsig_tprotons_avgs_cent8.csv'
+    df_partitions_fits_name = 'partitions_fits_cent8.csv'
     df_path = base_path + df_name
     sim_sets = []
 
@@ -151,6 +158,9 @@ def plot_star_model_var():
 
     v2_star_vals = {2: read_flow_values(v2_star_in_dir)}
     v2_ampt_vals = {2: read_flow_values(v2_ampt_in_dir)}
+    v2_cf_vals = {2: read_flow_values(v2_cf_in_dir)}
+    v2_cfev_vals = {2: read_flow_values(v2_cfev_in_dir)}
+    v2_cfevb342_vals = {2: read_flow_values(v2_cfevb342_in_dir)}
 
     df = pd.read_csv(df_path)
     df = df.dropna()
@@ -194,8 +204,18 @@ def plot_star_model_var():
                                                   'ampt_new_coal_epbins1', v2_ampt_vals, div, cent_plt)
         dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, 'bes_resample_epbins1_sub',
                                                   'bes_resample_epbins1', v2_star_vals, div, cent_plt)
+        dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, 'cf_resample_epbins1_sub',
+                                                  'cf_resample_epbins1', v2_cf_vals, div, cent_plt)
+        dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, 'cfev_resample_epbins1_sub',
+                                                  'cfev_resample_epbins1', v2_cfev_vals, div, cent_plt)
+        dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, 'cfevb342_resample_epbins1_sub',
+                                                  'cfevb342_resample_epbins1', v2_cfevb342_vals, div, cent_plt)
         dsig_avgs.append(dsig_avgs_div_diff)
+
     dsig_avgs = pd.concat(dsig_avgs, ignore_index=True)
+    if df_tproton_avgs_name is not None:
+        dsig_avgs.to_csv(f'{base_path}{fits_out_base}/{df_tproton_avgs_name}', index=False)
+
     for data_set in data_sets_plt:
         data_sets = [data_set + x for x in ['_raw', '_mix', '_sub']]
         colors = dict(zip(data_sets, ['blue', 'green', 'red']))
@@ -209,18 +229,14 @@ def plot_star_model_var():
         plot_dvar_avgs_divs(dsig_avgs, data_sets, data_sets_colors=colors, fit=False, data_sets_labels=labels)
     plot_dvar_avgs_divs(dsig_avgs, data_sets_plt, data_sets_colors=data_sets_colors, fit=False,
                         data_sets_labels=data_sets_labels)
-    # if df_tproton_fits_name:
-    #     dsig_avgs.to_csv(f'{base_path}{fits_out_base}{df_tproton_fits_name}', index=False)
-    # print(dsig_avgs)
-    # print(pd.unique(dsig_avgs['amp']))
-    # print(pd.unique(dsig_avgs['spread']))
-    # df_fits = plot_dsig_avgs_divs(dsig_avgs, all_sets_plt, data_sets_colors=data_sets_colors, fit=False,
-    #                                  data_sets_labels=data_sets_labels)
-    # if df_partitions_fits_name:
-    #     df_fits.to_csv(f'{base_path}{fits_out_base}{df_partitions_fits_name}', index=False)
-    # print(df_fits)
-    # plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
-    # plot_slope_div_fits_simpars(df_fits)
+
+    df_fits = plot_dvar_avgs_divs(dsig_avgs, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
+                                  data_sets_labels=data_sets_labels, plt_energies=False)
+    if df_partitions_fits_name is not None:
+        df_fits.to_csv(f'{base_path}{fits_out_base}/{df_partitions_fits_name}', index=False)
+
+    plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
+    plot_slope_div_fits_simpars(df_fits)
 
     plt.show()
 
@@ -586,13 +602,15 @@ def get_sim_mapping_var():
     #                                        plot=False, fit=True)
     #     protons_fits.append(protons_fits_div)
     dsig_avgs = pd.concat(dsig_avgs, ignore_index=True)
-    dsig_avgs.to_csv(f'{base_path}{fits_out_base}/{df_tproton_avgs_name}', index=False)
+    if df_tproton_avgs_name is not None:
+        dsig_avgs.to_csv(f'{base_path}{fits_out_base}/{df_tproton_avgs_name}', index=False)
     print(dsig_avgs)
     print(pd.unique(dsig_avgs['amp']))
     print(pd.unique(dsig_avgs['spread']))
     df_fits = plot_dvar_avgs_divs(dsig_avgs, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
                                   data_sets_labels=data_sets_labels, plt_energies=False)
-    df_fits.to_csv(f'{base_path}{fits_out_base}/{df_partitions_fits_name}', index=False)
+    if df_partitions_fits_name is not None:
+        df_fits.to_csv(f'{base_path}{fits_out_base}/{df_partitions_fits_name}', index=False)
 
     print(df_fits)
     sigma_fits = plot_slope_div_fits_simpars(df_fits)
@@ -852,7 +870,14 @@ def plot_vs_cent_var():
     v2_star_in_dir = 'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/' \
                      'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/'
     v2_ampt_in_dir = 'F:/Research/Data_Ampt_New_Coal/default_resample_epbins1/Ampt_rapid05_resample_norotate_epbins1_0/'
+    v2_cf_in_dir = 'F:/Research/Data_CF/default_resample_epbins1/CFEVb342_rapid05_resample_norotate_epbins1_0/'
+    v2_cfev_in_dir = 'F:/Research/Data_CFEV/default_resample_epbins1/CFEV_rapid05_resample_norotate_epbins1_0/'
+    v2_cfevb342_in_dir = 'F:/Research/Data_CFEVb342/default_resample_epbins1/' \
+                         'CFEVb342_rapid05_resample_norotate_epbins1_0/'
     df_name = 'binom_slice_stats_cent8_var_epbins1.csv'
+    fits_out_base = 'Base_Zero_Fits'
+    df_tproton_avgs_name = 'dsig_tprotons_avgs.csv'
+    df_partitions_fits_name = 'partitions_fits.csv'
     df_path = base_path + df_name
 
     cent_ref_name = 'mean_cent_ref.csv'
@@ -881,6 +906,9 @@ def plot_vs_cent_var():
 
     v2_star_vals = {2: read_flow_values(v2_star_in_dir)}
     v2_ampt_vals = {2: read_flow_values(v2_ampt_in_dir)}
+    v2_cf_vals = {2: read_flow_values(v2_cf_in_dir)}
+    v2_cfev_vals = {2: read_flow_values(v2_cfev_in_dir)}
+    v2_cfevb342_vals = {2: read_flow_values(v2_cfevb342_in_dir)}
 
     df = pd.read_csv(df_path)
     df = df.dropna()
@@ -907,8 +935,22 @@ def plot_vs_cent_var():
                                                   'ampt_new_coal_epbins1', v2_ampt_vals)
         dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, 'bes_resample_epbins1_flow_included',
                                                   'bes_resample_epbins1', v2_star_vals)
+        dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, 'cf_resample_epbins1_flow_included',
+                                                  'cf_resample_epbins1', v2_cf_vals)
+        dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, 'cfev_resample_epbins1_flow_included',
+                                                  'cfev_resample_epbins1', v2_cfev_vals)
+        dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, 'cfevb342_resample_epbins1_flow_included',
+                                                  'cfevb342_resample_epbins1', v2_cfevb342_vals)
         dsig_avgs.append(dsig_avgs_div_diff)
+
     dsig_avgs = pd.concat(dsig_avgs, ignore_index=True)
+    if df_tproton_avgs_name is not None:
+        dsig_avgs.to_csv(f'{base_path}{fits_out_base}/{df_tproton_avgs_name}', index=False)
+
+    df_fits = plot_dvar_avgs_divs(dsig_avgs, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
+                                  data_sets_labels=data_sets_labels, plt_energies=False)
+    if df_partitions_fits_name is not None:
+        df_fits.to_csv(f'{base_path}{fits_out_base}/{df_partitions_fits_name}', index=False)
 
     for energy in energies_fit:
         dsig_avgs_energy = dsig_avgs[dsig_avgs['energy'] == energy]
