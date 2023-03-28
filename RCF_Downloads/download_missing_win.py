@@ -23,7 +23,7 @@ def download():
     # data_set = 'CF'
     # data_set = 'CF_b342_lin'
     # data_set = 'BES1_flow'
-    data_set = 'CF_EV_flow'
+    data_set = 'CF_EVb342_flow'
     data_sets = {'BES1': {'remote_path_suf': 'BES1/', 'remote_tree_pref': 'trees/output',
                           'local_path': 'C:/Users/Dylan/Research/', 'local_tree_pref': 'BES1_Trees'},
                  'BES1_flow': {'remote_path_suf': 'BES1/', 'remote_tree_pref': 'trees/output',
@@ -67,8 +67,8 @@ def download():
                                     'local_tree_pref': 'Cooper_Frye_EVb342_Trees/All_Particles'},
                  }
 
-    energies = [7, 19, 27, 39, 62]  # , '2-7TeV_PbPb']
-    # energies = [27, 62]
+    # energies = [7, 19, 27, 39, 62]  # , '2-7TeV_PbPb']
+    energies = [7, 19, 27, 39]
     bw_limit = None  # bandwidth limit per energy in Mbps or None
     size_tolerance = 0.001  # percentage tolerance between remote and local sizes, re-download if different
     file_delay = 0.1  # seconds to delay between file download calls
