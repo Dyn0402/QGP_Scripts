@@ -139,15 +139,15 @@ def define_datasets(base_path):
         # ['cf_resample_def', '_CF', ['default', 'resample'], [], ['alg3', 'reactionplane'], [0], all_energies, all_cents,
         #  all_divs],
         ['cf_resample_epbins1', '_CF', ['default', 'resample', 'epbins1'], [], ['alg3', 'reactionplane'], [0],
-         all_energies, all_cents, all_divs],
+         [7, 19, 27, 39, 62], [8], all_divs],
         # ['cfev_resample_def', '_CFEV', ['default', 'resample'], [], ['alg3', 'reactionplane'], [0], all_energies, all_cents,
         #  all_divs],
         ['cfev_resample_epbins1', '_CFEV', ['default', 'resample', 'epbins1'], [], ['alg3', 'reactionplane'], [0],
-         all_energies, all_cents, all_divs],
+         [7, 19, 27, 39, 62], [8], all_divs],
         # ['cfevb342_resample_def', '_CFEVb342', ['default', 'resample'], [], ['alg3', 'reactionplane'], [0], all_energies,
         #  all_cents, all_divs],
         ['cfevb342_resample_epbins1', '_CFEVb342', ['default', 'resample', 'epbins1'], [], ['alg3', 'reactionplane'],
-         [0], all_energies, all_cents, all_divs],
+         [0], [7, 19, 27, 39, 62], [8], all_divs],
         # ['flow_resample_res9_v207', '_Sim_Flow', ['resample', 'res9', 'v207', 'epbins1'],
         #  [], [], [0], [62], [8], all_divs],
         # ['flow_resample_res15_v207', '_Sim_tests', ['flow', 'resample', 'res15', 'v207'],
@@ -248,20 +248,20 @@ def define_datasets(base_path):
     #                                     f'spreadminus{sm}', 'resample'], ['flat'], [], [0], [62], [8], all_divs])
 
     # Anti-clustering
-    df = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample'], ['test'], True)
-    # df = find_sim_sets(f'{base_path}Data_Sim_tests/', ['flat80', 'anticlmulti', 'resample'], [], True)
-    for amp in np.unique(df['amp']):
-        amp_float = float(f'0.{amp}')  # For filtering if needed
-        # if amp_float not in [0.2, 0.5]:
-        #     continue
-        df_amp = df[df['amp'] == amp]
-        for spread in np.unique(df_amp['spread']):
-            spread_float = float(f'0.{spread}') * 10  # For filtering if needed
-            # if spread_float not in [0.5, 1]:
-            #     continue
-            entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
-                               ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
-                               ['flat'], [], [0], [62], [8], all_divs])
+    # df = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'anticlmulti', 'resample'], ['test'], True)
+    # # df = find_sim_sets(f'{base_path}Data_Sim_tests/', ['flat80', 'anticlmulti', 'resample'], [], True)
+    # for amp in np.unique(df['amp']):
+    #     amp_float = float(f'0.{amp}')  # For filtering if needed
+    #     # if amp_float not in [0.2, 0.5]:
+    #     #     continue
+    #     df_amp = df[df['amp'] == amp]
+    #     for spread in np.unique(df_amp['spread']):
+    #         spread_float = float(f'0.{spread}') * 10  # For filtering if needed
+    #         # if spread_float not in [0.5, 1]:
+    #         #     continue
+    #         entry_vals.append([f'sim_aclmul_amp{amp}_spread{spread}', '_Sim',
+    #                            ['anticlmulti', f'amp{amp}', f'spread{spread}', 'resample'],
+    #                            ['flat'], [], [0], [62], [8], all_divs])
 
     # # Clustering
     # df = find_sim_sets(f'{base_path}Data_Sim/', ['flat80', 'clmulti', 'resample'], ['test'], True)
