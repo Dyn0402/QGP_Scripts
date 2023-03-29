@@ -165,7 +165,7 @@ def calculate_v2_cfmodel():
     batch_size = '40000 kB'
     print_results = False
     # energies = [7, 19, 27, 39, 62]
-    energies = [7, 19, 27, 39]
+    energies = [62]
     max_rapid = 0.5
     min_pt = 0.4  # GeV
     max_pt = 2.0  # GeV
@@ -182,7 +182,7 @@ def calculate_v2_cfmodel():
     for n in rp_harmonics:
         calc_quantities.update({f'v{n}_rp_sum': 0, f'v{n}_rp_sum2': 0})
     read_branches = ['pid', 'px', 'py', 'pz', 'refmult3']
-    threads = 10
+    threads = 16
 
     for energy in energies:
         print(f'\nStarting {energy}GeV')
