@@ -36,250 +36,6 @@ from DistStats import DistStats
 from Measure import Measure
 
 
-def main():
-    plt.rcParams["figure.figsize"] = (6.66, 5)
-    plt.rcParams["figure.dpi"] = 144
-    threads = 15
-    # base_path = 'F:/Research/Results/Azimuth_Analysis/'
-    base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
-    # df_name = 'binom_slice_sds_cent8.csv'
-    # df_name = 'binom_slice_stats_cent8_no_sim.csv'
-    # df_name = 'binom_slice_stats_cent8_ampt_eff.csv'
-    # df_name = 'binom_slice_stats_cent8_no_sim.csv'
-    df_name = 'binom_slice_stats_cent8_sim_test.csv'
-    # df_name = 'binom_slice_stats_cent8_ex_cl_ant_sim.csv'
-    chi_df_name = 'chi_df_ampt_neks_cent8.csv'
-    df_path = base_path + df_name
-    # df_path = '/home/dylan/Research/Results/Azimuth_Analysis/binom_slice_df.csv'
-    # df_path = 'F:/Research/Results/Azimuth_Analysis/binom_slice_cent_sds_df.csv'
-    # df_path = 'F:/Transfer/Research/Results/Azimuth_Analysis/binom_slice_df.csv'
-    # df_path = 'C:/Users/Dyn04/Desktop/binom_slice_df.csv'
-    # df_path = 'C:/Users/Dylan/Research/Results/Azimuth_Analysis/binom_slice_cent_sds_df.csv'
-    sim_sets = []
-    # sim_sets = ['sim_aclmul_amp02_spread1', 'sim_aclmul_amp2_spread1', 'sim_clmul_amp02_spread1',
-    #             'sim_clmul_amp2_spread1']
-    amps = ['002', '004', '006', '008', '01']  # ['002', '006', '01']
-    spreads = ['05', '1']
-    for amp in amps:
-        for spread in spreads:
-            sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}')
-            sim_sets.append(f'sim_clmul_amp{amp}_spread{spread}')
-    sim_sets = sorted(sim_sets, reverse=True)
-    sim_sets = sim_sets[:int(len(sim_sets) / 2)] + sorted(sim_sets[int(len(sim_sets) / 2):])
-
-    # sim_amp_pairs = [('2', '1'), ('5', '1'), ('2', '05'), ('5', '05')]
-    # # sim_amp_pairs = []  # [('5', '35'), ('02', '05'), ('015', '1')]
-    # for amp, spread in sim_amp_pairs:
-    #     sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}')
-    #
-    # sim_amp_pairs = [('1', '1'), ('5', '1'), ('1', '05'), ('5', '05')]
-    # # sim_amp_pairs = []  # [('5', '35'), ('02', '05'), ('015', '1')]
-    # for amp, spread in sim_amp_pairs:
-    #     sim_sets.append(f'sim_clmul_amp{amp}_spread{spread}')
-
-    # spreads.extend(['5', '6'])
-    # for amp in amps:
-    #     for spread in spreads:
-    #         sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}_test')
-    y_ranges = {'mean': (0.8, 1.2), 'standard deviation': (0.8, 1.25), 'skewness': (0, 1.25), 'kurtosis': (-3, 2),
-                'non-excess kurtosis': (0.95, 1.025)}
-    stat_plot = 'standard deviation'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
-    div_plt = 120
-    exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
-    total_protons_plt = 20
-    cent_plt = 8
-    energies_plt = [39, 'sim']  # [7, 11, 19, 27, 39, 62, 'sim']  # [7, 11, 19, 27, 39, 62]
-    # energies_fit = [7, 11, 19, 27, 39, 62]  # , 11, 19, 27, 39, 62]
-    energies_fit = ['sim', 7]
-    energy_plt = 62
-    data_types_plt = ['divide']
-    data_type_plt = 'divide'
-    samples = 72  # For title purposes only
-    # data_sets_plt = ['ampt_eff1_resample_def', 'ampt_eff2_resample_def', 'ampt_eff3_resample_def']  # ['ampt_resample_def', 'ampt_old_resample_def', 'bes_resample_def']  # ['ampt_resample_def']
-    # data_sets_plt = ['ampt_old_eff1_resample_def', 'ampt_old_eff2_resample_def', 'ampt_old_eff3_resample_def']
-
-    # data_sets_plt = ['bes_resample_def', 'ampt_baryon_first_resample_def', 'ampt_meson_first_resample_def',
-    #                  'ampt_new_coal_resample_def', 'ampt_baryon_first_fix_resample_def',
-    #                  'cf_resample_def', 'cfev_resample_def', 'cfevb342_resample_def']
-    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'green', 'salmon', 'cyan', 'blue', 'purple', 'olive']))
-    # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT_Baryon_First', 'AMPT_Meson_First', 'AMPT_New_Coalescence',
-    #                                             'AMPT_Baryon_Fix', 'MUSIC+FIST', 'MUSIC+FIST+EV', 'MUSIC+FIST+EVb342']))
-
-    # data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def', 'ampt_baryon_first_fix_resample_def',
-    #                  'cf_resample_def', 'cfev_resample_def']
-    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'salmon', 'green', 'olive']))
-    # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT_New_Coalescence', 'AMPT_Baryon_First',
-    #                                             'MUSIC+FIST', 'MUSIC+FIST+EV']))
-
-    # data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def', 'cf_resample_def', 'cfev_resample_def']
-    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple']))
-    # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST', 'MUSIC+FIST EV']))
-
-    # data_sets_plt = ['cf_resample_def']
-    # data_sets_colors = dict(zip(data_sets_plt, ['blue']))
-    # data_sets_labels = dict(zip(data_sets_plt, ['MUSIC+FIST']))
-
-    data_sets_plt, data_sets_colors, data_sets_labels = [], None, None
-    data_sets_plt = []
-    data_sets_labels = {}
-    for sim_set in sim_sets:
-        label = ''
-        if '_clmul_' in sim_set:
-            label += 'Attractive '
-        elif '_aclmul_' in sim_set:
-            label += 'Repulsive '
-        amp, spread = get_name_amp_spread(sim_set)
-        label += f'A={amp} σ={spread}'
-        data_sets_labels.update({sim_set: label})
-
-    # data_sets_plt = ['bes_resample_def', 'bes_resample_def_alg3', 'bes_single']
-    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'green']))
-    # data_sets_labels = dict(zip(data_sets_plt, ['STAR Stochastic', 'STAR Even Space', 'STAR Single']))
-
-    # data_sets_plt = ['ampt_meson_first_resample_def', 'cf_resample_def', 'cfev_resample_def', 'cfevb342_resample_def']
-    # data_sets_colors = dict(zip(data_sets_plt, ['red', 'blue', 'green', 'purple']))
-    # data_sets_labels = dict(zip(data_sets_plt, ['AMPT', 'MUSIC+FIST', 'MUSIC+FIST+EV', 'MUSIC+FIST+EVb342']))
-
-    # data_sets_plt = ['bes_resample_def',
-    #                  'ampt_new_coal_resample_def', 'cf_resample_def', 'cfev_resample_def', 'cfevb342_resample_def']
-    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'salmon', 'blue', 'purple', 'olive']))
-    # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT_New_Coalescence',
-    #                                             'MUSIC+FIST', 'MUSIC+FIST+EV', 'MUSIC+FIST+EVb342']))
-
-    # data_sets_labels = dict(zip(sim_sets, ['Repulsive Amp=0.2 Spread=1', 'Repulsive Amp=0.5 Spread=1',
-    #                                        'Repulsive Amp=0.2 Spread=0.5', 'Repulsive Amp=0.5 Spread=0.5',
-    #                                        'Attractive Amp=0.1 Spread=1', 'Attractive Amp=0.5 Spread=1',
-    #                                        'Attractive Amp=0.1 Spread=0.5', 'Attractive Amp=0.5 Spread=0.5']))
-    all_sets_plt = data_sets_plt + sim_sets[:]
-
-    df = pd.read_csv(df_path)
-    df = df.dropna()
-    print(pd.unique(df['name']))
-    # df_data = df[~df['name'].str.contains('sim_')]
-    # df_sim = df[df['name'].str.contains('sim_')]
-    df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
-    # df = df[df['spread'] != 1.2]
-
-    # fit_pars = stat_vs_divs(df, stat_plot, total_protons_plt, cent_plt, energies_plt, data_types_plt, data_sets_plt,
-    #                         exclude_divs, plot=True, fit=True)
-
-    # stat_vs_protons(df, stat_plot, div_plt, cent_plt, [7, 'sim'], data_types_plt, all_sets_plt, plot=True, fit=True,
-    #                 data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
-    stat_vs_protons(df, stat_plot, div_plt, cent_plt, [7, 'sim'], data_types_plt, all_sets_plt, plot=True, fit=False,
-                    data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
-    # plt.show()
-    # return
-
-    # protons_fits = stat_vs_protons(df, stat_plot, div_plt, cent_plt, [7, 11, 19, 27, 39, 62], data_types_plt,
-    #                                all_sets_plt, plot=False, fit=True)
-    # protons_fits = stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, data_types_plt,
-    #                                all_sets_plt, plot=False, fit=True)
-    # print(protons_fits)
-    # plot_protons_fits_vs_energy(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors,
-    #                             data_sets_labels=data_sets_labels, title=f'0-5% Centrality, {div_plt}° Partitions, '
-    #                                                                      f'{samples} Samples per Event')
-    # plt.show()
-    # return
-    # plot_protons_fits_vs_amp(protons_fits, all_sets_plt, data_sets_colors, data_sets_labels)
-    #
-    # stat_vs_protons(df, stat_plot, div_plt, cent_plt, [39], data_types_plt, all_sets_plt, plot=True, fit=False,
-    #                 data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
-    #
-    # stat_vs_protons_energies(df, stat_plot, [120], cent_plt, [7, 11, 19, 27, 39, 62], data_types_plt, all_sets_plt,
-    #                          plot=True, fit=False, plot_fit=False, data_sets_colors=data_sets_colors,
-    #                          data_sets_labels=data_sets_labels)
-    #
-    # stat_vs_protons_energies(df, stat_plot, [120], cent_plt, [7, 11, 19, 27, 39, 62], data_types_plt, all_sets_plt,
-    #                          plot=True, fit=True, plot_fit=True, data_sets_colors=data_sets_colors,
-    #                          data_sets_labels=data_sets_labels)
-
-    # stat_vs_protons(df, stat_plot, div_plt, cent_plt, [39], ['raw', 'mix'], ['bes_resample_def'], plot=True, fit=False)
-    # stat_vs_protons(df, stat_plot, div_plt, cent_plt, [39], data_types_plt, ['bes_resample_def'], plot=True, fit=False)
-    # plt.show()
-    # return
-
-    protons_fits = []
-    for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
-        print(f'Div {div}')
-        protons_fits_div = stat_vs_protons(df, stat_plot, div, cent_plt, energies_fit, data_types_plt, all_sets_plt,
-                                           plot=False, fit=True)
-        protons_fits.append(protons_fits_div)
-    protons_fits = pd.concat(protons_fits, ignore_index=True)
-    print(protons_fits)
-    print(pd.unique(protons_fits['amp']))
-    print(pd.unique(protons_fits['spread']))
-    df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
-                                     data_sets_labels=data_sets_labels)
-    # print(df_fits)
-    # plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
-    plot_slope_div_fits_simpars(df_fits)
-
-    plt.show()
-    return
-
-    # stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, data_types_plt, data_sets_plt, plot=True, fit=True)
-    # stat_vs_protons(df, stat_plot, div_plt, cent_plt, energies_plt, ['raw', 'mix'], all_sets_plt, plot=True, fit=False)
-    # stat_vs_protons(df, stat_plot, div_plt, cent_plt, [39], data_types_plt, all_sets_plt, plot=True, fit=False,
-    #                 data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels)
-    for energy in [7, 11, 19, 27, 39, 62]:
-        stat_vs_protons_divs(df, stat_plot, [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356], cent_plt, [energy],
-                             data_types_plt, all_sets_plt, plot=True, fit=True, data_sets_colors=data_sets_colors,
-                             data_sets_labels=data_sets_labels)
-    plt.show()
-    return
-
-    # chi_res = []
-    # chi2_list_all = []
-    # for energy in energies_fit:
-    #     chi2_sets = []
-    #     jobs = []
-    #     print(f'Energy {energy}GeV')
-    #     for data_type in data_types_plt:
-    #         for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
-    #             jobs.append((df, stat_plot, div, cent_plt, energy, data_type, data_sets_plt))
-    #     with Pool(threads) as pool:
-    #         for chi2_set in tqdm.tqdm(pool.istarmap(chi2_vs_protons, jobs), total=len(jobs)):
-    #             chi2_sets.extend(chi2_set)
-    #     # for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
-    #     #     print(f'{energy}GeV {div} bin width')
-    #     #     chi2_sets.extend(chi2_vs_protons(df, stat_plot, div, cent_plt, energy, data_type_plt, data_sets_plt))
-    #     data_sim_sets_plt, chi_res_e, chi_list = plot_chi2_protons(pd.DataFrame(chi2_sets), energy, n_sims_plt=4)
-    #     chi2_list_all.extend(chi_list)
-    #     chi_res.extend(chi_res_e)
-    #
-    # chi2_sets_df = pd.DataFrame(chi2_list_all)
-    # chi2_sets_df.to_csv(base_path + chi_df_name, index=False)
-
-    # chi_res = []
-    # chi2_sets_df = pd.read_csv(base_path + chi_df_name)
-    # for energy in np.unique(chi2_sets_df['energy']):
-    #     data_sim_sets_plt, chi_res_e = plot_chi2_protons(chi2_sets_df, energy, n_sims_plt=4)
-    #     chi_res.extend(chi_res_e)
-
-    # plot_chi_sim_pars(pd.DataFrame(chi_res))
-    # for data_set, sim_sets_plt in data_sim_sets_plt.items():
-    #     sets = [data_set] + list(sim_sets_plt)
-    #     print(sets)
-    #     for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):
-    #         stat_vs_protons(df, stat_plot, div, cent_plt, energies_plt, data_types_plt, sets, plot=True, fit=False)
-
-    # stat_vs_divs(df, stat_plot, total_protons_plt, cent_plt, energies_plt, data_types_plt, data_sets_plt,
-    #              exclude_divs, plot=True, fit=True)
-    # df_pars = stat_vs_divs(df, stat_plot, total_protons_plt, cent_plt, energies_plt, data_types_plt, all_sets_plt,
-    #                        exclude_divs, plot=False, fit=True)
-    # df_fits = interp_vs_div(df_pars, stat_plot, quad_par_line=line_yint1, r_amp_line=line_yint0, plot=True)
-    # for div_plt in [240]:
-    # plot_vs_protons(df, stats_plot, div_plt, cent_plt, data_type_plt, y_ranges, data_sets_plt)
-    # for total_protons_plt in [20]:
-    #     df_pars = fit_vs_divs(df, stats_plot, total_protons_plt, cent_plt, energies_plt, data_type_plt, y_ranges,
-    #                           all_sets_plt, exclude_divs, False)
-    #     df_fits = interp_vs_div(df_pars, y_ranges, quad_par_line=line_yint1, r_amp_line=line_yint0, plot=True)
-    #     # plot_fits(df_fits)
-    # plt.show()
-
-    print('donzo')
-
-
 def line(x, a, b):
     return a * x + b
 
@@ -597,7 +353,7 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
         if avg and len(df) > 1:
             weight_avg = np.average(df['val'], weights=1 / df['err'] ** 2)
             weight_avg_err = np.sqrt(1 / np.average(1 / df['err'] ** 2))
-            avgs.append({'name': data_set, 'energy': energy, 'divs': div, 'amp': amp, 'spread': spread,
+            avgs.append({'name': data_set, 'energy': energy, 'divs': div, 'cent': cent, 'amp': amp, 'spread': spread,
                          'avg': weight_avg, 'avg_err': weight_avg_err, 'avg_meas': Measure(weight_avg, weight_avg_err)})
             if plot:
                 ax.axhline(weight_avg, ls='--', color=c)
@@ -1349,127 +1105,142 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
     return pd.DataFrame(fit_pars)
 
 
-def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, data_sets_labels=None, exclude_divs=[],
-                        verbose=True, plt_energies=True, title=None, alpha=1, ylab=None):
+def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, data_sets_labels=None,
+                        exclude_divs=[], verbose=True, plt_energies=True, title=None, alpha=1, ylab=None, plot=True):
     energies = pd.unique(df['energy'])
-    if plt_energies:
+    if plt_energies and plot:
         fig, ax = plt.subplots()
         fig.canvas.manager.set_window_title(f'dsigma^2 vs Width All Energies')
         ax.axhline(0, ls='-', color='black')
         fig_panels, ax_panels = plt.subplots(2, 3, sharex=True, sharey=True, dpi=144, figsize=(13.33, 6.16))
         fig_panels.canvas.manager.set_window_title(f'dsigma^2 vs Width Energy Panels')
         ax_panels = dict(zip(energies, ax_panels.flat))
-    energy_fig_axs = {energy: plt.subplots() for energy in energies}
-    markers = ['o', 's', 'P', 'D', '*', '^', 'p']
-    colors = iter(plt.cm.rainbow(np.linspace(0, 1, len(energies) * len(data_sets_plt))))
+    if plot:
+        energy_fig_axs = {energy: plt.subplots() for energy in energies}
+        markers = ['o', 's', 'P', 'D', '*', '^', 'p']
+    if data_sets_colors is None:
+        num_colorless = len(energies) * len(data_sets_plt) * len(pd.unique(df['cent']))
+    else:
+        num_colorless = len(energies) * (len(data_sets_plt) - len(data_sets_colors)) * len(pd.unique(df['cent']))
+    colors = iter(plt.cm.rainbow(np.linspace(0, 1, num_colorless)))
     fit_pars = []
     for data_set in data_sets_plt:
         df_set = df[df['name'] == data_set]
         df_set.sort_values(by='divs')
         for energy_marker, energy in enumerate(energies):
             df_energy = df_set[df_set['energy'] == energy]
-            df_energy.sort_values(by='divs')
-            if data_sets_labels is None:
-                lab_energy = data_set
-            else:
-                lab_energy = data_sets_labels[data_set]
-            if len(energies) > 1:
-                lab = f'{lab_energy}_{energy}GeV'
-            else:
-                lab = lab_energy
-            if data_sets_colors is None:
-                color = next(colors)
-            else:
-                color = data_sets_colors[data_set]
-            energy_fig, energy_ax = energy_fig_axs[energy]
-            energy_ax.errorbar(df_energy['divs'], df_energy['avg'], yerr=df_energy['avg_err'], ls='none',
-                               marker='o', label=lab_energy, color=color, alpha=alpha)
-            if plt_energies:
-                ax.errorbar(df_energy['divs'], df_energy['avg'], yerr=df_energy['avg_err'], ls='none',
-                            marker=markers[energy_marker], label=lab, color=color, alpha=alpha)
-                ax_panels[energy].errorbar(df_energy['divs'], df_energy['avg'], yerr=df_energy['avg_err'], ls='none',
-                                           marker='o', label=lab_energy, color=color, alpha=alpha)
-            if fit and df_energy.size > 1:
-                try:
-                    df_energy = df_energy[~df_energy.divs.isin(exclude_divs)]
-                    popt, pcov = cf(quad_180, df_energy['divs'], df_energy['avg'], sigma=df_energy['avg_err'],
-                                    absolute_sigma=True)
-                    perr = np.sqrt(np.diag(pcov))
-                    fit_pars.append({'data_set': data_set, 'energy': energy, 'curvature': popt[0], 'color': color,
-                                     'curve_baseline': popt[1], 'curve_err': perr[0], 'curve_base_err': perr[1],
-                                     'spread': df_energy['spread'].iloc[0], 'amp': df_energy['amp'].iloc[0]})
-                    x = np.linspace(0, 360, 100)
-                    energy_ax.plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
-                    if plt_energies:
-                        ax.plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
-                        ax_panels[energy].plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
-                    if popt[0] * popt[1] < 0:
-                        popt2, pcov2 = cf(quad_180_zparam, df_energy['divs'], df_energy['avg'],
-                                          sigma=df_energy['avg_err'], absolute_sigma=True)
-                        perr2 = np.sqrt(np.diag(pcov2))
-                        fit_pars[-1].update({'zero_mag': popt2[0], 'zero_mag_err': perr2[0], 'baseline': popt2[1],
-                                             'base_err': perr2[1]})
-                        if verbose:
-                            print(f'{data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\n'
-                                  f'z-c fit: {popt2}\nz-c covariance: {pcov2}')
-                            print()
+            cents = pd.unique(df_energy['cent'])
+            for cent in cents:
+                df_cent = df_energy[df_energy['cent'] == cent]
+                df_cent.sort_values(by='divs')
+                if data_sets_colors is not None and data_set in data_sets_colors:
+                    color = data_sets_colors[data_set]
+                else:
+                    color = next(colors)
+                if plot:
+                    if data_sets_labels is not None and data_set in data_sets_labels:
+                        lab_energy = data_sets_labels[data_set]
                     else:
-                        if verbose:
-                            print(f'No Zeros! {data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\n')
-                            print()
-                except RuntimeError as e:
-                    print(f'Fitting Error, skipping data_set {data_set}, {e}')
+                        lab_energy = data_set
+                    if len(energies) > 1:
+                        lab = f'{lab_energy}_{energy}GeV'
+                    else:
+                        lab = lab_energy
+                    if len(cents) > 1:
+                        lab += f'_cent{cent}'
+                    energy_fig, energy_ax = energy_fig_axs[energy]
+                    energy_ax.errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['avg_err'], ls='none',
+                                       marker='o', label=lab_energy, color=color, alpha=alpha)
+                    if plt_energies:
+                        ax.errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['avg_err'], ls='none',
+                                    marker=markers[energy_marker], label=lab, color=color, alpha=alpha)
+                        ax_panels[energy].errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['avg_err'],
+                                                   ls='none',
+                                                   marker='o', label=lab_energy, color=color, alpha=alpha)
+                if fit and df_cent.size > 1:
+                    try:
+                        df_cent = df_cent[~df_cent.divs.isin(exclude_divs)]
+                        popt, pcov = cf(quad_180, df_cent['divs'], df_cent['avg'], sigma=df_cent['avg_err'],
+                                        absolute_sigma=True)
+                        perr = np.sqrt(np.diag(pcov))
+                        fit_pars.append({'data_set': data_set, 'energy': energy, 'cent': cent, 'color': color,
+                                         'curvature': popt[0], 'curve_baseline': popt[1], 'curve_err': perr[0],
+                                         'curve_base_err': perr[1],
+                                         'spread': df_cent['spread'].iloc[0], 'amp': df_cent['amp'].iloc[0]})
+                        if plot:
+                            x = np.linspace(0, 360, 100)
+                            energy_ax.plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
+                            if plt_energies:
+                                ax.plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
+                                ax_panels[energy].plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
+                        if popt[0] * popt[1] < 0:
+                            popt2, pcov2 = cf(quad_180_zparam, df_cent['divs'], df_cent['avg'],
+                                              sigma=df_cent['avg_err'], absolute_sigma=True)
+                            perr2 = np.sqrt(np.diag(pcov2))
+                            fit_pars[-1].update({'zero_mag': popt2[0], 'zero_mag_err': perr2[0], 'baseline': popt2[1],
+                                                 'base_err': perr2[1]})
+                            if verbose:
+                                print(f'{data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\n'
+                                      f'z-c fit: {popt2}\nz-c covariance: {pcov2}')
+                                print()
+                        else:
+                            if verbose:
+                                print(f'No Zeros! {data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\n')
+                                print()
+                    except RuntimeError as e:
+                        print(f'Fitting Error, skipping data_set {data_set}, {e}')
 
-    if title is None:
-        title = ''
-        if len(data_sets_plt) == 1:
-            title += f'{data_set}'
-        if len(energies) == 1:
-            if title != '':
-                title += ' '
-            title += f'{energies[0]}GeV'
-
-    if ylab is None:
-        ylab = r'$\widebar{\Delta\sigma^2}_{single} - \widebar{\Delta\sigma^2}_{mix}$'
-
-    if plt_energies:
-        if title != '' and title is not None:
-            ax.set_title(title)
-        ax.set_ylabel(ylab)
-        ax.set_xlabel('Azimuthal Partition Width')
-        ax.legend()
-
-    for energy_i, (energy, (energy_fig, energy_ax)) in enumerate(energy_fig_axs.items()):
+    if plot:
         if title is None:
-            energy_ax.set_title(f'{energy} GeV')
-        else:
-            energy_ax.set_title(title)
-        energy_ax.set_xlabel('Azimuthal Partition Width (w)')
-        energy_ax.set_ylabel(ylab)
-        energy_ax.axhline(0, color='black', zorder=0)
-        energy_ax.legend()
-        energy_fig.tight_layout()
-        if title is None:
-            energy_fig.canvas.manager.set_window_title(f'dsigma^2 vs Width {energy}GeV')
-        else:
-            energy_fig.canvas.manager.set_window_title(f'dsigma^2 vs Width {title}')
+            title = ''
+            if len(data_sets_plt) == 1:
+                title += f'{data_set}'
+            if len(energies) == 1:
+                if title != '':
+                    title += ' '
+                title += f'{energies[0]}GeV'
+
+        if ylab is None:
+            ylab = r'$\widebar{\Delta\sigma^2}_{single} - \widebar{\Delta\sigma^2}_{mix}$'
 
         if plt_energies:
-            ax_panels[energy].axhline(0, color='gray', alpha=0.8, zorder=0)
-            ax_panels[energy].text(0.5, 0.9, f'{energy} GeV', size='x-large', ha='center', va='top',
-                                   transform=ax_panels[energy].transAxes)
-            if energy_i >= 3:
-                ax_panels[energy].set_xlabel('Azimuthal Partition Width')
-            if energy_i in [0, 3]:
-                ax_panels[energy].set_ylabel(ylab)
-            if energy_i == 0:
-                # ax_panels[energy].legend(loc='lower left', bbox_to_anchor=(0.5, 0.85), framealpha=1.0)
-                ax_panels[energy].legend()
+            if title != '' and title is not None:
+                ax.set_title(title)
+            ax.set_ylabel(ylab)
+            ax.set_xlabel('Azimuthal Partition Width')
+            ax.legend()
 
-    if plt_energies:
-        fig.tight_layout()
-        fig_panels.tight_layout()
-        fig_panels.subplots_adjust(wspace=0.0, hspace=0.0, left=0.075, right=0.995, top=0.985, bottom=0.075)
+        for energy_i, (energy, (energy_fig, energy_ax)) in enumerate(energy_fig_axs.items()):
+            if title is None:
+                energy_ax.set_title(f'{energy} GeV')
+            else:
+                energy_ax.set_title(title)
+            energy_ax.set_xlabel('Azimuthal Partition Width (w)')
+            energy_ax.set_ylabel(ylab)
+            energy_ax.axhline(0, color='black', zorder=0)
+            energy_ax.legend()
+            energy_fig.tight_layout()
+            if title is None:
+                energy_fig.canvas.manager.set_window_title(f'dsigma^2 vs Width {energy}GeV')
+            else:
+                energy_fig.canvas.manager.set_window_title(f'dsigma^2 vs Width {title}')
+
+            if plt_energies:
+                ax_panels[energy].axhline(0, color='gray', alpha=0.8, zorder=0)
+                ax_panels[energy].text(0.5, 0.9, f'{energy} GeV', size='x-large', ha='center', va='top',
+                                       transform=ax_panels[energy].transAxes)
+                if energy_i >= 3:
+                    ax_panels[energy].set_xlabel('Azimuthal Partition Width')
+                if energy_i in [0, 3]:
+                    ax_panels[energy].set_ylabel(ylab)
+                if energy_i == 0:
+                    # ax_panels[energy].legend(loc='lower left', bbox_to_anchor=(0.5, 0.85), framealpha=1.0)
+                    ax_panels[energy].legend()
+
+        if plt_energies:
+            fig.tight_layout()
+            fig_panels.tight_layout()
+            fig_panels.subplots_adjust(wspace=0.0, hspace=0.0, left=0.075, right=0.995, top=0.985, bottom=0.075)
 
     return pd.DataFrame(fit_pars)
 
@@ -2713,41 +2484,101 @@ def plot_fits(df_fits):
         fig_slope.tight_layout()
 
 
-def plot_base_zeros(df, data_sets_plt, data_sets_labels, data_sets_colors):
-    fig_base_amp, ax_base_amp = plt.subplots()
-    fig_amp_base, ax_amp_base = plt.subplots()
+def plot_base_zeros(df, data_sets_plt, data_sets_labels, data_sets_colors, plot_sims=False):
+    fig_base_zeros, ax_base_zeros = plt.subplots(dpi=144)
+    fig_zeros_base_amps, ax_zeros_base_amps = plt.subplots(dpi=144)
+    fig_zeros_base_spreads, ax_zeros_base_spreads = plt.subplots(dpi=144)
 
-    ax_base_amp.axvline(0, color='black')
-    ax_amp_base.axhline(0, color='black')
+    ax_base_zeros.axhline(0, color='black')
+    ax_zeros_base_amps.axvline(0, color='black')
+    ax_zeros_base_spreads.axvline(0, color='black')
 
-    ax_base_amp.grid()
-    ax_amp_base.grid()
+    ax_base_zeros.grid()
+    ax_zeros_base_amps.grid()
+    ax_zeros_base_spreads.grid()
 
     for data_set in data_sets_plt:
         df_set = df[df['data_set'].str.contains(data_set)]
-        print(f'{data_set}: {df_set.size}')
-        ax_base_amp.errorbar(df_set['zero_mag'], df_set['baseline'], yerr=df_set['base_err'], marker='o', ls='none',
-                             xerr=df_set['zero_mag_err'], color=data_sets_colors[data_set],
-                             label=data_sets_labels[data_set])
-        ax_amp_base.errorbar(df_set['baseline'], df_set['zero_mag'], xerr=df_set['base_err'], marker='o', ls='none',
-                             yerr=df_set['zero_mag_err'], color=data_sets_colors[data_set],
-                             label=data_sets_labels[data_set])
+        ax_base_zeros.errorbar(df_set['zero_mag'], df_set['baseline'], yerr=df_set['base_err'], marker='o',
+                               ls='none', xerr=df_set['zero_mag_err'], color=data_sets_colors[data_set],
+                               label=data_sets_labels[data_set])
+        ax_zeros_base_amps.errorbar(df_set['baseline'], df_set['zero_mag'], xerr=df_set['base_err'], marker='o',
+                                    ls='none', yerr=df_set['zero_mag_err'], color=data_sets_colors[data_set],
+                                    label=data_sets_labels[data_set])
+        ax_zeros_base_spreads.errorbar(df_set['baseline'], df_set['zero_mag'], xerr=df_set['base_err'], marker='o',
+                                       ls='none', yerr=df_set['zero_mag_err'], color=data_sets_colors[data_set],
+                                       label=data_sets_labels[data_set])
 
-    ax_base_amp.set_xlabel('Zeros')
-    ax_base_amp.set_ylabel('Baseline')
-    ax_amp_base.set_ylabel('Baseline')
-    ax_amp_base.set_ylabel('Zeros')
+    if plot_sims:
+        df_sims = df[df['data_set'].str.contains('sim_')]
+        df_sims = df_sims[(df_sims['baseline'] < 0) & (df_sims['zero_mag'] < 220) & (df_sims['zero_mag'] > 110)]
 
-    ax_base_amp.set_xlim(110, 230)
-    ax_amp_base.set_ylim(110, 230)
+        amps = sorted(pd.unique(df_sims['amp']))
+        color = iter(plt.cm.rainbow(np.linspace(0, 1, len(amps))))
+        for amp in amps:
+            df_amp = df_sims[df_sims['amp'] == amp]
+            df_amp.sort_values('spread')
+            c = next(color)
+            ax_zeros_base_amps.fill_between(df_amp['baseline'], df_amp['zero_mag'] + df_amp['zero_mag_err'],
+                                            df_amp['zero_mag'] + df_amp['zero_mag_err'], alpha=0.5, color=c)
+            ax_zeros_base_amps.fill_betweenx(df_amp['zero_mag'], df_amp['baseline'] + df_amp['base_err'],
+                                             df_amp['baseline'] + df_amp['base_err'], alpha=0.5, color=c,
+                                             label=f'A={amp}')
 
-    ax_base_amp.legend()
-    ax_amp_base.legend()
+        spreads = sorted(pd.unique(df_sims['spread']))
+        color = iter(plt.cm.rainbow(np.linspace(0, 1, len(spreads))))
+        for spread in spreads:
+            df_spread = df_sims[df_sims['spread'] == spread]
+            df_spread.sort_values('amp')
+            c = next(color)
+            ax_zeros_base_spreads.fill_between(df_spread['baseline'], df_spread['zero_mag'] + df_spread['zero_mag_err'],
+                                               df_spread['zero_mag'] + df_spread['zero_mag_err'], alpha=0.5, color=c)
+            ax_zeros_base_spreads.fill_betweenx(df_spread['zero_mag'], df_spread['baseline'] + df_spread['base_err'],
+                                                df_spread['baseline'] + df_spread['base_err'], alpha=0.5, color=c,
+                                                label=rf'$\sigma=${spread:.2f}')
 
-    fig_base_amp.tight_layout()
-    fig_base_amp.canvas.manager.set_window_title('Baselines vs Zeros')
-    fig_amp_base.tight_layout()
-    fig_amp_base.canvas.manager.set_window_title('Zeros vs Baselines')
+    all_handles_zeros_base_amp, _ = ax_zeros_base_amps.get_legend_handles_labels()
+    data_handles_zeros_base_amp = [h for h in all_handles_zeros_base_amp if
+                                   isinstance(h, mpl.container.ErrorbarContainer)]
+    sim_handles_zeros_base_amp = [h for h in all_handles_zeros_base_amp if h not in data_handles_zeros_base_amp]
+
+    all_handles_zeros_base_spread, _ = ax_zeros_base_spreads.get_legend_handles_labels()
+    data_handles_zeros_base_spread = [h for h in all_handles_zeros_base_spread
+                                      if isinstance(h, mpl.container.ErrorbarContainer)]
+    sim_handles_zeros_base_spread = [h for h in all_handles_zeros_base_spread
+                                     if h not in data_handles_zeros_base_spread]
+
+    ax_base_zeros.set_xlabel('Zeros')
+    ax_base_zeros.set_ylabel('Baseline')
+    ax_zeros_base_amps.set_xlabel('Baseline')
+    ax_zeros_base_amps.set_ylabel('Zeros')
+    ax_zeros_base_spreads.set_xlabel('Baseline')
+    ax_zeros_base_spreads.set_ylabel('Zeros')
+
+    ax_base_zeros.set_xlim(110, 230)
+    ax_zeros_base_amps.set_ylim(110, 230)
+    ax_zeros_base_spreads.set_ylim(110, 230)
+
+    ax_base_zeros.set_ylim(bottom=-0.0065)
+    ax_zeros_base_amps.set_xlim(left=-0.0065, right=0.0005)
+    ax_zeros_base_spreads.set_xlim(left=-0.0065, right=0.0005)
+
+    ax_base_zeros.legend()
+    data_legend_zeros_base_amp = ax_zeros_base_amps.legend(handles=data_handles_zeros_base_amp)
+    sim_legend_zeros_base_amp = ax_zeros_base_amps.legend(handles=sim_handles_zeros_base_amp, loc='upper left')
+    ax_zeros_base_amps.add_artist(data_legend_zeros_base_amp)
+    ax_zeros_base_amps.add_artist(sim_legend_zeros_base_amp)
+    data_legend_zeros_base_spread = ax_zeros_base_spreads.legend(handles=data_handles_zeros_base_spread)
+    sim_legend_zeros_base_spread = ax_zeros_base_spreads.legend(handles=sim_handles_zeros_base_spread, loc='upper left')
+    ax_zeros_base_spreads.add_artist(data_legend_zeros_base_spread)
+    ax_zeros_base_spreads.add_artist(sim_legend_zeros_base_spread)
+
+    fig_base_zeros.tight_layout()
+    fig_base_zeros.canvas.manager.set_window_title('Baselines vs Zeros')
+    fig_zeros_base_amps.tight_layout()
+    fig_zeros_base_amps.canvas.manager.set_window_title('Zeros vs Baselines Amp Contours')
+    fig_zeros_base_spreads.tight_layout()
+    fig_zeros_base_spreads.canvas.manager.set_window_title('Zeros vs Baselines Spread Contours')
 
 
 def flow_vs_v2(df, div, res, out_dir=None):
@@ -2898,22 +2729,23 @@ def ampt_v2_closure_sub_dsigma(avg_df, data_set_name, new_name, v2, div, cent):
 
 def subtract_dsigma_flow(avg_df, data_set_name, new_name, vs, div=None, cent=None):
     df_new = avg_df[avg_df['name'] == data_set_name]
-    df_new = df_new.assign(name=new_name)
-    if div is None and cent is not None:
-        new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent)
-                   for energy, div, avg in zip(df_new['energy'], df_new['divs'], df_new['avg_meas'])]
-    elif cent is None and div is not None:
-        new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent)
-                   for energy, cent, avg in zip(df_new['energy'], df_new['cent'], df_new['avg_meas'])]
-    elif cent is None and div is None:
-        new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent) for energy, cent, div, avg in
-                   zip(df_new['energy'], df_new['cent'], df_new['divs'], df_new['avg_meas'])]
-    else:
-        new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent)
-                   for energy, avg in zip(df_new['energy'], df_new['avg_meas'])]
-    new_avg_vals, new_avg_errs = list(zip(*[(avg.val, avg.err) for avg in new_avg]))
-    df_new = df_new.assign(avg=new_avg_vals)
-    df_new = df_new.assign(avg_err=new_avg_errs)
+    if len(df_new) > 0:
+        df_new = df_new.assign(name=new_name)
+        if div is None and cent is not None:
+            new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent)
+                       for energy, div, avg in zip(df_new['energy'], df_new['divs'], df_new['avg_meas'])]
+        elif cent is None and div is not None:
+            new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent)
+                       for energy, cent, avg in zip(df_new['energy'], df_new['cent'], df_new['avg_meas'])]
+        elif cent is None and div is None:
+            new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent) for energy, cent, div, avg in
+                       zip(df_new['energy'], df_new['cent'], df_new['divs'], df_new['avg_meas'])]
+        else:
+            new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent)
+                       for energy, avg in zip(df_new['energy'], df_new['avg_meas'])]
+        new_avg_vals, new_avg_errs = list(zip(*[(avg.val, avg.err) for avg in new_avg]))
+        df_new = df_new.assign(avg=new_avg_vals)
+        df_new = df_new.assign(avg_err=new_avg_errs)
 
     return pd.concat([avg_df, df_new], ignore_index=True)
 
