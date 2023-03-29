@@ -20,11 +20,11 @@ from analyze_binom_slices import *
 
 
 def main():
-    # plot_star_model_var()
+    plot_star_model_var()
     # plot_vs_cent_var()
     # plot_sims_var()
     # get_sim_mapping_var()
-    plot_all_zero_base()
+    # plot_all_zero_base()
 
     # plot_sims()
     # get_sim_mapping()
@@ -123,7 +123,7 @@ def plot_star_model_var():
     v2_star_in_dir = 'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/' \
                      'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/'
     v2_ampt_in_dir = 'F:/Research/Data_Ampt_New_Coal/default_resample_epbins1/Ampt_rapid05_resample_norotate_epbins1_0/'
-    v2_cf_in_dir = 'F:/Research/Data_CF/default_resample_epbins1/CFEVb342_rapid05_resample_norotate_epbins1_0/'
+    v2_cf_in_dir = 'F:/Research/Data_CF/default_resample_epbins1/CF_rapid05_resample_norotate_epbins1_0/'
     v2_cfev_in_dir = 'F:/Research/Data_CFEV/default_resample_epbins1/CFEV_rapid05_resample_norotate_epbins1_0/'
     v2_cfevb342_in_dir = 'F:/Research/Data_CFEVb342/default_resample_epbins1/' \
                          'CFEVb342_rapid05_resample_norotate_epbins1_0/'
@@ -173,7 +173,10 @@ def plot_star_model_var():
     df = df[df['stat'] == stat_plot]
     df_raw, df_mix, df_diff = calc_dsigma(df, ['raw', 'mix', 'diff'])
 
-    stat_binom_vs_protons(df, stat_plot, div_plt, cent_plt, 39, ['raw', 'mix'], 'ampt_new_coal_epbins1')
+    stat_binom_vs_protons(df, stat_plot, div_plt, cent_plt, 39, ['raw', 'mix'], 'ampt_new_coal_epbins1',
+                          data_sets_labels=data_sets_labels)
+
+    plt.show()
 
     dvar_vs_protons(pd.concat([df_raw, df_mix, df_diff], ignore_index=True), div_plt, cent_plt, [39],
                     ['raw', 'mix', 'diff'], all_sets_plt, plot=True, avg=True,

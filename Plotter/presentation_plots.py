@@ -22,11 +22,11 @@ def main():
     cent = 8
     energy = 39
     samples = 72  # Just for title
-    data_name = "AMPT"  # Just for title
-    set_group = 'default_single'
-    set_name = 'Ampt_rapid05_single_'
+    data_name = 'AMPT'  # Just for title
     # set_group = 'default_single'
     # set_name = 'Ampt_rapid05_single_'
+    set_group = 'default_resample_epbins1'
+    set_name = 'Ampt_rapid05_resample_norotate_epbins1_'
     set_num = 0
     data_set = '_Ampt_New_Coal'
     # base_path = '/home/dylan/Research/Data'
@@ -261,11 +261,12 @@ def plot_binomial(data, particles, divs, data_name, title_sufx=''):
     # y_err = np.sqrt(y)  # No longer a good approximation with multi-sampling
 
     fig0, ax0 = plt.subplots(figsize=(6.6, 3.3), dpi=144)
-    ax0.bar(x, y, width=1, align='center', zorder=0, label=f'{particles} Proton Events')
+    ax0.bar(x, y, width=0.9, align='center', zorder=0, label=f'{particles} Proton Events')
     ax0.set_xticks(range(0, len(y), 2))
     ax0.set_title(f'{data_name} Protons in {divs}° Partition for {particles} Proton Events' + title_sufx)
     ax0.set_xlabel('Number of Protons in Azimuthal Partition')
     ax0.set_ylabel('Partitions')
+    ax0.set_xticks(x)
     ax0.set_xlim([-0.5, particles + 0.5])
     ax0.legend()
     fig0.tight_layout()

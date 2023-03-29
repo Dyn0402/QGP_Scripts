@@ -220,7 +220,7 @@ def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_
     return pd.DataFrame(fits)
 
 
-def stat_binom_vs_protons(df, stat, div, cent, energy, data_types, data_set_plt, y_ranges=None):
+def stat_binom_vs_protons(df, stat, div, cent, energy, data_types, data_set_plt, data_sets_labels=None, y_ranges=None):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     data = []
@@ -248,7 +248,11 @@ def stat_binom_vs_protons(df, stat, div, cent, energy, data_types, data_set_plt,
 
     fig, ax = plt.subplots(figsize=(6.66, 5), dpi=144)
     fig.canvas.manager.set_window_title(f'Binomial Comparison {stat.title()} vs Total Protons {energy}GeV {div}°')
-    ax.set_title(f'{data_set_plt}\n{energy} GeV, {cent_map[cent]} Centrality, {div}° Partitions, 72 Samples per Event')
+    if data_sets_labels is not None:
+        name = data_sets_labels[data_set_plt] + ' '
+    else:
+        name = data_set_plt + '\n'
+    ax.set_title(f'{name}{energy} GeV, {cent_map[cent]} Centrality, {div}° Partitions, 72 Samples per Event')
     ax.set_xlabel('Total Protons in Event')
     ax.set_ylabel(f'{stat.title()}')
     if y_ranges:

@@ -162,7 +162,7 @@ def calculate_v2_cfmodel():
     # out_dir = None
     # plot_out_dir = f'F:/Research/Results/Cooper_Frye{cf_type}_QA/'
     plot_out_dir = None  # Not really ready for plotting, using AMPT code to plot against centrality
-    batch_size = '40000 kB'
+    batch_size = '30000 kB'
     print_results = False
     # energies = [7, 19, 27, 39, 62]
     energies = [62]
