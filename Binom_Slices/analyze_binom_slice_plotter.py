@@ -145,14 +145,13 @@ def plot_star_model_var():
     # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple']))
     # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST', 'MUSIC+FIST EV $1fm^3$']))
 
-    # data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def', 'cfev_resample_def']
-    # data_sets_plt = ['bes_resample_def', 'ampt_new_coal_epbins1', 'cfev_resample_def']
-    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'purple']))
-    # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST EV $1fm^3$']))
+    data_sets_plt = ['bes_resample_epbins1', 'ampt_new_coal_epbins1', 'cfev_resample_epbins1']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'purple']))
+    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST EV $1fm^3$']))
 
-    data_sets_plt = ['bes_resample_epbins1', 'ampt_new_coal_epbins1']
-    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red']))
-    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT']))
+    # data_sets_plt = ['bes_resample_epbins1', 'ampt_new_coal_epbins1']
+    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red']))
+    # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT']))
 
     all_sets_plt = data_sets_plt + sim_sets[:]
 
@@ -175,6 +174,9 @@ def plot_star_model_var():
 
     stat_binom_vs_protons(df, stat_plot, div_plt, cent_plt, 39, ['raw', 'mix'], 'ampt_new_coal_epbins1',
                           data_sets_labels=data_sets_labels)
+
+    dvar_vs_protons(df_diff, div_plt, cent_plt, [39], ['diff'], all_sets_plt, plot=True, avg=False,
+                    data_sets_labels=data_sets_labels, data_sets_colors=data_sets_colors)
 
     plt.show()
 
