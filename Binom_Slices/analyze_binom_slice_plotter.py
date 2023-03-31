@@ -178,7 +178,7 @@ def plot_star_model_var():
     dvar_vs_protons(df_diff, div_plt, cent_plt, [39], ['diff'], all_sets_plt, plot=True, avg=False,
                     data_sets_labels=data_sets_labels, data_sets_colors=data_sets_colors)
 
-    plt.show()
+    # plt.show()
 
     dvar_vs_protons(pd.concat([df_raw, df_mix, df_diff], ignore_index=True), div_plt, cent_plt, [39],
                     ['raw', 'mix', 'diff'], all_sets_plt, plot=True, avg=True,
@@ -232,7 +232,7 @@ def plot_star_model_var():
         colors = dict(zip(data_sets, ['blue', 'red']))
         labels = dict(zip(data_sets, [data_sets_labels[data_set] + x for x in [' Original', ' v2 Corrected']]))
         plot_dvar_avgs_divs(dsig_avgs, data_sets, data_sets_colors=colors, fit=False, data_sets_labels=labels)
-    plot_dvar_avgs_divs(dsig_avgs, data_sets_plt, data_sets_colors=data_sets_colors, fit=False,
+    plot_dvar_avgs_divs(dsig_avgs, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,
                         data_sets_labels=data_sets_labels)
 
     df_fits = plot_dvar_avgs_divs(dsig_avgs, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
@@ -1163,6 +1163,7 @@ def plot_all_zero_base():
 
     plot_base_zeros(df_fits, data_sets_plt, data_sets_labels, data_sets_colors, plot_sims=False)
     plot_base_zeros(df_fits, data_sets_plt, data_sets_labels, data_sets_colors, plot_sims=True)
+    plot_base_zeros(df_fits, data_sets_plt, data_sets_labels, data_sets_colors, plot_sims=True, cent=8)
 
     plt.show()
 

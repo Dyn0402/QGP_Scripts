@@ -2488,30 +2488,40 @@ def plot_fits(df_fits):
         fig_slope.tight_layout()
 
 
-def plot_base_zeros(df, data_sets_plt, data_sets_labels, data_sets_colors, plot_sims=False):
+def plot_base_zeros(df, data_sets_plt, data_sets_labels, data_sets_colors, cent='all', plot_sims=False):
     fig_base_zeros, ax_base_zeros = plt.subplots(dpi=144)
     fig_zeros_base_amps, ax_zeros_base_amps = plt.subplots(dpi=144)
-    fig_zeros_base_spreads, ax_zeros_base_spreads = plt.subplots(dpi=144)
 
     ax_base_zeros.axhline(0, color='black')
     ax_zeros_base_amps.axvline(0, color='black')
-    ax_zeros_base_spreads.axvline(0, color='black')
 
     ax_base_zeros.grid()
     ax_zeros_base_amps.grid()
-    ax_zeros_base_spreads.grid()
+    if plot_sims:
+        fig_zeros_base_spreads, ax_zeros_base_spreads = plt.subplots(dpi=144)
+        fig_zeros_base_amps_spreads, ax_zeros_base_amps_spreads = plt.subplots(dpi=144)
+        ax_zeros_base_spreads.axvline(0, color='black')
+        ax_zeros_base_amps_spreads.axvline(0, color='black')
+        ax_zeros_base_spreads.grid()
+        ax_zeros_base_amps_spreads.grid()
 
     for data_set in data_sets_plt:
         df_set = df[df['data_set'].str.contains(data_set)]
+        if cent != 'all':
+            df_set = df_set[df_set['cent'] == cent]
         ax_base_zeros.errorbar(df_set['zero_mag'], df_set['baseline'], yerr=df_set['base_err'], marker='o',
                                ls='none', xerr=df_set['zero_mag_err'], color=data_sets_colors[data_set],
                                label=data_sets_labels[data_set])
         ax_zeros_base_amps.errorbar(df_set['baseline'], df_set['zero_mag'], xerr=df_set['base_err'], marker='o',
                                     ls='none', yerr=df_set['zero_mag_err'], color=data_sets_colors[data_set],
                                     label=data_sets_labels[data_set])
-        ax_zeros_base_spreads.errorbar(df_set['baseline'], df_set['zero_mag'], xerr=df_set['base_err'], marker='o',
-                                       ls='none', yerr=df_set['zero_mag_err'], color=data_sets_colors[data_set],
-                                       label=data_sets_labels[data_set])
+        if plot_sims:
+            ax_zeros_base_spreads.errorbar(df_set['baseline'], df_set['zero_mag'], xerr=df_set['base_err'], marker='o',
+                                           ls='none', yerr=df_set['zero_mag_err'], color=data_sets_colors[data_set],
+                                           label=data_sets_labels[data_set])
+            ax_zeros_base_amps_spreads.errorbar(df_set['baseline'], df_set['zero_mag'], xerr=df_set['base_err'],
+                                                marker='o', ls='none', yerr=df_set['zero_mag_err'],
+                                                color=data_sets_colors[data_set], label=data_sets_labels[data_set])
 
     if plot_sims:
         df_sims = df[df['data_set'].str.contains('sim_')]
@@ -2528,6 +2538,11 @@ def plot_base_zeros(df, data_sets_plt, data_sets_labels, data_sets_colors, plot_
             ax_zeros_base_amps.fill_betweenx(df_amp['zero_mag'], df_amp['baseline'] + df_amp['base_err'],
                                              df_amp['baseline'] + df_amp['base_err'], alpha=0.5, color=c,
                                              label=f'A={amp}')
+            ax_zeros_base_amps_spreads.fill_between(df_amp['baseline'], df_amp['zero_mag'] + df_amp['zero_mag_err'],
+                                                    df_amp['zero_mag'] + df_amp['zero_mag_err'], alpha=0.5, color=c)
+            ax_zeros_base_amps_spreads.fill_betweenx(df_amp['zero_mag'], df_amp['baseline'] + df_amp['base_err'],
+                                                     df_amp['baseline'] + df_amp['base_err'], alpha=0.5, color=c,
+                                                     label=f'A={amp}')
 
         spreads = sorted(pd.unique(df_sims['spread']))
         color = iter(plt.cm.rainbow(np.linspace(0, 1, len(spreads))))
@@ -2540,49 +2555,86 @@ def plot_base_zeros(df, data_sets_plt, data_sets_labels, data_sets_colors, plot_
             ax_zeros_base_spreads.fill_betweenx(df_spread['zero_mag'], df_spread['baseline'] + df_spread['base_err'],
                                                 df_spread['baseline'] + df_spread['base_err'], alpha=0.5, color=c,
                                                 label=rf'$\sigma=${spread:.2f}')
+            ax_zeros_base_amps_spreads.fill_between(df_spread['baseline'],
+                                                    df_spread['zero_mag'] + df_spread['zero_mag_err'],
+                                                    df_spread['zero_mag'] + df_spread['zero_mag_err'], alpha=0.5,
+                                                    color=c)
+            ax_zeros_base_amps_spreads.fill_betweenx(df_spread['zero_mag'],
+                                                     df_spread['baseline'] + df_spread['base_err'],
+                                                     df_spread['baseline'] + df_spread['base_err'], alpha=0.5, color=c,
+                                                     label=rf'$\sigma=${spread:.2f}')
 
-    all_handles_zeros_base_amp, _ = ax_zeros_base_amps.get_legend_handles_labels()
-    data_handles_zeros_base_amp = [h for h in all_handles_zeros_base_amp if
-                                   isinstance(h, mpl.container.ErrorbarContainer)]
-    sim_handles_zeros_base_amp = [h for h in all_handles_zeros_base_amp if h not in data_handles_zeros_base_amp]
+        all_handles_zeros_base_amp, _ = ax_zeros_base_amps.get_legend_handles_labels()
+        data_handles_zeros_base_amp = [h for h in all_handles_zeros_base_amp if
+                                       isinstance(h, mpl.container.ErrorbarContainer)]
+        sim_handles_zeros_base_amp = [h for h in all_handles_zeros_base_amp if h not in data_handles_zeros_base_amp]
 
-    all_handles_zeros_base_spread, _ = ax_zeros_base_spreads.get_legend_handles_labels()
-    data_handles_zeros_base_spread = [h for h in all_handles_zeros_base_spread
-                                      if isinstance(h, mpl.container.ErrorbarContainer)]
-    sim_handles_zeros_base_spread = [h for h in all_handles_zeros_base_spread
-                                     if h not in data_handles_zeros_base_spread]
+        all_handles_zeros_base_spread, _ = ax_zeros_base_spreads.get_legend_handles_labels()
+        data_handles_zeros_base_spread = [h for h in all_handles_zeros_base_spread
+                                          if isinstance(h, mpl.container.ErrorbarContainer)]
+        sim_handles_zeros_base_spread = [h for h in all_handles_zeros_base_spread
+                                         if h not in data_handles_zeros_base_spread]
+
+        # all_handles_zeros_base_amp_spread, _ = ax_zeros_base_spreads.get_legend_handles_labels()
+        # data_handles_zeros_base_amp_spread = [h for h in all_handles_zeros_base_spread
+        #                                       if isinstance(h, mpl.container.ErrorbarContainer)]
+        # sim_handles_zeros_base_spread = [h for h in all_handles_zeros_base_spread
+        #                                  if h not in data_handles_zeros_base_spread]
 
     ax_base_zeros.set_xlabel('Zeros')
     ax_base_zeros.set_ylabel('Baseline')
     ax_zeros_base_amps.set_xlabel('Baseline')
     ax_zeros_base_amps.set_ylabel('Zeros')
-    ax_zeros_base_spreads.set_xlabel('Baseline')
-    ax_zeros_base_spreads.set_ylabel('Zeros')
 
     ax_base_zeros.set_xlim(110, 230)
     ax_zeros_base_amps.set_ylim(110, 230)
-    ax_zeros_base_spreads.set_ylim(110, 230)
 
     ax_base_zeros.set_ylim(bottom=-0.0065)
     ax_zeros_base_amps.set_xlim(left=-0.0065, right=0.0005)
-    ax_zeros_base_spreads.set_xlim(left=-0.0065, right=0.0005)
 
     ax_base_zeros.legend()
-    data_legend_zeros_base_amp = ax_zeros_base_amps.legend(handles=data_handles_zeros_base_amp)
-    sim_legend_zeros_base_amp = ax_zeros_base_amps.legend(handles=sim_handles_zeros_base_amp, loc='upper left')
-    ax_zeros_base_amps.add_artist(data_legend_zeros_base_amp)
-    ax_zeros_base_amps.add_artist(sim_legend_zeros_base_amp)
-    data_legend_zeros_base_spread = ax_zeros_base_spreads.legend(handles=data_handles_zeros_base_spread)
-    sim_legend_zeros_base_spread = ax_zeros_base_spreads.legend(handles=sim_handles_zeros_base_spread, loc='upper left')
-    ax_zeros_base_spreads.add_artist(data_legend_zeros_base_spread)
-    ax_zeros_base_spreads.add_artist(sim_legend_zeros_base_spread)
+    if plot_sims:
+        data_legend_zeros_base_amp = ax_zeros_base_amps.legend(handles=data_handles_zeros_base_amp, loc='upper center')
+        sim_legend_zeros_base_amp = ax_zeros_base_amps.legend(handles=sim_handles_zeros_base_amp, loc='upper left')
+        ax_zeros_base_amps.add_artist(data_legend_zeros_base_amp)
+        ax_zeros_base_amps.add_artist(sim_legend_zeros_base_amp)
+    else:
+        ax_zeros_base_amps.legend()
 
     fig_base_zeros.tight_layout()
     fig_base_zeros.canvas.manager.set_window_title('Baselines vs Zeros')
     fig_zeros_base_amps.tight_layout()
     fig_zeros_base_amps.canvas.manager.set_window_title('Zeros vs Baselines Amp Contours')
-    fig_zeros_base_spreads.tight_layout()
-    fig_zeros_base_spreads.canvas.manager.set_window_title('Zeros vs Baselines Spread Contours')
+
+    if plot_sims:
+        ax_zeros_base_spreads.set_xlabel('Baseline')
+        ax_zeros_base_spreads.set_ylabel('Zeros')
+        ax_zeros_base_spreads.set_ylim(110, 230)
+        ax_zeros_base_spreads.set_xlim(left=-0.0065, right=0.0005)
+        data_legend_zeros_base_spread = ax_zeros_base_spreads.legend(handles=data_handles_zeros_base_spread,
+                                                                     loc='upper center')
+        sim_legend_zeros_base_spread = ax_zeros_base_spreads.legend(handles=sim_handles_zeros_base_spread,
+                                                                    loc='upper left')
+        ax_zeros_base_spreads.add_artist(data_legend_zeros_base_spread)
+        ax_zeros_base_spreads.add_artist(sim_legend_zeros_base_spread)
+        fig_zeros_base_spreads.tight_layout()
+        fig_zeros_base_spreads.canvas.manager.set_window_title('Zeros vs Baselines Spread Contours')
+
+        ax_zeros_base_amps_spreads.set_xlabel('Baseline')
+        ax_zeros_base_amps_spreads.set_ylabel('Zeros')
+        ax_zeros_base_amps_spreads.set_ylim(110, 230)
+        ax_zeros_base_amps_spreads.set_xlim(left=-0.0065, right=0.0005)
+        data_legend_zeros_base_amp_spread = ax_zeros_base_amps_spreads.legend(handles=data_handles_zeros_base_spread,
+                                                                              loc='upper center')
+        # sim_legend_zeros_base_spread = ax_zeros_base_amps_spreads.legend(handles=sim_handles_zeros_base_spread,
+        #                                                                  loc='upper left')
+        # sim_legend_zeros_base_amp = ax_zeros_base_amps_spreads.legend(handles=sim_handles_zeros_base_amp,
+        #                                                               loc='upper right')
+        ax_zeros_base_amps_spreads.add_artist(data_legend_zeros_base_amp_spread)
+        # ax_zeros_base_amps_spreads.add_artist(sim_legend_zeros_base_spread)
+        # ax_zeros_base_amps_spreads.add_artist(sim_legend_zeros_base_amp)
+        fig_zeros_base_amps_spreads.tight_layout()
+        fig_zeros_base_amps_spreads.canvas.manager.set_window_title('Zeros vs Baselines Amps & Spread Contours')
 
 
 def flow_vs_v2(df, div, res, out_dir=None):
