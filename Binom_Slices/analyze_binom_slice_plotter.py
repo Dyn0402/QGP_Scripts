@@ -20,8 +20,8 @@ from analyze_binom_slices import *
 
 
 def main():
-    plot_star_model_var()
-    # plot_vs_cent_var()
+    # plot_star_model_var()
+    plot_vs_cent_var()
     # plot_sims_var()
     # get_sim_mapping_var()
     # plot_all_zero_base()
@@ -134,6 +134,9 @@ def plot_star_model_var():
     df_path = base_path + df_name
     sim_sets = []
 
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
+                0: '70-80%', -1: '80-90%'}
+
     stat_plot = 'k2'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
     div_plt = 120
     exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
@@ -145,9 +148,9 @@ def plot_star_model_var():
     # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple']))
     # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST', 'MUSIC+FIST EV $1fm^3$']))
 
-    data_sets_plt = ['bes_resample_epbins1', 'ampt_new_coal_epbins1', 'cfev_resample_epbins1']
-    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'purple']))
-    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST EV $1fm^3$']))
+    data_sets_plt = ['bes_resample_epbins1', 'ampt_new_coal_epbins1', 'cf_resample_epbins1', 'cfev_resample_epbins1']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple']))
+    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST', 'MUSIC+FIST EV $1fm^3$']))
 
     # data_sets_plt = ['bes_resample_epbins1', 'ampt_new_coal_epbins1']
     # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red']))
@@ -175,18 +178,32 @@ def plot_star_model_var():
     stat_binom_vs_protons(df, stat_plot, div_plt, cent_plt, 39, ['raw', 'mix'], 'ampt_new_coal_epbins1',
                           data_sets_labels=data_sets_labels)
 
-    dvar_vs_protons(df_diff, div_plt, cent_plt, [39], ['diff'], all_sets_plt, plot=True, avg=False,
+    dvar_vs_protons(pd.concat([df_raw, df_mix]), div_plt, cent_plt, [39], ['raw', 'mix'], ['ampt_new_coal_epbins1'],
+                    plot=True, avg=False)
+
+    dvar_vs_protons(df_diff, div_plt, cent_plt, [39], ['diff'], ['ampt_new_coal_epbins1'], plot=True, avg=False,
                     data_sets_labels=data_sets_labels, data_sets_colors=data_sets_colors)
 
-    # plt.show()
+    dvar_vs_protons(df_diff, div_plt, cent_plt, [39], ['diff'], all_sets_plt, plot=True, avg=False,
+                    data_sets_labels=data_sets_labels, data_sets_colors=data_sets_colors)
 
     dvar_vs_protons(pd.concat([df_raw, df_mix, df_diff], ignore_index=True), div_plt, cent_plt, [39],
                     ['raw', 'mix', 'diff'], all_sets_plt, plot=True, avg=True,
                     data_sets_labels=data_sets_labels)
 
     dvar_vs_protons_energies(df_diff, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], all_sets_plt,
-                             plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
-                             data_sets_labels=data_sets_labels, y_ranges=[-0.0014, 0.0011])
+                             plot=True, avg=False, plot_avg=False, data_sets_colors=data_sets_colors,
+                             data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.00054])
+
+    dsig_avg = dvar_vs_protons_energies(df_diff, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], all_sets_plt,
+                                        plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
+                                        data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.00054])
+
+    plot_protons_avgs_vs_energy(dsig_avg, all_sets_plt, data_sets_colors=data_sets_colors,
+                                data_sets_labels=data_sets_labels, title=f'{cent_map[cent_plt]} Centrality, {div_plt}° '
+                                                                         f'Partitions, {samples} Samples per Event')
+
+    plt.show()
 
     dsig_avgs = []
     for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
@@ -896,6 +913,8 @@ def plot_vs_cent_var():
     cent_ref_name = 'mean_cent_ref.csv'
     cent_ref_df = pd.read_csv(f'F:/Research/Results/Azimuth_Analysis/{cent_ref_name}')
     ref_type = 'refn'  # 'refn'
+    cent_ref_df = cent_ref_df.replace('bes_resample_def', 'bes_resample_epbins1')
+    cent_ref_df = cent_ref_df.replace('ampt_new_coal_resample_def', 'ampt_new_coal_epbins1')
 
     sim_sets = []
 
@@ -977,29 +996,12 @@ def plot_vs_cent_var():
                                   data_sets_labels=data_sets_labels, exclude_divs=exclude_divs, fit=False)
         plot_dvar_avgs_divs_cents(dsig_avgs_energy, data_sets_plt, plot=True, data_sets_colors=data_sets_colors,
                                   data_sets_labels=data_sets_labels, exclude_divs=exclude_divs, fit=True)
-    plt.show()
 
-    # df_onediv_fits, df_tp_fits, df_divs_fits = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
-    # for energy in energies_fit:
-    #     df_fit = stat_vs_protons_cents(df, stat_plot, [div_plt], cents, energy, data_types_plt, all_sets_plt,
-    #                                    plot=False, fit=True, plot_fit=False, data_sets_colors=data_sets_colors,
-    #                                    data_sets_labels=data_sets_labels)
-    #     df_onediv_fits = pd.concat([df_onediv_fits, df_fit])
-    #
-    #     df_tp_fit = stat_vs_protons_cents(df, stat_plot, divs_all, cents, energy, data_types_plt, all_sets_plt,
-    #                                       plot=False, fit=True, plot_fit=False, data_sets_colors=data_sets_colors,
-    #                                       data_sets_labels=data_sets_labels)
-    #     df_tp_fits = pd.concat([df_tp_fits, df_tp_fit])
-    #
-    #     df_fits = plot_protons_fits_divs_cents(df_tp_fit, data_sets_plt, fit=True, data_sets_colors=data_sets_colors,
-    #                                            data_sets_labels=data_sets_labels, exclude_divs=exclude_divs)
-    #     # print(f'{energy}GeV {df_fit}')
-    #     df_divs_fits = pd.concat([df_divs_fits, df_fits])
-    #
-    # plot_protons_fits_vs_cent(df_onediv_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=False,
-    #                           data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,
-    #                           title=f'{div_plt}° Partitions, {samples} Samples per Event',
-    #                           data_sets_energies_cmaps=data_sets_energies_cmaps)
+    df_onediv_avgs = dsig_avgs[dsig_avgs['divs'] == div_plt]
+    plot_protons_avgs_vs_cent(df_onediv_avgs, data_sets_plt, data_sets_colors=data_sets_colors, fit=False,
+                              data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,
+                              title=f'{div_plt}° Partitions, {samples} Samples per Event',
+                              data_sets_energies_cmaps=data_sets_energies_cmaps)
     #
     # plot_protons_fits_vs_cent(df_onediv_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=False,
     #                           data_sets_labels=data_sets_labels,
@@ -1016,18 +1018,18 @@ def plot_vs_cent_var():
     #                           title=f'{div_plt}° Partitions, {samples} Samples per Event', ls='none',
     #                           data_sets_energies_cmaps=data_sets_energies_cmaps)
     #
-    # plot_div_fits_vs_cent(df_divs_fits, data_sets_plt, data_sets_colors=data_sets_colors,
-    #                       data_sets_labels=data_sets_labels, title=None, fit=False, cent_ref=None,
-    #                       ref_type=None, data_sets_energies_cmaps=data_sets_energies_cmaps)
-    # plot_div_fits_vs_cent(df_divs_fits, data_sets_plt, data_sets_colors=data_sets_colors,
-    #                       data_sets_labels=data_sets_labels, title=None, fit=True, cent_ref=cent_ref_df,
-    #                       ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
-    #
-    # plot_div_fits_vs_cent(df_divs_fits, data_sets_plt, data_sets_colors=data_sets_colors,
-    #                       data_sets_labels=data_sets_labels, title=None, fit=False, cent_ref=cent_ref_df,
-    #                       ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
-    #
-    # plt.show()
+    plot_div_fits_vs_cent(df_fits, data_sets_plt, data_sets_colors=data_sets_colors,
+                          data_sets_labels=data_sets_labels, title=None, fit=False, cent_ref=None,
+                          ref_type=None, data_sets_energies_cmaps=data_sets_energies_cmaps)
+    plot_div_fits_vs_cent(df_fits, data_sets_plt, data_sets_colors=data_sets_colors,
+                          data_sets_labels=data_sets_labels, title=None, fit=True, cent_ref=cent_ref_df,
+                          ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
+
+    plot_div_fits_vs_cent(df_fits, data_sets_plt, data_sets_colors=data_sets_colors,
+                          data_sets_labels=data_sets_labels, title=None, fit=False, cent_ref=cent_ref_df,
+                          ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
+
+    plt.show()
 
 
 def plot_vs_cent_nofit():

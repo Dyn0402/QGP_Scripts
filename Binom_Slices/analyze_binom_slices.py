@@ -304,7 +304,13 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
                 else:
                     lab = data_sets_labels[data_set]
                 if len(data_types) > 1:
-                    lab += f' {data_type.capitalize()}'
+                    if len(data_sets_plt) == 1:
+                        if data_type == 'raw':
+                            lab = 'Single Event'
+                        elif data_type == 'mix':
+                            lab = 'Mixed Event'
+                    else:
+                        lab += f' {data_type.capitalize()}'
                 df_set = df_set.sort_values(by=['total_protons'])
                 amp, spread = df_set['amp'].iloc[0], df_set['spread'].iloc[0]
                 data.append((df_set, lab, data_set, data_type, amp, spread, energy))
@@ -319,6 +325,8 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
                 ax.set_ylabel(rf'Single Event $\Delta \sigma^2$')
             elif data_types[0] == 'mix':
                 ax.set_ylabel(rf'Mixed Event $\Delta \sigma^2$')
+            elif data_types[0] == 'diff':
+                ax.set_ylabel(r'$\Delta \sigma^2_{Single} - \Delta \sigma^2_{Mixed}$')
             else:
                 ax.set_ylabel(rf'$\Delta \sigma^2$')
         else:
@@ -356,7 +364,7 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
 
         if avg and len(df) > 1:
             weight_avg = np.average(df['val'], weights=1 / df['err'] ** 2)
-            weight_avg_err = np.sqrt(1 / np.average(1 / df['err'] ** 2))
+            weight_avg_err = np.sqrt(1 / np.sum(1 / df['err'] ** 2))
             avgs.append({'name': data_set, 'energy': energy, 'divs': div, 'cent': cent, 'amp': amp, 'spread': spread,
                          'avg': weight_avg, 'avg_err': weight_avg_err, 'avg_meas': Measure(weight_avg, weight_avg_err)})
             if plot:
@@ -382,7 +390,7 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
             ax.text(31.6, 1.041, 'statistical uncertainty only', fontsize=8)
             ax.legend(loc='upper center', framealpha=1.0).set_zorder(10)
         else:
-            ax.legend(loc='upper left')
+            ax.legend(loc='upper center')
         fig.tight_layout()
 
     return pd.DataFrame(avgs)
@@ -676,6 +684,8 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
                         ax.set_ylabel(rf'Single Event $\Delta \sigma^2$')
                     elif data_types[0] == 'mix':
                         ax.set_ylabel(rf'Mixed Event $\Delta \sigma^2$')
+                    elif data_types[0] == 'diff':
+                        ax.set_ylabel(r'$\Delta \sigma^2_{Single} - \Delta \sigma^2_{Mixed}$')
                     else:
                         ax.set_ylabel(rf'$\Delta \sigma^2$')
                 else:
@@ -695,7 +705,7 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
                     c = next(color)
                 else:
                     c = data_sets_colors[data_set]
-                ax.text(0.5, 0.95, f'{energy} GeV', size='x-large', ha='center', va='top', transform=ax.transAxes)
+                ax.text(0.95, 0.95, f'{energy} GeV', size='x-large', ha='right', va='top', transform=ax.transAxes)
             if plot:
                 if 'sim_' in data_set:
                     ax.fill_between(df['total_protons'], df['val'] - df['err'], df['val'] + df['err'],
@@ -709,7 +719,7 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
 
             if avg and len(df) > 1:
                 weight_avg = np.average(df['val'], weights=1 / df['err'] ** 2)
-                weight_avg_err = np.sqrt(1 / np.average(1 / df['err'] ** 2))
+                weight_avg_err = np.sqrt(1 / np.sum(1 / df['err'] ** 2))
                 avgs.append({'name': data_set, 'energy': energy, 'divs': div, 'amp': amp, 'spread': spread,
                              'avg': weight_avg, 'avg_err': weight_avg_err,
                              'avg_meas': Measure(weight_avg, weight_avg_err)})
@@ -732,7 +742,7 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
                         fig_hist.tight_layout()
 
     if plot or plot_avg:
-        ax_energies[-3].legend(loc='lower right', framealpha=1.0).set_zorder(10)
+        ax_energies[-1].legend(loc='lower right', framealpha=1.0).set_zorder(10)
         if star_prelim:
             ax_energies[4].text(46, 0.93, 'STAR \nPreliminary', fontsize=15)
             eta_line = r'|$\eta$| < 1'
@@ -939,7 +949,7 @@ def dvar_vs_protons_cents(df, divs, cents, energy, data_types, data_sets_plt, y_
 
             if avg and len(df) > 1:
                 weight_avg = np.average(df['val'], weights=1 / df['err'] ** 2)
-                weight_avg_err = np.sqrt(1 / np.average(1 / df['err'] ** 2))
+                weight_avg_err = np.sqrt(1 / np.sum(1 / df['err'] ** 2))
                 avgs.append({'name': data_set, 'energy': energy, 'divs': div, 'amp': amp, 'spread': spread,
                              'avg': weight_avg, 'avg_err': weight_avg_err,
                              'avg_meas': Measure(weight_avg, weight_avg_err), 'cent': cent})
@@ -1110,7 +1120,7 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
 
 
 def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, data_sets_labels=None,
-                        exclude_divs=[], verbose=True, plt_energies=True, title=None, alpha=1, ylab=None, plot=True):
+                        exclude_divs=[], verbose=False, plt_energies=True, title=None, alpha=1, ylab=None, plot=True):
     energies = pd.unique(df['energy'])
     if plt_energies and plot:
         fig, ax = plt.subplots()
@@ -1427,7 +1437,7 @@ def plot_protons_fits_divs_cents(df, data_sets_plt, plot=False, fit=False, data_
 
 
 def plot_dvar_avgs_divs_cents(df, data_sets_plt, plot=False, fit=False, data_sets_colors=None, data_sets_labels=None,
-                              exclude_divs=[]):
+                              exclude_divs=[], verbose=False):
     energies = pd.unique(df['energy'])
     if plot:
         fig, axs = plt.subplots(3, 3, sharex=True, sharey=True, figsize=(13.33, 6.16), dpi=144)
@@ -1485,10 +1495,11 @@ def plot_dvar_avgs_divs_cents(df, data_sets_plt, plot=False, fit=False, data_set
                         perr2 = np.sqrt(np.diag(pcov2))
                         fit_pars[-1].update({'zero_mag': popt2[0], 'zero_mag_err': perr2[0], 'baseline': popt2[1],
                                              'base_err': perr2[1]})
-                        print(f'{data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\nz-c fit: {popt2}\n'
-                              f'z-c covariance: {pcov2}')
-                        print()
-                    else:
+                        if verbose:
+                            print(f'{data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\nz-c fit: {popt2}\n'
+                                  f'z-c covariance: {pcov2}')
+                            print()
+                    elif verbose:
                         print(f'No Zeros! {data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\n')
                         print()
 
@@ -1902,6 +1913,33 @@ def plot_protons_fits_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
     fig_int.tight_layout()
 
 
+def plot_protons_avgs_vs_energy(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None):
+    fig_avg, ax_avg = plt.subplots(figsize=(6.66, 5), dpi=144)
+    ax_avg.axhline(0, color='gray')
+    fig_avg.canvas.manager.set_window_title(f'Dsigma2 Averages vs Energy')
+    for data_set in data_sets_plt:
+        df_set = df[df['name'] == data_set]
+        df_set.sort_values(by='energy')
+        if data_sets_labels is None:
+            lab = data_set
+        else:
+            lab = data_sets_labels[data_set]
+        if data_sets_colors is None:
+            ax_avg.errorbar(df_set['energy'], df_set['avg'], yerr=df_set['avg_err'], ls='none', marker='o',
+                            label=lab)
+        else:
+            ax_avg.errorbar(df_set['energy'], df_set['avg'], yerr=df_set['avg_err'], ls='none', marker='o',
+                            color=data_sets_colors[data_set], label=lab)
+    ax_avg.set_ylabel(r'$\widebar{\Delta\sigma^2}$')
+    ax_avg.set_xlabel('Energy (GeV)')
+    ax_avg.grid()
+    if title:
+        ax_avg.set_title(title)
+    legend_avg = ax_avg.legend()
+    # legend_avg.get_frame().set_alpha(0)
+    fig_avg.tight_layout()
+
+
 def plot_protons_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None,
                               fit=False, cent_ref=None, ref_type=None, data_sets_energies_cmaps=None, ls='-'):
     fig_slope, ax_slope = plt.subplots(figsize=(6.66, 5), dpi=144)
@@ -1983,6 +2021,80 @@ def plot_protons_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
     fig_slope.tight_layout()
 
 
+def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None,
+                              fit=False, cent_ref=None, ref_type=None, data_sets_energies_cmaps=None, ls='-'):
+    fig_avg, ax_avg = plt.subplots(figsize=(6.66, 5), dpi=144)
+    ax_avg.axhline(0, color='black')
+    fig_avg.canvas.manager.set_window_title(f'Dsigma2 Avg vs Centrality')
+    energies = pd.unique(df['energy'])
+    for data_set in data_sets_plt:
+        df_set = df[df['name'] == data_set]
+        if data_sets_energies_cmaps is not None:
+            colors = iter([plt.cm.get_cmap(data_sets_energies_cmaps[data_set])(i)
+                           for i in np.linspace(1, 0.4, len(energies))])
+        elif data_sets_colors is not None:
+            color, colors = data_sets_colors[data_set], None
+        else:
+            colors, color = None
+        for energy in pd.unique(df_set['energy']):
+            if colors is not None:
+                color = next(colors)
+            df_energy = df_set[df_set['energy'] == energy]
+            df_energy.sort_values(by='cent')
+            if data_sets_labels is None:
+                lab = data_set
+            else:
+                lab = data_sets_labels[data_set]
+            if len(energies) > 1:
+                lab += f' {energy}GeV'
+
+            if cent_ref is None:
+                x = df_energy['cent']
+                x_err = None
+            else:
+                cent_energy = cent_ref[(cent_ref['data_set'] == data_set) & (cent_ref['energy'] == energy)]
+                x = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_val'].iloc[0] for cent in
+                     df_energy['cent']]
+                x_err = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_sd'].iloc[0] for cent in
+                         df_energy['cent']]
+            ls = 'none' if fit else ls
+            if colors is None and color is None:
+                ax_avg.errorbar(x, df_energy['avg'], xerr=x_err, yerr=df_energy['avg_err'], marker='o', ls=ls,
+                                label=lab, alpha=0.6)
+            else:
+                ax_avg.errorbar(x, df_energy['avg'], xerr=x_err, yerr=df_energy['avg_err'], marker='o', ls=ls,
+                                color=color, label=lab, alpha=0.6)
+            if fit:
+                p0 = [-0.02, 0.0001]
+                x_fit = np.linspace(min(x), max(x), 1000)
+                odr_model = odr.Model(inv_sqrtx_odr)
+                fit_index_highs = range(4, len(x))
+                colors_fit = iter(plt.cm.rainbow(np.linspace(0, 1, len(fit_index_highs))))
+                for i in fit_index_highs:
+                    color_fit = next(colors_fit)
+                    sx = None if x_err is None else x_err[:i]
+                    odr_data = odr.RealData(x[:i], df_energy['slope'][:i], sx=sx, sy=df_energy['slope_err'][:i])
+                    inv_sqrt_odr = odr.ODR(odr_data, odr_model, beta0=p0, maxit=500)
+                    odr_out = inv_sqrt_odr.run()
+                    ax_avg.plot(x_fit, inv_sqrtx(x_fit, *odr_out.beta), alpha=0.6, color=color_fit)
+                    ax_avg.axhline(odr_out.beta[1], color=color_fit, ls='--')
+                    ax_avg.axhspan(odr_out.beta[1] - odr_out.sd_beta[1], odr_out.beta[1] + odr_out.sd_beta[1],
+                                   color=color_fit, alpha=0.4)
+                    print(f'{lab} Fit: {[Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]}')
+
+    ax_avg.set_ylabel(r'$\widebar{\Delta\sigma^2}$')
+    if ref_type is None:
+        ax_avg.set_xlabel('Centrality')
+    else:
+        ax_avg.set_xlabel('Reference Multiplicity')
+    ax_avg.grid()
+    if title:
+        ax_avg.set_title(title)
+    legend_avg = ax_avg.legend()
+    # legend_avg.get_frame().set_alpha(0)
+    fig_avg.tight_layout()
+
+
 def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None,
                           fit=False, cent_ref=None, ref_type=None, data_sets_energies_cmaps=None):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
@@ -2057,20 +2169,20 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
                 consts[data_set]['const_val'].append(odr_out.beta[1])
                 consts[data_set]['const_err'].append(odr_out.sd_beta[1])
 
-                p0 = [-0.02, 0.0001, 1]
-                x_fit = np.linspace(1, 800, 2000)
-                odr_model = odr.Model(inv_invxpow_odr)
-                odr_data = odr.RealData(x, df_energy['baseline'], sx=x_err, sy=df_energy['base_err'])
-                inv_sqrt_odr = odr.ODR(odr_data, odr_model, beta0=p0, maxit=500)
-                odr_out = inv_sqrt_odr.run()
-                ax_base.axhline(odr_out.beta[1], color=color, ls=':')
-                ax_base.axhspan(odr_out.beta[1] - odr_out.sd_beta[1], odr_out.beta[1] + odr_out.sd_beta[1],
-                                color=color, alpha=0.4)
-                ax_base.plot(x_fit, inv_invxpow_odr(odr_out.beta, x_fit), alpha=0.6, color=color, ls=':')
-                print(f'{lab} Fit: {[Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]}')
-                # consts[data_set]['energy'].append(energy)
-                # consts[data_set]['const_val'].append(odr_out.beta[1])
-                # consts[data_set]['const_err'].append(odr_out.sd_beta[1])
+                # p0 = [-0.02, 0.0001, 1]
+                # x_fit = np.linspace(1, 800, 2000)
+                # odr_model = odr.Model(inv_invxpow_odr)
+                # odr_data = odr.RealData(x, df_energy['baseline'], sx=x_err, sy=df_energy['base_err'])
+                # inv_sqrt_odr = odr.ODR(odr_data, odr_model, beta0=p0, maxit=500)
+                # odr_out = inv_sqrt_odr.run()
+                # ax_base.axhline(odr_out.beta[1], color=color, ls=':')
+                # ax_base.axhspan(odr_out.beta[1] - odr_out.sd_beta[1], odr_out.beta[1] + odr_out.sd_beta[1],
+                #                 color=color, alpha=0.4)
+                # ax_base.plot(x_fit, inv_invxpow_odr(odr_out.beta, x_fit), alpha=0.6, color=color, ls=':')
+                # print(f'{lab} Fit: {[Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]}')
+                # # consts[data_set]['energy'].append(energy)
+                # # consts[data_set]['const_val'].append(odr_out.beta[1])
+                # # consts[data_set]['const_err'].append(odr_out.sd_beta[1])
 
                 # p0 = [-0.02, 1]
                 # x_fit = np.linspace(1, 800, 2000)
@@ -2081,44 +2193,46 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
                 # ax_base.plot(x_fit, inv_invxpow_noc_odr(odr_out.beta, x_fit), alpha=0.6, color=color, ls=':')
                 # print(f'{lab} Fit: {[Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]}')
 
-                p0 = [-0.02, 0.0001]
-                x_fit = np.linspace(1, 800, 2000)
-                odr_model = odr.Model(inv_invx_odr)
-                odr_data = odr.RealData(x, df_energy['baseline'], sx=x_err, sy=df_energy['base_err'])
-                inv_sqrt_odr = odr.ODR(odr_data, odr_model, beta0=p0, maxit=500)
-                odr_out = inv_sqrt_odr.run()
-                ax_base.axhline(odr_out.beta[1], color=color, ls='--')
-                ax_base.axhspan(odr_out.beta[1] - odr_out.sd_beta[1], odr_out.beta[1] + odr_out.sd_beta[1],
-                                color=color, alpha=0.4)
-                ax_base.plot(x_fit, inv_invx_odr(odr_out.beta, x_fit), alpha=0.6, color=color, ls='--')
-                print(f'{lab} Fit: {[Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]}')
-                # consts[data_set]['energy'].append(energy)
-                # consts[data_set]['const_val'].append(odr_out.beta[1])
-                # consts[data_set]['const_err'].append(odr_out.sd_beta[1])
-                # cs.append(odr_out.beta[1])
-                # ax_base.set_ylim(ax_base_ylim)
-                # ax_base.set_xlim(ax_base_xlim)
-                # fit_index_highs = range(4, len(x))
-                # colors_fit = iter(plt.cm.rainbow(np.linspace(0, 1, len(fit_index_highs))))
-                # for i in fit_index_highs:
-                #     color_fit = next(colors_fit)
-                #     odr_data = odr.RealData(x[:i], df_energy['baseline'][:i], sx=x_err[:i],
-                #                             sy=df_energy['base_err'][:i])
-                #     inv_sqrt_odr = odr.ODR(odr_data, odr_model, beta0=p0, maxit=500)
-                #     odr_out = inv_sqrt_odr.run()
-                #     ax_base.plot(x_fit, inv_sqrtx(x_fit, *odr_out.beta), alpha=0.6, color=color_fit)
-                #     ax_base.axhline(odr_out.beta[1], color=color_fit, ls='--')
-                #     ax_base.axhspan(odr_out.beta[1] - odr_out.sd_beta[1], odr_out.beta[1] + odr_out.sd_beta[1],
-                #                     color=color_fit, alpha=0.4)
-                #     print(f'{lab} Fit: {[Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]}')
+                # p0 = [-0.02, 0.0001]
+                # x_fit = np.linspace(1, 800, 2000)
+                # odr_model = odr.Model(inv_invx_odr)
+                # odr_data = odr.RealData(x, df_energy['baseline'], sx=x_err, sy=df_energy['base_err'])
+                # inv_sqrt_odr = odr.ODR(odr_data, odr_model, beta0=p0, maxit=500)
+                # odr_out = inv_sqrt_odr.run()
+                # ax_base.axhline(odr_out.beta[1], color=color, ls='--')
+                # ax_base.axhspan(odr_out.beta[1] - odr_out.sd_beta[1], odr_out.beta[1] + odr_out.sd_beta[1],
+                #                 color=color, alpha=0.4)
+                # ax_base.plot(x_fit, inv_invx_odr(odr_out.beta, x_fit), alpha=0.6, color=color, ls='--')
+                # print(f'{lab} Fit: {[Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]}')
+                # # consts[data_set]['energy'].append(energy)
+                # # consts[data_set]['const_val'].append(odr_out.beta[1])
+                # # consts[data_set]['const_err'].append(odr_out.sd_beta[1])
+                # # cs.append(odr_out.beta[1])
+                # # ax_base.set_ylim(ax_base_ylim)
+                # # ax_base.set_xlim(ax_base_xlim)
+                # # fit_index_highs = range(4, len(x))
+                # # colors_fit = iter(plt.cm.rainbow(np.linspace(0, 1, len(fit_index_highs))))
+                # # for i in fit_index_highs:
+                # #     color_fit = next(colors_fit)
+                # #     odr_data = odr.RealData(x[:i], df_energy['baseline'][:i], sx=x_err[:i],
+                # #                             sy=df_energy['base_err'][:i])
+                # #     inv_sqrt_odr = odr.ODR(odr_data, odr_model, beta0=p0, maxit=500)
+                # #     odr_out = inv_sqrt_odr.run()
+                # #     ax_base.plot(x_fit, inv_sqrtx(x_fit, *odr_out.beta), alpha=0.6, color=color_fit)
+                # #     ax_base.axhline(odr_out.beta[1], color=color_fit, ls='--')
+                # #     ax_base.axhspan(odr_out.beta[1] - odr_out.sd_beta[1], odr_out.beta[1] + odr_out.sd_beta[1],
+                # #                     color=color_fit, alpha=0.4)
+                # #     print(f'{lab} Fit: {[Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]}')
     ax_base.set_ylim(min(bases) * 1.1, max(cs) * 1.1)
     try:
         ax_base.set_xlim(0, max(refs) * 1.1)
     except TypeError:
         pass
 
-    ax_base.set_ylabel('Baseline of Slope vs Partition Width Fit')
-    ax_zeros.set_ylabel('Zeros of Slope vs Partition Width Fit')
+    # ax_base.set_ylabel('Baseline of Slope vs Partition Width Fit')
+    # ax_zeros.set_ylabel('Zeros of Slope vs Partition Width Fit')
+    ax_base.set_ylabel(r'Baseline of $\widebar{\Delta\sigma^2}$ vs Partition Width Fit')
+    ax_zeros.set_ylabel(r'Zeros of $\widebar{\Delta\sigma^2}$ vs Partition Width Fit')
     if ref_type is None:
         ax_base.set_xlabel('Centrality')
         ax_zeros.set_xlabel('Centrality')
@@ -2136,17 +2250,18 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
     fig_base.tight_layout()
     fig_zeros.tight_layout()
 
-    fig_consts_vs_energy, ax_consts_vs_energy = plt.subplots()
-    ax_consts_vs_energy.set_ylabel('Constant Fit Parameter')
-    ax_consts_vs_energy.set_xlabel('Energy (GeV)')
-    for data_set, data in consts.items():
-        ax_consts_vs_energy.errorbar(data['energy'], data['const_val'], yerr=data['const_err'], ls='none',
-                                     label=data_set, marker='o')
-    ax_consts_vs_energy.legend()
-    ax_consts_vs_energy.grid()
-    ax_consts_vs_energy.set_title('Fit Constants vs Energy')
-    fig_consts_vs_energy.canvas.manager.set_window_title('Fit Constants vs Energy')
-    fig_consts_vs_energy.tight_layout()
+    if fit:
+        fig_consts_vs_energy, ax_consts_vs_energy = plt.subplots()
+        ax_consts_vs_energy.set_ylabel('Constant Fit Parameter')
+        ax_consts_vs_energy.set_xlabel('Energy (GeV)')
+        for data_set, data in consts.items():
+            ax_consts_vs_energy.errorbar(data['energy'], data['const_val'], yerr=data['const_err'], ls='none',
+                                         label=data_set, marker='o')
+        ax_consts_vs_energy.legend()
+        ax_consts_vs_energy.grid()
+        ax_consts_vs_energy.set_title('Fit Constants vs Energy')
+        fig_consts_vs_energy.canvas.manager.set_window_title('Fit Constants vs Energy')
+        fig_consts_vs_energy.tight_layout()
 
 
 def plot_protons_fits_vs_amp(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None):
