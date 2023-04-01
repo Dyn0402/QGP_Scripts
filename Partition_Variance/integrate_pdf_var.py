@@ -34,7 +34,9 @@ def main():
     # eff_v2_combo2()
     # eff_gaus_combo()
     # eff_gaus_combo2()
-    gaus_v2_combo2()
+    # gaus_v2_combo2()
+    eff_plotting()
+    v2_plotting()
     print('donzo')
 
 
@@ -1055,11 +1057,42 @@ def gaus_v2_combo2():
     plt.show()
 
 
+def eff_plotting():
+    func1_pre = get_efficiency_pdf(62)
+    func1_norm = get_norm(func1_pre, ())
+    func1 = lambda x: func1_pre(x) / func1_norm
+    func1_args = ()
+    fig, ax = plt.subplots(dpi=144, figsize=(6, 3))
+    # ax.set_ylim(bottom=0)
+    # fig.tight_layout()
+
+    plot_az_bin_example(func1, func1_args, np.pi / 4, np.pi / 4 + np.deg2rad(120))
+    ax.set_title('Efficiency Probability Distribution')
+    fig.tight_layout()
+
+    plt.show()
+
+
+def v2_plotting():
+    func2 = vn_pdf
+    n = 2
+    v2 = 0.07
+    psi = np.pi / 3
+    func2_args = (v2, psi, n)
+    fig, ax = plt.subplots(dpi=144, figsize=(6, 3))
+
+    plot_az_bin_example(func2, func2_args, np.pi / 4, np.pi / 4 + np.deg2rad(100))
+    ax.set_title('Elliptic Flow Azimuthal Probability Distribution')
+    fig.tight_layout()
+
+    plt.show()
+
+
 def plot_pdf(func, pars, xs=None):
     if xs is None:
         xs = np.linspace(0, 2 * np.pi, 1000)
     plt.plot(xs, func(xs, *pars))
-    plt.xlabel('phi')
+    plt.xlabel(r'$\phi$')
     plt.ylabel('Probability')
 
 

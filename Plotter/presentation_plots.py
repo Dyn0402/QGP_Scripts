@@ -41,7 +41,7 @@ def main():
     title_sufx = f'\n{energy}GeV, 0-5% Centrality, {divs}° Partitions, {samples} Sample per Event'
 
     # plot_2d(raw.get_dist(), raw.max_particle, raw.get_max_bin(), divs, data_name, title_sufx)
-    plot_binomial(raw.get_dist(), 6, divs, data_name, title_sufx=title_sufx)
+    plot_binomial(raw.get_dist(), 38, divs, data_name, title_sufx=title_sufx)
     # plot_ratio(raw.get_dist(), raw.max_particle, divs, x_bins=20, title_sufx=title_sufx)
     # plot_pull(raw.get_dist(), raw.max_particle, divs, x_bins=40, title_sufx=title_sufx)
 
@@ -266,7 +266,7 @@ def plot_binomial(data, particles, divs, data_name, title_sufx=''):
     ax0.set_title(f'{data_name} Protons in {divs}° Partition for {particles} Proton Events' + title_sufx)
     ax0.set_xlabel('Number of Protons in Azimuthal Partition')
     ax0.set_ylabel('Partitions')
-    ax0.set_xticks(x)
+    # ax0.set_xticks(x)
     ax0.set_xlim([-0.5, particles + 0.5])
     ax0.legend()
     fig0.tight_layout()
