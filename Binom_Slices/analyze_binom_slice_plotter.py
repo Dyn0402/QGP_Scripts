@@ -21,10 +21,12 @@ from analyze_binom_slices import *
 
 def main():
     # plot_star_model_var()
-    plot_vs_cent_var()
+    # plot_vs_cent_var()
     # plot_sims_var()
     # get_sim_mapping_var()
     # plot_all_zero_base()
+
+    plot_vs_cent_var_fits()
 
     # plot_sims()
     # get_sim_mapping()
@@ -1028,6 +1030,66 @@ def plot_vs_cent_var():
     plot_div_fits_vs_cent(df_fits, data_sets_plt, data_sets_colors=data_sets_colors,
                           data_sets_labels=data_sets_labels, title=None, fit=False, cent_ref=cent_ref_df,
                           ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
+
+    plt.show()
+
+
+def plot_vs_cent_var_fits():
+    plt.rcParams["figure.figsize"] = (6.66, 5)
+    plt.rcParams["figure.dpi"] = 144
+    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    fits_out_base = 'Base_Zero_Fits'
+    df_tproton_avgs_name = 'dsig_tprotons_avgs.csv'
+    df_partitions_fits_name = 'partitions_fits.csv'
+
+    df_fits = pd.read_csv(f'{base_path}{fits_out_base}/{df_partitions_fits_name}')
+    df_divs_avgs = pd.read_csv(f'{base_path}{fits_out_base}/{df_tproton_avgs_name}')
+
+    cent_ref_name = 'mean_cent_ref.csv'
+    cent_ref_df = pd.read_csv(f'F:/Research/Results/Azimuth_Analysis/{cent_ref_name}')
+    ref_type = 'refn'  # 'refn'
+    cent_ref_df = cent_ref_df.replace('bes_resample_def', 'bes_resample_epbins1')
+    cent_ref_df = cent_ref_df.replace('ampt_new_coal_resample_def', 'ampt_new_coal_epbins1')
+
+    data_sets_plt = ['bes_resample_epbins1', 'ampt_new_coal_epbins1']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red']))
+    data_sets_energies_cmaps = dict(zip(data_sets_plt, ['tab10', 'Reds']))
+    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT']))
+
+    plot_div_fits_vs_cent(df_fits, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
+                          data_sets_labels=data_sets_labels, title=f'BES1', fit=False, cent_ref=cent_ref_df,
+                          ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
+
+    plot_div_fits_vs_cent(df_fits, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
+                          data_sets_labels=data_sets_labels, title=f'BES1', fit=True, cent_ref=cent_ref_df,
+                          ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
+    plt.show()
+
+    plot_div_fits_vs_cent_62res(df_fits, ['ampt_new_coal_epbins1'], data_sets_colors=data_sets_colors,
+                                data_sets_labels=data_sets_labels, title=f'AMPT', fit=True, cent_ref=cent_ref_df,
+                                ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
+
+    plot_div_fits_vs_cent_62res(df_fits, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
+                                data_sets_labels=data_sets_labels, title=f'BES1 refn', fit=True, cent_ref=cent_ref_df,
+                                ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
+
+    plot_div_fits_vs_cent_62res(df_fits, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
+                                data_sets_labels=data_sets_labels, title=f'BES1 ref', fit=True, cent_ref=cent_ref_df,
+                                ref_type='ref', data_sets_energies_cmaps=data_sets_energies_cmaps)
+
+    div = 120
+    df_div_avgs = df_divs_avgs[df_divs_avgs['divs'] == div]
+    df_div_avgs = df_div_avgs.rename({'name': 'data_set', 'avg': 'baseline', 'avg_err': 'base_err'}, axis='columns')
+    plot_div_fits_vs_cent_62res(df_div_avgs, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
+                                data_sets_labels=data_sets_labels, title=f'BES1 {div}', fit=True, cent_ref=cent_ref_df,
+                                ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
+
+    # energies = [7, 11, 19, 27, 39, 62]
+    # for energy in energies:
+    #     df_fits_energy = df_fits[df_fits['energy'] == energy]
+    #     plot_div_fits_vs_cent(df_fits_energy, data_sets_plt, data_sets_colors=data_sets_colors,
+    #                           data_sets_labels=data_sets_labels, title=f'{energy} GeV', fit=True, cent_ref=cent_ref_df,
+    #                           ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
 
     plt.show()
 

@@ -65,11 +65,23 @@ def double_quad_180_zparam(x, z1, c1, z2, c2):
 
 
 def inv_sqrtx(x, a, c):
-    return a / np.sqrt(x) + c
+    return a * (-1.0 / np.sqrt(x) + c)
+
+
+def inv_sqrtx_noconst_odr(pars, x):
+    return pars[0] / np.sqrt(x)
 
 
 def inv_sqrtx_odr(pars, x):
-    return pars[0] / np.sqrt(x) + pars[1]
+    return pars[0] * (-1.0 / np.sqrt(x) + pars[1])
+
+
+def inv_sqrtx_sigmoid_odr(pars, x):  # Not fitting well
+    return pars[0] / np.sqrt(x) + pars[1] * (1 + pars[2] / (1 + np.exp(-(x - pars[3]))))
+
+
+def inv_sqrtx_heaviside_odr(pars, x):  # Not fitting well
+    return pars[0] / np.sqrt(x) + pars[1] + pars[2] * np.heaviside(x - pars[3], 1)
 
 
 def inv_sqrtxlin_odr(pars, x):
@@ -1496,8 +1508,9 @@ def plot_dvar_avgs_divs_cents(df, data_sets_plt, plot=False, fit=False, data_set
                         fit_pars[-1].update({'zero_mag': popt2[0], 'zero_mag_err': perr2[0], 'baseline': popt2[1],
                                              'base_err': perr2[1]})
                         if verbose:
-                            print(f'{data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\nz-c fit: {popt2}\n'
-                                  f'z-c covariance: {pcov2}')
+                            print(
+                                f'{data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\nz-c fit: {popt2}\n'
+                                f'z-c covariance: {pcov2}')
                             print()
                     elif verbose:
                         print(f'No Zeros! {data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\n')
@@ -2099,11 +2112,15 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
                           fit=False, cent_ref=None, ref_type=None, data_sets_energies_cmaps=None):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
+    fit_boundary = 60
     fig_base, ax_base = plt.subplots(figsize=(6.66, 5), dpi=144)
     ax_base.axhline(0, color='black')
     fig_base.canvas.manager.set_window_title(f'Baselines vs Centrality')
     fig_zeros, ax_zeros = plt.subplots(figsize=(6.66, 5), dpi=144)
     fig_zeros.canvas.manager.set_window_title(f'Zeros vs Centrality')
+    fig_base_res, ax_base_res = plt.subplots(figsize=(6.66, 5), dpi=144)
+    ax_base_res.axhline(0, color='black')
+    fig_base.canvas.manager.set_window_title(f'Baselines vs Centrality Fit Residuals')
     energies = pd.unique(df['energy'])
     bases, refs, cs = [], [], [0]  # Just to set x and y limits for plot
     consts = {}
@@ -2153,21 +2170,56 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
             bases.extend(list(df_energy['baseline']))
             refs.extend(list(x))
             if fit:
-                p0 = [-0.02, 0.0001]
-                x_fit = np.linspace(1, 800, 2000)
-                odr_model = odr.Model(inv_sqrtx_odr)
-                odr_data = odr.RealData(x, df_energy['baseline'], sx=x_err, sy=df_energy['base_err'])
+                # p0 = [-0.02]
+                p0 = [-0.02, 0.01]
+                func = inv_sqrtx_odr
+                func_cf = inv_sqrtx
+
+                x_fit_plt = np.linspace(1, 800, 2000)
+                odr_model = odr.Model(func)
+                # odr_data = odr.RealData(x, df_energy['baseline'], sx=x_err, sy=df_energy['base_err'])
+                x_fit, x_fit_err, y_fit, y_fit_err = zip(*[[xi, xi_err, yi, yi_err] for xi, yi, xi_err, yi_err in
+                                                           zip(x, df_energy['baseline'], x_err, df_energy['base_err'])
+                                                           if xi > fit_boundary])
+                # print(x_fit, x_fit_err, y_fit, y_fit_err)
+                odr_data = odr.RealData(x_fit, y_fit, sx=x_fit_err, sy=y_fit_err)
                 inv_sqrt_odr = odr.ODR(odr_data, odr_model, beta0=p0, maxit=500)
                 odr_out = inv_sqrt_odr.run()
                 ax_base.axhline(odr_out.beta[1], color=color, ls='-')
                 ax_base.axhspan(odr_out.beta[1] - odr_out.sd_beta[1], odr_out.beta[1] + odr_out.sd_beta[1],
                                 color=color, alpha=0.4)
-                ax_base.plot(x_fit, inv_sqrtx(x_fit, *odr_out.beta), alpha=0.6, color=color)
-                print(f'{lab} Fit: {[Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]}')
+                ax_base.plot(x_fit_plt, func(odr_out.beta, x_fit_plt), alpha=0.6, color=color)
+                fit_meases = [Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]
+                print(f'{lab} ODR Fit: {fit_meases}')
                 cs.append(odr_out.beta[1])
                 consts[data_set]['energy'].append(energy)
                 consts[data_set]['const_val'].append(odr_out.beta[1])
                 consts[data_set]['const_err'].append(odr_out.sd_beta[1])
+
+                popt, pcov = cf(func_cf, x_fit, y_fit, sigma=y_fit_err, absolute_sigma=True, p0=p0)
+                ax_base.plot(x_fit_plt, func_cf(x_fit_plt, *popt), alpha=0.6, ls='--', color=color)
+                fit_meases_cf = [Measure(var, err) for var, err in zip(popt, np.sqrt(np.diag(pcov)))]
+                print(f'{lab} CF Fit: {fit_meases_cf}')
+
+                y = [Measure(base, base_err) for base, base_err in zip(df_energy['baseline'], df_energy['base_err'])]
+                y_fit = [func(fit_meases, xi) for xi in x]
+                y_res = np.array(y) - np.array(y_fit)
+                ax_base_res.errorbar(x, [z.val for z in y_res], [z.err for z in y_res], marker='o', ls=ls,
+                                     color=color, label=lab, alpha=0.6)
+
+                # p0 = [-0.026, 0.0006, 0.2, 100]
+                # x_fit = np.linspace(1, 800, 2000)
+                # func = inv_sqrtx_sigmoid_odr
+                # odr_model = odr.Model(func)
+                # odr_data = odr.RealData(x, df_energy['baseline'], sx=x_err, sy=df_energy['base_err'])
+                # inv_sqrt_odr = odr.ODR(odr_data, odr_model, beta0=p0, maxit=500)
+                # odr_out = inv_sqrt_odr.run()
+                # ax_base.axhline(odr_out.beta[1], color=color, ls=':')
+                # ax_base.axhspan(odr_out.beta[1] - odr_out.sd_beta[1], odr_out.beta[1] + odr_out.sd_beta[1],
+                #                 color=color, alpha=0.4)
+                # ax_base.plot(x_fit, func(p0, x_fit), alpha=0.6, color='gray', ls=':')
+                # ax_base.plot(x_fit, func(odr_out.beta, x_fit), alpha=0.6, color=color, ls=':')
+                # print(f'{lab} Fit: {[Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]}')
 
                 # p0 = [-0.02, 0.0001, 1]
                 # x_fit = np.linspace(1, 800, 2000)
@@ -2233,22 +2285,29 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
     # ax_zeros.set_ylabel('Zeros of Slope vs Partition Width Fit')
     ax_base.set_ylabel(r'Baseline of $\widebar{\Delta\sigma^2}$ vs Partition Width Fit')
     ax_zeros.set_ylabel(r'Zeros of $\widebar{\Delta\sigma^2}$ vs Partition Width Fit')
+    ax_base_res.set_ylabel(r'Residual of Fit to Baseline of $\widebar{\Delta\sigma^2}$ vs Partition Width Fit')
     if ref_type is None:
         ax_base.set_xlabel('Centrality')
         ax_zeros.set_xlabel('Centrality')
+        ax_base_res.set_xlabel('Centrality')
     else:
         ax_base.set_xlabel('Reference Multiplicity')
         ax_zeros.set_xlabel('Reference Multiplicity')
+        ax_base_res.set_xlabel('Reference Multiplicity')
     ax_base.grid()
     ax_zeros.grid()
+    ax_base_res.grid()
     if title:
         ax_base.set_title(title)
         ax_zeros.set_title(title)
+        ax_base_res.set_title(title)
     legend_base = ax_base.legend()
     legend_zeros = ax_zeros.legend()
+    legend_base_res = ax_base_res.legend()
     # legend_slope.get_frame().set_alpha(0)
     fig_base.tight_layout()
     fig_zeros.tight_layout()
+    fig_base_res.tight_layout()
 
     if fit:
         fig_consts_vs_energy, ax_consts_vs_energy = plt.subplots()
@@ -2262,6 +2321,113 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
         ax_consts_vs_energy.set_title('Fit Constants vs Energy')
         fig_consts_vs_energy.canvas.manager.set_window_title('Fit Constants vs Energy')
         fig_consts_vs_energy.tight_layout()
+
+        ax_base.axvline(fit_boundary, ls='--', color='orange')
+        ax_base_res.axvline(fit_boundary, ls='--', color='orange')
+
+
+def plot_div_fits_vs_cent_62res(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None,
+                                fit=False, cent_ref=None, ref_type=None, data_sets_energies_cmaps=None):
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
+                0: '70-80%', -1: '80-90%'}
+    fig_base, ax_base = plt.subplots(figsize=(6.66, 5), dpi=144)
+    ax_base.axhline(0, color='black')
+    fig_base.canvas.manager.set_window_title(f'Baseline with 62 GeV Fit vs Centrality')
+    fig_dev, ax_dev = plt.subplots(figsize=(6.66, 5), dpi=144)
+    ax_dev.axhline(0, color='black')
+    fig_dev.canvas.manager.set_window_title(f'Deviation From 62 GeV Fit vs Centrality')
+
+    energies = pd.unique(df['energy'])
+    for data_set in data_sets_plt:
+        df_set = df[df['data_set'] == data_set]
+
+        df_62 = df_set[df_set['energy'] == 62]
+        if cent_ref is None:
+            x = [cent_map[cent_i] for cent_i in df_62['cent']]
+            x_err = None
+        else:
+            cent_energy = cent_ref[(cent_ref['data_set'] == data_set) & (cent_ref['energy'] == 62)]
+            x = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_val'].iloc[0] for cent in
+                 df_62['cent']]
+            x_err = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_sd'].iloc[0] for cent in
+                     df_62['cent']]
+
+        p0 = [-0.02, 0.0001]
+        odr_model = odr.Model(inv_sqrtx_odr)
+        odr_data = odr.RealData(x, df_62['baseline'], sx=x_err, sy=df_62['base_err'])
+        inv_sqrt_odr = odr.ODR(odr_data, odr_model, beta0=p0, maxit=500)
+        odr_out = inv_sqrt_odr.run()
+        fit_meases = [Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]
+        print(f'{data_set} 62GeV Fit: {fit_meases}')
+        x_fit_plt = np.linspace(1, 800, 2000)
+        ax_base.plot(x_fit_plt, inv_sqrtx(x_fit_plt, *odr_out.beta), alpha=0.6, color='black')
+
+        if data_sets_energies_cmaps is not None:
+            colors = iter([plt.cm.get_cmap(data_sets_energies_cmaps[data_set])(i)
+                           for i in np.linspace(1, 0.4, len(energies))])
+        elif data_sets_colors is not None:
+            color, colors = data_sets_colors[data_set], None
+        else:
+            colors, color = None
+        print(pd.unique(df_set['energy']))
+        for energy in pd.unique(df_set['energy']):
+            if colors is not None:
+                color = next(colors)
+            df_energy = df_set[df_set['energy'] == energy]
+            df_energy.sort_values(by='cent')
+            if data_sets_labels is None:
+                lab = data_set
+            else:
+                lab = data_sets_labels[data_set]
+            if len(energies) > 1:
+                lab += f' {energy}GeV'
+
+            if cent_ref is None:
+                x = [cent_map[cent_i] for cent_i in df_energy['cent']]
+                x_err = None
+            else:
+                cent_energy = cent_ref[(cent_ref['data_set'] == data_set) & (cent_ref['energy'] == energy)]
+                x = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_val'].iloc[0] for cent in
+                     df_energy['cent']]
+                x_err = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_sd'].iloc[0] for cent in
+                         df_energy['cent']]
+
+            y = [Measure(base, base_err) for base, base_err in zip(df_energy['baseline'], df_energy['base_err'])]
+            y_fit = [inv_sqrtx_odr(fit_meases, xi) for xi in x]
+            y_res = (np.array(y_fit) - odr_out.beta[-1]) / (np.array(y) - odr_out.beta[-1])
+
+            ls = 'none' if fit else '-'
+            if colors is None and color is None:
+                ax_dev.errorbar(x, [z.val for z in y_res], xerr=x_err, yerr=[z.err for z in y_res], marker='o',
+                                ls=ls, label=lab, alpha=0.6)
+                ax_base.errorbar(x, df_energy['baseline'], xerr=x_err, yerr=df_energy['base_err'], marker='o',
+                                 ls=ls, label=lab, alpha=0.6)
+            else:
+                ax_dev.errorbar(x, [z.val for z in y_res], xerr=x_err, yerr=[z.err for z in y_res], marker='o',
+                                ls=ls, color=color, label=lab, alpha=0.6)
+                ax_base.errorbar(x, df_energy['baseline'], xerr=x_err, yerr=df_energy['base_err'], marker='o',
+                                 ls=ls, color=color, label=lab, alpha=0.6)
+
+    ax_base.set_ylim([-0.007, 0.001])
+    ax_dev.set_ylabel(r'Residual of 62GeV Fit to Baseline of $\widebar{\Delta\sigma^2}$ vs Partition Width Fit')
+    ax_base.set_ylabel(r'Baseline of $\widebar{\Delta\sigma^2}$ vs Partition Width Fit')
+    if ref_type is None:
+        ax_dev.set_xlabel('Centrality')
+        ax_base.set_xlabel('Centrality')
+    else:
+        ax_dev.set_xlabel('Reference Multiplicity')
+        ax_base.set_xlabel('Reference Multiplicity')
+    ax_dev.grid()
+    ax_base.grid()
+    if title:
+        ax_dev.set_title(title)
+        ax_base.set_title(title)
+    legend_dev = ax_dev.legend()
+    legend_base = ax_base.legend()
+
+    # legend_slope.get_frame().set_alpha(0)
+    fig_dev.tight_layout()
+    fig_base.tight_layout()
 
 
 def plot_protons_fits_vs_amp(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None):
