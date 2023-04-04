@@ -17,14 +17,38 @@ import tqdm
 import istarmap  # Needed for tqdm
 
 from ClustDist import ClustDist, ClustDistPlusMinus
-from sub_event_resample_algorithm import get_resamples4
+from sub_event_resample_algorithm import get_resamples4, plot_event_nobin
 
 
 def main():
     # run_dynamic()
     # run_dynamic_plus_minus()
-    cluster_voids_example_plots()
+    # cluster_voids_example_plots()
+    plot_example_event_tracks()
     print('donzo')
+
+
+def plot_example_event_tracks():
+    n_tracks = 25
+    bin_width = np.radians(120)
+    resamples = 1  # Not used
+    seed = 94
+
+    # Clustering
+    amp = 0.5
+    spread = 1.0
+    wraps = 8
+    clust_pars = (amp, spread, wraps)
+    tracks = sim_event_dynamic(clust_pars, n_tracks, bin_width, resamples, seed, return_tracks=True)[-1]
+    print('Clustering')
+    plot_event_nobin(tracks)
+
+    # Anti-Clustering
+    amp = -0.5
+    aclust_pars = (amp, spread, wraps)
+    tracks = sim_event_dynamic(aclust_pars, n_tracks, bin_width, resamples, seed, return_tracks=True)[-1]
+    print('Anti-Clustering')
+    plot_event_nobin(tracks)
 
 
 def run_static():
@@ -193,7 +217,7 @@ def sim_pdf_dynamic(sim_pars, n_events, n_tracks, bin_width, samples, threads=1,
     return hist
 
 
-def sim_event_dynamic(sim_pars, n_tracks, bin_width, samples, seed):
+def sim_event_dynamic(sim_pars, n_tracks, bin_width, samples, seed, return_tracks=False):
     rng = np.random.default_rng(seed)
     cl_amp, sd, wrap_num = sim_pars
     phis = []
@@ -207,6 +231,9 @@ def sim_event_dynamic(sim_pars, n_tracks, bin_width, samples, seed):
     # print(hist)
     # hist = np.histogram(hist, bins=np.arange(-0.5, n_tracks + 1.5, 1))[0]
     # print(hist)
+
+    if return_tracks:
+        return hist, tracks
 
     return hist
 

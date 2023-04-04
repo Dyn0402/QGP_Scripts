@@ -623,7 +623,11 @@ def plot_event(angles, bin_low, bin_high, bin_width, counts):
 def plot_event_nobin(angles):
     fig = plt.figure(figsize=(5, 5))
     ax = plt.subplot(111, projection='polar')
-    ax.vlines(angles, 0, 1, color='red', label='Tracks')
+    ax.plot([], [], color='red', ls='--', label='Tracks')  # Just for legend
+    for angle in angles:
+        arrow = FancyArrowPatch(posA=(angle, 0), posB=(angle, 1), arrowstyle='-|>', color='red', ls='--',
+                                mutation_scale=20, shrinkA=0, shrinkB=0)
+        ax.add_artist(arrow)
     ax.grid(False)
     ax.set_yticklabels([])
     ax.set_ylim((0, 1))
