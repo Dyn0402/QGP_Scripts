@@ -1053,38 +1053,40 @@ def plot_vs_cent_var_fits():
 
     data_sets_plt = ['bes_resample_epbins1', 'ampt_new_coal_epbins1']
     data_sets_colors = dict(zip(data_sets_plt, ['black', 'red']))
-    data_sets_energies_cmaps = dict(zip(data_sets_plt, ['tab10', 'Reds']))
+    data_sets_energies_cmaps = dict(zip(data_sets_plt, ['tab10', 'Dark2']))
     data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT']))
 
-    plot_div_fits_vs_cent(df_fits, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
-                          data_sets_labels=data_sets_labels, title=f'BES1', fit=False, cent_ref=cent_ref_df,
-                          ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
-
-    plot_div_fits_vs_cent(df_fits, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
-                          data_sets_labels=data_sets_labels, title=f'BES1', fit=True, cent_ref=cent_ref_df,
-                          ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
-    plt.show()
+    # plot_div_fits_vs_cent(df_fits, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
+    #                       data_sets_labels=data_sets_labels, title=f'BES1', fit=False, cent_ref=cent_ref_df,
+    #                       ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
+    #
+    # plot_div_fits_vs_cent(df_fits, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
+    #                       data_sets_labels=data_sets_labels, title=f'BES1', fit=True, cent_ref=cent_ref_df,
+    #                       ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
 
     plot_div_fits_vs_cent_62res(df_fits, ['ampt_new_coal_epbins1'], data_sets_colors=data_sets_colors,
                                 data_sets_labels=data_sets_labels, title=f'AMPT', fit=True, cent_ref=cent_ref_df,
                                 ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
 
     plot_div_fits_vs_cent_62res(df_fits, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
-                                data_sets_labels=data_sets_labels, title=f'BES1 refn', fit=True, cent_ref=cent_ref_df,
+                                data_sets_labels=data_sets_labels, title=f'BES1', fit=True, cent_ref=cent_ref_df,
                                 ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
 
-    plot_div_fits_vs_cent_62res(df_fits, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
-                                data_sets_labels=data_sets_labels, title=f'BES1 ref', fit=True, cent_ref=cent_ref_df,
-                                ref_type='ref', data_sets_energies_cmaps=data_sets_energies_cmaps)
-
-    div = 120
-    df_div_avgs = df_divs_avgs[df_divs_avgs['divs'] == div]
-    df_div_avgs = df_div_avgs.rename({'name': 'data_set', 'avg': 'baseline', 'avg_err': 'base_err'}, axis='columns')
-    plot_div_fits_vs_cent_62res(df_div_avgs, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
-                                data_sets_labels=data_sets_labels, title=f'BES1 {div}', fit=True, cent_ref=cent_ref_df,
-                                ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
+    plt.show()
+    #
+    # plot_div_fits_vs_cent_62res(df_fits, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
+    #                             data_sets_labels=data_sets_labels, title=f'BES1 ref', fit=True, cent_ref=cent_ref_df,
+    #                             ref_type='ref', data_sets_energies_cmaps=data_sets_energies_cmaps)
+    #
+    # div = 120
+    # df_div_avgs = df_divs_avgs[df_divs_avgs['divs'] == div]
+    # df_div_avgs = df_div_avgs.rename({'name': 'data_set', 'avg': 'baseline', 'avg_err': 'base_err'}, axis='columns')
+    # plot_div_fits_vs_cent_62res(df_div_avgs, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
+    #                             data_sets_labels=data_sets_labels, title=f'BES1 {div}', fit=True, cent_ref=cent_ref_df,
+    #                             ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
 
     # energies = [7, 11, 19, 27, 39, 62]
+    # energies = [62]
     # for energy in energies:
     #     df_fits_energy = df_fits[df_fits['energy'] == energy]
     #     plot_div_fits_vs_cent(df_fits_energy, data_sets_plt, data_sets_colors=data_sets_colors,

@@ -2109,18 +2109,21 @@ def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
 
 
 def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None,
-                          fit=False, cent_ref=None, ref_type=None, data_sets_energies_cmaps=None):
+                          fit=False, cent_ref=None, ref_type=None, ls='none', data_sets_energies_cmaps=None):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     fit_boundary = 60
+    ls = 'none' if fit else ls
+
     fig_base, ax_base = plt.subplots(figsize=(6.66, 5), dpi=144)
     ax_base.axhline(0, color='black')
     fig_base.canvas.manager.set_window_title(f'Baselines vs Centrality')
     fig_zeros, ax_zeros = plt.subplots(figsize=(6.66, 5), dpi=144)
     fig_zeros.canvas.manager.set_window_title(f'Zeros vs Centrality')
-    fig_base_res, ax_base_res = plt.subplots(figsize=(6.66, 5), dpi=144)
-    ax_base_res.axhline(0, color='black')
-    fig_base.canvas.manager.set_window_title(f'Baselines vs Centrality Fit Residuals')
+    if fit:
+        fig_base_res, ax_base_res = plt.subplots(figsize=(6.66, 5), dpi=144)
+        ax_base_res.axhline(0, color='black')
+        fig_base_res.canvas.manager.set_window_title(f'Baselines vs Centrality Fit Residuals')
     energies = pd.unique(df['energy'])
     bases, refs, cs = [], [], [0]  # Just to set x and y limits for plot
     consts = {}
@@ -2156,7 +2159,6 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
                      df_energy['cent']]
                 x_err = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_sd'].iloc[0] for cent in
                          df_energy['cent']]
-            ls = 'none' if fit else '-'
             if colors is None and color is None:
                 ax_base.errorbar(x, df_energy['baseline'], xerr=x_err, yerr=df_energy['base_err'], marker='o',
                                  ls=ls, label=lab, alpha=0.6)
@@ -2285,31 +2287,35 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
     # ax_zeros.set_ylabel('Zeros of Slope vs Partition Width Fit')
     ax_base.set_ylabel(r'Baseline of $\widebar{\Delta\sigma^2}$ vs Partition Width Fit')
     ax_zeros.set_ylabel(r'Zeros of $\widebar{\Delta\sigma^2}$ vs Partition Width Fit')
-    ax_base_res.set_ylabel(r'Residual of Fit to Baseline of $\widebar{\Delta\sigma^2}$ vs Partition Width Fit')
     if ref_type is None:
         ax_base.set_xlabel('Centrality')
         ax_zeros.set_xlabel('Centrality')
-        ax_base_res.set_xlabel('Centrality')
+        if fit:
+            ax_base_res.set_xlabel('Centrality')
     else:
         ax_base.set_xlabel('Reference Multiplicity')
         ax_zeros.set_xlabel('Reference Multiplicity')
-        ax_base_res.set_xlabel('Reference Multiplicity')
+        if fit:
+            ax_base_res.set_xlabel('Reference Multiplicity')
     ax_base.grid()
     ax_zeros.grid()
-    ax_base_res.grid()
     if title:
         ax_base.set_title(title)
         ax_zeros.set_title(title)
-        ax_base_res.set_title(title)
+        if fit:
+            ax_base_res.set_title(title)
     legend_base = ax_base.legend()
     legend_zeros = ax_zeros.legend()
-    legend_base_res = ax_base_res.legend()
     # legend_slope.get_frame().set_alpha(0)
     fig_base.tight_layout()
     fig_zeros.tight_layout()
-    fig_base_res.tight_layout()
 
     if fit:
+        ax_base_res.set_ylabel(r'Residual of Fit to Baseline of $\widebar{\Delta\sigma^2}$ vs Partition Width Fit')
+        ax_base_res.grid()
+        legend_base_res = ax_base_res.legend()
+        fig_base_res.tight_layout()
+
         fig_consts_vs_energy, ax_consts_vs_energy = plt.subplots()
         ax_consts_vs_energy.set_ylabel('Constant Fit Parameter')
         ax_consts_vs_energy.set_xlabel('Energy (GeV)')
@@ -2352,8 +2358,9 @@ def plot_div_fits_vs_cent_62res(df, data_sets_plt, data_sets_colors=None, data_s
             x_err = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_sd'].iloc[0] for cent in
                      df_62['cent']]
 
-        p0 = [-0.02, 0.0001]
-        odr_model = odr.Model(inv_sqrtx_odr)
+        p0 = [-0.02, 0.01]
+        func = inv_sqrtx_odr
+        odr_model = odr.Model(func)
         odr_data = odr.RealData(x, df_62['baseline'], sx=x_err, sy=df_62['base_err'])
         inv_sqrt_odr = odr.ODR(odr_data, odr_model, beta0=p0, maxit=500)
         odr_out = inv_sqrt_odr.run()
@@ -2393,8 +2400,10 @@ def plot_div_fits_vs_cent_62res(df, data_sets_plt, data_sets_colors=None, data_s
                          df_energy['cent']]
 
             y = [Measure(base, base_err) for base, base_err in zip(df_energy['baseline'], df_energy['base_err'])]
-            y_fit = [inv_sqrtx_odr(fit_meases, xi) for xi in x]
-            y_res = (np.array(y_fit) - odr_out.beta[-1]) / (np.array(y) - odr_out.beta[-1])
+            y_fit = [func(fit_meases, xi) for xi in x]
+            # y_res = (np.array(y_fit) - odr_out.beta[-1]) / (np.array(y) - odr_out.beta[-1])
+            # y_res = np.array(y_fit) / np.array(y)
+            y_res = np.array(y) - np.array(y_fit)
 
             ls = 'none' if fit else '-'
             if colors is None and color is None:
@@ -2409,7 +2418,7 @@ def plot_div_fits_vs_cent_62res(df, data_sets_plt, data_sets_colors=None, data_s
                                  ls=ls, color=color, label=lab, alpha=0.6)
 
     ax_base.set_ylim([-0.007, 0.001])
-    ax_dev.set_ylabel(r'Residual of 62GeV Fit to Baseline of $\widebar{\Delta\sigma^2}$ vs Partition Width Fit')
+    ax_dev.set_ylabel(r'Deviation of Baseline of $\widebar{\Delta\sigma^2}$ vs Partition Width from 62GeV Fit')
     ax_base.set_ylabel(r'Baseline of $\widebar{\Delta\sigma^2}$ vs Partition Width Fit')
     if ref_type is None:
         ax_dev.set_xlabel('Centrality')
