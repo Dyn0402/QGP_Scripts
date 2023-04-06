@@ -20,6 +20,8 @@ from analyze_binom_slices import *
 
 
 def main():
+    # plot_paper_figs()
+
     # plot_star_model_var()
     # plot_vs_cent_var()
     # plot_sims_var()
@@ -48,6 +50,100 @@ def main():
     # plot_anticl_flow_closure_test()
     # plot_efficiency_closure_tests()
     print('donzo')
+
+
+
+def plot_paper_figs():
+    plt.rcParams["figure.figsize"] = (6.66, 5)
+    plt.rcParams["figure.dpi"] = 144
+    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    v2_star_in_dir = 'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/' \
+                     'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/'
+    v2_ampt_in_dir = 'F:/Research/Data_Ampt_New_Coal/default_resample_epbins1/Ampt_rapid05_resample_norotate_epbins1_0/'
+    v2_cf_in_dir = 'F:/Research/Data_CF/default_resample_epbins1/CF_rapid05_resample_norotate_epbins1_0/'
+    v2_cfev_in_dir = 'F:/Research/Data_CFEV/default_resample_epbins1/CFEV_rapid05_resample_norotate_epbins1_0/'
+    v2_cfevb342_in_dir = 'F:/Research/Data_CFEVb342/default_resample_epbins1/' \
+                         'CFEVb342_rapid05_resample_norotate_epbins1_0/'
+    df_name = 'Binomial_Slice_Moments/binom_slice_stats_var_epbins1.csv'
+    fits_out_base = 'Base_Zero_Fits'
+    df_tproton_avgs_name = 'dsig_tprotons_avgs_cent8.csv'
+    df_partitions_fits_name = 'partitions_fits_cent8.csv'
+    df_path = base_path + df_name
+    sim_sets = []
+
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
+                0: '70-80%', -1: '80-90%'}
+
+    stat_plot = 'k2'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
+    div_plt = 120
+    exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
+    cent_plt = 8
+    energies_fit = [7, 11, 19, 27, 39, 62]
+    samples = 72  # For title purposes only
+
+    # data_sets_plt = ['bes_resample_def', 'ampt_new_coal_resample_def', 'cf_resample_def', 'cfev_resample_def']
+    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple']))
+    # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST', 'MUSIC+FIST EV $1fm^3$']))
+
+    data_sets_plt = ['bes_resample_epbins1', 'ampt_new_coal_epbins1', 'cf_resample_epbins1', 'cfev_resample_epbins1']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple']))
+    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST', 'MUSIC+FIST EV $1fm^3$']))
+
+    # data_sets_plt = ['bes_resample_epbins1', 'ampt_new_coal_epbins1']
+    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red']))
+    # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT']))
+
+    all_sets_plt = data_sets_plt + sim_sets[:]
+
+    v2_star_vals = {2: read_flow_values(v2_star_in_dir)}
+    v2_ampt_vals = {2: read_flow_values(v2_ampt_in_dir)}
+    v2_cf_vals = {2: read_flow_values(v2_cf_in_dir)}
+    v2_cfev_vals = {2: read_flow_values(v2_cfev_in_dir)}
+    v2_cfevb342_vals = {2: read_flow_values(v2_cfevb342_in_dir)}
+
+    df = pd.read_csv(df_path)
+    df = df.dropna()
+    print(pd.unique(df['name']))
+
+    df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
+
+    # df = df[df['name'].str.contains('bes')]
+
+    df = df[df['stat'] == stat_plot]
+    df_raw, df_mix, df_diff = calc_dsigma(df, ['raw', 'mix', 'diff'])
+
+    dvar_vs_protons(pd.concat([df_raw, df_mix]), div_plt, cent_plt, [39], ['raw', 'mix'], ['bes_resample_epbins1'],
+                    plot=True, avg=False, star_prelim=True, alpha=1.0, y_ranges=[-0.0007, 0.00055],
+                    marker_map={'bes_resample_epbins1': {'raw': 'o', 'mix': 's'}})
+
+    dsig_avg = dvar_vs_protons_energies(df_diff, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'],
+                                        ['bes_resample_epbins1'], star_prelim=True,
+                                        plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
+                                        data_sets_labels=data_sets_labels, y_ranges=[-0.00088, 0.00016])
+
+    plot_protons_avgs_vs_energy(dsig_avg, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
+                                data_sets_labels=data_sets_labels, title=f'{cent_map[cent_plt]} Centrality, {div_plt}° '
+                                                                         f'Partitions, {samples} Samples per Event')
+
+    plt.show()
+
+    # dsig_avgs = pd.concat(dsig_avgs, ignore_index=True)
+    # if df_tproton_avgs_name is not None:
+    #     dsig_avgs.to_csv(f'{base_path}{fits_out_base}/{df_tproton_avgs_name}', index=False)
+
+
+    # plot_dvar_avgs_divs(dsig_avgs, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,
+    #                     data_sets_labels=data_sets_labels)
+    #
+    # df_fits = plot_dvar_avgs_divs(dsig_avgs, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
+    #                               data_sets_labels=data_sets_labels, plt_energies=False)
+    # if df_partitions_fits_name is not None:
+    #     df_fits.to_csv(f'{base_path}{fits_out_base}/{df_partitions_fits_name}', index=False)
+
+    # plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
+    # plot_slope_div_fits_simpars(df_fits)
+
+    plt.show()
 
 
 def plot_star_model():
@@ -177,16 +273,16 @@ def plot_star_model_var():
     df = df[df['stat'] == stat_plot]
     df_raw, df_mix, df_diff = calc_dsigma(df, ['raw', 'mix', 'diff'])
 
-    stat_binom_vs_protons(df, stat_plot, div_plt, cent_plt, 39, ['raw', 'mix'], 'ampt_new_coal_epbins1',
+    stat_binom_vs_protons(df, stat_plot, div_plt, cent_plt, 62, ['raw', 'mix'], 'ampt_new_coal_epbins1',
                           data_sets_labels=data_sets_labels)
 
-    dvar_vs_protons(pd.concat([df_raw, df_mix]), div_plt, cent_plt, [39], ['raw', 'mix'], ['ampt_new_coal_epbins1'],
+    dvar_vs_protons(pd.concat([df_raw, df_mix]), div_plt, cent_plt, [62], ['raw', 'mix'], ['ampt_new_coal_epbins1'],
                     plot=True, avg=False)
 
-    dvar_vs_protons(df_diff, div_plt, cent_plt, [39], ['diff'], ['ampt_new_coal_epbins1'], plot=True, avg=False,
+    dvar_vs_protons(df_diff, div_plt, cent_plt, [62], ['diff'], ['ampt_new_coal_epbins1'], plot=True, avg=False,
                     data_sets_labels=data_sets_labels, data_sets_colors=data_sets_colors)
 
-    dvar_vs_protons(df_diff, div_plt, cent_plt, [39], ['diff'], all_sets_plt, plot=True, avg=False,
+    dvar_vs_protons(df_diff, div_plt, cent_plt, [62], ['diff'], all_sets_plt, plot=True, avg=False,
                     data_sets_labels=data_sets_labels, data_sets_colors=data_sets_colors)
 
     dvar_vs_protons(pd.concat([df_raw, df_mix, df_diff], ignore_index=True), div_plt, cent_plt, [39],
@@ -1056,6 +1152,28 @@ def plot_vs_cent_var_fits():
     data_sets_energies_cmaps = dict(zip(data_sets_plt, ['tab10', 'Dark2']))
     data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT']))
 
+    energy = 7
+    df_divs_avgs_energy = df_divs_avgs[df_divs_avgs['energy'] == energy]
+    plot_dvar_avgs_vs_divs_cents(df_divs_avgs_energy, data_sets_plt, data_sets_colors=data_sets_colors,
+                                 data_sets_labels=data_sets_labels, fit=True)
+    div = 120
+    df_div_avgs_div = df_divs_avgs[df_divs_avgs['divs'] == div]
+    df_div_avgs_div = df_div_avgs_div.rename({'name': 'data_set', 'avg': 'baseline', 'avg_err': 'base_err'},
+                                             axis='columns')
+    # plot_div_fits_vs_cent_62res(df_div_avgs_div, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
+    #                             data_sets_labels=data_sets_labels, title=f'BES1 {div}', fit=True, cent_ref=cent_ref_df,
+    #                             ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
+
+    print(df_div_avgs_div)
+    df_div_avgs_div_energy = df_div_avgs_div[df_div_avgs_div['energy'] == energy]
+    df_div_avgs_div_energy['zero_mag'] = 0
+    df_div_avgs_div_energy['zero_mag_err'] = 0
+    plot_div_fits_vs_cent(df_div_avgs_div_energy, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
+                          data_sets_labels=data_sets_labels, title=f'BES1 {div}° {energy} GeV', cent_ref=cent_ref_df,
+                          ref_type=ref_type, data_sets_energies_cmaps=None, fit=True)
+
+    # plt.show()
+
     # plot_div_fits_vs_cent(df_fits, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
     #                       data_sets_labels=data_sets_labels, title=f'BES1', fit=False, cent_ref=cent_ref_df,
     #                       ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
@@ -1064,34 +1182,28 @@ def plot_vs_cent_var_fits():
     #                       data_sets_labels=data_sets_labels, title=f'BES1', fit=True, cent_ref=cent_ref_df,
     #                       ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
 
-    plot_div_fits_vs_cent_62res(df_fits, ['ampt_new_coal_epbins1'], data_sets_colors=data_sets_colors,
-                                data_sets_labels=data_sets_labels, title=f'AMPT', fit=True, cent_ref=cent_ref_df,
-                                ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
-
-    plot_div_fits_vs_cent_62res(df_fits, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
-                                data_sets_labels=data_sets_labels, title=f'BES1', fit=True, cent_ref=cent_ref_df,
-                                ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
-
-    plt.show()
+    # plot_div_fits_vs_cent_62res(df_fits, ['ampt_new_coal_epbins1'], data_sets_colors=data_sets_colors,
+    #                             data_sets_labels=data_sets_labels, title=f'AMPT', fit=True, cent_ref=cent_ref_df,
+    #                             ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
     #
     # plot_div_fits_vs_cent_62res(df_fits, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
-    #                             data_sets_labels=data_sets_labels, title=f'BES1 ref', fit=True, cent_ref=cent_ref_df,
-    #                             ref_type='ref', data_sets_energies_cmaps=data_sets_energies_cmaps)
-    #
-    # div = 120
-    # df_div_avgs = df_divs_avgs[df_divs_avgs['divs'] == div]
-    # df_div_avgs = df_div_avgs.rename({'name': 'data_set', 'avg': 'baseline', 'avg_err': 'base_err'}, axis='columns')
-    # plot_div_fits_vs_cent_62res(df_div_avgs, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
-    #                             data_sets_labels=data_sets_labels, title=f'BES1 {div}', fit=True, cent_ref=cent_ref_df,
+    #                             data_sets_labels=data_sets_labels, title=f'BES1', fit=True, cent_ref=cent_ref_df,
     #                             ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
+    #
+    # plt.show()
+    #
+    plot_div_fits_vs_cent_62res(df_fits, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
+                                data_sets_labels=data_sets_labels, title=f'BES1 ref', fit=True, cent_ref=cent_ref_df,
+                                ref_type='ref', data_sets_energies_cmaps=data_sets_energies_cmaps)
+
 
     # energies = [7, 11, 19, 27, 39, 62]
-    # energies = [62]
-    # for energy in energies:
-    #     df_fits_energy = df_fits[df_fits['energy'] == energy]
-    #     plot_div_fits_vs_cent(df_fits_energy, data_sets_plt, data_sets_colors=data_sets_colors,
-    #                           data_sets_labels=data_sets_labels, title=f'{energy} GeV', fit=True, cent_ref=cent_ref_df,
-    #                           ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
+    energies = [62]
+    for energy in energies:
+        df_fits_energy = df_fits[df_fits['energy'] == energy]
+        plot_div_fits_vs_cent(df_fits_energy, data_sets_plt, data_sets_colors=data_sets_colors,
+                              data_sets_labels=data_sets_labels, title=f'{energy} GeV', fit=True, cent_ref=cent_ref_df,
+                              ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
 
     plt.show()
 

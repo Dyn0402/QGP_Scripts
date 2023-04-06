@@ -65,7 +65,7 @@ def double_quad_180_zparam(x, z1, c1, z2, c2):
 
 
 def inv_sqrtx(x, a, c):
-    return a * (-1.0 / np.sqrt(x) + c)
+    return a / np.sqrt(x) + c
 
 
 def inv_sqrtx_noconst_odr(pars, x):
@@ -73,7 +73,7 @@ def inv_sqrtx_noconst_odr(pars, x):
 
 
 def inv_sqrtx_odr(pars, x):
-    return pars[0] * (-1.0 / np.sqrt(x) + pars[1])
+    return pars[0] / np.sqrt(x) + pars[1]
 
 
 def inv_sqrtx_sigmoid_odr(pars, x):  # Not fitting well
@@ -293,7 +293,8 @@ def stat_binom_vs_protons(df, stat, div, cent, energy, data_types, data_set_plt,
 
 
 def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False, avg=False,
-                    hist=False, data_sets_colors=None, data_sets_labels=None, star_prelim=False):
+                    hist=False, data_sets_colors=None, data_sets_labels=None, star_prelim=False, alpha=0.6,
+                    marker_map=None):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     data = []
@@ -368,8 +369,13 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
                 ax.fill_between(df['total_protons'], df['val'] - df['err'], df['val'] + df['err'], label=lab, color=c,
                                 alpha=0.4)
             else:
-                ax.errorbar(df['total_protons'], df['val'], df['err'], label=lab,
-                            marker='o', ls='', color=c, alpha=0.7, zorder=zo)
+                if star_prelim and y_ranges is not None:
+                    df_plt = df[(df['val'] < y_ranges[1]) & (df['val'] > y_ranges[0])]
+                else:
+                    df_plt = df
+                marker = marker_map[data_set][data_type] if marker_map is not None else 'o'
+                ax.errorbar(df_plt['total_protons'], df_plt['val'], df_plt['err'], label=lab,
+                            marker=marker, ls='', color=c, alpha=alpha, zorder=zo)
                 if 'sys' in df:
                     ax.errorbar(df['total_protons'], df['val'], df['sys'], marker='', ls='', elinewidth=3,
                                 color=c, alpha=0.4, zorder=zo)
@@ -395,11 +401,14 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
 
     if plot:
         if star_prelim:
-            ax.text(10, 0.955, 'STAR Preliminary', fontsize=15)
-            eta_line = r'|$\eta$| < 1'
+            ax.text(0.02, 0.98, 'STAR Preliminary', fontsize=15, ha='left', va='top',
+                    transform=ax.transAxes)
+            eta_line = r'|y| < 0.5'
             pt_line = r'0.4 < $p_T$ < 2.0 GeV'
-            ax.text(10, 0.962, f'Au+Au\n{eta_line}\n{pt_line}')
-            ax.text(31.6, 1.041, 'statistical uncertainty only', fontsize=8)
+            ax.text(0.02, 0.91, f'Au+Au\n{eta_line}\n{pt_line}', ha='left', va='top',
+                    transform=ax.transAxes)
+            ax.text(0.65, 0.98, 'statistical uncertainty only', fontsize=8, ha='left', va='top',
+                    transform=ax.transAxes)
             ax.legend(loc='upper center', framealpha=1.0).set_zorder(10)
         else:
             ax.legend(loc='upper center')
@@ -651,7 +660,7 @@ def stat_vs_protons_energies(df, stat, divs, cent, energies, data_types, data_se
 
 def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False,
                              avg=False, plot_avg=False, hist=False, data_sets_colors=None, data_sets_labels=None,
-                             star_prelim=False):
+                             star_prelim=False, marker_map=None, alpha=1.0):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     energy_data = []
@@ -723,8 +732,13 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
                     ax.fill_between(df['total_protons'], df['val'] - df['err'], df['val'] + df['err'],
                                     label=lab, color=c, alpha=0.4)
                 else:
-                    ax.errorbar(df['total_protons'], df['val'], df['err'], label=lab,
-                                marker='o', ls='', color=c, alpha=0.7, zorder=zo)
+                    if star_prelim and y_ranges is not None:
+                        df_plt = df[(df['val'] < y_ranges[1]) & (df['val'] > y_ranges[0])]
+                    else:
+                        df_plt = df
+                    marker = marker_map[data_set][data_type] if marker_map is not None else 'o'
+                    ax.errorbar(df_plt['total_protons'], df_plt['val'], df_plt['err'], label=lab,
+                                marker=marker, ls='', color=c, alpha=alpha, zorder=zo)
                     if 'sys' in df:
                         ax.errorbar(df['total_protons'], df['val'], df['sys'], marker='', ls='',
                                     elinewidth=3, color=c, alpha=0.4, zorder=zo)
@@ -754,13 +768,17 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
                         fig_hist.tight_layout()
 
     if plot or plot_avg:
-        ax_energies[-1].legend(loc='lower right', framealpha=1.0).set_zorder(10)
+        if len(data_sets_plt) * len(data_types) > 1:
+            ax_energies[-1].legend(loc='lower right', framealpha=1.0).set_zorder(10)
         if star_prelim:
-            ax_energies[4].text(46, 0.93, 'STAR \nPreliminary', fontsize=15)
-            eta_line = r'|$\eta$| < 1'
+            ax_energies[4].text(0.5, 0.75, 'STAR Preliminary', fontsize=15, ha='left', va='top',
+                                transform=ax_energies[4].transAxes)
+            eta_line = r'|y| < 0.5'
             pt_line = r'0.4 < $p_T$ < 2.0 GeV'
-            ax_energies[4].text(46, 0.95, f'Au+Au\n{eta_line}\n{pt_line}')
-            ax_energies[2].text(15, 1.012, 'statistical uncertainty only')
+            ax_energies[4].text(0.5, 0.65, f'Au+Au\n{eta_line}\n{pt_line}', ha='left', va='top',
+                                transform=ax_energies[4].transAxes)
+            ax_energies[2].text(0.2, 0.97, 'statistical uncertainty only', ha='left', va='top',
+                                transform=ax_energies[2].transAxes)
         fig.tight_layout()
         fig.subplots_adjust(wspace=0.0, hspace=0.0)
         fig.canvas.manager.set_window_title(f'binom_slices_{divs[0]}')
@@ -1267,6 +1285,104 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
             fig.tight_layout()
             fig_panels.tight_layout()
             fig_panels.subplots_adjust(wspace=0.0, hspace=0.0, left=0.075, right=0.995, top=0.985, bottom=0.075)
+
+    return pd.DataFrame(fit_pars)
+
+
+def plot_dvar_avgs_vs_divs_cents(df, data_sets_plt, fit=False, data_sets_colors=None, data_sets_labels=None,
+                                 exclude_divs=[], verbose=False, title=None, alpha=1, ylab=None):
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
+                0: '70-80%', -1: '80-90%'}
+    cents = pd.unique(df['cent'])
+    fig_panels, ax_panels_all = plt.subplots(3, 3, sharex=True, sharey=True, dpi=144, figsize=(13.33, 6.16))
+    fig_panels.canvas.manager.set_window_title(f'dsigma^2 vs Width Centrality Panels')
+    ax_panels = dict(zip(cents, ax_panels_all.flat))
+    if data_sets_colors is None:
+        num_colorless = len(cents) * len(data_sets_plt) * len(pd.unique(df['energy']))
+    else:
+        num_colorless = len(cents) * (len(data_sets_plt) - len(data_sets_colors)) * len(pd.unique(df['energy']))
+    colors = iter(plt.cm.rainbow(np.linspace(0, 1, num_colorless)))
+    fit_pars = []
+    for data_set in data_sets_plt:
+        df_set = df[df['name'] == data_set]
+        df_set.sort_values(by='divs')
+        for cent_marker, cent in enumerate(cents):
+            df_cent = df_set[df_set['cent'] == cent]
+            energies = pd.unique(df_cent['cent'])
+            for energy in energies:
+                df_energy = df_cent[df_cent['energy'] == energy]
+                df_energy.sort_values(by='divs')
+                if data_sets_colors is not None and data_set in data_sets_colors:
+                    color = data_sets_colors[data_set]
+                else:
+                    color = next(colors)
+                if data_sets_labels is not None and data_set in data_sets_labels:
+                    lab_cent = data_sets_labels[data_set]
+                else:
+                    lab_cent = data_set
+                if len(cents) > 1:
+                    lab = f'{lab_cent}_{cent_map[cent]}'
+                else:
+                    lab = lab_cent
+                if len(cents) > 1:
+                    lab += f'_cent{cent}'
+                ax_panels[energy].errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['avg_err'],
+                                           ls='none',
+                                           marker='o', label=lab_cent, color=color, alpha=alpha)
+                if fit and df_cent.size > 1:
+                    try:
+                        df_cent = df_cent[~df_cent.divs.isin(exclude_divs)]
+                        popt, pcov = cf(quad_180, df_cent['divs'], df_cent['avg'], sigma=df_cent['avg_err'],
+                                        absolute_sigma=True)
+                        perr = np.sqrt(np.diag(pcov))
+                        fit_pars.append({'data_set': data_set, 'energy': energy, 'cent': cent, 'color': color,
+                                         'curvature': popt[0], 'curve_baseline': popt[1], 'curve_err': perr[0],
+                                         'curve_base_err': perr[1],
+                                         'spread': df_cent['spread'].iloc[0], 'amp': df_cent['amp'].iloc[0]})
+                        x = np.linspace(0, 360, 100)
+                        ax_panels[energy].plot(x, quad_180(x, *popt), ls='-', color=color, alpha=0.65)
+                        if popt[0] * popt[1] < 0:
+                            popt2, pcov2 = cf(quad_180_zparam, df_cent['divs'], df_cent['avg'],
+                                              sigma=df_cent['avg_err'], absolute_sigma=True)
+                            perr2 = np.sqrt(np.diag(pcov2))
+                            fit_pars[-1].update({'zero_mag': popt2[0], 'zero_mag_err': perr2[0], 'baseline': popt2[1],
+                                                 'base_err': perr2[1]})
+                            if verbose:
+                                print(f'{data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\n'
+                                      f'z-c fit: {popt2}\nz-c covariance: {pcov2}')
+                                print()
+                        else:
+                            if verbose:
+                                print(f'No Zeros! {data_set}, {energy}GeV\na-c fit: {popt}\na-c covariance: {pcov}\n')
+                                print()
+                    except RuntimeError as e:
+                        print(f'Fitting Error, skipping data_set {data_set}, {e}')
+
+    if title is None:
+        title = ''
+        if len(data_sets_plt) == 1:
+            title += f'{data_set}'
+        if len(energies) == 1:
+            if title != '':
+                title += ' '
+            title += f'{energies[0]}GeV'
+
+    if ylab is None:
+        ylab = r'$\widebar{\Delta\sigma^2}_{single} - \widebar{\Delta\sigma^2}_{mix}$'
+
+    for cent_i, cent in enumerate(cents):
+        ax_panels[cent].axhline(0, color='gray', alpha=0.8, zorder=0)
+        ax_panels[cent].text(0.5, 0.9, f'{cent_map[cent]}', size='x-large', ha='center', va='top',
+                             transform=ax_panels[cent].transAxes)
+        if cent_i >= 6:
+            ax_panels[cent].set_xlabel('Azimuthal Partition Width')
+        if cent_i in [0, 3, 6]:
+            ax_panels[cent].set_ylabel(ylab)
+    ax_panels_all.flat[-1].set_xlabel('Azimuthal Partition Width')
+    ax_panels[8].legend()
+
+    fig_panels.tight_layout()
+    fig_panels.subplots_adjust(wspace=0.0, hspace=0.0, left=0.075, right=0.995, top=0.985, bottom=0.075)
 
     return pd.DataFrame(fit_pars)
 
@@ -2112,7 +2228,7 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
                           fit=False, cent_ref=None, ref_type=None, ls='none', data_sets_energies_cmaps=None):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
-    fit_boundary = 60
+    fit_boundary = 0  # 60
     ls = 'none' if fit else ls
 
     fig_base, ax_base = plt.subplots(figsize=(6.66, 5), dpi=144)
@@ -2175,7 +2291,8 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
                 # p0 = [-0.02]
                 p0 = [-0.02, 0.01]
                 func = inv_sqrtx_odr
-                func_cf = inv_sqrtx
+                # func = inv_sqrtx_noconst_odr
+                # func_cf = inv_sqrtx
 
                 x_fit_plt = np.linspace(1, 800, 2000)
                 odr_model = odr.Model(func)
@@ -2198,10 +2315,10 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
                 consts[data_set]['const_val'].append(odr_out.beta[1])
                 consts[data_set]['const_err'].append(odr_out.sd_beta[1])
 
-                popt, pcov = cf(func_cf, x_fit, y_fit, sigma=y_fit_err, absolute_sigma=True, p0=p0)
-                ax_base.plot(x_fit_plt, func_cf(x_fit_plt, *popt), alpha=0.6, ls='--', color=color)
-                fit_meases_cf = [Measure(var, err) for var, err in zip(popt, np.sqrt(np.diag(pcov)))]
-                print(f'{lab} CF Fit: {fit_meases_cf}')
+                # popt, pcov = cf(func_cf, x_fit, y_fit, sigma=y_fit_err, absolute_sigma=True, p0=p0)
+                # ax_base.plot(x_fit_plt, func_cf(x_fit_plt, *popt), alpha=0.6, ls='--', color=color)
+                # fit_meases_cf = [Measure(var, err) for var, err in zip(popt, np.sqrt(np.diag(pcov)))]
+                # print(f'{lab} CF Fit: {fit_meases_cf}')
 
                 y = [Measure(base, base_err) for base, base_err in zip(df_energy['baseline'], df_energy['base_err'])]
                 y_fit = [func(fit_meases, xi) for xi in x]
