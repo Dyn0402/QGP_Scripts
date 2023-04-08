@@ -52,7 +52,6 @@ def main():
     print('donzo')
 
 
-
 def plot_paper_figs():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
@@ -130,7 +129,6 @@ def plot_paper_figs():
     # dsig_avgs = pd.concat(dsig_avgs, ignore_index=True)
     # if df_tproton_avgs_name is not None:
     #     dsig_avgs.to_csv(f'{base_path}{fits_out_base}/{df_tproton_avgs_name}', index=False)
-
 
     # plot_dvar_avgs_divs(dsig_avgs, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,
     #                     data_sets_labels=data_sets_labels)
@@ -1002,7 +1000,7 @@ def plot_vs_cent_var():
     v2_cfev_in_dir = 'F:/Research/Data_CFEV/default_resample_epbins1/CFEV_rapid05_resample_norotate_epbins1_0/'
     v2_cfevb342_in_dir = 'F:/Research/Data_CFEVb342/default_resample_epbins1/' \
                          'CFEVb342_rapid05_resample_norotate_epbins1_0/'
-    df_name = 'Binomial_Slice_Moments/binom_slice_stats_var_epbins1.csv'
+    df_name = 'Binomial_Slice_Moments/binom_slice_vars.csv'
     fits_out_base = 'Base_Zero_Fits'
     df_tproton_avgs_name = 'dsig_tprotons_avgs.csv'
     df_partitions_fits_name = 'partitions_fits.csv'
@@ -1011,8 +1009,8 @@ def plot_vs_cent_var():
     cent_ref_name = 'mean_cent_ref.csv'
     cent_ref_df = pd.read_csv(f'F:/Research/Results/Azimuth_Analysis/{cent_ref_name}')
     ref_type = 'refn'  # 'refn'
-    cent_ref_df = cent_ref_df.replace('bes_resample_def', 'bes_resample_epbins1')
-    cent_ref_df = cent_ref_df.replace('ampt_new_coal_resample_def', 'ampt_new_coal_epbins1')
+    cent_ref_df = cent_ref_df.replace('bes_resample_def', 'bes_def')
+    cent_ref_df = cent_ref_df.replace('ampt_new_coal_resample_def', 'ampt')
 
     sim_sets = []
 
@@ -1022,12 +1020,13 @@ def plot_vs_cent_var():
     exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
     cents = [1, 2, 3, 4, 5, 6, 7, 8]
     energy_plt = 39
-    energies_fit = [7, 11, 19, 27, 39, 62]
+    # energies_fit = [7, 11, 19, 27, 39, 62]
+    energies_fit = [7, 11, 19, 27, 62]
     # energies_fit = [energy_plt]
     data_types_plt = ['diff']
     samples = 72  # For title purposes only
 
-    data_sets_plt = ['bes_resample_epbins1', 'ampt_new_coal_epbins1']
+    data_sets_plt = ['bes_def', 'ampt']
     data_sets_colors = dict(zip(data_sets_plt, ['black', 'red']))
     data_sets_energies_cmaps = dict(zip(data_sets_plt, ['Greys', 'Reds']))
     data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT']))
@@ -1038,9 +1037,8 @@ def plot_vs_cent_var():
     v2_cfev_vals = {2: read_flow_values(v2_cfev_in_dir)}
     v2_cfevb342_vals = {2: read_flow_values(v2_cfevb342_in_dir)}
 
-    print(v2_cf_vals)
-    print(v2_cfev_vals)
-    print(v2_cfevb342_vals)
+    v2_vals = {'bes_def': v2_star_vals, 'ampt': v2_ampt_vals,
+               'cf': v2_cf_vals, 'cfev': v2_cfev_vals, 'cfevb342': v2_cfevb342_vals}
 
     df = pd.read_csv(df_path)
     df = df.dropna()
@@ -1064,16 +1062,19 @@ def plot_vs_cent_var():
         dsig_avgs_div_diff = dvar_vs_protons_cents(df_diff, divs_all, cents, energy, ['diff'], all_sets_plt,
                                                    plot=False, avg=True)
         dsig_avgs_div_diff.loc[:, 'name'] = dsig_avgs_div_diff['name'] + '_flow_included'
-        dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, 'ampt_new_coal_epbins1_flow_included',
-                                                  'ampt_new_coal_epbins1', v2_ampt_vals)
-        dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, 'bes_resample_epbins1_flow_included',
-                                                  'bes_resample_epbins1', v2_star_vals)
-        dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, 'cf_resample_epbins1_flow_included',
-                                                  'cf_resample_epbins1', v2_cf_vals)
-        dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, 'cfev_resample_epbins1_flow_included',
-                                                  'cfev_resample_epbins1', v2_cfev_vals)
-        dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, 'cfevb342_resample_epbins1_flow_included',
-                                                  'cfevb342_resample_epbins1', v2_cfevb342_vals)
+        for data_set in all_sets_plt:
+            dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, f'{data_set}_flow_included',
+                                                      data_set, v2_vals[data_set])
+        # dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, 'ampt_new_coal_epbins1_flow_included',
+        #                                           'ampt_new_coal_epbins1', v2_ampt_vals)
+        # dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, 'bes_resample_epbins1_flow_included',
+        #                                           'bes_resample_epbins1', v2_star_vals)
+        # dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, 'cf_resample_epbins1_flow_included',
+        #                                           'cf_resample_epbins1', v2_cf_vals)
+        # dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, 'cfev_resample_epbins1_flow_included',
+        #                                           'cfev_resample_epbins1', v2_cfev_vals)
+        # dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, 'cfevb342_resample_epbins1_flow_included',
+        #                                           'cfevb342_resample_epbins1', v2_cfevb342_vals)
         dsig_avgs.append(dsig_avgs_div_diff)
 
     dsig_avgs = pd.concat(dsig_avgs, ignore_index=True)
@@ -1135,8 +1136,8 @@ def plot_vs_cent_var_fits():
     plt.rcParams["figure.dpi"] = 144
     base_path = 'F:/Research/Results/Azimuth_Analysis/'
     fits_out_base = 'Base_Zero_Fits'
-    df_tproton_avgs_name = 'dsig_tprotons_avgs.csv'
-    df_partitions_fits_name = 'partitions_fits.csv'
+    df_tproton_avgs_name = 'dsig_tprotons_avgs_old.csv'
+    df_partitions_fits_name = 'partitions_fits_old.csv'
 
     df_fits = pd.read_csv(f'{base_path}{fits_out_base}/{df_partitions_fits_name}')
     df_divs_avgs = pd.read_csv(f'{base_path}{fits_out_base}/{df_tproton_avgs_name}')
@@ -1144,13 +1145,24 @@ def plot_vs_cent_var_fits():
     cent_ref_name = 'mean_cent_ref.csv'
     cent_ref_df = pd.read_csv(f'F:/Research/Results/Azimuth_Analysis/{cent_ref_name}')
     ref_type = 'refn'  # 'refn'
-    cent_ref_df = cent_ref_df.replace('bes_resample_def', 'bes_resample_epbins1')
+    cent_ref_df = cent_ref_df.replace('bes_resample_def', 'bes_def')
+    cent_ref_df_bes_old = cent_ref_df.replace('bes_def', 'bes_resample_epbins1')
+    cent_ref_df = pd.concat([cent_ref_df,
+                             cent_ref_df_bes_old[cent_ref_df_bes_old['data_set'] == 'bes_resample_epbins1']],
+                            ignore_index=True)
     cent_ref_df = cent_ref_df.replace('ampt_new_coal_resample_def', 'ampt_new_coal_epbins1')
+    print(cent_ref_df)
+    print(pd.unique(cent_ref_df['data_set']))
 
-    data_sets_plt = ['bes_resample_epbins1', 'ampt_new_coal_epbins1']
+    # data_sets_plt = ['bes_resample_epbins1', 'ampt_new_coal_epbins1']
+    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red']))
+    # data_sets_energies_cmaps = dict(zip(data_sets_plt, ['tab10', 'Dark2']))
+    # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT']))
+
+    data_sets_plt = ['bes_resample_epbins1', 'bes_def']
     data_sets_colors = dict(zip(data_sets_plt, ['black', 'red']))
     data_sets_energies_cmaps = dict(zip(data_sets_plt, ['tab10', 'Dark2']))
-    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT']))
+    data_sets_labels = dict(zip(data_sets_plt, ['STAR bad', 'STAR fixed']))
 
     energy = 7
     df_divs_avgs_energy = df_divs_avgs[df_divs_avgs['energy'] == energy]
@@ -1196,9 +1208,12 @@ def plot_vs_cent_var_fits():
                                 data_sets_labels=data_sets_labels, title=f'BES1 ref', fit=True, cent_ref=cent_ref_df,
                                 ref_type='ref', data_sets_energies_cmaps=data_sets_energies_cmaps)
 
+    plot_div_fits_vs_cent(df_fits, data_sets_plt, data_sets_colors=data_sets_colors,
+                          data_sets_labels=data_sets_labels, title=f'{energy} GeV', fit=True, cent_ref=cent_ref_df,
+                          ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
 
-    # energies = [7, 11, 19, 27, 39, 62]
-    energies = [62]
+    energies = [7, 11, 19, 27, 39, 62]
+    # energies = [62]
     for energy in energies:
         df_fits_energy = df_fits[df_fits['energy'] == energy]
         plot_div_fits_vs_cent(df_fits_energy, data_sets_plt, data_sets_colors=data_sets_colors,

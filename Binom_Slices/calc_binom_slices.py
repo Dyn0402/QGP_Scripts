@@ -46,8 +46,7 @@ def init_pars():
         #             'binom_slice_stats_ampt_flow_closure.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cents.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_v2_ck2.csv',
-        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
-                    'binom_slice_stats_var_epbins1.csv',
+        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_vars.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_var_cent8_2source_closure_tests.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
@@ -63,7 +62,7 @@ def init_pars():
         # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
         'csv_append': False,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': False,  # If True check csv_path and only run missing datasets, else run all datasets
-        'threads': 16,
+        'threads': 10,
         # 'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'stats': define_stats(['k2']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
@@ -109,7 +108,7 @@ def define_datasets(base_path):
         #  all_energies, all_cents, all_divs],
         # ['ampt_new_coal_rp', '_Ampt_New_Coal', ['default', 'resample', 'rp', 'epbins1'],
         #  [], ['alg3'], [0], all_energies, all_cents, all_divs],
-        ['ampt_new_coal_epbins1', '_Ampt_New_Coal', ['default', 'resample', 'epbins1'],
+        ['ampt', '_Ampt_New_Coal', ['default', 'resample', 'epbins1'],
          [], ['alg3', 'rp', 'noprerotate'], [0], all_energies, all_cents, all_divs],
         # ['ampt_new_coal_resample_eff1', '_Ampt_New_Coal', ['resample', 'eff1'], [], ['alg3'], [0],
         #  all_energies, all_cents, all_divs],
@@ -133,20 +132,20 @@ def define_datasets(base_path):
         # ['bes_def', '', ['default'], [], ['resample'], range(60), all_energies, [8], all_divs],
         # ['bes_resample_def', '', ['default', 'resample'], [], ['alg3', 'epbins1'], [0], all_energies, all_cents,
         #  all_divs],
-        ['bes_resample_epbins1', '', ['default', 'resample', 'epbins1'], [], ['alg3', 'calcv2'], [0], all_energies,
-         all_cents, all_divs],
+        ['bes_def', '', ['default'], [], ['alg3', 'calcv2', 'resample', 'epbins1'], [0], all_energies, all_cents,
+         all_divs],
         # ['bes_single', '', ['default', 'single'], [], ['alg3'], [0], all_energies, [8], all_divs],
         # ['cf_resample_def', '_CF', ['default', 'resample'], [], ['alg3', 'reactionplane'], [0], all_energies, all_cents,
         #  all_divs],
-        ['cf_resample_epbins1', '_CF', ['default', 'resample', 'epbins1'], [], ['alg3', 'reactionplane'], [0],
+        ['cf', '_CF', ['default', 'resample', 'epbins1'], [], ['alg3', 'reactionplane'], [0],
          [7, 19, 27, 39, 62], [8], all_divs],
         # ['cfev_resample_def', '_CFEV', ['default', 'resample'], [], ['alg3', 'reactionplane'], [0], all_energies, all_cents,
         #  all_divs],
-        ['cfev_resample_epbins1', '_CFEV', ['default', 'resample', 'epbins1'], [], ['alg3', 'reactionplane'], [0],
+        ['cfev', '_CFEV', ['default', 'resample', 'epbins1'], [], ['alg3', 'reactionplane'], [0],
          [7, 19, 27, 39, 62], [8], all_divs],
         # ['cfevb342_resample_def', '_CFEVb342', ['default', 'resample'], [], ['alg3', 'reactionplane'], [0], all_energies,
         #  all_cents, all_divs],
-        ['cfevb342_resample_epbins1', '_CFEVb342', ['default', 'resample', 'epbins1'], [], ['alg3', 'reactionplane'],
+        ['cfevb342', '_CFEVb342', ['default', 'resample', 'epbins1'], [], ['alg3', 'reactionplane'],
          [0], [7, 19, 27, 39, 62], [8], all_divs],
         # ['flow_resample_res9_v207', '_Sim_Flow', ['resample', 'res9', 'v207', 'epbins1'],
         #  [], [], [0], [62], [8], all_divs],
