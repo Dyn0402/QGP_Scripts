@@ -94,7 +94,7 @@ def define_datasets(base_path):
 
     all_divs = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356]
     all_energies = [7, 11, 19, 27, 39, 62]
-    # all_energies = [11]
+    # all_energies = [39]
     all_cents = [0, 1, 2, 3, 4, 5, 6, 7, 8]  # [8]
     # all_cents = [8]
 
@@ -132,7 +132,7 @@ def define_datasets(base_path):
         # ['bes_def', '', ['default'], [], ['resample'], range(60), all_energies, [8], all_divs],
         # ['bes_resample_def', '', ['default', 'resample'], [], ['alg3', 'epbins1'], [0], all_energies, all_cents,
         #  all_divs],
-        ['bes_def', '', ['default'], [], ['alg3', 'calcv2', 'resample', 'epbins1'], [0], all_energies, all_cents,
+        ['bes_def', '', ['default'], [], ['alg3', 'calcv2', 'resample', 'epbins1', 'sys'], [0], all_energies, all_cents,
          all_divs],
         # ['bes_single', '', ['default', 'single'], [], ['alg3'], [0], all_energies, [8], all_divs],
         # ['cf_resample_def', '_CF', ['default', 'resample'], [], ['alg3', 'reactionplane'], [0], all_energies, all_cents,

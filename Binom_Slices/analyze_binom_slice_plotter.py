@@ -22,7 +22,7 @@ from analyze_binom_slices import *
 def main():
     # plot_paper_figs()
 
-    # plot_star_model_var()
+    plot_star_model_var()
     # plot_vs_cent_var()
     # plot_sims_var()
     # get_sim_mapping_var()
@@ -1020,8 +1020,8 @@ def plot_vs_cent_var():
     exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
     cents = [1, 2, 3, 4, 5, 6, 7, 8]
     energy_plt = 39
-    # energies_fit = [7, 11, 19, 27, 39, 62]
-    energies_fit = [7, 11, 19, 27, 62]
+    energies_fit = [7, 11, 19, 27, 39, 62]
+    # energies_fit = [7, 11, 19, 27, 62]
     # energies_fit = [energy_plt]
     data_types_plt = ['diff']
     samples = 72  # For title purposes only
