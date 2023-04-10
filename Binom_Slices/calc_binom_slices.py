@@ -46,7 +46,7 @@ def init_pars():
         #             'binom_slice_stats_ampt_flow_closure.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cents.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_v2_ck2.csv',
-        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_vars.csv',
+        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_vars_bes_sys.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_var_cent8_2source_closure_tests.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
@@ -99,7 +99,7 @@ def define_datasets(base_path):
     # all_cents = [8]
 
     entry_names = ['name', 'base_ext', 'exact_keys', 'contain_keys', 'exclude_keys',
-                   'set_nums', 'energies', 'cents', 'divs']
+                   'sub_set_includes', 'energies', 'cents', 'divs']
     entry_vals = [
         # ['ampt_def', '_Ampt', ['default'], [], ['resample'], range(60), all_energies, all_cents, all_divs],
         # ['ampt_new_coal_single_def', '_Ampt_New_Coal', ['default', 'single'], [], [], [0], all_energies, all_cents,
@@ -108,8 +108,8 @@ def define_datasets(base_path):
         #  all_energies, all_cents, all_divs],
         # ['ampt_new_coal_rp', '_Ampt_New_Coal', ['default', 'resample', 'rp', 'epbins1'],
         #  [], ['alg3'], [0], all_energies, all_cents, all_divs],
-        ['ampt', '_Ampt_New_Coal', ['default', 'resample', 'epbins1'],
-         [], ['alg3', 'rp', 'noprerotate'], [0], all_energies, all_cents, all_divs],
+        # ['ampt', '_Ampt_New_Coal', ['default', 'resample', 'epbins1'],
+        #  [], ['alg3', 'rp', 'noprerotate'], [0], all_energies, all_cents, all_divs],
         # ['ampt_new_coal_resample_eff1', '_Ampt_New_Coal', ['resample', 'eff1'], [], ['alg3'], [0],
         #  all_energies, all_cents, all_divs],
         # ['ampt_new_coal_resample_eff2', '_Ampt_New_Coal', ['resample', 'eff2'], [], ['alg3'], [0],
@@ -137,16 +137,16 @@ def define_datasets(base_path):
         # ['bes_single', '', ['default', 'single'], [], ['alg3'], [0], all_energies, [8], all_divs],
         # ['cf_resample_def', '_CF', ['default', 'resample'], [], ['alg3', 'reactionplane'], [0], all_energies, all_cents,
         #  all_divs],
-        ['cf', '_CF', ['default', 'resample', 'epbins1'], [], ['alg3', 'reactionplane'], [0],
-         [7, 19, 27, 39, 62], [8], all_divs],
+        # ['cf', '_CF', ['default', 'resample', 'epbins1'], [], ['alg3', 'reactionplane'], [0],
+        #  [7, 19, 27, 39, 62], [8], all_divs],
         # ['cfev_resample_def', '_CFEV', ['default', 'resample'], [], ['alg3', 'reactionplane'], [0], all_energies, all_cents,
         #  all_divs],
-        ['cfev', '_CFEV', ['default', 'resample', 'epbins1'], [], ['alg3', 'reactionplane'], [0],
-         [7, 19, 27, 39, 62], [8], all_divs],
+        # ['cfev', '_CFEV', ['default', 'resample', 'epbins1'], [], ['alg3', 'reactionplane'], [0],
+        #  [7, 19, 27, 39, 62], [8], all_divs],
         # ['cfevb342_resample_def', '_CFEVb342', ['default', 'resample'], [], ['alg3', 'reactionplane'], [0], all_energies,
         #  all_cents, all_divs],
-        ['cfevb342', '_CFEVb342', ['default', 'resample', 'epbins1'], [], ['alg3', 'reactionplane'],
-         [0], [7, 19, 27, 39, 62], [8], all_divs],
+        # ['cfevb342', '_CFEVb342', ['default', 'resample', 'epbins1'], [], ['alg3', 'reactionplane'],
+        #  [0], [7, 19, 27, 39, 62], [8], all_divs],
         # ['flow_resample_res9_v207', '_Sim_Flow', ['resample', 'res9', 'v207', 'epbins1'],
         #  [], [], [0], [62], [8], all_divs],
         # ['flow_resample_res15_v207', '_Sim_tests', ['flow', 'resample', 'res15', 'v207'],
@@ -230,6 +230,14 @@ def define_datasets(base_path):
     #                    all_divs])
     # entry_vals.append(['flow_resample_res15_v202', '_Sim_Flow', ['resample', 'res15', 'v202'], [], [], [0], [62], [8],
     #                    all_divs])
+
+    # BES1 Systematics
+    var_defaults = {'dca': 1, 'nsprx': 1, 'm2r': 6, 'm2s': 0, 'nhfit': 20}
+    exclude_keys = ['dca05', 'dca15', 'nsprx075', 'nsprx125', 'm2r2', 'm2r10']
+    sub_sets = find_sys_sets(f'{base_path}Data/default_sys/', var_defaults, exclude_keys, True)
+    for sub_set, sub_set_dir_name in sub_sets.items():
+        entry_vals.append([f'bes_sys_{sub_set}', '', ['default', 'sys'], [], [], [sub_set_dir_name],
+                           all_energies, all_cents, all_divs])
 
     # Plus Minus Clustering
     # df = find_sim_sets(f'{base_path}Data_Sim_tests/', ['flat80', 'clmultiplusminus', 'resample'], [], False)
@@ -380,6 +388,29 @@ def find_sim_sets(path, include_keys, exclude_keys=[], print_sets=False):
     return df
 
 
+def find_sys_sets(path, var_defaults, exclude_keys=[], print_sets=False):
+    sub_sets = {}
+    for dir_name in os.listdir(path):
+        dir_keys = dir_name.strip().split('_')
+        if any([exclude_key in dir_keys for exclude_key in exclude_keys]):
+            continue
+        non_def_keys = []
+        for var, var_def_val in var_defaults.items():
+            for dir_key in dir_keys:
+                if var in dir_key:
+                    key_val = int(dir_key.replace(var, ''))
+                    if key_val != var_def_val:
+                        non_def_keys.append(dir_key)
+        sub_set_name = '_'.join(non_def_keys)
+        sub_sets.update({sub_set_name: dir_name})
+
+    if print_sets:
+        for sub_set in sub_sets:
+            print(sub_set, sub_sets[sub_set])
+
+    return sub_sets
+
+
 def read_data(pars):
     if pars['csv_append'] or pars['only_new']:
         try:
@@ -448,7 +479,8 @@ def get_set_jobs(dataset, set_dir, base_paths, pars):
             for cent in dataset['cents']:
                 for sub_set_dir in os.listdir(f'{base_paths["raw"]}{set_dir}'):
                     set_num = int(sub_set_dir.split('_')[-1])
-                    if set_num in dataset['set_nums']:
+
+                    if set_num in dataset['sub_set_includes'] or sub_set_dir in dataset['sub_set_includes']:
                         path = f'{set_dir}/{sub_set_dir}/{energy}GeV/ratios_divisions_{div}_centrality_{cent}_local.txt'
                         info_path = f'{set_dir}/{sub_set_dir}/{energy}GeV/info.txt'
                         if not os.path.exists(f'{base_paths["mix"]}{path}'):
