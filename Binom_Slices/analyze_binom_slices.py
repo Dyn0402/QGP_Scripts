@@ -2042,7 +2042,7 @@ def plot_protons_fits_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
     fig_int.tight_layout()
 
 
-def plot_protons_avgs_vs_energy(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None):
+def plot_protons_avgs_vs_energy(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None, alpha=1):
     fig_avg, ax_avg = plt.subplots(figsize=(6.66, 5), dpi=144)
     ax_avg.axhline(0, color='gray')
     fig_avg.canvas.manager.set_window_title(f'Dsigma2 Averages vs Energy')
@@ -2055,10 +2055,10 @@ def plot_protons_avgs_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
             lab = data_sets_labels[data_set]
         if data_sets_colors is None:
             ax_avg.errorbar(df_set['energy'], df_set['avg'], yerr=df_set['avg_err'], ls='none', marker='o',
-                            label=lab)
+                            label=lab, alpha=alpha)
         else:
             ax_avg.errorbar(df_set['energy'], df_set['avg'], yerr=df_set['avg_err'], ls='none', marker='o',
-                            color=data_sets_colors[data_set], label=lab)
+                            color=data_sets_colors[data_set], label=lab, alpha=alpha)
     ax_avg.set_ylabel(r'$\widebar{\Delta\sigma^2}$')
     ax_avg.set_xlabel('Energy (GeV)')
     ax_avg.grid()
