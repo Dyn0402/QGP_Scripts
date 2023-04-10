@@ -11,32 +11,66 @@ import os.path
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 import pandas as pd
 
 from analyze_binom_slices import read_flow_values
 
 
 def main():
+    # plot_star_models()
+    plot_star_sys()
+
+    print('donzo')
+
+
+def plot_star_models():
     data_sets = {'BES1': 'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/'
                          'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/',
                  'AMPT': 'F:/Research/Data_Ampt_New_Coal/default_resample_epbins1/'
                          'Ampt_rapid05_resample_norotate_epbins1_0/',
                  'CF': 'F:/Research/Data_CF/default_resample_epbins1/CF_rapid05_resample_norotate_epbins1_0/',
                  'CFEV': 'F:/Research/Data_CFEV/default_resample_epbins1/CFEV_rapid05_resample_norotate_epbins1_0/',
-                 # 'CFEVb342': 'F:/Research/Data_CFEVb342/default_resample_epbins1/'
-                 #              'CFEVb342_rapid05_resample_norotate_epbins1_0/',
+                 'CFEVb342': 'F:/Research/Data_CFEVb342/default_resample_epbins1/'
+                             'CFEVb342_rapid05_resample_norotate_epbins1_0/',
                  }
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     energies = [7, 11, 19, 27, 39, 62]
 
-    # energy_figs, energy_axs = list(zip(*[plt.subplots(dpi=144) for energy in energies]))
-    # energy_figs, energy_axs = [dict(zip(energies, x)) for x in [energy_figs, energy_axs]]
-    # for ax in energy_axs.values():
-    #     ax.grid()
-    #     ax.axhline(0, color='black')
-    #     ax.set_title('')
+    df = read_flow_data(data_sets, energies, cent_map)
+    plot_flow_data(df, data_sets, energies, cent_map)
 
+
+def plot_star_sys():
+    data_sets = {
+        'dca = 1.0 cm': 'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/'
+                        'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/',
+        'dca = 0.5 cm': 'F:/Research/Data/v2_sys/'
+                        'rapid05_resample_norotate_dca05_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+        'dca = 0.8 cm': 'F:/Research/Data/v2_sys/'
+                        'rapid05_resample_norotate_dca08_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+        'dca = 1.2 cm': 'F:/Research/Data/v2_sys/'
+                        'rapid05_resample_norotate_dca12_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+        'dca = 1.5 cm': 'F:/Research/Data/v2_sys/'
+                        'rapid05_resample_norotate_dca15_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+    }
+    data_set_vals = [1, 0.5, 0.8, 1.2, 1.5]
+    x_label = 'DCA (cm)'
+    sys_name = 'DCA'
+    pdf_path = f'F:/Research/Results/BES_v2_Systematics/BES1_proton_v2_systematic_plots_{sys_name}.pdf'
+    data_set_vals = dict(zip(data_sets.keys(), data_set_vals))
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
+                0: '70-80%', -1: '80-90%'}
+    # energies = [7, 11, 19, 27, 39, 62]
+    energies = [7, 11, 19, 27]
+
+    df = read_flow_data(data_sets, energies, cent_map)
+    # plot_flow_data(df, data_sets, energies, cent_map)
+    plot_sys_data(df, data_sets, energies, cent_map, data_set_vals, sys_name, x_label, pdf_path)
+
+
+def read_flow_data(data_sets, energies, cent_map):
     df = []
     for name, directory in data_sets.items():
         for energy in energies:
@@ -54,6 +88,10 @@ def main():
     df = pd.DataFrame(df)
     df = df[df['cent_label'] != '80-90%']
 
+    return df
+
+
+def plot_flow_data(df, data_sets, energies, cent_map):
     # Plots vs centrality
     for data_set in data_sets.keys():
         df_set = df[df['data_set'] == data_set]
@@ -124,7 +162,41 @@ def main():
 
     plt.show()
 
-    print('donzo')
+
+def plot_sys_data(df, data_sets, energies, cent_map, data_set_vals, sys_name=None, xlabel=None, pdf_path=None):
+    # Plots vs sys variable
+    pdf = PdfPages(pdf_path) if pdf_path is not None else None
+    for cent_bin in pd.unique(df['cent_bin']):
+        df_cent = df[df['cent_bin'] == cent_bin]
+        fig, ax = plt.subplots(dpi=144)
+        ax.grid()
+        sys_name = 'Systematic' if sys_name is None else sys_name
+        title = f'{sys_name} {cent_map[cent_bin]}'
+        ax.set_title(title)
+        ax.set_xlabel('Systematic' if xlabel is None else xlabel)
+        ax.set_ylabel('v2')
+        for energy in energies:
+            df_e = df_cent[df_cent['energy'] == energy]
+            df_e = df_e.assign(data_set_vals=[data_set_vals[data_set] for data_set in df_e['data_set']])
+            df_e = df_e.sort_values('data_set_vals')
+            ebar = ax.errorbar(df_e['data_set_vals'], df_e['v2_val'], yerr=df_e['v2_err'], ls='-', marker='o',
+                               alpha=0.7, label=f'{energy} GeV')
+            def_val, def_err = df_e[df_e['data_set_vals'] == 1].iloc[0][['v2_val', 'v2_err']]
+            var_val, var_err = df_e[df_e['data_set_vals'] == 0.5].iloc[0][['v2_val', 'v2_err']]
+            barlow = (def_val - var_val) ** 2 - abs(def_err ** 2 - var_err ** 2)
+            barlow = 0 if barlow < 0 else np.sqrt(barlow / 12.0)
+            print(f'{energy}GeV {cent_map[cent_bin]} barlow: {barlow}')
+            ax.errorbar(1.0, def_val, yerr=barlow, elinewidth=8, alpha=0.3, color=ebar[0].get_color())
+        ax.legend()
+        fig.canvas.manager.set_window_title(title)
+        fig.tight_layout()
+        if pdf:
+            pdf.savefig(fig)
+
+    if pdf:
+        pdf.close()
+
+    # plt.show()
 
 
 if __name__ == '__main__':
