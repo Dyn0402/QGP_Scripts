@@ -243,7 +243,7 @@ def define_datasets(base_path):
 
     for i in range(12):
         entry_vals.append([f'bes_rand_sys_{i}', '', ['default', 'sys', 'test'], [], [], [i],
-                           all_energies, all_cents, all_divs])
+                           [7], all_cents, all_divs])
 
     # Plus Minus Clustering
     # df = find_sim_sets(f'{base_path}Data_Sim_tests/', ['flat80', 'clmultiplusminus', 'resample'], [], False)
@@ -491,7 +491,9 @@ def get_set_jobs(dataset, set_dir, base_paths, pars):
                         info_path = f'{set_dir}/{sub_set_dir}/{energy}GeV/info.txt'
                         if not os.path.exists(f'{base_paths["mix"]}{path}'):
                             print(f'Mixed file missing! {base_paths["mix"]}{path}')
-                            continue
+                            mix_path = None
+                        else:
+                            mix_path = f'{base_paths["mix"]}{path}'
                         other_columns = {'name': dataset['name'], 'energy': energy, 'divs': div}
                         if pars['save_cent']:
                             other_columns.update({'cent': cent})
@@ -507,7 +509,7 @@ def get_set_jobs(dataset, set_dir, base_paths, pars):
                                 other_columns.update({'amp': amp, 'spread': spread})
                         else:
                             other_columns.update({'amp': 0, 'spread': 0})
-                        subset_jobs.append((f'{base_paths["raw"]}{path}', f'{base_paths["mix"]}{path}',
+                        subset_jobs.append((f'{base_paths["raw"]}{path}', mix_path,
                                             f'{base_paths["raw"]}{info_path}', div, pars["stats"], other_columns,
                                             pars["min_events"], pars["min_bs"], pars["out_bs"],
                                             pars["save_data_type"], pars["save_stat"], pars["diff"]))
@@ -521,7 +523,7 @@ def read_subset(raw_path, mix_path, info_path, div, stats, other_columns, min_ev
     Read a single raw/mix file pair. Calculate stats with bootstrap or delta errors depending on bootstrap's existence.
     Calculate raw divided by mixed. Return as entries to convert to dataframe.
     :param raw_path: Path to raw histogram file
-    :param mix_path: Path to mix histogram file
+    :param mix_path: Path to mix histogram file, or None if no mixed
     :param info_path: Path to info text file in raw directory, for determining type of binning and min_counts
     :param div: Azimuthal division width
     :param stats: Stats to calculate for each distribution
@@ -536,52 +538,66 @@ def read_subset(raw_path, mix_path, info_path, div, stats, other_columns, min_ev
     """
     df_subset = []
     raw_az_data = BootstrapAzBin(div, raw_path)
-    mix_az_data = BootstrapAzBin(div, mix_path)
+    if mix_path is not None:
+        mix_az_data = BootstrapAzBin(div, mix_path)
 
     min_counts = get_min_counts(info_path, min_events, div)
     div_diff = 'diff' if diff else 'divide'
 
     for total_protons in raw_az_data.get_dist():
-        if total_protons in mix_az_data.get_dist():
+        if mix_path is None or total_protons in mix_az_data.get_dist():
             for stat, stat_method in stats.items():
                 other_columns.update({'total_protons': total_protons})
                 if save_stat:
                     other_columns.update({'stat': stat})
-                if diff:  # Get raw-mix difference
-                    # measures = get_diff(raw_az_data, mix_az_data, total_protons, stat_method, min_counts, min_bs,
-                    #                     out_bs)
-                    raw_stat_meas = get_stat(raw_az_data, total_protons, stat_method, min_counts, min_bs)[0]
-                    mix_stat_meas = get_stat(mix_az_data, total_protons, stat_method, min_counts, min_bs)[0]
-                    if raw_stat_meas is not None and mix_stat_meas is not None:
-                        diff_stat_meas = raw_stat_meas - mix_stat_meas  # Seems to be equivalent to the bootstrapping
-                    else:
-                        diff_stat_meas = None
-                    measures = [raw_stat_meas, mix_stat_meas, diff_stat_meas, None]
-                else:  # Get raw/mix division
-                    measures = get_div(raw_az_data, mix_az_data, total_protons, stat_method, min_counts, min_bs, out_bs)
-                measures, out_bs_sets = measures[:3], measures[-1]
-                if any(x is None for x in measures):
-                    continue
-                if save_data_type:
-                    for data_type, meas in zip(['raw', 'mix', div_diff], measures):
-                        df_new = {'data_type': data_type, 'val': meas.val, 'err': meas.err}
+                if mix_path is not None:
+                    if diff:  # Get raw-mix difference
+                        # measures = get_diff(raw_az_data, mix_az_data, total_protons, stat_method, min_counts, min_bs,
+                        #                     out_bs)
+                        raw_stat_meas = get_stat(raw_az_data, total_protons, stat_method, min_counts, min_bs)[0]
+                        mix_stat_meas = get_stat(mix_az_data, total_protons, stat_method, min_counts, min_bs)[0]
+                        if raw_stat_meas is not None and mix_stat_meas is not None:
+                            diff_stat_meas = raw_stat_meas - mix_stat_meas  # Seems to be equivalent to the bootstrapping
+                        else:
+                            diff_stat_meas = None
+                        measures = [raw_stat_meas, mix_stat_meas, diff_stat_meas, None]
+                    else:  # Get raw/mix division
+                        measures = get_div(raw_az_data, mix_az_data, total_protons, stat_method, min_counts, min_bs, out_bs)
+                    measures, out_bs_sets = measures[:3], measures[-1]
+                    if any(x is None for x in measures):
+                        continue
+                    if save_data_type:
+                        for data_type, meas in zip(['raw', 'mix', div_diff], measures):
+                            df_new = {'data_type': data_type, 'val': meas.val, 'err': meas.err}
+                            if out_bs:
+                                df_new.update({'bs_index': -1})
+                            df_new.update(other_columns)
+                            df_subset.append(df_new)
+                    else:  # Only save diff val/err
+                        df_new = {'val': measures[-1].val, 'err': measures[-1].err}
                         if out_bs:
                             df_new.update({'bs_index': -1})
                         df_new.update(other_columns)
                         df_subset.append(df_new)
-                else:  # Only save diff val/err
-                    df_new = {'val': measures[-1].val, 'err': measures[-1].err}
                     if out_bs:
-                        df_new.update({'bs_index': -1})
-                    df_new.update(other_columns)
-                    df_subset.append(df_new)
-                if out_bs:
-                    for bs_index, out_bs_meas in enumerate(out_bs_sets):
-                        df_new = {'val': out_bs_meas.val, 'err': out_bs_meas.err}
-                        if save_data_type:
-                            df_new.update({'data_type': div_diff})
+                        for bs_index, out_bs_meas in enumerate(out_bs_sets):
+                            df_new = {'val': out_bs_meas.val, 'err': out_bs_meas.err}
+                            if save_data_type:
+                                df_new.update({'data_type': div_diff})
+                            df_new.update(other_columns)
+                            df_new.update({'bs_index': bs_index})
+                            df_subset.append(df_new)
+                else:  # No mixed
+                    raw_stat_meas = get_stat(raw_az_data, total_protons, stat_method, min_counts, min_bs)[0]
+                    if raw_stat_meas is None:
+                        continue
+                    if save_data_type:
+                        df_new = {'data_type': 'raw', 'val': raw_stat_meas.val, 'err': raw_stat_meas.err}
                         df_new.update(other_columns)
-                        df_new.update({'bs_index': bs_index})
+                        df_subset.append(df_new)
+                    else:  # Only save raw without data_type='raw' column
+                        df_new = {'val': raw_stat_meas.val, 'err': raw_stat_meas.err}
+                        df_new.update(other_columns)
                         df_subset.append(df_new)
         # else:
         #     print(f'Total_protons {total_protons} exists in raw but not mixed for '
