@@ -28,7 +28,7 @@ def main():
     # get_sim_mapping_var()
     # plot_all_zero_base()
 
-    # plot_star_var_sys()
+    plot_star_var_sys()
 
     # plot_vs_cent_var_fits()
 

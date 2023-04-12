@@ -46,7 +46,9 @@ def init_pars():
         #             'binom_slice_stats_ampt_flow_closure.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cents.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_v2_ck2.csv',
-        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_vars_bes_sys.csv',
+        # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_vars_bes_sys.csv',
+        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+                    'binom_slice_vars_bes_rand_sys_test.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_var_cent8_2source_closure_tests.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
@@ -62,7 +64,7 @@ def init_pars():
         # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
         'csv_append': False,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': False,  # If True check csv_path and only run missing datasets, else run all datasets
-        'threads': 10,
+        'threads': 12,
         # 'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'stats': define_stats(['k2']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
@@ -132,8 +134,8 @@ def define_datasets(base_path):
         # ['bes_def', '', ['default'], [], ['resample'], range(60), all_energies, [8], all_divs],
         # ['bes_resample_def', '', ['default', 'resample'], [], ['alg3', 'epbins1'], [0], all_energies, all_cents,
         #  all_divs],
-        ['bes_def', '', ['default'], [], ['alg3', 'calcv2', 'resample', 'epbins1', 'sys'], [0], all_energies, all_cents,
-         all_divs],
+        # ['bes_def', '', ['default'], [], ['alg3', 'calcv2', 'resample', 'epbins1', 'sys'], [0], all_energies, all_cents,
+        #  all_divs],
         # ['bes_single', '', ['default', 'single'], [], ['alg3'], [0], all_energies, [8], all_divs],
         # ['cf_resample_def', '_CF', ['default', 'resample'], [], ['alg3', 'reactionplane'], [0], all_energies, all_cents,
         #  all_divs],
@@ -232,11 +234,15 @@ def define_datasets(base_path):
     #                    all_divs])
 
     # BES1 Systematics
-    var_defaults = {'dca': 1, 'nsprx': 1, 'm2r': 6, 'm2s': 0, 'nhfit': 20}
-    exclude_keys = ['dca05', 'dca15', 'nsprx075', 'nsprx125', 'm2r2', 'm2r10']
-    sub_sets = find_sys_sets(f'{base_path}Data/default_sys/', var_defaults, exclude_keys, True)
-    for sub_set, sub_set_dir_name in sub_sets.items():
-        entry_vals.append([f'bes_sys_{sub_set}', '', ['default', 'sys'], [], [], [sub_set_dir_name],
+    # var_defaults = {'dca': 1, 'nsprx': 1, 'm2r': 6, 'm2s': 0, 'nhfit': 20}
+    # exclude_keys = ['dca05', 'dca15', 'nsprx075', 'nsprx125', 'm2r2', 'm2r10']
+    # sub_sets = find_sys_sets(f'{base_path}Data/default_sys/', var_defaults, exclude_keys, True)
+    # for sub_set, sub_set_dir_name in sub_sets.items():
+    #     entry_vals.append([f'bes_sys_{sub_set}', '', ['default', 'sys'], [], [], [sub_set_dir_name],
+    #                        all_energies, all_cents, all_divs])
+
+    for i in range(12):
+        entry_vals.append([f'bes_rand_sys_{i}', '', ['default', 'sys', 'test'], [], [], [i],
                            all_energies, all_cents, all_divs])
 
     # Plus Minus Clustering
