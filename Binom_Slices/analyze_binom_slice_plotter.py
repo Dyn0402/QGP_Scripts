@@ -22,13 +22,13 @@ from analyze_binom_slices import *
 def main():
     # plot_paper_figs()
 
-    # plot_star_model_var()
+    plot_star_model_var()
     # plot_vs_cent_var()
     # plot_sims_var()
     # get_sim_mapping_var()
     # plot_all_zero_base()
 
-    plot_star_var_sys()
+    # plot_star_var_sys()
 
     # plot_vs_cent_var_fits()
 
@@ -225,7 +225,7 @@ def plot_star_model_var():
     v2_cfev_in_dir = 'F:/Research/Data_CFEV/default_resample_epbins1/CFEV_rapid05_resample_norotate_epbins1_0/'
     v2_cfevb342_in_dir = 'F:/Research/Data_CFEVb342/default_resample_epbins1/' \
                          'CFEVb342_rapid05_resample_norotate_epbins1_0/'
-    df_name = 'Binomial_Slice_Moments/binom_slice_stats_var_epbins1.csv'
+    df_name = 'Binomial_Slice_Moments/binom_slice_vars.csv'
     fits_out_base = 'Base_Zero_Fits'
     df_tproton_avgs_name = 'dsig_tprotons_avgs_cent8.csv'
     df_partitions_fits_name = 'partitions_fits_cent8.csv'
@@ -246,7 +246,7 @@ def plot_star_model_var():
     # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple']))
     # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST', 'MUSIC+FIST EV $1fm^3$']))
 
-    data_sets_plt = ['bes_resample_epbins1', 'ampt_new_coal_epbins1', 'cf_resample_epbins1', 'cfev_resample_epbins1']
+    data_sets_plt = ['bes_def', 'ampt_new_coal_epbins1', 'cf_resample_epbins1', 'cfev_resample_epbins1']
     data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple']))
     data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST', 'MUSIC+FIST EV $1fm^3$']))
 
@@ -275,6 +275,10 @@ def plot_star_model_var():
 
     stat_binom_vs_protons(df, stat_plot, div_plt, cent_plt, 62, ['raw', 'mix'], 'ampt_new_coal_epbins1',
                           data_sets_labels=data_sets_labels)
+
+    raw_to_mix_stat_err(pd.concat([df_raw, df_mix], ignore_index=True), div_plt, 4, 11, 'bes_def')
+
+    plt.show()
 
     dvar_vs_protons(pd.concat([df_raw, df_mix]), div_plt, cent_plt, [62], ['raw', 'mix'], ['ampt_new_coal_epbins1'],
                     plot=True, avg=False)

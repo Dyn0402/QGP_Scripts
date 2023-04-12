@@ -13,6 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors
 import matplotlib as mpl
+import matplotlib.ticker as mtick
 from mpl_toolkits import mplot3d
 import seaborn as sns
 import pandas as pd
@@ -230,6 +231,74 @@ def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_
         fig.tight_layout()
 
     return pd.DataFrame(fits)
+
+
+def raw_to_mix_stat_err(df, div_plt, cent_plt, energy_plt, data_set_plt):
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
+                0: '70-80%', -1: '80-90%'}
+
+    df = df[(df['divs'] == div_plt) & (df['cent'] == cent_plt) & (df['energy'] == energy_plt) &
+            (df['name'] == data_set_plt)]
+    df = df.sort_values(by=['total_protons'])
+    df_raw = df[df['data_type'] == 'raw'].drop(columns=['data_type'])
+    df_mix = df[df['data_type'] == 'mix'].drop(columns=['data_type'])
+    df_sub = subtract_avgs(df_raw, df_mix, val_col='val', err_col='err', meas_col='meas')
+    # df_sub = df_raw.set_index('total_protons') - df_mix.set_index('total_protons')
+
+    fig, ax = plt.subplots(dpi=144)
+    title = r'$\Delta\sigma^2$' f' vs Total Protons {data_set_plt} {energy_plt}GeV {div_plt}° {cent_map[cent_plt]}'
+    fig.canvas.manager.set_window_title(title)
+    ax.set_title(title)
+    ax.grid()
+    ax.errorbar(df_raw['total_protons'], df_raw['val'], df_raw['err'], label='Single Event', marker='o', ls='',
+                color='blue', alpha=0.7)
+    ax.errorbar(df_mix['total_protons'], df_mix['val'], df_mix['err'], label='Mixed Event', marker='o', ls='',
+                color='green', alpha=0.7)
+    ax.errorbar(df_sub['total_protons'], df_sub['val'], df_sub['err'], label='Single - Mixed', marker='o', ls='',
+                color='red', alpha=0.7)
+    ax.set_xlabel('Total Protons in Event')
+    ax.set_ylabel(r'$\Delta\sigma^2$')
+    ax.legend()
+    fig.tight_layout()
+
+    fig, ax = plt.subplots(dpi=144)
+    title = r'$\Delta\sigma^2$ Error' \
+            f' vs Total Protons {data_set_plt} {energy_plt}GeV {div_plt}° {cent_map[cent_plt]}'
+    fig.canvas.manager.set_window_title(title)
+    ax.set_title(title)
+    ax.grid()
+    ax.scatter(df_raw['total_protons'], df_raw['err'], label='Single Event', color='blue', alpha=0.7)
+    ax.scatter(df_mix['total_protons'], df_mix['err'], label='Mixed Event', color='green', alpha=0.7)
+    ax.scatter(df_sub['total_protons'], df_sub['err'], label='Single - Mixed', color='red', alpha=0.7)
+    ax.set_xlabel('Total Protons in Event')
+    ax.set_ylabel(r'$\Delta\sigma^2$ Error')
+    ax.legend()
+    fig.tight_layout()
+
+    fig, ax = plt.subplots(dpi=144)
+    title = r'$\Delta\sigma^2$ Error Contribution' \
+            f' vs Total Protons {data_set_plt} {energy_plt}GeV {div_plt}° {cent_map[cent_plt]}'
+    fig.canvas.manager.set_window_title(title)
+    ax.set_title(title)
+    ax.axhline(0, color='gray')
+    ax.axhline(100, color='gray')
+    ax.grid()
+    df_raw = df_raw.assign(err2=lambda x: x['err']**2)
+    df_mix = df_mix.assign(err2=lambda x: x['err']**2)
+    df_sub = df_sub.assign(err2=lambda x: x['err']**2)
+    df_ratio_raw = pd.merge(df_raw, df_sub, on='total_protons')
+    df_ratio_raw = df_ratio_raw.assign(err_ratio=lambda x: x['err2_x'] / x['err2_y'])
+    df_ratio_mix = pd.merge(df_mix, df_sub, on='total_protons')
+    df_ratio_mix = df_ratio_mix.assign(err_ratio=lambda x: x['err2_x'] / x['err2_y'])
+    ax.scatter(df_ratio_raw['total_protons'], 100 * df_ratio_raw['err_ratio'], label='Single Event', color='blue',
+               alpha=0.7)
+    ax.scatter(df_ratio_mix['total_protons'], 100 * df_ratio_mix['err_ratio'], label='Mixed Event', color='green',
+               alpha=0.7)
+    ax.yaxis.set_major_formatter(mtick.PercentFormatter())
+    ax.set_xlabel('Total Protons in Event')
+    ax.set_ylabel(r'$\Delta\sigma^2$ Error Contribution')
+    ax.legend()
+    fig.tight_layout()
 
 
 def stat_binom_vs_protons(df, stat, div, cent, energy, data_types, data_set_plt, data_sets_labels=None, y_ranges=None):
@@ -3102,7 +3171,7 @@ def calc_dsigma(df, data_types='diff'):
         data_types = [data_types]
     dfs = []
     for data_type in data_types:
-        df_type = df[df['data_type'] == data_type]
+        df_type = df[df['data_type'] == data_type].copy()
         p, tp = df_type['divs'] / 360, df_type['total_protons']
         if data_type in ['raw', 'mix']:
             df_type.loc[:, 'val'] = (df_type['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
@@ -3123,6 +3192,7 @@ def subtract_avgs(df_a, df_b, val_col='avg', err_col='avg_err', meas_col='avg_me
         index_cols = list(set(df_a.columns) - {val_col, err_col, meas_col})
         df_sub = df_a.set_index(index_cols) - df_b.set_index(index_cols)
         df_sub.loc[:, err_col] = df_sub[meas_col].apply(lambda x: x.err)
+        # df_sub.loc[:, err_col] = df_sub.assign(err_col=lambda x: x[meas_col].err)  # Think this is right but check
     else:
         index_cols = list(set(df_a.columns) - {val_col, err_col})
         df_sub = df_a.set_index(index_cols) - df_b.set_index(index_cols)
