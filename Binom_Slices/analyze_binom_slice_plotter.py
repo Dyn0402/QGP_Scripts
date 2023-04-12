@@ -22,13 +22,14 @@ from analyze_binom_slices import *
 def main():
     # plot_paper_figs()
 
-    plot_star_model_var()
+    # plot_star_model_var()
     # plot_vs_cent_var()
     # plot_sims_var()
     # get_sim_mapping_var()
     # plot_all_zero_base()
 
-    plot_star_var_sys()
+    # plot_star_var_sys()
+    plot_star_var_rand_sys()
 
     # plot_vs_cent_var_fits()
 
@@ -483,6 +484,110 @@ def plot_star_var_sys():
     plot_slope_div_fits_simpars(df_fits)
 
     plt.show()
+
+
+def plot_star_var_rand_sys():
+    plt.rcParams["figure.figsize"] = (6.66, 5)
+    plt.rcParams["figure.dpi"] = 144
+    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    v2_star_in_dir = 'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/' \
+                     'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/'
+    df_name = 'Binomial_Slice_Moments/binom_slice_vars_bes_rand_sys_test.csv'
+    # fits_out_base = 'Base_Zero_Fits'
+    # df_tproton_avgs_name = 'dsig_tprotons_avgs_cent8.csv'
+    # df_partitions_fits_name = 'partitions_fits_cent8.csv'
+    df_path = base_path + df_name
+
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
+                0: '70-80%', -1: '80-90%'}
+
+    stat_plot = 'k2'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
+    div_plt = 180
+    exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
+    cent_plt = 7
+    # energies_fit = [7, 11, 19, 27, 39, 62]
+    energies_fit = [7]
+    samples = 72  # For title purposes only
+
+    # data_sets_plt = ['bes_def', 'bes_sys_dca08', 'bes_sys_dca12']
+    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'blue', 'green']))
+    # data_sets_labels = dict(zip(data_sets_plt, ['dca = 1.0 cm', 'dca = 0.8 cm', 'dca = 1.2 cm']))
+
+    # data_sets_plt = ['bes_def', 'bes_sys_nsprx09', 'bes_sys_nsprx11']
+    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'blue', 'green']))
+    # data_sets_labels = dict(zip(data_sets_plt, ['nsigmaproton = 2.0', 'nsigmaproton = 1.8', 'nsigmaproton = 2.2']))
+    #
+    # data_sets_plt = ['bes_def', 'bes_sys_nsprx09', 'bes_sys_nsprx11']
+    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'blue', 'green']))
+    # data_sets_labels = dict(zip(data_sets_plt, ['nsigmaproton = 2.0', 'nsigmaproton = 1.8', 'nsigmaproton = 2.2']))
+
+    v2_star_vals = {2: read_flow_values(v2_star_in_dir)}
+
+    df = pd.read_csv(df_path)
+    df = df.dropna()
+    all_sets = pd.unique(df['name'])
+    print(all_sets)
+    print(df)
+
+    df = df[df['stat'] == stat_plot]
+    df_raw = calc_dsigma(df, 'raw')
+    print(df_raw)
+
+    dsig_avg = dvar_vs_protons(df_raw, div_plt, cent_plt, [7], ['raw'], all_sets, plot=True, avg=True)
+
+    plot_protons_avgs_vs_energy(dsig_avg, all_sets, alpha=0.6, title=f'{cent_map[cent_plt]} Centrality, {div_plt}° '
+                                                                         f'Partitions, {samples} Samples per Event')
+
+    plt.show()
+
+    # dsig_avgs = []
+    # for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
+    #     print(f'Div {div}')
+    #     dsig_avgs_div_raw = dvar_vs_protons(df_raw, div, cent_plt, energies_fit, ['raw'], data_sets_plt, plot=False,
+    #                                         avg=True)
+    #     dsig_avgs_div_raw.loc[:, 'name'] = dsig_avgs_div_raw['name'] + '_raw'
+    #     dsig_avgs.append(dsig_avgs_div_raw)
+    #
+    #     dsig_avgs_div_mix = dvar_vs_protons(df_mix, div, cent_plt, energies_fit, ['mix'], data_sets_plt, plot=False,
+    #                                         avg=True)
+    #     dsig_avgs_div_mix.loc[:, 'name'] = dsig_avgs_div_mix['name'] + '_mix'
+    #     dsig_avgs.append(dsig_avgs_div_mix)
+    #
+    #     dsig_avgs_div_diff = dvar_vs_protons(df_diff, div, cent_plt, energies_fit, ['diff'], data_sets_plt, plot=False,
+    #                                          avg=True)
+    #     dsig_avgs_div_diff.loc[:, 'name'] = dsig_avgs_div_diff['name'] + '_sub'
+    #
+    #     dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, 'bes_resample_epbins1_sub',
+    #                                               'bes_resample_epbins1', v2_star_vals, div, cent_plt)
+    #     dsig_avgs.append(dsig_avgs_div_diff)
+    #
+    # dsig_avgs = pd.concat(dsig_avgs, ignore_index=True)
+    # # if df_tproton_avgs_name is not None:
+    # #     dsig_avgs.to_csv(f'{base_path}{fits_out_base}/{df_tproton_avgs_name}', index=False)
+    #
+    # for data_set in data_sets_plt:
+    #     data_sets = [data_set + x for x in ['_raw', '_mix', '_sub']]
+    #     colors = dict(zip(data_sets, ['blue', 'green', 'red']))
+    #     labels = dict(zip(data_sets, [data_sets_labels[data_set] + x for x in [' Raw', ' Mix', ' Sub']]))
+    #     plot_dvar_avgs_divs(dsig_avgs, data_sets, data_sets_colors=colors, fit=False, data_sets_labels=labels,
+    #                         ylab=r'$\widebar{\Delta\sigma^2}$')
+    # for data_set in data_sets_plt:
+    #     data_sets = [data_set + x for x in ['_sub', '']]
+    #     colors = dict(zip(data_sets, ['blue', 'red']))
+    #     labels = dict(zip(data_sets, [data_sets_labels[data_set] + x for x in [' Original', ' v2 Corrected']]))
+    #     plot_dvar_avgs_divs(dsig_avgs, data_sets, data_sets_colors=colors, fit=False, data_sets_labels=labels)
+    # plot_dvar_avgs_divs(dsig_avgs, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,
+    #                     data_sets_labels=data_sets_labels)
+    #
+    # df_fits = plot_dvar_avgs_divs(dsig_avgs, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,
+    #                               data_sets_labels=data_sets_labels, plt_energies=False)
+    # # if df_partitions_fits_name is not None:
+    # #     df_fits.to_csv(f'{base_path}{fits_out_base}/{df_partitions_fits_name}', index=False)
+    #
+    # plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
+    # plot_slope_div_fits_simpars(df_fits)
+    #
+    # plt.show()
 
 
 def plot_sims():
