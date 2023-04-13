@@ -64,7 +64,7 @@ def init_pars():
         # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
         'csv_append': False,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': False,  # If True check csv_path and only run missing datasets, else run all datasets
-        'threads': 12,
+        'threads': 10,
         # 'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'stats': define_stats(['k2']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
@@ -242,7 +242,17 @@ def define_datasets(base_path):
     #                        all_energies, all_cents, all_divs])
 
     for i in range(12):
-        entry_vals.append([f'bes_rand_sys_{i}', '', ['default', 'sys', 'test'], [], [], [i],
+        entry_vals.append([f'bes_rand_sys_{i}', '', ['default', 'sys', 'test'], [], ['rand'], [i],
+                           [7], all_cents, all_divs])
+
+    for i in range(4):
+        set_name = f'rapid05_resample_norotate_strefnoseed_nomix_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_{i}'
+        entry_vals.append([f'bes_strefnoseed_sys_{i}', '', ['default', 'rand', 'sys', 'test'], [], [], [set_name],
+                           [7], all_cents, all_divs])
+
+    for i in range(6):
+        set_name = f'rapid05_resample_norotate_strefseed_nomix_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_{i}'
+        entry_vals.append([f'bes_strefseed_sys_{i}', '', ['default', 'rand', 'sys', 'test'], [], [], [set_name],
                            [7], all_cents, all_divs])
 
     # Plus Minus Clustering

@@ -283,9 +283,9 @@ def raw_to_mix_stat_err(df, div_plt, cent_plt, energy_plt, data_set_plt):
     ax.axhline(0, color='gray')
     ax.axhline(100, color='gray')
     ax.grid()
-    df_raw = df_raw.assign(err2=lambda x: x['err']**2)
-    df_mix = df_mix.assign(err2=lambda x: x['err']**2)
-    df_sub = df_sub.assign(err2=lambda x: x['err']**2)
+    df_raw = df_raw.assign(err2=lambda x: x['err'] ** 2)
+    df_mix = df_mix.assign(err2=lambda x: x['err'] ** 2)
+    df_sub = df_sub.assign(err2=lambda x: x['err'] ** 2)
     df_ratio_raw = pd.merge(df_raw, df_sub, on='total_protons')
     df_ratio_raw = df_ratio_raw.assign(err_ratio=lambda x: x['err2_x'] / x['err2_y'])
     df_ratio_mix = pd.merge(df_mix, df_sub, on='total_protons')
@@ -2294,10 +2294,10 @@ def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
 
 
 def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None,
-                          fit=False, cent_ref=None, ref_type=None, ls='none', data_sets_energies_cmaps=None):
+                          fit=False, cent_ref=None, ref_type=None, ls='none', data_sets_energies_cmaps=None,
+                          fit_boundary=0):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
-    fit_boundary = 0  # 60
     ls = 'none' if fit else ls
 
     fig_base, ax_base = plt.subplots(figsize=(6.66, 5), dpi=144)
@@ -2311,18 +2311,20 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
         fig_base_res.canvas.manager.set_window_title(f'Baselines vs Centrality Fit Residuals')
     energies = pd.unique(df['energy'])
     bases, refs, cs = [], [], [0]  # Just to set x and y limits for plot
-    consts = {}
+    fit_pars = {}
     for data_set in data_sets_plt:
         df_set = df[df['data_set'] == data_set]
-        if data_sets_energies_cmaps is not None:
-            colors = iter([plt.cm.get_cmap(data_sets_energies_cmaps[data_set])(i)
-                           for i in np.linspace(1, 0.4, len(energies))])
+        if data_sets_energies_cmaps is not None and (data_sets_colors is None or len(energies) > 1):
+            cmap = plt.cm.get_cmap(data_sets_energies_cmaps[data_set])
+            colors = iter([cmap(i) for i in range(cmap.N)])
+            # colors = iter([plt.cm.get_cmap(data_sets_energies_cmaps[data_set])(i)
+            #                for i in np.linspace(1, 0.4, len(energies))])
         elif data_sets_colors is not None:
             color, colors = data_sets_colors[data_set], None
         else:
             colors, color = None
         print(pd.unique(df_set['energy']))
-        consts.update({data_set: {'energy': [], 'const_val': [], 'const_err': []}})
+        fit_pars.update({data_set: {'energy': [], 'const_val': [], 'const_err': [], 'isqrt_val': [], 'isqrt_err': []}})
         for energy in pd.unique(df_set['energy']):
             if colors is not None:
                 color = next(colors)
@@ -2380,9 +2382,11 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
                 fit_meases = [Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]
                 print(f'{lab} ODR Fit: {fit_meases}')
                 cs.append(odr_out.beta[1])
-                consts[data_set]['energy'].append(energy)
-                consts[data_set]['const_val'].append(odr_out.beta[1])
-                consts[data_set]['const_err'].append(odr_out.sd_beta[1])
+                fit_pars[data_set]['energy'].append(energy)
+                fit_pars[data_set]['const_val'].append(odr_out.beta[1])
+                fit_pars[data_set]['const_err'].append(odr_out.sd_beta[1])
+                fit_pars[data_set]['isqrt_val'].append(odr_out.beta[0])
+                fit_pars[data_set]['isqrt_err'].append(odr_out.sd_beta[0])
 
                 # popt, pcov = cf(func_cf, x_fit, y_fit, sigma=y_fit_err, absolute_sigma=True, p0=p0)
                 # ax_base.plot(x_fit_plt, func_cf(x_fit_plt, *popt), alpha=0.6, ls='--', color=color)
@@ -2420,9 +2424,9 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
                 #                 color=color, alpha=0.4)
                 # ax_base.plot(x_fit, inv_invxpow_odr(odr_out.beta, x_fit), alpha=0.6, color=color, ls=':')
                 # print(f'{lab} Fit: {[Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]}')
-                # # consts[data_set]['energy'].append(energy)
-                # # consts[data_set]['const_val'].append(odr_out.beta[1])
-                # # consts[data_set]['const_err'].append(odr_out.sd_beta[1])
+                # # fit_pars[data_set]['energy'].append(energy)
+                # # fit_pars[data_set]['const_val'].append(odr_out.beta[1])
+                # # fit_pars[data_set]['const_err'].append(odr_out.sd_beta[1])
 
                 # p0 = [-0.02, 1]
                 # x_fit = np.linspace(1, 800, 2000)
@@ -2444,9 +2448,9 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
                 #                 color=color, alpha=0.4)
                 # ax_base.plot(x_fit, inv_invx_odr(odr_out.beta, x_fit), alpha=0.6, color=color, ls='--')
                 # print(f'{lab} Fit: {[Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]}')
-                # # consts[data_set]['energy'].append(energy)
-                # # consts[data_set]['const_val'].append(odr_out.beta[1])
-                # # consts[data_set]['const_err'].append(odr_out.sd_beta[1])
+                # # fit_pars[data_set]['energy'].append(energy)
+                # # fit_pars[data_set]['const_val'].append(odr_out.beta[1])
+                # # fit_pars[data_set]['const_err'].append(odr_out.sd_beta[1])
                 # # cs.append(odr_out.beta[1])
                 # # ax_base.set_ylim(ax_base_ylim)
                 # # ax_base.set_xlim(ax_base_xlim)
@@ -2505,14 +2509,27 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
         fig_consts_vs_energy, ax_consts_vs_energy = plt.subplots()
         ax_consts_vs_energy.set_ylabel('Constant Fit Parameter')
         ax_consts_vs_energy.set_xlabel('Energy (GeV)')
-        for data_set, data in consts.items():
+
+        fig_sqrt_vs_energy, ax_sqrt_vs_energy = plt.subplots()
+        ax_sqrt_vs_energy.set_ylabel(r'$1/\sqrt{M}$ Fit Parameter')
+        ax_sqrt_vs_energy.set_xlabel('Energy (GeV)')
+
+        for data_set, data in fit_pars.items():
             ax_consts_vs_energy.errorbar(data['energy'], data['const_val'], yerr=data['const_err'], ls='none',
-                                         label=data_set, marker='o')
+                                         label=data_sets_labels[data_set], marker='o')
+            ax_sqrt_vs_energy.errorbar(data['energy'], data['isqrt_val'], yerr=data['isqrt_err'], ls='none',
+                                       label=data_sets_labels[data_set], marker='o')
         ax_consts_vs_energy.legend()
         ax_consts_vs_energy.grid()
         ax_consts_vs_energy.set_title('Fit Constants vs Energy')
         fig_consts_vs_energy.canvas.manager.set_window_title('Fit Constants vs Energy')
         fig_consts_vs_energy.tight_layout()
+
+        ax_sqrt_vs_energy.legend()
+        ax_sqrt_vs_energy.grid()
+        ax_sqrt_vs_energy.set_title(r'$1/\sqrt{M}$ Parameter vs Energy')
+        fig_sqrt_vs_energy.canvas.manager.set_window_title('1/sqrt(M) Parameter vs Energy')
+        fig_sqrt_vs_energy.tight_layout()
 
         ax_base.axvline(fit_boundary, ls='--', color='orange')
         ax_base_res.axvline(fit_boundary, ls='--', color='orange')

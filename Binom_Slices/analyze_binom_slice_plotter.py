@@ -29,9 +29,9 @@ def main():
     # plot_all_zero_base()
 
     # plot_star_var_sys()
-    plot_star_var_rand_sys()
+    # plot_star_var_rand_sys()
 
-    # plot_vs_cent_var_fits()
+    plot_vs_cent_var_fits()
 
     # plot_sims()
     # get_sim_mapping()
@@ -535,8 +535,37 @@ def plot_star_var_rand_sys():
 
     dsig_avg = dvar_vs_protons(df_raw, div_plt, cent_plt, [7], ['raw'], all_sets, plot=True, avg=True)
 
-    plot_protons_avgs_vs_energy(dsig_avg, all_sets, alpha=0.6, title=f'{cent_map[cent_plt]} Centrality, {div_plt}° '
-                                                                         f'Partitions, {samples} Samples per Event')
+    # print(dsig_avg)
+    dsig_avg['set_num'] = dsig_avg['name'].apply(lambda x: int(x.split('_')[-1]))
+    dsig_avg['set_group'] = dsig_avg['name'].apply(lambda x: x.replace('_' + x.split('_')[-1], ''))
+    # print(dsig_avg)
+    fig, ax = plt.subplots(dpi=144)
+    ax.grid()
+    ax.axhline(np.average(dsig_avg['avg']), color='gray')
+    ax.set_title(r'Variation of $\widebar{\Delta\sigma^2}$ from Randomization Sources')
+    ax.set_ylabel(r'$\widebar{\Delta\sigma^2}$')
+    ax.set_xlabel('Arbitrary run index')
+    fig2, ax2 = plt.subplots()
+    # plt.xticks(rotation=20)
+    ax2.grid()
+    ax2.set_ylabel(r'Standard Deviation of $\widebar{\Delta\sigma^2}$')
+    iterate_set_num = 0
+    group_map = {'bes_rand_sys': 'File Order, Resampling, StRefMultCorr', 'bes_strefnoseed_sys': 'StRefMultCorr',
+                 'bes_strefseed_sys': 'Resampling'}
+    for group in pd.unique(dsig_avg['set_group']):
+        group_df = dsig_avg[dsig_avg['set_group'] == group]
+        # print(f'{group}\n{group_df}')
+        ebar = ax.errorbar(group_df['set_num'] + iterate_set_num, group_df['avg'], yerr=group_df['avg_err'], ls='',
+                           marker='o', label=group_map[group])
+        ax.plot(group_df['set_num'] + iterate_set_num, np.ones(len(group_df)) * np.average(group_df['avg']),
+                color=ebar[0].get_color())
+        ax2.scatter(['\n'.join(group_map[group].split(', '))], [np.std(group_df['avg'])], color=ebar[0].get_color(),
+                    zorder=10)
+        iterate_set_num += max(group_df['set_num']) + 1
+    ax.legend()
+    ax2.axhline(0, color='gray')
+    fig.tight_layout()
+    fig2.tight_layout()
 
     plt.show()
 
@@ -1375,7 +1404,7 @@ def plot_vs_cent_var_fits():
 
     cent_ref_name = 'mean_cent_ref.csv'
     cent_ref_df = pd.read_csv(f'F:/Research/Results/Azimuth_Analysis/{cent_ref_name}')
-    ref_type = 'refn'  # 'refn'
+    ref_type = 'ref'  # 'refn'
     cent_ref_df = cent_ref_df.replace('bes_resample_def', 'bes_def')
     cent_ref_df_bes_old = cent_ref_df.replace('bes_def', 'bes_resample_epbins1')
     cent_ref_df = pd.concat([cent_ref_df,
@@ -1385,15 +1414,15 @@ def plot_vs_cent_var_fits():
     print(cent_ref_df)
     print(pd.unique(cent_ref_df['data_set']))
 
-    # data_sets_plt = ['bes_resample_epbins1', 'ampt_new_coal_epbins1']
-    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red']))
-    # data_sets_energies_cmaps = dict(zip(data_sets_plt, ['tab10', 'Dark2']))
-    # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT']))
-
-    data_sets_plt = ['bes_resample_epbins1', 'bes_def']
+    data_sets_plt = ['bes_def', 'ampt_new_coal_epbins1']
     data_sets_colors = dict(zip(data_sets_plt, ['black', 'red']))
     data_sets_energies_cmaps = dict(zip(data_sets_plt, ['tab10', 'Dark2']))
-    data_sets_labels = dict(zip(data_sets_plt, ['STAR bad', 'STAR fixed']))
+    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT']))
+
+    # data_sets_plt = ['bes_resample_epbins1', 'bes_def']
+    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red']))
+    # data_sets_energies_cmaps = dict(zip(data_sets_plt, ['tab10', 'Dark2']))
+    # data_sets_labels = dict(zip(data_sets_plt, ['STAR bad', 'STAR fixed']))
 
     energy = 7
     df_divs_avgs_energy = df_divs_avgs[df_divs_avgs['energy'] == energy]
@@ -1403,7 +1432,7 @@ def plot_vs_cent_var_fits():
     df_div_avgs_div = df_divs_avgs[df_divs_avgs['divs'] == div]
     df_div_avgs_div = df_div_avgs_div.rename({'name': 'data_set', 'avg': 'baseline', 'avg_err': 'base_err'},
                                              axis='columns')
-    # plot_div_fits_vs_cent_62res(df_div_avgs_div, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
+    # plot_div_fits_vs_cent_62res(df_div_avgs_div, ['bes_def'], data_sets_colors=data_sets_colors,
     #                             data_sets_labels=data_sets_labels, title=f'BES1 {div}', fit=True, cent_ref=cent_ref_df,
     #                             ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
 
@@ -1411,17 +1440,17 @@ def plot_vs_cent_var_fits():
     df_div_avgs_div_energy = df_div_avgs_div[df_div_avgs_div['energy'] == energy]
     df_div_avgs_div_energy['zero_mag'] = 0
     df_div_avgs_div_energy['zero_mag_err'] = 0
-    plot_div_fits_vs_cent(df_div_avgs_div_energy, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
+    plot_div_fits_vs_cent(df_div_avgs_div_energy, ['bes_def'], data_sets_colors=data_sets_colors,
                           data_sets_labels=data_sets_labels, title=f'BES1 {div}° {energy} GeV', cent_ref=cent_ref_df,
                           ref_type=ref_type, data_sets_energies_cmaps=None, fit=True)
 
     # plt.show()
 
-    # plot_div_fits_vs_cent(df_fits, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
+    # plot_div_fits_vs_cent(df_fits, ['bes_def'], data_sets_colors=data_sets_colors,
     #                       data_sets_labels=data_sets_labels, title=f'BES1', fit=False, cent_ref=cent_ref_df,
     #                       ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
     #
-    # plot_div_fits_vs_cent(df_fits, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
+    # plot_div_fits_vs_cent(df_fits, ['bes_def'], data_sets_colors=data_sets_colors,
     #                       data_sets_labels=data_sets_labels, title=f'BES1', fit=True, cent_ref=cent_ref_df,
     #                       ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
 
@@ -1429,19 +1458,19 @@ def plot_vs_cent_var_fits():
     #                             data_sets_labels=data_sets_labels, title=f'AMPT', fit=True, cent_ref=cent_ref_df,
     #                             ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
     #
-    # plot_div_fits_vs_cent_62res(df_fits, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
+    # plot_div_fits_vs_cent_62res(df_fits, ['bes_def'], data_sets_colors=data_sets_colors,
     #                             data_sets_labels=data_sets_labels, title=f'BES1', fit=True, cent_ref=cent_ref_df,
     #                             ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
     #
     # plt.show()
     #
-    plot_div_fits_vs_cent_62res(df_fits, ['bes_resample_epbins1'], data_sets_colors=data_sets_colors,
+    plot_div_fits_vs_cent_62res(df_fits, ['bes_def'], data_sets_colors=data_sets_colors,
                                 data_sets_labels=data_sets_labels, title=f'BES1 ref', fit=True, cent_ref=cent_ref_df,
                                 ref_type='ref', data_sets_energies_cmaps=data_sets_energies_cmaps)
 
     plot_div_fits_vs_cent(df_fits, data_sets_plt, data_sets_colors=data_sets_colors,
                           data_sets_labels=data_sets_labels, title=f'{energy} GeV', fit=True, cent_ref=cent_ref_df,
-                          ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
+                          ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps, fit_boundary=30)
 
     energies = [7, 11, 19, 27, 39, 62]
     # energies = [62]
@@ -1449,7 +1478,7 @@ def plot_vs_cent_var_fits():
         df_fits_energy = df_fits[df_fits['energy'] == energy]
         plot_div_fits_vs_cent(df_fits_energy, data_sets_plt, data_sets_colors=data_sets_colors,
                               data_sets_labels=data_sets_labels, title=f'{energy} GeV', fit=True, cent_ref=cent_ref_df,
-                              ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps)
+                              ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps, fit_boundary=30)
 
     plt.show()
 
