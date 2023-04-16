@@ -31,7 +31,8 @@ def main():
     # plot_star_var_sys()
     # plot_star_var_rand_sys()
 
-    plot_vs_cent_var_fits()
+    # plot_vs_cent_var_fits()
+    plot_vs_cent_var_fit_tests()
 
     # plot_sims()
     # get_sim_mapping()
@@ -1470,7 +1471,8 @@ def plot_vs_cent_var_fits():
 
     plot_div_fits_vs_cent(df_fits, data_sets_plt, data_sets_colors=data_sets_colors,
                           data_sets_labels=data_sets_labels, title=f'{energy} GeV', fit=True, cent_ref=cent_ref_df,
-                          ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps, fit_boundary=30)
+                          ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps, fit_boundary=0)
+    # plt.show()
 
     energies = [7, 11, 19, 27, 39, 62]
     # energies = [62]
@@ -1478,7 +1480,314 @@ def plot_vs_cent_var_fits():
         df_fits_energy = df_fits[df_fits['energy'] == energy]
         plot_div_fits_vs_cent(df_fits_energy, data_sets_plt, data_sets_colors=data_sets_colors,
                               data_sets_labels=data_sets_labels, title=f'{energy} GeV', fit=True, cent_ref=cent_ref_df,
-                              ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps, fit_boundary=30)
+                              ref_type=ref_type, data_sets_energies_cmaps=data_sets_energies_cmaps, fit_boundary=0)
+
+    plt.show()
+
+
+def plot_vs_cent_var_fit_tests():
+    plt.rcParams["figure.figsize"] = (6.66, 5)
+    plt.rcParams["figure.dpi"] = 144
+    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    fits_out_base = 'Base_Zero_Fits'
+    df_tproton_avgs_name = 'dsig_tprotons_avgs_old.csv'
+    df_partitions_fits_name = 'partitions_fits_old.csv'
+
+    df_fits = pd.read_csv(f'{base_path}{fits_out_base}/{df_partitions_fits_name}')
+    df_divs_avgs = pd.read_csv(f'{base_path}{fits_out_base}/{df_tproton_avgs_name}')
+    # print(pd.unique(df_divs_avgs['name']))
+
+    cent_ref_name = 'mean_cent_ref.csv'
+    cent_ref_df = pd.read_csv(f'F:/Research/Results/Azimuth_Analysis/{cent_ref_name}')
+    cent_ref_df = cent_ref_df.replace('bes_resample_def', 'bes_def')
+    cent_ref_df_bes_old = cent_ref_df.replace('bes_def', 'bes_resample_epbins1')
+    cent_ref_df = pd.concat([cent_ref_df,
+                             cent_ref_df_bes_old[cent_ref_df_bes_old['data_set'] == 'bes_resample_epbins1']],
+                            ignore_index=True)
+    cent_ref_df = cent_ref_df.replace('ampt_new_coal_resample_def', 'ampt_new_coal_epbins1')
+
+    def invx_test(x, a):
+        return a / np.sqrt(x)
+
+    def invx_const_test(x, a, b):
+        return a / np.sqrt(x) + b
+
+    def invx_sigmoid_test(x, a, b, c, d):
+        return a / np.sqrt(x) + b / (1 + np.exp(-c * (x - d)))
+
+    energy = 62
+    div = 180
+    data_set = 'bes_def'
+    # data_set = 'ampt_new_coal_epbins1'
+    df_div_energy_avgs = df_divs_avgs[(df_divs_avgs['name'] == data_set) &
+                                      (df_divs_avgs['divs'] == div) & (df_divs_avgs['energy'] == energy)]
+    cent_ref_df_energy = cent_ref_df[(cent_ref_df['data_set'] == 'bes_def') &
+                                     (cent_ref_df['energy'] == energy)][['cent', 'mean_ref_val', 'mean_ref_sd']]
+    df_test = pd.merge(df_div_energy_avgs, cent_ref_df_energy, on='cent')
+
+    p01 = [-0.01]
+    popt1, pcov1 = cf(invx_test, df_test['mean_ref_val'], df_test['avg'],
+                      sigma=df_test['avg_err'], absolute_sigma=True, p0=p01)
+    pfit1 = [Measure(val, err) for val, err in zip(popt1, np.sqrt(np.diag(pcov1)))]
+    print(pfit1)
+
+    p02 = [-0.01, 0.001]
+    popt2, pcov2 = cf(invx_const_test, df_test['mean_ref_val'], df_test['avg'],
+                      sigma=df_test['avg_err'], absolute_sigma=True, p0=p02)
+    pfit2 = [Measure(val, err) for val, err in zip(popt2, np.sqrt(np.diag(pcov2)))]
+    print(pfit2)
+
+    p03 = [-0.02, 0.0004, 0.1, 20]
+    popt3, pcov3 = cf(invx_sigmoid_test, df_test['mean_ref_val'], df_test['avg'],
+                      sigma=df_test['avg_err'], absolute_sigma=True, p0=p03)
+    pfit3 = [Measure(val, err) for val, err in zip(popt3, np.sqrt(np.diag(pcov3)))]
+    print(pfit3)
+
+    x_fit = np.linspace(1, 250, 1000)
+    fig, ax = plt.subplots()
+    ax.set_xlabel('RefMult')
+    ax.set_ylabel(r'$\widebar{\Delta\sigma^2}$')
+    ax.set_title(f'{data_set} {energy}GeV {div}° Partition Width')
+    ax.grid()
+    ax.axhline(0, color='gray')
+    ax.errorbar(df_test['mean_ref_val'], df_test['avg'], yerr=df_test['avg_err'], xerr=df_test['mean_ref_sd'],
+                ls='none', marker='o', color='black')
+    ax.plot(x_fit, invx_test(x_fit, *popt1), color='gray')
+    ax.plot(x_fit, invx_const_test(x_fit, *popt2), color='blue')
+    ax.plot(x_fit, invx_sigmoid_test(x_fit, *popt3), color='orange')
+    ax.plot(x_fit, invx_sigmoid_test(x_fit, *p03), color='orange', ls='--')
+    ax.set_ylim(-0.0052, 0.0005)
+    ax.set_xlim(-2, 230)
+
+    fig, ax = plt.subplots()
+    ax.set_xlabel('RefMult')
+    ax.set_ylabel(r'$\widebar{\Delta\sigma^2}$ Fit Resituals')
+    ax.set_title(f'{data_set} {energy}GeV {div}° Partition Width')
+    ax.grid()
+    ax.axhline(0, color='black')
+    ax.errorbar(df_test['mean_ref_val'], df_test['avg'] - invx_test(df_test['mean_ref_val'], *popt1),
+                yerr=df_test['avg_err'], xerr=df_test['mean_ref_sd'], ls='none', marker='o', color='gray',
+                label=r'$a/\sqrt{M}$')
+    ax.errorbar(df_test['mean_ref_val'], df_test['avg'] - invx_const_test(df_test['mean_ref_val'], *popt2),
+                yerr=df_test['avg_err'], xerr=df_test['mean_ref_sd'], ls='none', marker='o', color='blue',
+                label=r'$a/\sqrt{M}+b$')
+    ax.errorbar(df_test['mean_ref_val'], df_test['avg'] - invx_test(df_test['mean_ref_val'], popt2[0]),
+                yerr=df_test['avg_err'], xerr=df_test['mean_ref_sd'], ls='none', marker='o', color='salmon',
+                label=r'$a/\sqrt{M}+b$ b fit')
+    ax.errorbar(df_test['mean_ref_val'], df_test['avg'] - invx_sigmoid_test(df_test['mean_ref_val'], *popt3),
+                yerr=df_test['avg_err'], xerr=df_test['mean_ref_sd'], ls='none', marker='o', color='orange',
+                label=r'$a/\sqrt{M}+sigmoid$')
+    ax.legend()
+    fig.tight_layout()
+
+    # plt.show()
+
+    def invx_n_test(x, a, b, c):
+        return a / x ** b + c
+
+    # def invx_const_test(x, a, b):
+    #     return a / np.sqrt(x) + b
+    #
+    # def invx_sigmoid_test(x, a, b, c, d):
+    #     return a / np.sqrt(x) + b / (1 + np.exp(-c * (x - d)))
+
+    p01 = [-0.01, 0.5, 0.0001]
+    popt1, pcov1 = cf(invx_n_test, df_test['mean_ref_val'], df_test['avg'],
+                      sigma=df_test['avg_err'], absolute_sigma=True, p0=p01)
+    pfit1 = [Measure(val, err) for val, err in zip(popt1, np.sqrt(np.diag(pcov1)))]
+    print(pfit1)
+
+    # p02 = [-0.01, 0.001]
+    # popt2, pcov2 = cf(invx_const_test, df_test['mean_ref_val'], df_test['avg'],
+    #                   sigma=df_test['avg_err'], absolute_sigma=True, p0=p02)
+    # pfit2 = [Measure(val, err) for val, err in zip(popt2, np.sqrt(np.diag(pcov2)))]
+    # print(pfit2)
+    #
+    # p03 = [-0.02, 0.0004, 0.1, 20]
+    # popt3, pcov3 = cf(invx_sigmoid_test, df_test['mean_ref_val'], df_test['avg'],
+    #                   sigma=df_test['avg_err'], absolute_sigma=True, p0=p03)
+    # pfit3 = [Measure(val, err) for val, err in zip(popt3, np.sqrt(np.diag(pcov3)))]
+    # print(pfit3)
+
+    x_fit = np.linspace(1, 250, 1000)
+    fig, ax = plt.subplots()
+    ax.set_xlabel('RefMult')
+    ax.set_ylabel(r'$\widebar{\Delta\sigma^2}$')
+    ax.set_title(f'{data_set} {energy}GeV {div}° Partition Width')
+    ax.grid()
+    ax.axhline(0, color='gray')
+    ax.errorbar(df_test['mean_ref_val'], df_test['avg'], yerr=df_test['avg_err'], xerr=df_test['mean_ref_sd'],
+                ls='none', marker='o', color='black')
+    ax.plot(x_fit, invx_n_test(x_fit, *popt1), color='gray')
+    # ax.plot(x_fit, invx_const_test(x_fit, *popt2), color='blue')
+    # ax.plot(x_fit, invx_sigmoid_test(x_fit, *popt3), color='orange')
+    # ax.plot(x_fit, invx_sigmoid_test(x_fit, *p03), color='orange', ls='--')
+    ax.set_ylim(-0.0052, 0.0005)
+    ax.set_xlim(-2, 230)
+
+    fig, ax = plt.subplots()
+    ax.set_xlabel('RefMult')
+    ax.set_ylabel(r'$\widebar{\Delta\sigma^2}$ Fit Resituals')
+    ax.set_title(f'{data_set} {energy}GeV {div}° Partition Width')
+    ax.grid()
+    ax.axhline(0, color='black')
+    ax.errorbar(df_test['mean_ref_val'], df_test['avg'] - invx_n_test(df_test['mean_ref_val'], *popt1),
+                yerr=df_test['avg_err'], xerr=df_test['mean_ref_sd'], ls='none', marker='o', color='gray',
+                label=r'$a/M^n$')
+    # ax.errorbar(df_test['mean_ref_val'], df_test['avg'] - invx_const_test(df_test['mean_ref_val'], *popt2),
+    #             yerr=df_test['avg_err'], xerr=df_test['mean_ref_sd'], ls='none', marker='o', color='blue',
+    #             label=r'$a/\sqrt{M}+b$')
+    # ax.errorbar(df_test['mean_ref_val'], df_test['avg'] - invx_test(df_test['mean_ref_val'], popt2[0]),
+    #             yerr=df_test['avg_err'], xerr=df_test['mean_ref_sd'], ls='none', marker='o', color='salmon',
+    #             label=r'$a/\sqrt{M}+b$ b fit')
+    # ax.errorbar(df_test['mean_ref_val'], df_test['avg'] - invx_sigmoid_test(df_test['mean_ref_val'], *popt3),
+    #             yerr=df_test['avg_err'], xerr=df_test['mean_ref_sd'], ls='none', marker='o', color='orange',
+    #             label=r'$a/\sqrt{M}+sigmoid$')
+    ax.legend()
+    fig.tight_layout()
+
+    # plt.show()
+
+    energies = [7, 11, 19, 27, 39, 62]
+
+    fig, ax = plt.subplots()
+    ax.set_xlabel('RefMult')
+    ax.set_ylabel(r'$\widebar{\Delta\sigma^2}$')
+    ax.set_title(f'{data_set} {div}° Partition Width')
+    ax.grid()
+    ax.axhline(0, color='gray')
+    ax.set_ylim(-0.0052, 0.0005)
+    ax.set_xlim(-2, 230)
+
+    fig2, ax2 = plt.subplots()
+    ax2.set_xlabel('RefMult')
+    ax2.set_ylabel(r'$\widebar{\Delta\sigma^2}$ Fit Resituals')
+    ax2.set_title(f'{data_set} {div}° Partition Width')
+    ax2.grid()
+    ax2.axhline(0, color='black')
+
+    fig3, ax3 = plt.subplots()
+    ax3.set_xlabel('RefMult')
+    ax3.set_ylabel(r'$\widebar{\Delta\sigma^2}$ Fit - $1/\sqrt{M}$ Term')
+    ax3.set_title(f'{data_set} {div}° Partition Width')
+    ax3.grid()
+    ax3.axhline(0, color='black')
+
+    x_fit = np.linspace(1, 400, 1000)
+
+    df_fit = []
+    for energy in energies:
+        df_div_energy_avgs = df_divs_avgs[(df_divs_avgs['name'] == data_set) &
+                                          (df_divs_avgs['divs'] == div) & (df_divs_avgs['energy'] == energy)]
+        cent_ref_df_energy = cent_ref_df[(cent_ref_df['data_set'] == 'bes_def') &
+                                         (cent_ref_df['energy'] == energy)][['cent', 'mean_ref_val', 'mean_ref_sd']]
+        df_test = pd.merge(df_div_energy_avgs, cent_ref_df_energy, on='cent')
+
+        p02 = [-0.01, 0.001]
+        popt2, pcov2 = cf(invx_const_test, df_test['mean_ref_val'], df_test['avg'],
+                          sigma=df_test['avg_err'], absolute_sigma=True, p0=p02)
+        pfit2 = [Measure(val, err) for val, err in zip(popt2, np.sqrt(np.diag(pcov2)))]
+        print(f'{energy} GeV: ', pfit2)
+
+        p03 = [p02[0] * 1.5, p02[1] * 0.9, 0.05, 25]
+        popt3, pcov3 = cf(invx_sigmoid_test, df_test['mean_ref_val'], df_test['avg'],
+                          sigma=df_test['avg_err'], absolute_sigma=True, p0=p03)
+        pfit3 = [Measure(val, err) for val, err in zip(popt3, np.sqrt(np.diag(pcov3)))]
+        print(f'{energy} GeV: ', pfit3)
+
+        p04 = [-0.01, 0.5, 0.001]
+        popt4, pcov4 = cf(invx_n_test, df_test['mean_ref_val'], df_test['avg'],
+                          sigma=df_test['avg_err'], absolute_sigma=True, p0=p04)
+        pfit4 = [Measure(val, err) for val, err in zip(popt4, np.sqrt(np.diag(pcov4)))]
+        print(f'{energy} GeV: ', pfit4)
+        df_fit.append({'energy': energy, 'a_val': pfit4[0].val, 'a_err': pfit4[0].err, 'b_val': pfit4[1].val,
+                       'b_err': pfit4[1].err, 'c_val': pfit4[2].val, 'c_err': pfit4[2].err})
+
+        ebar = ax.errorbar(df_test['mean_ref_val'], df_test['avg'], yerr=df_test['avg_err'],
+                           xerr=df_test['mean_ref_sd'], ls='none', marker='o', label=f'{energy} GeV')
+        ax.plot(x_fit, invx_const_test(x_fit, *popt2), color=ebar[0].get_color(), ls=':', alpha=0.4)
+        ax.plot(x_fit, invx_sigmoid_test(x_fit, *popt3), color=ebar[0].get_color())
+
+        ax2.errorbar(df_test['mean_ref_val'], df_test['avg'] - invx_test(df_test['mean_ref_val'], popt2[0]),
+                     yerr=df_test['avg_err'], xerr=df_test['mean_ref_sd'], ls='none', marker='^',
+                     color=ebar[0].get_color(), label=f'{energy} GeV', alpha=0.4)
+        ax2.errorbar(df_test['mean_ref_val'], df_test['avg'] - invx_sigmoid_test(df_test['mean_ref_val'], *popt3),
+                     yerr=df_test['avg_err'], xerr=df_test['mean_ref_sd'], ls='none', marker='o',
+                     color=ebar[0].get_color(), label=f'{energy} GeV')
+
+        ax3.errorbar(df_test['mean_ref_val'], df_test['avg'] - invx_test(df_test['mean_ref_val'], popt3[0]),
+                     yerr=df_test['avg_err'], xerr=df_test['mean_ref_sd'], ls='none', marker='o',
+                     color=ebar[0].get_color(), label=f'{energy} GeV', alpha=0.5)
+        ax3.plot(x_fit, invx_sigmoid_test(x_fit, *popt3) - invx_test(x_fit, popt3[0]), color=ebar[0].get_color(),
+                 alpha=0.5)
+    ax.legend()
+    ax2.legend()
+    ax3.legend()
+
+    data_set = 'ampt_new_coal_epbins1'
+    df_fit2 = []
+    for energy in energies:
+        df_div_energy_avgs = df_divs_avgs[(df_divs_avgs['name'] == data_set) &
+                                          (df_divs_avgs['divs'] == div) & (df_divs_avgs['energy'] == energy)]
+        cent_ref_df_energy = cent_ref_df[(cent_ref_df['data_set'] == 'bes_def') &
+                                         (cent_ref_df['energy'] == energy)][['cent', 'mean_ref_val', 'mean_ref_sd']]
+        df_test = pd.merge(df_div_energy_avgs, cent_ref_df_energy, on='cent')
+
+        p02 = [-0.01, 0.001]
+        popt2, pcov2 = cf(invx_const_test, df_test['mean_ref_val'], df_test['avg'],
+                          sigma=df_test['avg_err'], absolute_sigma=True, p0=p02)
+        pfit2 = [Measure(val, err) for val, err in zip(popt2, np.sqrt(np.diag(pcov2)))]
+        print(f'{energy} GeV: ', pfit2)
+
+        p03 = [p02[0] * 1.5, p02[1] * 0.9, 0.05, 25]
+        popt3, pcov3 = cf(invx_sigmoid_test, df_test['mean_ref_val'], df_test['avg'],
+                          sigma=df_test['avg_err'], absolute_sigma=True, p0=p03)
+        pfit3 = [Measure(val, err) for val, err in zip(popt3, np.sqrt(np.diag(pcov3)))]
+        print(f'{energy} GeV: ', pfit3)
+
+        p04 = [-0.01, 0.5, 0.001]
+        popt4, pcov4 = cf(invx_n_test, df_test['mean_ref_val'], df_test['avg'],
+                          sigma=df_test['avg_err'], absolute_sigma=True, p0=p04)
+        pfit4 = [Measure(val, err) for val, err in zip(popt4, np.sqrt(np.diag(pcov4)))]
+        print(f'{energy} GeV: ', pfit4)
+        df_fit2.append({'energy': energy + 1, 'a_val': pfit4[0].val, 'a_err': pfit4[0].err, 'b_val': pfit4[1].val,
+                       'b_err': pfit4[1].err, 'c_val': pfit4[2].val, 'c_err': pfit4[2].err})
+
+    df_fit = pd.DataFrame(df_fit)
+    df_fit2 = pd.DataFrame(df_fit2)
+
+    fig4, ax4 = plt.subplots()
+    ax4.set_xlabel('Energy')
+    ax4.set_ylabel('a')
+    ax4.set_title(f'{data_set} {div}° Partition Width')
+    ax4.errorbar(df_fit['energy'], df_fit['a_val'], df_fit['a_err'], ls='none', marker='o', label='STAR')
+    ax4.errorbar(df_fit2['energy'], df_fit2['a_val'], df_fit2['a_err'], ls='none', marker='o', label='AMPT')
+    ax4.grid()
+    ax4.text(0.55, 0.9, r'$\frac{a}{M^n}+c$', fontsize=20, ha='center', va='top', transform=ax.transAxes)
+    ax4.legend()
+    fig4.tight_layout()
+
+    fig4, ax4 = plt.subplots()
+    ax4.set_xlabel('Energy')
+    ax4.set_ylabel('n')
+    ax4.set_title(f'{data_set} {div}° Partition Width')
+    ax4.errorbar(df_fit['energy'], df_fit['b_val'], df_fit['b_err'], ls='none', marker='o', label='STAR')
+    ax4.errorbar(df_fit2['energy'], df_fit2['b_val'], df_fit2['b_err'], ls='none', marker='o', label='AMPT')
+    ax4.grid()
+    ax4.text(0.55, 0.9, r'$\frac{a}{M^n}+c$', fontsize=20, ha='center', va='top', transform=ax.transAxes)
+    ax4.legend()
+    fig4.tight_layout()
+
+    fig4, ax4 = plt.subplots()
+    ax4.set_xlabel('Energy')
+    ax4.set_ylabel('c')
+    ax4.set_title(f'{data_set} {div}° Partition Width')
+    ax4.errorbar(df_fit['energy'], df_fit['c_val'], df_fit['c_err'], ls='none', marker='o', label='STAR')
+    ax4.errorbar(df_fit2['energy'], df_fit2['c_val'], df_fit2['c_err'], ls='none', marker='o', label='AMPT')
+    ax4.grid()
+    ax4.text(0.55, 0.9, r'$\frac{a}{M^n}+c$', fontsize=20, ha='center', va='top', transform=ax.transAxes)
+    ax4.legend()
+    fig4.tight_layout()
 
     plt.show()
 
