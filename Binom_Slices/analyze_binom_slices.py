@@ -77,6 +77,14 @@ def inv_sqrtx_odr(pars, x):
     return pars[0] / np.sqrt(x) + pars[1]
 
 
+def inv_sqrtx_poly2_odr(pars, x):
+    return pars[0] / np.sqrt(x) + pars[1] + pars[2] * x + pars[3] * x**2
+
+
+def poly2_odr(pars, x):
+    return pars[0] + pars[1] * x + pars[2] * x**2
+
+
 def inv_sqrtx_sigmoid_odr(pars, x):  # Not fitting well
     return pars[0] / np.sqrt(x) + pars[1] * (1 + pars[2] / (1 + np.exp(-(x - pars[3]))))
 
@@ -2360,8 +2368,10 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
             refs.extend(list(x))
             if fit:
                 # p0 = [-0.02]
-                p0 = [-0.02, 0.01]
-                func = inv_sqrtx_odr
+                # p0 = [-0.02, 0.01]
+                p0 = [-0.02, 0.01, 0, 0]
+                # func = inv_sqrtx_odr
+                func = inv_sqrtx_poly2_odr
                 # func = inv_sqrtx_noconst_odr
                 # func_cf = inv_sqrtx
 
@@ -2375,9 +2385,10 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
                 odr_data = odr.RealData(x_fit, y_fit, sx=x_fit_err, sy=y_fit_err)
                 inv_sqrt_odr = odr.ODR(odr_data, odr_model, beta0=p0, maxit=500)
                 odr_out = inv_sqrt_odr.run()
-                ax_base.axhline(odr_out.beta[1], color=color, ls='-')
-                ax_base.axhspan(odr_out.beta[1] - odr_out.sd_beta[1], odr_out.beta[1] + odr_out.sd_beta[1],
-                                color=color, alpha=0.4)
+                # ax_base.axhline(odr_out.beta[1], color=color, ls='-')
+                # ax_base.axhspan(odr_out.beta[1] - odr_out.sd_beta[1], odr_out.beta[1] + odr_out.sd_beta[1],
+                #                 color=color, alpha=0.4)
+                ax_base.plot(x_fit_plt, poly2_odr(odr_out.beta[1:], x_fit_plt), color=color)
                 ax_base.plot(x_fit_plt, func(odr_out.beta, x_fit_plt), alpha=0.6, color=color)
                 fit_meases = [Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]
                 print(f'{lab} ODR Fit: {fit_meases}')
