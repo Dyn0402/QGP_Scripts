@@ -57,66 +57,132 @@ def plot_star_sys():
     ]
     def_vals = [1, 20, 6, 2]
     sys_vals = [0.5, 15, 2, 1.5]
+    # data_sets = [
+    #     {
+    #         'dca = 1.0 cm': 'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/'
+    #                         'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/',
+    #         'dca = 0.5 cm': 'F:/Research/Data/v2_sys/'
+    #                         'rapid05_resample_norotate_dca05_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+    #         'dca = 0.8 cm': 'F:/Research/Data/v2_sys/'
+    #                         'rapid05_resample_norotate_dca08_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+    #         'dca = 1.2 cm': 'F:/Research/Data/v2_sys/'
+    #                         'rapid05_resample_norotate_dca12_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+    #         'dca = 1.5 cm': 'F:/Research/Data/v2_sys/'
+    #                         'rapid05_resample_norotate_dca15_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+    #     },
+    #     {
+    #         'nHitsFit = 20': 'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/'
+    #                          'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/',
+    #         'nHitsFit = 15': 'F:/Research/Data/v2_sys/'
+    #                          'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit15_epbins1_calcv2_qaonly_0/',
+    #         'nHitsFit = 25': 'F:/Research/Data/v2_sys/'
+    #                          'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit25_epbins1_calcv2_qaonly_0/',
+    #     },
+    #     {
+    #         'm^2 range = 0.6 GeV':
+    #             'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/'
+    #             'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/',
+    #         'm^2 range = 0.2 GeV':
+    #             'F:/Research/Data/v2_sys/'
+    #             'rapid05_resample_norotate_dca1_nsprx1_m2r2_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+    #         'm^2 range = 0.4 GeV':
+    #             'F:/Research/Data/v2_sys/'
+    #             'rapid05_resample_norotate_dca1_nsprx1_m2r4_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+    #         'm^2 range = 0.8 GeV':
+    #             'F:/Research/Data/v2_sys/'
+    #             'rapid05_resample_norotate_dca1_nsprx1_m2r8_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+    #         'm^2 range = 1.0 GeV':
+    #             'F:/Research/Data/v2_sys/'
+    #             'rapid05_resample_norotate_dca1_nsprx1_m2r10_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+    #     },
+    #     {
+    #         '|nsigmaproton| max = 2.0':
+    #             'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/'
+    #             'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/',
+    #         '|nsigmaproton| max = 1.5':
+    #             'F:/Research/Data/v2_sys/'
+    #             'rapid05_resample_norotate_dca1_nsprx075_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+    #         '|nsigmaproton| max = 1.8':
+    #             'F:/Research/Data/v2_sys/'
+    #             'rapid05_resample_norotate_dca1_nsprx09_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+    #         '|nsigmaproton| max = 2.2':
+    #             'F:/Research/Data/v2_sys/'
+    #             'rapid05_resample_norotate_dca1_nsprx11_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+    #         '|nsigmaproton| max = 2.5':
+    #             'F:/Research/Data/v2_sys/'
+    #             'rapid05_resample_norotate_dca1_nsprx125_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+    #     }
+    # ]
+
     data_sets = [
         {
-            'dca = 1.0 cm': 'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/'
-                            'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/',
+            'dca = 1.0 cm': 'F:/Research/Data/v2_sys/'
+                            'rapid05_resample_norotate_strefseed_dca1_nsprx1_m2r6_m2s0_nhfit20_'
+                            'epbins1_calcv2_qaonly_0/',
             'dca = 0.5 cm': 'F:/Research/Data/v2_sys/'
-                            'rapid05_resample_norotate_dca05_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+                            'rapid05_resample_norotate_strefseed_dca05_nsprx1_m2r6_m2s0_nhfit20_'
+                            'epbins1_calcv2_qaonly_0/',
             'dca = 0.8 cm': 'F:/Research/Data/v2_sys/'
-                            'rapid05_resample_norotate_dca08_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+                            'rapid05_resample_norotate_strefseed_dca08_nsprx1_m2r6_m2s0_nhfit20_'
+                            'epbins1_calcv2_qaonly_0/',
             'dca = 1.2 cm': 'F:/Research/Data/v2_sys/'
-                            'rapid05_resample_norotate_dca12_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+                            'rapid05_resample_norotate_strefseed_dca12_nsprx1_m2r6_m2s0_nhfit20_'
+                            'epbins1_calcv2_qaonly_0/',
             'dca = 1.5 cm': 'F:/Research/Data/v2_sys/'
-                            'rapid05_resample_norotate_dca15_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+                            'rapid05_resample_norotate_strefseed_dca15_nsprx1_m2r6_m2s0_nhfit20_'
+                            'epbins1_calcv2_qaonly_0/',
         },
         {
-            'nHitsFit = 20': 'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/'
-                             'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/',
+            'nHitsFit = 20': 'F:/Research/Data/v2_sys/'
+                             'rapid05_resample_norotate_strefseed_dca1_nsprx1_m2r6_m2s0_nhfit20_'
+                             'epbins1_calcv2_qaonly_0/',
             'nHitsFit = 15': 'F:/Research/Data/v2_sys/'
-                             'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit15_epbins1_calcv2_qaonly_0/',
+                             'rapid05_resample_norotate_strefseed_dca1_nsprx1_m2r6_m2s0_nhfit15_'
+                             'epbins1_calcv2_qaonly_0/',
             'nHitsFit = 25': 'F:/Research/Data/v2_sys/'
-                             'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit25_epbins1_calcv2_qaonly_0/',
+                             'rapid05_resample_norotate_strefseed_dca1_nsprx1_m2r6_m2s0_nhfit25_'
+                             'epbins1_calcv2_qaonly_0/',
         },
         {
             'm^2 range = 0.6 GeV':
-                'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/'
-                'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/',
+                'F:/Research/Data/v2_sys/'
+                'rapid05_resample_norotate_strefseed_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
             'm^2 range = 0.2 GeV':
                 'F:/Research/Data/v2_sys/'
-                'rapid05_resample_norotate_dca1_nsprx1_m2r2_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+                'rapid05_resample_norotate_strefseed_dca1_nsprx1_m2r2_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
             'm^2 range = 0.4 GeV':
                 'F:/Research/Data/v2_sys/'
-                'rapid05_resample_norotate_dca1_nsprx1_m2r4_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+                'rapid05_resample_norotate_strefseed_dca1_nsprx1_m2r4_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
             'm^2 range = 0.8 GeV':
                 'F:/Research/Data/v2_sys/'
-                'rapid05_resample_norotate_dca1_nsprx1_m2r8_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+                'rapid05_resample_norotate_strefseed_dca1_nsprx1_m2r8_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
             'm^2 range = 1.0 GeV':
                 'F:/Research/Data/v2_sys/'
-                'rapid05_resample_norotate_dca1_nsprx1_m2r10_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+                'rapid05_resample_norotate_strefseed_dca1_nsprx1_m2r10_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
         },
         {
             '|nsigmaproton| max = 2.0':
-                'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/'
-                'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/',
+                'F:/Research/Data/v2_sys/'
+                'rapid05_resample_norotate_strefseed_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
             '|nsigmaproton| max = 1.5':
                 'F:/Research/Data/v2_sys/'
-                'rapid05_resample_norotate_dca1_nsprx075_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+                'rapid05_resample_norotate_strefseed_dca1_nsprx075_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
             '|nsigmaproton| max = 1.8':
                 'F:/Research/Data/v2_sys/'
-                'rapid05_resample_norotate_dca1_nsprx09_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+                'rapid05_resample_norotate_strefseed_dca1_nsprx09_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
             '|nsigmaproton| max = 2.2':
                 'F:/Research/Data/v2_sys/'
-                'rapid05_resample_norotate_dca1_nsprx11_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+                'rapid05_resample_norotate_strefseed_dca1_nsprx11_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
             '|nsigmaproton| max = 2.5':
                 'F:/Research/Data/v2_sys/'
-                'rapid05_resample_norotate_dca1_nsprx125_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
+                'rapid05_resample_norotate_strefseed_dca1_nsprx125_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_0/',
         }
     ]
 
     for sys_name, x_label, data_set, data_set_vals, def_val, sys_val in \
             zip(sys_names, x_labels, data_sets, data_sets_vals, def_vals, sys_vals):
-        pdf_path = f'F:/Research/Results/BES_v2_Systematics/BES1_proton_v2_systematic_plots_{sys_name}.pdf'
+        # pdf_path = f'F:/Research/Results/BES_v2_Systematics/BES1_proton_v2_systematic_plots_{sys_name}_strefrand.pdf'
+        pdf_path = f'F:/Research/Results/BES_v2_Systematics/BES1_proton_v2_systematic_plots_{sys_name}_strefrand.pdf'
         data_set_vals = dict(zip(data_set.keys(), data_set_vals))
 
         df = read_flow_data(data_set, energies, cent_map)
