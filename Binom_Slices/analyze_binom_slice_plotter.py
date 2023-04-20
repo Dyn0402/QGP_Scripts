@@ -1515,7 +1515,7 @@ def plot_vs_cent_var_fit_tests():
     def invx_sigmoid_test(x, a, b, c, d):
         return a / np.sqrt(x) + b / (1 + np.exp(-c * (x - d)))
 
-    energy = 62
+    energy = 7
     div = 180
     data_set = 'bes_def'
     # data_set = 'ampt_new_coal_epbins1'
@@ -1543,7 +1543,7 @@ def plot_vs_cent_var_fit_tests():
     pfit3 = [Measure(val, err) for val, err in zip(popt3, np.sqrt(np.diag(pcov3)))]
     print(pfit3)
 
-    x_fit = np.linspace(1, 250, 1000)
+    x_fit = np.linspace(1, 400, 1000)
     fig, ax = plt.subplots()
     ax.set_xlabel('RefMult')
     ax.set_ylabel(r'$\widebar{\Delta\sigma^2}$')
@@ -1557,7 +1557,7 @@ def plot_vs_cent_var_fit_tests():
     ax.plot(x_fit, invx_sigmoid_test(x_fit, *popt3), color='orange')
     ax.plot(x_fit, invx_sigmoid_test(x_fit, *p03), color='orange', ls='--')
     ax.set_ylim(-0.0052, 0.0005)
-    ax.set_xlim(-2, 230)
+    ax.set_xlim(-2, 400)
 
     fig, ax = plt.subplots()
     ax.set_xlabel('RefMult')
@@ -1609,7 +1609,6 @@ def plot_vs_cent_var_fit_tests():
     # pfit3 = [Measure(val, err) for val, err in zip(popt3, np.sqrt(np.diag(pcov3)))]
     # print(pfit3)
 
-    x_fit = np.linspace(1, 250, 1000)
     fig, ax = plt.subplots()
     ax.set_xlabel('RefMult')
     ax.set_ylabel(r'$\widebar{\Delta\sigma^2}$')
@@ -1623,7 +1622,7 @@ def plot_vs_cent_var_fit_tests():
     # ax.plot(x_fit, invx_sigmoid_test(x_fit, *popt3), color='orange')
     # ax.plot(x_fit, invx_sigmoid_test(x_fit, *p03), color='orange', ls='--')
     ax.set_ylim(-0.0052, 0.0005)
-    ax.set_xlim(-2, 230)
+    ax.set_xlim(-2, 400)
 
     fig, ax = plt.subplots()
     ax.set_xlabel('RefMult')
@@ -1756,36 +1755,39 @@ def plot_vs_cent_var_fit_tests():
     df_fit = pd.DataFrame(df_fit)
     df_fit2 = pd.DataFrame(df_fit2)
 
+    plt.rcParams["figure.figsize"] = (4.4, 4)
+
     fig4, ax4 = plt.subplots()
     ax4.set_xlabel('Energy')
     ax4.set_ylabel('a')
-    ax4.set_title(f'{data_set} {div}° Partition Width')
+    ax4.set_title(f'{div}° Partition Width')
     ax4.errorbar(df_fit['energy'], df_fit['a_val'], df_fit['a_err'], ls='none', marker='o', label='STAR')
     ax4.errorbar(df_fit2['energy'], df_fit2['a_val'], df_fit2['a_err'], ls='none', marker='o', label='AMPT')
     ax4.grid()
-    ax4.text(0.55, 0.9, r'$\frac{a}{M^n}+c$', fontsize=20, ha='center', va='top', transform=ax.transAxes)
+    ax4.text(0.55, 0.9, r'$\frac{a}{M^n}+c$', fontsize=20, ha='center', va='top', transform=ax4.transAxes)
     ax4.legend()
     fig4.tight_layout()
 
     fig4, ax4 = plt.subplots()
     ax4.set_xlabel('Energy')
     ax4.set_ylabel('n')
-    ax4.set_title(f'{data_set} {div}° Partition Width')
+    ax4.set_title(f'{div}° Partition Width')
     ax4.errorbar(df_fit['energy'], df_fit['b_val'], df_fit['b_err'], ls='none', marker='o', label='STAR')
     ax4.errorbar(df_fit2['energy'], df_fit2['b_val'], df_fit2['b_err'], ls='none', marker='o', label='AMPT')
     ax4.grid()
-    ax4.text(0.55, 0.9, r'$\frac{a}{M^n}+c$', fontsize=20, ha='center', va='top', transform=ax.transAxes)
+    ax4.text(0.55, 0.9, r'$\frac{a}{M^n}+c$', fontsize=20, ha='center', va='top', transform=ax4.transAxes)
     ax4.legend()
     fig4.tight_layout()
 
     fig4, ax4 = plt.subplots()
     ax4.set_xlabel('Energy')
     ax4.set_ylabel('c')
-    ax4.set_title(f'{data_set} {div}° Partition Width')
+    ax4.axhline(0, color='black')
+    ax4.set_title(f'{div}° Partition Width')
     ax4.errorbar(df_fit['energy'], df_fit['c_val'], df_fit['c_err'], ls='none', marker='o', label='STAR')
     ax4.errorbar(df_fit2['energy'], df_fit2['c_val'], df_fit2['c_err'], ls='none', marker='o', label='AMPT')
     ax4.grid()
-    ax4.text(0.55, 0.9, r'$\frac{a}{M^n}+c$', fontsize=20, ha='center', va='top', transform=ax.transAxes)
+    ax4.text(0.55, 0.9, r'$\frac{a}{M^n}+c$', fontsize=20, ha='center', va='top', transform=ax4.transAxes)
     ax4.legend()
     fig4.tight_layout()
 
