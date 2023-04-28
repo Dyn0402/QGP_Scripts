@@ -20,7 +20,7 @@ def main():
 
 
 def momentum_test():
-    n_particles = 15
+    n_particles = 50
     angle_frac = 0.8 / np.sqrt(n_particles)
     iterations = 4
     momenta = np.random.uniform(-5, 5, size=(n_particles, 3))
