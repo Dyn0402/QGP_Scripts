@@ -369,6 +369,52 @@ def stat_binom_vs_protons(df, stat, div, cent, energy, data_types, data_set_plt,
     fig.tight_layout()
 
 
+def get_sys(df, df_def_name, df_sys_set_names, group_cols=None, val_col='val', err_col='err'):
+    if group_cols is None:
+        group_cols = ['divs', 'energy', 'cent', 'data_type', 'total_protons']
+    # print(df.columns)
+    # print(df)
+    df = df[df['name'].isin(df_sys_set_names + [df_def_name])]
+    df_set = df.groupby(group_cols)
+    # print(df_set)
+    df_def_sys = []
+    for group_name, group_df in df_set:
+        # print(group_name)
+        # print(df_def_name)
+        # print(group_df['name'])
+        if df_def_name not in group_df['name'].values:
+            continue  # No default value so no systematic
+
+        group_df_def = group_df[group_df['name'] == df_def_name].copy()
+        assert len(group_df_def) == 1
+        def_val, def_err = group_df_def.iloc[0][val_col], group_df_def.iloc[0][err_col]
+        barlow = 0
+        if len(group_df) <= 1:
+            # print('No sys')
+            pass  # No systematic values so sys = 0
+        else:
+            group_df_sys = group_df[group_df['name'] != df_def_name].copy()
+
+            for index, row in group_df_sys.iterrows():
+                sys_val, sys_err = row[val_col], row[err_col]
+                barlow_i = (def_val - sys_val) ** 2 - abs(def_err ** 2 - sys_err ** 2)
+                barlow = barlow_i if barlow_i > barlow else barlow
+            barlow = np.sqrt(barlow / 12.0)
+        # print(group_df_def)
+        df_entry = group_df_def.reset_index().to_dict(orient='records')[0]
+        df_entry.update({'sys': barlow})
+        # print(group_df_def)
+        # df_entry = df_entry.reset_index().to_dict(orient='records')
+        # df_entry = {'name': df_def_name, 'val': def_val, 'err': def_err, 'sys': barlow}
+        # df_entry.update(dict(zip(group_cols, group_name)))
+        # print(df_entry)
+        df_def_sys.append(df_entry)
+
+    # print(df_def_sys)
+
+    return pd.DataFrame(df_def_sys)
+
+
 def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False, avg=False,
                     hist=False, data_sets_colors=None, data_sets_labels=None, star_prelim=False, alpha=0.6,
                     marker_map=None):
@@ -454,7 +500,7 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
                 ax.errorbar(df_plt['total_protons'], df_plt['val'], df_plt['err'], label=lab,
                             marker=marker, ls='', color=c, alpha=alpha, zorder=zo)
                 if 'sys' in df:
-                    ax.errorbar(df['total_protons'], df['val'], df['sys'], marker='', ls='', elinewidth=3,
+                    ax.errorbar(df['total_protons'], df['val'], df['sys'], marker='', ls='', elinewidth=4,
                                 color=c, alpha=0.4, zorder=zo)
 
         if avg and len(df) > 1:

@@ -47,8 +47,10 @@ def init_pars():
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cents.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_v2_ck2.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_vars_bes_sys.csv',
+        # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+        #             'binom_slice_vars_bes_rand_sys_test.csv',
         'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
-                    'binom_slice_vars_bes_rand_sys_test.csv',
+                    'binom_slice_vars_bes_bes_sys.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_var_cent8_2source_closure_tests.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
@@ -95,8 +97,8 @@ def define_datasets(base_path):
     """
 
     all_divs = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356]
-    all_energies = [7, 11, 19, 27, 39, 62]
-    # all_energies = [39]
+    # all_energies = [7, 11, 19, 27, 39, 62]
+    all_energies = [7, 11]
     all_cents = [0, 1, 2, 3, 4, 5, 6, 7, 8]  # [8]
     # all_cents = [8]
 
@@ -134,8 +136,9 @@ def define_datasets(base_path):
         # ['bes_def', '', ['default'], [], ['resample'], range(60), all_energies, [8], all_divs],
         # ['bes_resample_def', '', ['default', 'resample'], [], ['alg3', 'epbins1'], [0], all_energies, all_cents,
         #  all_divs],
-        # ['bes_def', '', ['default'], [], ['alg3', 'calcv2', 'resample', 'epbins1', 'sys'], [0], all_energies, all_cents,
-        #  all_divs],
+        ['bes_def', '', ['default'], [], ['alg3', 'sys', 'epbins1', 'calcv2'],
+         ['calcv2', 'epbins1', 'resample', 'seed'], all_energies,
+         all_cents, all_divs],
         # ['bes_single', '', ['default', 'single'], [], ['alg3'], [0], all_energies, [8], all_divs],
         # ['cf_resample_def', '_CF', ['default', 'resample'], [], ['alg3', 'reactionplane'], [0], all_energies, all_cents,
         #  all_divs],
@@ -234,26 +237,28 @@ def define_datasets(base_path):
     #                    all_divs])
 
     # BES1 Systematics
-    # var_defaults = {'dca': 1, 'nsprx': 1, 'm2r': 6, 'm2s': 0, 'nhfit': 20}
+    var_defaults = {'dca': 1, 'nsprx': 1, 'm2r': 6, 'm2s': 0, 'nhfit': 20}
     # exclude_keys = ['dca05', 'dca15', 'nsprx075', 'nsprx125', 'm2r2', 'm2r10']
-    # sub_sets = find_sys_sets(f'{base_path}Data/default_sys/', var_defaults, exclude_keys, True)
-    # for sub_set, sub_set_dir_name in sub_sets.items():
-    #     entry_vals.append([f'bes_sys_{sub_set}', '', ['default', 'sys'], [], [], [sub_set_dir_name],
-    #                        all_energies, all_cents, all_divs])
+    exclude_keys = []
+    sub_sets = find_sys_sets(f'{base_path}Data/default_sys/', var_defaults, exclude_keys, True)
+    print(f'sys_sets len {len(sub_sets)}')
+    for sub_set, sub_set_dir_name in sub_sets.items():
+        entry_vals.append([f'bes_sys_{sub_set}', '', ['default', 'sys'], [], [], [sub_set_dir_name],
+                           all_energies, all_cents, all_divs])
 
-    for i in range(12):
-        entry_vals.append([f'bes_rand_sys_{i}', '', ['default', 'sys', 'test'], [], ['rand'], [i],
-                           [7], all_cents, all_divs])
-
-    for i in range(4):
-        set_name = f'rapid05_resample_norotate_strefnoseed_nomix_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_{i}'
-        entry_vals.append([f'bes_strefnoseed_sys_{i}', '', ['default', 'rand', 'sys', 'test'], [], [], [set_name],
-                           [7], all_cents, all_divs])
-
-    for i in range(6):
-        set_name = f'rapid05_resample_norotate_strefseed_nomix_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_{i}'
-        entry_vals.append([f'bes_strefseed_sys_{i}', '', ['default', 'rand', 'sys', 'test'], [], [], [set_name],
-                           [7], all_cents, all_divs])
+    # for i in range(12):
+    #     entry_vals.append([f'bes_rand_sys_{i}', '', ['default', 'sys', 'test'], [], ['rand'], [i],
+    #                        [7], all_cents, all_divs])
+    #
+    # for i in range(4):
+    #     set_name = f'rapid05_resample_norotate_strefnoseed_nomix_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_{i}'
+    #     entry_vals.append([f'bes_strefnoseed_sys_{i}', '', ['default', 'rand', 'sys', 'test'], [], [], [set_name],
+    #                        [7], all_cents, all_divs])
+    #
+    # for i in range(6):
+    #     set_name = f'rapid05_resample_norotate_strefseed_nomix_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_{i}'
+    #     entry_vals.append([f'bes_strefseed_sys_{i}', '', ['default', 'rand', 'sys', 'test'], [], [], [set_name],
+    #                        [7], all_cents, all_divs])
 
     # Plus Minus Clustering
     # df = find_sim_sets(f'{base_path}Data_Sim_tests/', ['flat80', 'clmultiplusminus', 'resample'], [], False)
@@ -495,8 +500,9 @@ def get_set_jobs(dataset, set_dir, base_paths, pars):
             for cent in dataset['cents']:
                 for sub_set_dir in os.listdir(f'{base_paths["raw"]}{set_dir}'):
                     set_num = int(sub_set_dir.split('_')[-1])
-
-                    if set_num in dataset['sub_set_includes'] or sub_set_dir in dataset['sub_set_includes']:
+                    sub_set_good = all([sub_set_include in sub_set_dir for
+                                        sub_set_include in dataset['sub_set_includes']])
+                    if set_num in dataset['sub_set_includes'] or sub_set_good:
                         path = f'{set_dir}/{sub_set_dir}/{energy}GeV/ratios_divisions_{div}_centrality_{cent}_local.txt'
                         info_path = f'{set_dir}/{sub_set_dir}/{energy}GeV/info.txt'
                         if not os.path.exists(f'{base_paths["mix"]}{path}'):
