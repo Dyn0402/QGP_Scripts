@@ -83,9 +83,9 @@ def read_trees():
 
 
 def read_qas_uproot():
-    # data_set = 'BES'
-    data_set = 'AMPT_New_Coal'
-    base_paths = {'BES': 'F:/Research/Data/default_resample/rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0/',
+    data_set = 'BES'
+    # data_set = 'AMPT_New_Coal'
+    base_paths = {'BES': 'F:/Research/Data/default/rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_0/',
                   'AMPT_New_Coal': 'F:/Research/Data_Ampt_New_Coal/default_resample/Ampt_rapid05_resample_norotate_0/'}
     save_paths = {'BES': 'F:/Research/Results/BES_QA_Plots/',
                   'AMPT_New_Coal': 'F:/Research/Results/AMPT_New_Coal_QA_Plots/'}
@@ -116,6 +116,14 @@ def read_qas_uproot():
         figs.update({name: fig})
         axs.update({name: ax.flat})
 
+        fig, ax = plt.subplots(dpi=144, figsize=(6, 5))
+        ax.set_xlabel(title)
+        fig.suptitle(f'{data_set} {title} pre cuts')
+        fig.canvas.manager.set_window_title(title)
+        # fig.subplots_adjust(hspace=0)
+        figs.update({f'{name}_pre_cut': fig})
+        axs.update({f'{name}_pre_cut': ax})
+
     for energy_index, energy in enumerate(energies):
         qa_path = f'{base_path}{energy}GeV/QA_{energy}GeV.root'
         with uproot.open(qa_path) as file:
@@ -128,21 +136,29 @@ def read_qas_uproot():
                     # axs[name][energy_index].bar(x=bin_centers, height=vals, width=bin_widths, ls='steps', color=color)
                     axs[name][energy_index].step(bin_centers, vals, color=color, alpha=0.7, label=f'{pre_post} cuts')
                     if 'phi_' in name and data_set == 'AMPT_New_Coal' and pre_post == 'post':
-                        print(f'Here {name} {data_set}')
                         axs[name][energy_index].set_ylim(0, 1.1 * max(vals))
                     # sns.histplot(x=bin_centers, y=vals, binwidth=bin_widths, ax=axs[name][energy_index])
                     # sns.histplot(y=vals, bins=hist[1], ax=axs[name][energy_index])
+                    if pre_post == 'pre':
+                        density = vals / (np.sum(vals) * (bin_centers[-1] - bin_centers[0]))
+                        axs[f'{name}_pre_cut'].step(bin_centers, density, alpha=0.7, label=f'{energy}GeV')
                 if energy_index == 1:
                     axs[name][energy_index].legend()
 
     for name in th1_names:
+        axs[f'{name}_pre_cut'].axhline(0, color='black')
+        axs[f'{name}_pre_cut'].legend()
         for energy_index, energy in enumerate(energies):
+            axs[name][energy_index].axhline(0, color='black')
             axs[name][energy_index].text(0.5, 0.5, f'{energy} GeV', alpha=0.05, horizontalalignment='center',
                                          fontsize=60,
                                          verticalalignment='center', transform=axs[name][energy_index].transAxes)
             figs[name].tight_layout()
             figs[name].savefig(f'{save_path}{figs[name]._suptitle.get_text()}.png')
             figs[name].savefig(f'{save_path}{figs[name]._suptitle.get_text()}.pdf')
+        figs[f'{name}_pre_cut'].tight_layout()
+        figs[f'{name}_pre_cut'].savefig(f'{save_path}{figs[name]._suptitle.get_text()}_pre_cut.png')
+        figs[f'{name}_pre_cut'].savefig(f'{save_path}{figs[name]._suptitle.get_text()}_pre_cut.pdf')
 
     # plt.show()
 
