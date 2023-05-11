@@ -413,6 +413,8 @@ def add_sys_info(df, sys_info_dict, name_col='name'):
     def get_sys_val(row):
         if row['name'] == 'default':
             return None
+        if row['sys_type'] == 'm2r' and row['sys_val'] == '10':
+            return 1.0
         return round(float(f'0.{row["sys_val"]}') * 10 ** sys_info_dict[row['sys_type']]['decimal'], 3)
 
     def get_sys_val_str(row):
@@ -440,25 +442,38 @@ def plot_vs_sys(df, df_def_name, def_val, df_sys_set_names, sys_info_dict, group
     df_filtered = df[df['name'].isin(list(df_sys_set_names) + [df_def_name])]
     df_filtered = add_sys_info(df_filtered, sys_info_dict)
     df_filtered.loc[df_filtered['name'] == 'default', 'sys_val'] = def_val
+    data_types = df_filtered['data_type'].unique()
+
     df_set = df_filtered.groupby(group_cols)
 
     for group_name, group_df in df_set:
+        if type(group_name) is not list:
+            group_name = [group_name]
         if df_def_name not in group_df['name'].values:
             continue  # No default value so no systematic
-        fig, ax = plt.subplots(dpi=144)
-        ax.grid()
-        ax.set_xlabel('Sys')
-        ax.set_title(', '.join([f'{col}={val}' for col, val in zip(group_cols, group_name)]))
-        for data_type in group_df['data_type'].unique():
+        fig, axs = plt.subplots(nrows=len(data_types), sharex=True, dpi=144, figsize=(6.66, 5))
+        axs[-1].set_xlabel(split_string(df_sys_set_names[0])[0])
+        print(group_cols, group_name)
+        fig.suptitle(', '.join([f'{col}={val}' for col, val in zip(group_cols, group_name)]))
+        for index, data_type in enumerate(group_df['data_type'].unique()):
+            axs[index].grid()
+            axs[index].set_ylabel(data_type)
             df_dt = group_df[group_df['data_type'] == data_type]
-            df_dt = df_dt.sort_values(by='sys_val')
-            ax.errorbar(df_dt['sys_val'], df_dt[val_col], df_dt[err_col], marker='o', label=data_type)
-        ax.legend()
+            for energy in df_dt['energy'].unique():
+                df_e = df_dt[df_dt['energy'] == energy]
+                df_e = df_e.sort_values(by='sys_val')
+                axs[index].errorbar(df_e['sys_val'], df_e[val_col], df_e[err_col], marker='o', label=f'{energy} GeV')
+        axs[0].legend()
+        fig.subplots_adjust(hspace=0)
+        fig.tight_layout()
+        fig.subplots_adjust(hspace=0)
 
 
 def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, val_col='val', err_col='err'):
     if group_cols is None:
         group_cols = ['divs', 'energy', 'cent', 'data_type', 'total_protons']
+
+    def_color = 'black'
 
     # print(df_sys_set_names + [df_def_name])
     # print(df['name'])
@@ -466,8 +481,10 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
     df_filtered = df[df['name'].isin(list(df_sys_set_names) + [df_def_name])]
     df_filtered[['sys_type', 'sys_val']] = df_filtered['name'].apply(lambda x: pd.Series(split_string(x)))
 
-    default_colors = plt.rcParams['axes.prop_cycle'].by_key()['color'][1:]
-    color_dict = {val: color for val, color in zip(df_filtered['sys_type'].unique(), default_colors)}
+    default_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+    sys_types = [sys_type for sys_type in df_filtered['sys_type'].unique() if sys_type != 'default']
+    print(sys_types)
+    color_dict = {sys_type: color for sys_type, color in zip(sys_types, default_colors)}
     df_filtered['color'] = df_filtered['sys_type'].map(color_dict)
 
     df_set = df_filtered.groupby(group_cols)
@@ -499,17 +516,19 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
             barlow = np.sqrt(np.max(barlow_i) / 12.0)
             group_df_sys['barlow'] = barlow_i
 
-            ax_errorbar.axhline(def_val, color='blue')
+            ax_errorbar.axhline(def_val, color=def_color)
             # print(df_def_name, def_val, def_err)
-            ax_errorbar.errorbar([df_def_name], [def_val], [def_err], color='b', ls='none', marker='o')
+            ax_errorbar.errorbar([df_def_name], [def_val], [def_err], color=def_color, ls='none', marker='o')
 
             for sys_type in group_df_sys['sys_type'].unique():
                 sys_type_df = group_df_sys[group_df_sys['sys_type'] == sys_type]
                 ax_errorbar.errorbar(sys_type_df['sys_val_str'], sys_type_df[val_col], sys_type_df[err_col],
                                      color=sys_type_df['color'].values[0], ls='none', marker='o',
                                      label=sys_info_dict[sys_type]['name'])
-            ax_bar.bar([df_def_name] + list(group_df_sys['sys_val_str']), [barlow] + list(np.sqrt(barlow_i / 12.0)),
-                       color=['b'] + list(group_df_sys['color']))
+            bars = ax_bar.bar([df_def_name] + list(group_df_sys['sys_val_str']),
+                              [barlow] + list(np.sqrt(barlow_i / 12.0)),
+                              color=[def_color] + list(group_df_sys['color']))
+            ax_bar.plot([bars[0].get_x(), bars[0].get_x() + bars[0].get_width()], [def_err, def_err], color='red')
             plt.xticks(rotation=45)
             ax_errorbar.legend()
             fig.subplots_adjust(hspace=0.0)  # Adjust the vertical spacing between subplots

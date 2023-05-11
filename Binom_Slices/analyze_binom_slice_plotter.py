@@ -397,28 +397,34 @@ def plot_star_var_sys():
         'nhfit': {'name': 'nHits Fit', 'decimal': 2, 'default': 20, 'val_unit': ''},
     }
 
-    # data_sets_plt = ['bes_sys_dca05', 'bes_sys_dca08', 'bes_def', 'bes_sys_dca12', 'bes_sys_dca15']
+    data_sets_plt = ['dca05', 'dca08', 'default', 'dca12', 'dca15']
+    data_sets_colors = dict(zip(data_sets_plt, ['blue', 'green', 'black', 'red', 'purple']))
+    data_sys_sets_vals = [0.5, 0.8, 1.0, 1.2, 1.5]
+    def_val = 1.0
+    data_sets_labels = {name: f'dca = {val} cm' for name, val in zip(data_sets_plt, data_sys_sets_vals)}
+    data_sets_name_vals = dict(zip(data_sets_plt, data_sys_sets_vals))
+
+    # data_sets_plt = ['nsprx075', 'nsprx09', 'default', 'nsprx11', 'nsprx125']
     # data_sets_colors = dict(zip(data_sets_plt, ['blue', 'green', 'black', 'red', 'purple']))
-    # data_sys_sets_vals = [0.5, 0.8, 1.0, 1.2, 1.5]
-    # data_sets_labels = {name: f'dca = {val} cm' for name, val in zip(data_sets_plt, data_sys_sets_vals)}
+    # data_sys_sets_vals = [1.8, 1.9, 2.0, 2.1, 2.2]
+    # def_val = 2.0
+    # data_sets_labels = {name: f'nsigmaproton = {val}' for name, val in zip(data_sets_plt, data_sys_sets_vals)}
     # data_sets_name_vals = dict(zip(data_sets_plt, data_sys_sets_vals))
 
-    # data_sets_plt = ['bes_sys_nsprx075', 'bes_sys_nsprx09', 'bes_def', 'bes_sys_nsprx11', 'bes_sys_nsprx125']
-    # data_sets_colors = dict(zip(data_sets_plt, ['blue', 'green', 'black', 'red', 'purple']))
-    # data_sets_labels = dict(zip(data_sets_plt, ['nsigmaproton = 1.8', 'nsigmaproton = 1.9', 'nsigmaproton = 2.0',
-    #                                             'nsigmaproton = 2.1', 'nsigmaproton = 2.2']))
-
-    # data_sets_plt = ['bes_sys_m2r2', 'bes_sys_m2r4', 'bes_def', 'bes_sys_m2r6', 'bes_sys_m2r10']
-    # data_sets_colors = dict(zip(data_sets_plt, ['blue', 'green', 'black', 'red', 'purple']))
-    # data_sets_labels = dict(zip(data_sets_plt, ['m2_range = 0.2GeV', 'm2_range = 0.4GeV', 'm2_range = 0.6GeV',
-    #                                             'm2_range = 0.8GeV', 'm2_range = 1.0GeV']))
-
-    data_sets_plt = ['nhfit15', 'default', 'nhfit25']
-    data_sets_colors = dict(zip(data_sets_plt, ['green', 'black', 'red']))
-    data_sys_sets_vals = [15, 20, 25]
-    data_sets_labels = {name: f'nhits_fit = {val}' for name, val in zip(data_sets_plt, data_sys_sets_vals)}
+    data_sets_plt = ['m2r2', 'm2r4', 'default', 'm2r6', 'm2r10']
+    data_sets_colors = dict(zip(data_sets_plt, ['blue', 'green', 'black', 'red', 'purple']))
+    data_sys_sets_vals = [0.2, .04, 0.6, 0.8, 1.0]
+    def_val = 0.6
+    data_sets_labels = {name: f'm2_range = {val}' for name, val in zip(data_sets_plt, data_sys_sets_vals)}
     data_sets_name_vals = dict(zip(data_sets_plt, data_sys_sets_vals))
-    # data_sets_labels = dict(zip(data_sets_plt, ['nhit_fit = 15', 'nhit_fit = 20', 'nhit_fit = 25']))
+
+    # data_sets_plt = ['nhfit15', 'default', 'nhfit25']
+    # data_sets_colors = dict(zip(data_sets_plt, ['green', 'black', 'red']))
+    # data_sys_sets_vals = [15, 20, 25]
+    # def_val = 20
+    # data_sets_labels = {name: f'nhits_fit = {val}' for name, val in zip(data_sets_plt, data_sys_sets_vals)}
+    # data_sets_name_vals = dict(zip(data_sets_plt, data_sys_sets_vals))
+    # # data_sets_labels = dict(zip(data_sets_plt, ['nhit_fit = 15', 'nhit_fit = 20', 'nhit_fit = 25']))
 
     v2_star_vals = {2: read_flow_values(v2_star_in_dir)}
 
@@ -501,8 +507,8 @@ def plot_star_var_sys():
     dsig_avg_mix['data_type'] = 'mix'
     dsig_avg_diff['data_type'] = 'diff'
     dsig_avg_dtypes = pd.concat([dsig_avg_raw, dsig_avg_mix, dsig_avg_diff])
-    plot_vs_sys(dsig_avg_dtypes, 'default', 20, data_sets_plt, sys_info_dict,
-                val_col='avg', err_col='avg_err', group_cols=['divs', 'energy'])
+    plot_vs_sys(dsig_avg_dtypes, 'default', def_val, data_sets_plt, sys_info_dict,
+                val_col='avg', err_col='avg_err', group_cols=['divs'])
 
     plt.show()
 
