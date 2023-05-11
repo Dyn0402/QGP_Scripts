@@ -98,7 +98,7 @@ def define_datasets(base_path):
 
     all_divs = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300, 356]
     # all_energies = [7, 11, 19, 27, 39, 62]
-    all_energies = [7, 11]
+    all_energies = [7, 11, 19, 27]
     all_cents = [0, 1, 2, 3, 4, 5, 6, 7, 8]  # [8]
     # all_cents = [8]
 

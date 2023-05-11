@@ -387,13 +387,21 @@ def plot_star_var_sys():
     exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
     cent_plt = 7
     # energies_fit = [7, 11, 19, 27, 39, 62]
-    energies_fit = [7, 11]
+    energies_fit = [7, 11, 19, 27]
     samples = 72  # For title purposes only
+
+    sys_info_dict = {
+        'dca': {'name': 'DCA', 'decimal': 1, 'default': 1, 'val_unit': ' cm'},
+        'nsprx': {'name': 'nsigma proton x', 'decimal': 1, 'default': 1, 'val_unit': ''},
+        'm2r': {'name': 'mass^2 range', 'decimal': 0, 'default': 0.6, 'val_unit': ' GeV'},
+        'nhfit': {'name': 'nHits Fit', 'decimal': 2, 'default': 20, 'val_unit': ''},
+    }
 
     # data_sets_plt = ['bes_sys_dca05', 'bes_sys_dca08', 'bes_def', 'bes_sys_dca12', 'bes_sys_dca15']
     # data_sets_colors = dict(zip(data_sets_plt, ['blue', 'green', 'black', 'red', 'purple']))
-    # data_sets_labels = dict(zip(data_sets_plt, ['dca = 0.5 cm', 'dca = 0.8 cm', 'dca = 1.0 cm', 'dca = 1.2 cm',
-    #                                             'dca = 1.5 cm']))
+    # data_sys_sets_vals = [0.5, 0.8, 1.0, 1.2, 1.5]
+    # data_sets_labels = {name: f'dca = {val} cm' for name, val in zip(data_sets_plt, data_sys_sets_vals)}
+    # data_sets_name_vals = dict(zip(data_sets_plt, data_sys_sets_vals))
 
     # data_sets_plt = ['bes_sys_nsprx075', 'bes_sys_nsprx09', 'bes_def', 'bes_sys_nsprx11', 'bes_sys_nsprx125']
     # data_sets_colors = dict(zip(data_sets_plt, ['blue', 'green', 'black', 'red', 'purple']))
@@ -405,7 +413,7 @@ def plot_star_var_sys():
     # data_sets_labels = dict(zip(data_sets_plt, ['m2_range = 0.2GeV', 'm2_range = 0.4GeV', 'm2_range = 0.6GeV',
     #                                             'm2_range = 0.8GeV', 'm2_range = 1.0GeV']))
 
-    data_sets_plt = ['bes_sys_nhfit15', 'bes_def', 'bes_sys_nhfit25']
+    data_sets_plt = ['nhfit15', 'default', 'nhfit25']
     data_sets_colors = dict(zip(data_sets_plt, ['green', 'black', 'red']))
     data_sys_sets_vals = [15, 20, 25]
     data_sets_labels = {name: f'nhits_fit = {val}' for name, val in zip(data_sets_plt, data_sys_sets_vals)}
@@ -416,21 +424,27 @@ def plot_star_var_sys():
 
     df = pd.read_csv(df_path)
     df = df.dropna()
-    print(pd.unique(df['name']))
+    df['name'] = df['name'].str.replace('bes_sys_', '')
+    df['name'] = df['name'].str.replace('bes_def', 'default')
+    all_sets = pd.unique(df['name'])
+    print(all_sets)
 
     df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
 
     df = df[df['stat'] == stat_plot]
     df_raw, df_mix, df_diff = calc_dsigma(df, ['raw', 'mix', 'diff'])
 
-    df_diff_def = get_sys(df_diff, 'bes_def', data_sets_plt,
-                          group_cols=['divs', 'energy', 'cent', 'data_type', 'total_protons'])
+    # df_diff_def = get_sys(df_diff, 'default', data_sets_plt,
+    #                       group_cols=['divs', 'energy', 'cent', 'data_type', 'total_protons'])
+    # df_diff_def_all = get_sys(df_diff, 'default', all_sets,
+    #                           group_cols=['divs', 'energy', 'cent', 'data_type', 'total_protons'])
+
     # return
 
     # print(df_diff_def['sys'])
     # print(df_diff_def)
-    dvar_vs_protons(df_diff_def, div_plt, cent_plt, [11], ['diff'], data_sets_plt, plot=True, avg=False,
-                    data_sets_labels=data_sets_labels, data_sets_colors=data_sets_colors)
+    # dvar_vs_protons(df_diff_def, div_plt, cent_plt, [11], ['diff'], data_sets_plt, plot=True, avg=False,
+    #                 data_sets_labels=data_sets_labels, data_sets_colors=data_sets_colors)
 
     # dvar_vs_protons(df_diff, div_plt, cent_plt, [62], ['diff'], data_sets_plt, plot=True, avg=False,
     #                 data_sets_labels=data_sets_labels, data_sets_colors=data_sets_colors)
@@ -455,12 +469,20 @@ def plot_star_var_sys():
                                 data_sets_labels=data_sets_labels, title=f'{cent_map[cent_plt]} Centrality, {div_plt}° '
                                                                          f'Partitions, {samples} Samples per Event')
 
+    dsig_avg_mix = dvar_vs_protons_energies(df_mix, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['mix'], data_sets_plt,
+                                            plot=False, avg=True, plot_avg=False, data_sets_colors=data_sets_colors,
+                                            data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.00054])
+
     dsig_avg_diff = dvar_vs_protons_energies(df_diff, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], data_sets_plt,
                                              plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
                                              data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.00054])
-    print(dsig_avg_diff.columns)
-    dsig_avg_diff_def = get_sys(dsig_avg_diff, 'bes_def', data_sets_plt, val_col='avg', err_col='avg_err',
+
+    dsig_avg_diff_all = dvar_vs_protons_energies(df_diff, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], all_sets,
+                                                 plot=True, avg=True, plot_avg=True, y_ranges=[-0.00099, 0.00054])
+    dsig_avg_diff_def = get_sys(dsig_avg_diff, 'default', data_sets_plt, val_col='avg', err_col='avg_err',
                                 group_cols=['divs', 'energy'])
+    plot_sys(dsig_avg_diff_all, 'default', all_sets, sys_info_dict,
+             val_col='avg', err_col='avg_err', group_cols=['divs', 'energy'])
     plot_protons_avgs_vs_energy(dsig_avg_diff_def, data_sets_plt, data_sets_colors=data_sets_colors, alpha=0.6,
                                 data_sets_labels=data_sets_labels, title=f'{cent_map[cent_plt]} Centrality, {div_plt}° '
                                                                          f'Partitions, {samples} Samples per Event')
@@ -473,6 +495,14 @@ def plot_star_var_sys():
     plot_protons_avgs_vs_energy(dsig_avg_raw_diff, data_sets_plt, data_sets_colors=data_sets_colors, alpha=0.6,
                                 data_sets_labels=data_sets_labels, title=f'{cent_map[cent_plt]} Centrality, {div_plt}° '
                                                                          f'Partitions, {samples} Samples per Event')
+
+    print(dsig_avg_raw.columns)
+    dsig_avg_raw['data_type'] = 'raw'
+    dsig_avg_mix['data_type'] = 'mix'
+    dsig_avg_diff['data_type'] = 'diff'
+    dsig_avg_dtypes = pd.concat([dsig_avg_raw, dsig_avg_mix, dsig_avg_diff])
+    plot_vs_sys(dsig_avg_dtypes, 'default', 20, data_sets_plt, sys_info_dict,
+                val_col='avg', err_col='avg_err', group_cols=['divs', 'energy'])
 
     plt.show()
 

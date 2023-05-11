@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors
 import matplotlib as mpl
 import matplotlib.ticker as mtick
+import matplotlib.gridspec as gridspec
 from mpl_toolkits import mplot3d
 import seaborn as sns
 import pandas as pd
@@ -78,11 +79,11 @@ def inv_sqrtx_odr(pars, x):
 
 
 def inv_sqrtx_poly2_odr(pars, x):
-    return pars[0] / np.sqrt(x) + pars[1] + pars[2] * x + pars[3] * x**2
+    return pars[0] / np.sqrt(x) + pars[1] + pars[2] * x + pars[3] * x ** 2
 
 
 def poly2_odr(pars, x):
-    return pars[0] + pars[1] * x + pars[2] * x**2
+    return pars[0] + pars[1] * x + pars[2] * x ** 2
 
 
 def inv_sqrtx_sigmoid_odr(pars, x):  # Not fitting well
@@ -372,47 +373,148 @@ def stat_binom_vs_protons(df, stat, div, cent, energy, data_types, data_set_plt,
 def get_sys(df, df_def_name, df_sys_set_names, group_cols=None, val_col='val', err_col='err'):
     if group_cols is None:
         group_cols = ['divs', 'energy', 'cent', 'data_type', 'total_protons']
-    # print(df.columns)
-    # print(df)
-    df = df[df['name'].isin(df_sys_set_names + [df_def_name])]
-    df_set = df.groupby(group_cols)
-    # print(df_set)
+
+    df_filtered = df[df['name'].isin(df_sys_set_names + [df_def_name])]
+    df_set = df_filtered.groupby(group_cols)
     df_def_sys = []
+
     for group_name, group_df in df_set:
-        # print(group_name)
-        # print(df_def_name)
-        # print(group_df['name'])
         if df_def_name not in group_df['name'].values:
             continue  # No default value so no systematic
 
-        group_df_def = group_df[group_df['name'] == df_def_name].copy()
+        group_df_def = group_df[group_df['name'] == df_def_name]
         assert len(group_df_def) == 1
-        def_val, def_err = group_df_def.iloc[0][val_col], group_df_def.iloc[0][err_col]
+        def_val, def_err = group_df_def[val_col].values[0], group_df_def[err_col].values[0]
         barlow = 0
+
         if len(group_df) <= 1:
-            # print('No sys')
+            pass  # No systematic values so sys = 0
+        else:
+            group_df_sys = group_df[group_df['name'] != df_def_name]
+
+            sys_val = group_df_sys[val_col].values
+            sys_err = group_df_sys[err_col].values
+
+            barlow_i = (def_val - sys_val) ** 2 - np.abs(def_err ** 2 - sys_err ** 2)
+            barlow = np.sqrt(np.maximum(barlow_i, 0)[0] / 12.0)
+
+        df_entry = group_df_def.reset_index().to_dict(orient='records')[0]
+        df_entry.update({'sys': barlow})
+        df_def_sys.append(df_entry)
+
+    return pd.DataFrame(df_def_sys)
+
+
+def add_sys_info(df, sys_info_dict, name_col='name'):
+    sys_name_dict = {sys_type: sys_info['name'] for sys_type, sys_info in sys_info_dict.items()}
+    df[['sys_type', 'sys_val']] = df[name_col].apply(lambda x: pd.Series(split_string(x)))
+    df['sys_name'] = df['sys_type'].map(sys_name_dict)
+
+    def get_sys_val(row):
+        if row['name'] == 'default':
+            return None
+        return round(float(f'0.{row["sys_val"]}') * 10 ** sys_info_dict[row['sys_type']]['decimal'], 3)
+
+    def get_sys_val_str(row):
+        if row['name'] == 'default':
+            return None
+        return f'{row["sys_type"]}={row["sys_val"]}{sys_info_dict[row["sys_type"]]["val_unit"]}'
+
+    df['sys_val'] = df.apply(get_sys_val, axis=1)
+    df['sys_val_str'] = df.apply(get_sys_val_str, axis=1)
+
+    return df
+
+
+def split_string(string):
+    for i in range(len(string), 0, -1):
+        if not string[i - 1].isdigit():
+            return string[:i], string[i:]
+    return string, ''
+
+
+def plot_vs_sys(df, df_def_name, def_val, df_sys_set_names, sys_info_dict, group_cols=None,
+                val_col='val', err_col='err'):
+    if group_cols is None:
+        group_cols = ['divs', 'energy', 'cent', 'data_type', 'total_protons']
+    df_filtered = df[df['name'].isin(list(df_sys_set_names) + [df_def_name])]
+    df_filtered = add_sys_info(df_filtered, sys_info_dict)
+    df_filtered.loc[df_filtered['name'] == 'default', 'sys_val'] = def_val
+    df_set = df_filtered.groupby(group_cols)
+
+    for group_name, group_df in df_set:
+        if df_def_name not in group_df['name'].values:
+            continue  # No default value so no systematic
+        fig, ax = plt.subplots(dpi=144)
+        ax.grid()
+        ax.set_xlabel('Sys')
+        ax.set_title(', '.join([f'{col}={val}' for col, val in zip(group_cols, group_name)]))
+        for data_type in group_df['data_type'].unique():
+            df_dt = group_df[group_df['data_type'] == data_type]
+            df_dt = df_dt.sort_values(by='sys_val')
+            ax.errorbar(df_dt['sys_val'], df_dt[val_col], df_dt[err_col], marker='o', label=data_type)
+        ax.legend()
+
+
+def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, val_col='val', err_col='err'):
+    if group_cols is None:
+        group_cols = ['divs', 'energy', 'cent', 'data_type', 'total_protons']
+
+    # print(df_sys_set_names + [df_def_name])
+    # print(df['name'])
+    # print(df['name'].isin(list(df_sys_set_names) + [df_def_name]))
+    df_filtered = df[df['name'].isin(list(df_sys_set_names) + [df_def_name])]
+    df_filtered[['sys_type', 'sys_val']] = df_filtered['name'].apply(lambda x: pd.Series(split_string(x)))
+
+    default_colors = plt.rcParams['axes.prop_cycle'].by_key()['color'][1:]
+    color_dict = {val: color for val, color in zip(df_filtered['sys_type'].unique(), default_colors)}
+    df_filtered['color'] = df_filtered['sys_type'].map(color_dict)
+
+    df_set = df_filtered.groupby(group_cols)
+
+    for group_name, group_df in df_set:
+        if df_def_name not in group_df['name'].values:
+            continue  # No default value so no systematic
+        fig = plt.figure(figsize=(8, 6), dpi=144)
+        gs = gridspec.GridSpec(2, 1, height_ratios=[1, 2])
+        ax_bar = plt.subplot(gs[0])
+        ax_errorbar = plt.subplot(gs[1], sharex=ax_bar)
+        ax_errorbar.grid()
+        ax_bar.set_title(', '.join([f'{col}={val}' for col, val in zip(group_cols, group_name)]))
+
+        group_df_def = group_df[group_df['name'] == df_def_name]
+        assert len(group_df_def) == 1
+        def_val, def_err = group_df_def[val_col].values[0], group_df_def[err_col].values[0]
+
+        if len(group_df) <= 1:
             pass  # No systematic values so sys = 0
         else:
             group_df_sys = group_df[group_df['name'] != df_def_name].copy()
+            group_df_sys = add_sys_info(group_df_sys, sys_info_dict)
 
-            for index, row in group_df_sys.iterrows():
-                sys_val, sys_err = row[val_col], row[err_col]
-                barlow_i = (def_val - sys_val) ** 2 - abs(def_err ** 2 - sys_err ** 2)
-                barlow = barlow_i if barlow_i > barlow else barlow
-            barlow = np.sqrt(barlow / 12.0)
-        # print(group_df_def)
-        df_entry = group_df_def.reset_index().to_dict(orient='records')[0]
-        df_entry.update({'sys': barlow})
-        # print(group_df_def)
-        # df_entry = df_entry.reset_index().to_dict(orient='records')
-        # df_entry = {'name': df_def_name, 'val': def_val, 'err': def_err, 'sys': barlow}
-        # df_entry.update(dict(zip(group_cols, group_name)))
-        # print(df_entry)
-        df_def_sys.append(df_entry)
+            sys_val = group_df_sys[val_col].values
+            sys_err = group_df_sys[err_col].values
 
-    # print(df_def_sys)
+            barlow_i = np.clip((def_val - sys_val) ** 2 - np.abs(def_err ** 2 - sys_err ** 2), a_min=0, a_max=None)
+            barlow = np.sqrt(np.max(barlow_i) / 12.0)
+            group_df_sys['barlow'] = barlow_i
 
-    return pd.DataFrame(df_def_sys)
+            ax_errorbar.axhline(def_val, color='blue')
+            # print(df_def_name, def_val, def_err)
+            ax_errorbar.errorbar([df_def_name], [def_val], [def_err], color='b', ls='none', marker='o')
+
+            for sys_type in group_df_sys['sys_type'].unique():
+                sys_type_df = group_df_sys[group_df_sys['sys_type'] == sys_type]
+                ax_errorbar.errorbar(sys_type_df['sys_val_str'], sys_type_df[val_col], sys_type_df[err_col],
+                                     color=sys_type_df['color'].values[0], ls='none', marker='o',
+                                     label=sys_info_dict[sys_type]['name'])
+            ax_bar.bar([df_def_name] + list(group_df_sys['sys_val_str']), [barlow] + list(np.sqrt(barlow_i / 12.0)),
+                       color=['b'] + list(group_df_sys['color']))
+            plt.xticks(rotation=45)
+            ax_errorbar.legend()
+            fig.subplots_adjust(hspace=0.0)  # Adjust the vertical spacing between subplots
+            fig.tight_layout()
+            fig.subplots_adjust(hspace=0.0)  # Adjust the vertical spacing between subplots
 
 
 def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False, avg=False,
@@ -837,6 +939,8 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
             if y_ranges:
                 ax.set_ylim(y_ranges)
             ax.set_xlim(0, 69)
+    else:
+        ax_energies = [None] * len(energies)
 
     avgs = []
     for data, ax, energy in zip(energy_data, ax_energies[:len(energies)], energies):
