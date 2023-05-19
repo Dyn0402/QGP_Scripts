@@ -406,19 +406,19 @@ def get_sys(df, df_def_name, df_sys_set_names, group_cols=None, val_col='val', e
 
 
 def add_sys_info(df, sys_info_dict, name_col='name'):
-    sys_name_dict = {sys_type: sys_info['name'] for sys_type, sys_info in sys_info_dict.items()}
+    sys_name_dict = {sys_type: sys_info[name_col] for sys_type, sys_info in sys_info_dict.items()}
     df[['sys_type', 'sys_val']] = df[name_col].apply(lambda x: pd.Series(split_string(x)))
     df['sys_name'] = df['sys_type'].map(sys_name_dict)
 
     def get_sys_val(row):
-        if row['name'] == 'default':
+        if row[name_col] == 'default':
             return None
         if row['sys_type'] == 'm2r' and row['sys_val'] == '10':
             return 1.0
         return round(float(f'0.{row["sys_val"]}') * 10 ** sys_info_dict[row['sys_type']]['decimal'], 3)
 
     def get_sys_val_str(row):
-        if row['name'] == 'default':
+        if row[name_col] == 'default':
             return None
         return f'{row["sys_type"]}={row["sys_val"]}{sys_info_dict[row["sys_type"]]["val_unit"]}'
 
@@ -433,6 +433,15 @@ def split_string(string):
         if not string[i - 1].isdigit():
             return string[:i], string[i:]
     return string, ''
+
+
+def get_set_dir(set_name, def_dir, base_dir):
+    if set_name == 'default':
+        new_dir = def_dir
+    else:
+        sys_type, sys_val = split_string(set_name)
+        new_dir = '_'.join([set_name if sys_type in dir_key else dir_key for dir_key in def_dir.split('_')])
+    return f'{base_dir}{new_dir}'
 
 
 def plot_vs_sys(df, df_def_name, def_val, df_sys_set_names, sys_info_dict, group_cols=None,
@@ -469,7 +478,8 @@ def plot_vs_sys(df, df_def_name, def_val, df_sys_set_names, sys_info_dict, group
         fig.subplots_adjust(hspace=0)
 
 
-def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, val_col='val', err_col='err'):
+def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, val_col='val', err_col='err',
+             name_col='name'):
     if group_cols is None:
         group_cols = ['divs', 'energy', 'cent', 'data_type', 'total_protons']
 
@@ -478,8 +488,8 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
     # print(df_sys_set_names + [df_def_name])
     # print(df['name'])
     # print(df['name'].isin(list(df_sys_set_names) + [df_def_name]))
-    df_filtered = df[df['name'].isin(list(df_sys_set_names) + [df_def_name])]
-    df_filtered[['sys_type', 'sys_val']] = df_filtered['name'].apply(lambda x: pd.Series(split_string(x)))
+    df_filtered = df[df[name_col].isin(list(df_sys_set_names) + [df_def_name])]
+    df_filtered[['sys_type', 'sys_val']] = df_filtered[name_col].apply(lambda x: pd.Series(split_string(x)))
 
     default_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
     sys_types = [sys_type for sys_type in df_filtered['sys_type'].unique() if sys_type != 'default']
@@ -490,7 +500,7 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
     df_set = df_filtered.groupby(group_cols)
 
     for group_name, group_df in df_set:
-        if df_def_name not in group_df['name'].values:
+        if df_def_name not in group_df[name_col].values:
             continue  # No default value so no systematic
         fig = plt.figure(figsize=(8, 6), dpi=144)
         gs = gridspec.GridSpec(2, 1, height_ratios=[1, 2])
@@ -499,36 +509,40 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
         ax_errorbar.grid()
         ax_bar.set_title(', '.join([f'{col}={val}' for col, val in zip(group_cols, group_name)]))
 
-        group_df_def = group_df[group_df['name'] == df_def_name]
+        group_df_def = group_df[group_df[name_col] == df_def_name]
         assert len(group_df_def) == 1
         def_val, def_err = group_df_def[val_col].values[0], group_df_def[err_col].values[0]
 
         if len(group_df) <= 1:
             pass  # No systematic values so sys = 0
         else:
-            group_df_sys = group_df[group_df['name'] != df_def_name].copy()
-            group_df_sys = add_sys_info(group_df_sys, sys_info_dict)
+            group_df_sys = group_df[group_df[name_col] != df_def_name].copy()
+            group_df_sys = add_sys_info(group_df_sys, sys_info_dict, name_col)
 
             sys_val = group_df_sys[val_col].values
             sys_err = group_df_sys[err_col].values
 
             barlow_i = np.clip((def_val - sys_val) ** 2 - np.abs(def_err ** 2 - sys_err ** 2), a_min=0, a_max=None)
-            barlow = np.sqrt(np.max(barlow_i) / 12.0)
+            # barlow = np.sqrt(np.max(barlow_i) / 12.0)
+            barlow = np.sqrt(np.sum(barlow_i / 12.0))
             group_df_sys['barlow'] = barlow_i
 
             ax_errorbar.axhline(def_val, color=def_color)
             # print(df_def_name, def_val, def_err)
             ax_errorbar.errorbar([df_def_name], [def_val], [def_err], color=def_color, ls='none', marker='o')
+            ax_errorbar.errorbar([df_def_name], [def_val], [barlow], color=def_color, linewidth=5, alpha=0.5,
+                                 ls='none', marker=None)
 
             for sys_type in group_df_sys['sys_type'].unique():
                 sys_type_df = group_df_sys[group_df_sys['sys_type'] == sys_type]
                 ax_errorbar.errorbar(sys_type_df['sys_val_str'], sys_type_df[val_col], sys_type_df[err_col],
                                      color=sys_type_df['color'].values[0], ls='none', marker='o',
-                                     label=sys_info_dict[sys_type]['name'])
+                                     label=sys_info_dict[sys_type][name_col])
             bars = ax_bar.bar([df_def_name] + list(group_df_sys['sys_val_str']),
                               [barlow] + list(np.sqrt(barlow_i / 12.0)),
                               color=[def_color] + list(group_df_sys['color']))
             ax_bar.plot([bars[0].get_x(), bars[0].get_x() + bars[0].get_width()], [def_err, def_err], color='red')
+            plt.xlim(right=len(group_df_sys['sys_type'].unique()) + 2)
             plt.xticks(rotation=45)
             ax_errorbar.legend()
             fig.subplots_adjust(hspace=0.0)  # Adjust the vertical spacing between subplots

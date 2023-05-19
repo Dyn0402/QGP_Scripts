@@ -373,6 +373,8 @@ def plot_star_var_sys():
     base_path = 'F:/Research/Results/Azimuth_Analysis/'
     v2_star_in_dir = 'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/' \
                      'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/'
+    sys_dir = 'F:/Research/Data/default_sys/'
+    sys_default_dir = 'rapid05_resample_norotate_seed_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_0/'
     df_name = 'Binomial_Slice_Moments/binom_slice_vars_bes_bes_sys.csv'
     # fits_out_base = 'Base_Zero_Fits'
     # df_tproton_avgs_name = 'dsig_tprotons_avgs_cent8.csv'
@@ -391,18 +393,18 @@ def plot_star_var_sys():
     samples = 72  # For title purposes only
 
     sys_info_dict = {
-        'dca': {'name': 'DCA', 'decimal': 1, 'default': 1, 'val_unit': ' cm'},
-        'nsprx': {'name': 'nsigma proton x', 'decimal': 1, 'default': 1, 'val_unit': ''},
-        'm2r': {'name': 'mass^2 range', 'decimal': 0, 'default': 0.6, 'val_unit': ' GeV'},
-        'nhfit': {'name': 'nHits Fit', 'decimal': 2, 'default': 20, 'val_unit': ''},
+        'dca': {'name': 'DCA', 'decimal': 1, 'default': 1, 'sys_var': 0.8, 'val_unit': ' cm'},
+        'nsprx': {'name': 'nsigma proton x', 'decimal': 1, 'default': 1, 'sys_var': 0.9, 'val_unit': ''},
+        'm2r': {'name': 'mass^2 range', 'decimal': 0, 'default': 0.6, 'sys_var': 0.4, 'val_unit': ' GeV'},
+        'nhfit': {'name': 'nHits Fit', 'decimal': 2, 'default': 20, 'sys_var': 15, 'val_unit': ''},
     }
 
-    data_sets_plt = ['dca05', 'dca08', 'default', 'dca12', 'dca15']
-    data_sets_colors = dict(zip(data_sets_plt, ['blue', 'green', 'black', 'red', 'purple']))
-    data_sys_sets_vals = [0.5, 0.8, 1.0, 1.2, 1.5]
-    def_val = 1.0
-    data_sets_labels = {name: f'dca = {val} cm' for name, val in zip(data_sets_plt, data_sys_sets_vals)}
-    data_sets_name_vals = dict(zip(data_sets_plt, data_sys_sets_vals))
+    # data_sets_plt = ['dca05', 'dca08', 'default', 'dca12', 'dca15']
+    # data_sets_colors = dict(zip(data_sets_plt, ['blue', 'green', 'black', 'red', 'purple']))
+    # data_sys_sets_vals = [0.5, 0.8, 1.0, 1.2, 1.5]
+    # def_val = 1.0
+    # data_sets_labels = {name: f'dca = {val} cm' for name, val in zip(data_sets_plt, data_sys_sets_vals)}
+    # data_sets_name_vals = dict(zip(data_sets_plt, data_sys_sets_vals))
 
     # data_sets_plt = ['nsprx075', 'nsprx09', 'default', 'nsprx11', 'nsprx125']
     # data_sets_colors = dict(zip(data_sets_plt, ['blue', 'green', 'black', 'red', 'purple']))
@@ -411,12 +413,12 @@ def plot_star_var_sys():
     # data_sets_labels = {name: f'nsigmaproton = {val}' for name, val in zip(data_sets_plt, data_sys_sets_vals)}
     # data_sets_name_vals = dict(zip(data_sets_plt, data_sys_sets_vals))
 
-    data_sets_plt = ['m2r2', 'm2r4', 'default', 'm2r6', 'm2r10']
-    data_sets_colors = dict(zip(data_sets_plt, ['blue', 'green', 'black', 'red', 'purple']))
-    data_sys_sets_vals = [0.2, .04, 0.6, 0.8, 1.0]
-    def_val = 0.6
-    data_sets_labels = {name: f'm2_range = {val}' for name, val in zip(data_sets_plt, data_sys_sets_vals)}
-    data_sets_name_vals = dict(zip(data_sets_plt, data_sys_sets_vals))
+    # data_sets_plt = ['m2r2', 'm2r4', 'default', 'm2r6', 'm2r10']
+    # data_sets_colors = dict(zip(data_sets_plt, ['blue', 'green', 'black', 'red', 'purple']))
+    # data_sys_sets_vals = [0.2, .04, 0.6, 0.8, 1.0]
+    # def_val = 0.6
+    # data_sets_labels = {name: f'm2_range = {val}' for name, val in zip(data_sets_plt, data_sys_sets_vals)}
+    # data_sets_name_vals = dict(zip(data_sets_plt, data_sys_sets_vals))
 
     # data_sets_plt = ['nhfit15', 'default', 'nhfit25']
     # data_sets_colors = dict(zip(data_sets_plt, ['green', 'black', 'red']))
@@ -426,7 +428,11 @@ def plot_star_var_sys():
     # data_sets_name_vals = dict(zip(data_sets_plt, data_sys_sets_vals))
     # # data_sets_labels = dict(zip(data_sets_plt, ['nhit_fit = 15', 'nhit_fit = 20', 'nhit_fit = 25']))
 
-    v2_star_vals = {2: read_flow_values(v2_star_in_dir)}
+    data_sets_plt = ['default', 'dca08', 'nsprx09', 'm2r4', 'nhfit25']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'green', 'black', 'red', 'purple']))
+    # data_sys_sets_vals = [0.2, .04, 0.6, 0.8, 1.0]
+    # def_val = 0.6
+    data_sets_labels = dict(zip(data_sets_plt, ['default', 'dca08', 'nsprx09', 'm2r4', 'nhfit25']))
 
     df = pd.read_csv(df_path)
     df = df.dropna()
@@ -434,6 +440,12 @@ def plot_star_var_sys():
     df['name'] = df['name'].str.replace('bes_def', 'default')
     all_sets = pd.unique(df['name'])
     print(all_sets)
+
+    v2_star_vals = {2: read_flow_values(v2_star_in_dir)}
+    v2_sys_vals = {name: {2: read_flow_values(get_set_dir(name, sys_default_dir, sys_dir))} for name in all_sets
+                   if name != 'default'}
+    v2_sys_vals.update({'default': v2_star_vals})
+    print(v2_sys_vals)
 
     df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
 
@@ -487,7 +499,10 @@ def plot_star_var_sys():
                                                  plot=True, avg=True, plot_avg=True, y_ranges=[-0.00099, 0.00054])
     dsig_avg_diff_def = get_sys(dsig_avg_diff, 'default', data_sets_plt, val_col='avg', err_col='avg_err',
                                 group_cols=['divs', 'energy'])
+    print(dsig_avg_diff_def)
     plot_sys(dsig_avg_diff_all, 'default', all_sets, sys_info_dict,
+             val_col='avg', err_col='avg_err', group_cols=['divs', 'energy'])
+    plot_sys(dsig_avg_diff_all, 'default', data_sets_plt, sys_info_dict,
              val_col='avg', err_col='avg_err', group_cols=['divs', 'energy'])
     plot_protons_avgs_vs_energy(dsig_avg_diff_def, data_sets_plt, data_sets_colors=data_sets_colors, alpha=0.6,
                                 data_sets_labels=data_sets_labels, title=f'{cent_map[cent_plt]} Centrality, {div_plt}° '
@@ -502,15 +517,15 @@ def plot_star_var_sys():
                                 data_sets_labels=data_sets_labels, title=f'{cent_map[cent_plt]} Centrality, {div_plt}° '
                                                                          f'Partitions, {samples} Samples per Event')
 
-    print(dsig_avg_raw.columns)
-    dsig_avg_raw['data_type'] = 'raw'
-    dsig_avg_mix['data_type'] = 'mix'
-    dsig_avg_diff['data_type'] = 'diff'
-    dsig_avg_dtypes = pd.concat([dsig_avg_raw, dsig_avg_mix, dsig_avg_diff])
-    plot_vs_sys(dsig_avg_dtypes, 'default', def_val, data_sets_plt, sys_info_dict,
-                val_col='avg', err_col='avg_err', group_cols=['divs'])
+    # print(dsig_avg_raw.columns)
+    # dsig_avg_raw['data_type'] = 'raw'
+    # dsig_avg_mix['data_type'] = 'mix'
+    # dsig_avg_diff['data_type'] = 'diff'
+    # dsig_avg_dtypes = pd.concat([dsig_avg_raw, dsig_avg_mix, dsig_avg_diff])
+    # plot_vs_sys(dsig_avg_dtypes, 'default', def_val, data_sets_plt, sys_info_dict,
+    #             val_col='avg', err_col='avg_err', group_cols=['divs'])
 
-    plt.show()
+    # plt.show()
 
     dsig_avgs = []
     for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
@@ -529,27 +544,31 @@ def plot_star_var_sys():
                                              avg=True)
         dsig_avgs_div_diff.loc[:, 'name'] = dsig_avgs_div_diff['name'] + '_sub'
 
-        dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, 'bes_resample_epbins1_sub',
-                                                  'bes_resample_epbins1', v2_star_vals, div, cent_plt)
-        dsig_avgs.append(dsig_avgs_div_diff)
+        # dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, 'default_sub', 'default', v2_star_vals, div,
+        #                                           cent_plt)
+        # dsig_avgs.append(dsig_avgs_div_diff)
+        for name in data_sets_plt:
+            dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, f'{name}_sub', name, v2_sys_vals[name], div,
+                                                      cent_plt)
+            dsig_avgs.append(dsig_avgs_div_diff)
 
     dsig_avgs = pd.concat(dsig_avgs, ignore_index=True)
     # if df_tproton_avgs_name is not None:
     #     dsig_avgs.to_csv(f'{base_path}{fits_out_base}/{df_tproton_avgs_name}', index=False)
 
-    for data_set in data_sets_plt:
-        data_sets = [data_set + x for x in ['_raw', '_mix', '_sub']]
-        colors = dict(zip(data_sets, ['blue', 'green', 'red']))
-        labels = dict(zip(data_sets, [data_sets_labels[data_set] + x for x in [' Raw', ' Mix', ' Sub']]))
-        plot_dvar_avgs_divs(dsig_avgs, data_sets, data_sets_colors=colors, fit=False, data_sets_labels=labels,
-                            ylab=r'$\widebar{\Delta\sigma^2}$')
-    for data_set in data_sets_plt:
-        data_sets = [data_set + x for x in ['_sub', '']]
-        colors = dict(zip(data_sets, ['blue', 'red']))
-        labels = dict(zip(data_sets, [data_sets_labels[data_set] + x for x in [' Original', ' v2 Corrected']]))
-        plot_dvar_avgs_divs(dsig_avgs, data_sets, data_sets_colors=colors, fit=False, data_sets_labels=labels)
-    plot_dvar_avgs_divs(dsig_avgs, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,
-                        data_sets_labels=data_sets_labels)
+    # for data_set in data_sets_plt:
+    #     data_sets = [data_set + x for x in ['_raw', '_mix', '_sub']]
+    #     colors = dict(zip(data_sets, ['blue', 'green', 'red']))
+    #     labels = dict(zip(data_sets, [data_sets_labels[data_set] + x for x in [' Raw', ' Mix', ' Sub']]))
+    #     plot_dvar_avgs_divs(dsig_avgs, data_sets, data_sets_colors=colors, fit=False, data_sets_labels=labels,
+    #                         ylab=r'$\widebar{\Delta\sigma^2}$')
+    # for data_set in data_sets_plt:
+    #     data_sets = [data_set + x for x in ['_sub', '']]
+    #     colors = dict(zip(data_sets, ['blue', 'red']))
+    #     labels = dict(zip(data_sets, [data_sets_labels[data_set] + x for x in [' Original', ' v2 Corrected']]))
+    #     plot_dvar_avgs_divs(dsig_avgs, data_sets, data_sets_colors=colors, fit=False, data_sets_labels=labels)
+    # plot_dvar_avgs_divs(dsig_avgs, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,
+    #                     data_sets_labels=data_sets_labels)
 
     df_fits = plot_dvar_avgs_divs(dsig_avgs, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,
                                   data_sets_labels=data_sets_labels, plt_energies=False)
@@ -558,6 +577,10 @@ def plot_star_var_sys():
 
     plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
     plot_slope_div_fits_simpars(df_fits)
+    print(df_fits)
+    df_fits = df_fits.rename(columns={'data_set': 'name'})
+    plot_sys(df_fits, 'default', data_sets_plt, sys_info_dict, val_col='baseline', err_col='base_err',
+             group_cols=['cent', 'energy'], name_col='name')
 
     plt.show()
 
