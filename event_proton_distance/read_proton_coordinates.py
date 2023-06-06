@@ -19,7 +19,9 @@ def main():
     un-normalized 2D histograms. Example of an 62GeV event plotted to make sure things look right.
     :return:
     """
-    path = 'C:/Users/Dylan/OneDrive - UCLA IT Services/Research/UCLA/Jared_Tejes_Sample_Data/'
+    # path = 'C:/Users/Dylan/OneDrive - UCLA IT Services/Research/UCLA/Jared_Tejes_Sample_Data/BES1/'
+    path = 'N:/UCLA_Microsoft/OneDrive - personalmicrosoftsoftware.ucla.edu/Research/UCLA/Jared_Tejes_Sample_Data' \
+               '/BES1/'
     rapidity_bin_edges = np.linspace(-0.5, 0.5, 50, endpoint=True)
     phi_bin_edges = np.linspace(0, 2 * np.pi, 50, endpoint=True)
     binning = [rapidity_bin_edges, phi_bin_edges]
@@ -30,7 +32,7 @@ def main():
         print(f'{energy}GeV: ')
 
     plot_protons_per_event(sample_data)
-    plot_event(sample_data[62][25], binning)
+    plot_event(sample_data[11][26], binning)
     plt.show()
     print('donzo')
 
