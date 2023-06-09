@@ -509,6 +509,9 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
         ax_errorbar.grid()
         ax_bar.set_title(', '.join([f'{col}={val}' for col, val in zip(group_cols, group_name)]))
 
+        fig_barlow_decomp, ax_barlow_decomp = plt.subplots(figsize=(8, 6), dpi=144)
+        ax_barlow_decomp.grid()
+
         group_df_def = group_df[group_df[name_col] == df_def_name]
         assert len(group_df_def) == 1
         def_val, def_err = group_df_def[val_col].values[0], group_df_def[err_col].values[0]
@@ -527,6 +530,17 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
             barlow = np.sqrt(np.sum(barlow_i / 12.0))
             group_df_sys['barlow'] = barlow_i
 
+            sys_types = group_df_sys['sys_type'].values
+            ax_barlow_decomp.axhline(0, color='black')
+            ax_barlow_decomp.axhline(def_err**2, ls='--', label=r'$\sigma_d^2$')
+            ax_barlow_decomp.scatter(sys_types, (def_val - sys_val)**2, marker='_', s=50, label=r'$(d-v)^2$')
+            ax_barlow_decomp.scatter(sys_types, sys_err**2, marker='_', s=50, label=r'$\sigma_v^2$')
+            ax_barlow_decomp.scatter(sys_types, np.abs(def_err ** 2 - sys_err ** 2), s=50, marker='_',
+                                     label=r'$|\sigma_d^2 - \sigma_v^2|$')
+            ax_barlow_decomp.scatter(sys_types, barlow_i, marker='_', s=50,
+                                     label=r'$(d-v)^2 - |\sigma_d^2 - \sigma_v^2|$')
+            ax_barlow_decomp.legend()
+
             ax_errorbar.axhline(def_val, color=def_color)
             # print(df_def_name, def_val, def_err)
             ax_errorbar.errorbar([df_def_name], [def_val], [def_err], color=def_color, ls='none', marker='o')
@@ -542,8 +556,8 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
                               [barlow] + list(np.sqrt(barlow_i / 12.0)),
                               color=[def_color] + list(group_df_sys['color']))
             ax_bar.plot([bars[0].get_x(), bars[0].get_x() + bars[0].get_width()], [def_err, def_err], color='red')
-            plt.xlim(right=len(group_df_sys['sys_type'].unique()) + 2)
-            plt.xticks(rotation=45)
+            ax_errorbar.set_xlim(right=len(group_df_sys['sys_type'].unique()) + 2)
+            ax_errorbar.tick_params(axis='x', rotation=45)
             ax_errorbar.legend()
             fig.subplots_adjust(hspace=0.0)  # Adjust the vertical spacing between subplots
             fig.tight_layout()
