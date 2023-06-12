@@ -21,8 +21,8 @@ def main():
     r = np.linspace(0, 3, 1000)
     n_primary = 1000
     binning = np.arange(0, 3, 0.1)
-    def_cut = 1.0
-    sys_cuts = np.linspace(0.1, 1.0, 25)
+    def_cut, chosen_sys = 1.0, 0.8
+    sys_cuts = np.arange(0.1, 3.0, 0.05)
     primary_val, secondary_val = 2, 1
 
     # primary_dist = rayleigh.pdf(r, mu, sigma_primary)
@@ -62,7 +62,13 @@ def main():
         total_under_cut = prim_under_cut + second_under_cut
         avg_val = (prim_under_cut * primary_val + second_under_cut * secondary_val) / total_under_cut
         avgs.append(avg_val)
+        if np.isclose(cut, def_cut):
+            def_avg = avg_val
+        elif np.isclose(cut, chosen_sys):
+            chosen_avg = avg_val
     plt.figure()
+    plt.axhline(def_avg, color='black', alpha=0.5, ls='--')
+    plt.axhline(chosen_avg, color='red', alpha=0.5, ls='--')
     plt.axhline(primary_val, color='blue', label='primary_val')
     plt.axhline(secondary_val, color='orange', label='secondary_val')
     plt.scatter(all_cuts, avgs, marker='o')
