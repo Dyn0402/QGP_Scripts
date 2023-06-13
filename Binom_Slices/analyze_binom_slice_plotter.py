@@ -570,11 +570,11 @@ def plot_star_var_sys():
         dsig_avgs_div_all = dvar_vs_protons_cents(df_types, divs_all, cents, energy, ['raw', 'mix', 'diff'],
                                                   sys_sets_count, plot=False, avg=True)
         dsig_avgs_all.append(dsig_avgs_div_all)
-        dsig_avgs_div_diff = dsig_avgs_div_all[dsig_avgs_div_all['type'] == 'diff']
-        dsig_avgs_div_diff = dsig_avgs_div_diff.drop('type', axis=1)
+        dsig_avgs_div_diff = dsig_avgs_div_all[dsig_avgs_div_all['data_type'] == 'diff']
+        dsig_avgs_div_diff = dsig_avgs_div_diff.drop('data_type', axis=1)
         for data_set in sys_sets_count:
             dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, data_set,
-                                                      data_set, v2_vals[data_set], new_only=True)
+                                                      data_set, v2_sys_vals[data_set], new_only=True)
         dsig_avgs_diff_v2sub.append(dsig_avgs_div_diff)
 
     dsig_avg_all = pd.concat(dsig_avgs_all, ignore_index=True)
