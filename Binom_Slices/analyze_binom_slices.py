@@ -371,6 +371,18 @@ def stat_binom_vs_protons(df, stat, div, cent, energy, data_types, data_set_plt,
 
 
 def get_sys(df, df_def_name, df_sys_set_names, group_cols=None, val_col='val', err_col='err'):
+    """
+    Calculate systematic uncertainties on the default set in df.
+    Only ready to take single variation per systematic variable.
+    :param df: Dataframe
+    :param df_def_name: Default set name
+    :param df_sys_set_names: Names of systematic sets to be analyzed
+    :param group_cols: Name of columns by which to group values.
+    For example, energies and centralities should be separate
+    :param val_col: Name of column containing the values of interest
+    :param err_col: Name of column containing the statistical uncertainties on the values of interest
+    :return: Dataframe with default values, statistical uncertainties, and estimated systematic uncertainties
+    """
     if group_cols is None:
         group_cols = ['divs', 'energy', 'cent', 'data_type', 'total_protons']
 
@@ -396,10 +408,14 @@ def get_sys(df, df_def_name, df_sys_set_names, group_cols=None, val_col='val', e
             sys_err = group_df_sys[err_col].values
 
             barlow_i = (def_val - sys_val) ** 2 - np.abs(def_err ** 2 - sys_err ** 2)
-            barlow = np.sqrt(np.maximum(barlow_i, 0)[0] / 12.0)
+            # barlow = np.sqrt(np.maximum(barlow_i, 0)[0] / 12.0)
+            barlow = np.sqrt(np.sum(np.where(barlow_i < 0, 0, barlow_i)))
+            # print(barlow, list(zip(group_df_sys['name'].values, barlow_i)))
+            # input()
 
         df_entry = group_df_def.reset_index().to_dict(orient='records')[0]
         df_entry.update({'sys': barlow})
+        del df_entry['index']
         df_def_sys.append(df_entry)
 
     return pd.DataFrame(df_def_sys)
@@ -3485,7 +3501,7 @@ def ampt_v2_closure_sub_dsigma(avg_df, data_set_name, new_name, v2, div, cent):
     return pd.concat([avg_df, df_new], ignore_index=True)
 
 
-def subtract_dsigma_flow(avg_df, data_set_name, new_name, vs, div=None, cent=None):
+def subtract_dsigma_flow(avg_df, data_set_name, new_name, vs, div=None, cent=None, new_only=False):
     df_new = avg_df[avg_df['name'] == data_set_name]
     if len(df_new) > 0:
         df_new = df_new.assign(name=new_name)
@@ -3505,7 +3521,10 @@ def subtract_dsigma_flow(avg_df, data_set_name, new_name, vs, div=None, cent=Non
         df_new = df_new.assign(avg=new_avg_vals)
         df_new = df_new.assign(avg_err=new_avg_errs)
 
-    return pd.concat([avg_df, df_new], ignore_index=True)
+    if new_only:
+        return df_new
+    else:
+        return pd.concat([avg_df, df_new], ignore_index=True)
 
 
 def flow_correction(div, vs, energy, cent):
