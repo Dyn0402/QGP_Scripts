@@ -1226,7 +1226,8 @@ def dvar_vs_protons_cents(df, divs, cents, energy, data_types, data_sets_plt, y_
                     else:
                         lab = data_sets_labels[data_set]
                     df_set = df_set.sort_values(by=['total_protons'])
-                    data.append((df_set, div, lab, data_set, df_set['amp'].iloc[0], df_set['spread'].iloc[0]))
+                    data.append((df_set, div, lab, data_set, df_set['amp'].iloc[0], df_set['spread'].iloc[0],
+                                 data_type))
         cent_data.append(data)
 
     if plot or plot_avg:
@@ -1248,7 +1249,7 @@ def dvar_vs_protons_cents(df, divs, cents, energy, data_types, data_sets_plt, y_
         if plot or plot_avg:
             ax = ax_cents[ax_index]
             color = iter(plt.cm.rainbow(np.linspace(0, 1, len(data))))
-        for i, (df, div, lab, data_set, amp, spread) in enumerate(data):
+        for i, (df, div, lab, data_set, amp, spread, data_type) in enumerate(data):
             zo = len(data) - i + 4
             if plot or plot_avg:
                 if data_sets_colors is None:
@@ -1271,7 +1272,7 @@ def dvar_vs_protons_cents(df, divs, cents, energy, data_types, data_sets_plt, y_
                 weight_avg = np.average(df['val'], weights=1 / df['err'] ** 2)
                 weight_avg_err = np.sqrt(1 / np.sum(1 / df['err'] ** 2))
                 avgs.append({'name': data_set, 'energy': energy, 'divs': div, 'amp': amp, 'spread': spread,
-                             'avg': weight_avg, 'avg_err': weight_avg_err,
+                             'data_type': data_type, 'avg': weight_avg, 'avg_err': weight_avg_err,
                              'avg_meas': Measure(weight_avg, weight_avg_err), 'cent': cent})
                 if plot_avg:
                     ax.axhline(weight_avg, ls='--', color=c)
@@ -1455,7 +1456,8 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
     if data_sets_colors is None:
         num_colorless = len(energies) * len(data_sets_plt) * len(pd.unique(df['cent']))
     else:
-        num_colorless = len(energies) * (len(data_sets_plt) - len(data_sets_colors)) * len(pd.unique(df['cent']))
+        data_sets_covered = len(set(data_sets_colors).intersection(set(data_sets_plt)))
+        num_colorless = len(energies) * (len(data_sets_plt) - data_sets_covered) * len(pd.unique(df['cent']))
     colors = iter(plt.cm.rainbow(np.linspace(0, 1, num_colorless)))
     fit_pars = []
     for data_set in data_sets_plt:
@@ -1491,6 +1493,11 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                         ax_panels[energy].errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['avg_err'],
                                                    ls='none',
                                                    marker='o', label=lab_energy, color=color, alpha=alpha)
+                        if 'sys' in df_cent.columns:
+                            ax.errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['sys'], ls='', elinewidth=4,
+                                        marker='', color=color, alpha=0.3)
+                            ax_panels[energy].errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['sys'],
+                                                       ls='', marker='', color=color, alpha=0.3, elinewidth=4)
                 if fit and df_cent.size > 1:
                     try:
                         df_cent = df_cent[~df_cent.divs.isin(exclude_divs)]
@@ -2459,7 +2466,7 @@ def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
             if colors is not None:
                 color = next(colors)
             df_energy = df_set[df_set['energy'] == energy]
-            df_energy.sort_values(by='cent')
+            df_energy = df_energy.sort_values(by='cent')
             if data_sets_labels is None:
                 lab = data_set
             else:
@@ -2480,9 +2487,15 @@ def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
             if colors is None and color is None:
                 ax_avg.errorbar(x, df_energy['avg'], xerr=x_err, yerr=df_energy['avg_err'], marker='o', ls=ls,
                                 label=lab, alpha=0.6)
+                if 'sys' in df_energy.columns:
+                    ax_avg.errorbar(x, df_energy['avg'], xerr=0, yerr=df_energy['sys'], marker='', ls='',
+                                    elinewidth=4, alpha=0.3)
             else:
                 ax_avg.errorbar(x, df_energy['avg'], xerr=x_err, yerr=df_energy['avg_err'], marker='o', ls=ls,
                                 color=color, label=lab, alpha=0.6)
+                if 'sys' in df_energy.columns:
+                    ax_avg.errorbar(x, df_energy['avg'], xerr=0, yerr=df_energy['sys'], marker='', ls='',
+                                    color=color, elinewidth=4, alpha=0.3)
             if fit:
                 p0 = [-0.02, 0.0001]
                 x_fit = np.linspace(min(x), max(x), 1000)
@@ -3502,7 +3515,9 @@ def ampt_v2_closure_sub_dsigma(avg_df, data_set_name, new_name, v2, div, cent):
 
 
 def subtract_dsigma_flow(avg_df, data_set_name, new_name, vs, div=None, cent=None, new_only=False):
+    # print(data_set_name, avg_df)
     df_new = avg_df[avg_df['name'] == data_set_name]
+    # print(data_set_name, df_new)
     if len(df_new) > 0:
         df_new = df_new.assign(name=new_name)
         if div is None and cent is not None:
