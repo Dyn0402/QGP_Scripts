@@ -64,8 +64,8 @@ def init_pars():
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_stats_sim.csv',
         # 'csv_path': 'D:/Transfer/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim_new.csv',
         # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
-        'csv_append': False,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
-        'only_new': False,  # If True check csv_path and only run missing datasets, else run all datasets
+        'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
+        'only_new': True,  # If True check csv_path and only run missing datasets, else run all datasets
         'threads': 10,
         # 'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'stats': define_stats(['k2']),
@@ -237,7 +237,7 @@ def define_datasets(base_path):
     #                    all_divs])
 
     # BES1 Systematics
-    var_defaults = {'dca': 1, 'nsprx': 1, 'm2r': 6, 'm2s': 0, 'nhfit': 20}
+    var_defaults = {'dca': 1, 'nsprx': 1, 'm2r': 6, 'm2s': 0, 'nhfit': 20, 'Efficiency': None}
     # exclude_keys = ['dca05', 'dca15', 'nsprx075', 'nsprx125', 'm2r2', 'm2r10']
     exclude_keys = []
     sub_sets = find_sys_sets(f'{base_path}Data/default_sys/', var_defaults, exclude_keys, True)
