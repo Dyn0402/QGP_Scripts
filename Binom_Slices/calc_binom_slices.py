@@ -246,6 +246,18 @@ def define_datasets(base_path):
         entry_vals.append([f'bes_sys_{sub_set}', '', ['default', 'sys'], [], [], [sub_set_dir_name],
                            all_energies, all_cents, all_divs])
 
+    # Mix randomization
+    for i in range(5):
+        mix_rand_sub_name = f'rapid05_resample_norotate_mixnoseed_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_{i}'
+        entry_vals.append([f'bes_sys_mix_rand_{i}', '', ['default', 'sys'], [], [], [mix_rand_sub_name],
+                           all_energies, all_cents, all_divs])
+
+    # All randomization
+    for i in range(7):
+        all_rand_sub_name = f'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_{i}'
+        entry_vals.append([f'bes_sys_all_rand_{i}', '', ['default', 'sys'], [], [], [all_rand_sub_name],
+                           all_energies, all_cents, all_divs])
+
     # for i in range(12):
     #     entry_vals.append([f'bes_rand_sys_{i}', '', ['default', 'sys', 'test'], [], ['rand'], [i],
     #                        [7], all_cents, all_divs])
@@ -422,8 +434,9 @@ def find_sys_sets(path, var_defaults, exclude_keys=[], print_sets=False):
                     key_val = int(dir_key.replace(var, ''))
                     if key_val != var_def_val:
                         non_def_keys.append(dir_key)
-        sub_set_name = '_'.join(non_def_keys)
-        sub_sets.update({sub_set_name: dir_name})
+        if len(non_def_keys) > 0:
+            sub_set_name = '_'.join(non_def_keys)
+            sub_sets.update({sub_set_name: dir_name})
 
     if print_sets:
         for sub_set in sub_sets:

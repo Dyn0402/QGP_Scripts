@@ -14,13 +14,15 @@ import pickle
 
 import itertools
 
+from multiprocessing import Pool
 import tqdm
+import istarmap  # Needed for tqdm
 
 from analyze_binom_slices import *
 
 
 def main():
-    plot_paper_figs()
+    # plot_paper_figs()
 
     # plot_star_model_var()
     # plot_vs_cent_var()
@@ -409,9 +411,13 @@ def plot_star_var_sys():
     sys_default_dir = 'rapid05_resample_norotate_seed_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_0/'
     df_name = 'Binomial_Slice_Moments/binom_slice_vars_bes_sys.csv'
 
+    plot = True
+    calc_finals = False
+    threads = 10
     df_def_out_name = 'Binomial_Slice_Moments/binom_slice_vars_bes.csv'
     # df_def_out_name = None
     df_def_dsigma_out_name = 'Binomial_Slice_Moments/binom_slice_vars_bes_dsigma.csv'
+    # df_def_dsigma_out_name = None
     # df_def_dsigma_avgs_out_name = 'Binomial_Slice_Moments/binom_slice_vars_bes_dsigma_avgs.csv'
     fits_out_base = 'Base_Zero_Fits'
     df_def_avgs_out_name = 'dsig_tprotons_avgs_bes.csv'
@@ -437,6 +443,9 @@ def plot_star_var_sys():
         'nsprx': {'name': 'nsigma proton x', 'decimal': 1, 'default': 1, 'sys_var': 0.9, 'val_unit': ''},
         'm2r': {'name': 'mass^2 range', 'decimal': 0, 'default': 0.6, 'sys_var': 0.4, 'val_unit': ' GeV'},
         'nhfit': {'name': 'nHits Fit', 'decimal': 2, 'default': 20, 'sys_var': 15, 'val_unit': ''},
+        'Efficiency': {'name': 'Efficiency', 'decimal': 2, 'default': 0, 'sys_var': 0.05, 'val_unit': '%'},
+        'mix_rand_': {'name': 'mix rand', 'decimal': 1, 'default': 0, 'sys_var': 1, 'val_unit': ''},
+        'all_rand_': {'name': 'all rand', 'decimal': 1, 'default': 0, 'sys_var': 1, 'val_unit': ''},
     }
 
     # data_sets_plt = ['dca05', 'dca08', 'default', 'dca12', 'dca15']
@@ -483,6 +492,9 @@ def plot_star_var_sys():
     all_sets = pd.unique(df['name'])
     print(all_sets)
 
+    rand_sets = [set_name for set_name in all_sets if '_rand' in set_name]
+    non_rand_sets = [set_name for set_name in all_sets if '_rand' not in set_name]
+
     v2_star_vals = {2: read_flow_values(v2_star_in_dir)}
     v2_sys_vals = {name: {2: read_flow_values(get_set_dir(name, sys_default_dir, sys_dir))} for name in all_sets
                    if name != 'bes_def'}
@@ -493,7 +505,7 @@ def plot_star_var_sys():
     df = df[df['stat'] == stat_plot]
 
     # Get k2 raw, mix, diff systematics
-    if df_def_out_name is not None:
+    if df_def_out_name is not None and calc_finals:
         df_def_with_sys = get_sys(df, 'bes_def', sys_sets_count,
                                   group_cols=['divs', 'energy', 'cent', 'data_type', 'total_protons'])
         df_def_with_sys.to_csv(f'{base_path}{df_def_out_name}', index=False)
@@ -506,7 +518,7 @@ def plot_star_var_sys():
 
     dvar_vs_protons_energies(df_diff, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'],
                              sys_sets_count, star_prelim=True,
-                             plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
+                             plot=False, avg=True, plot_avg=False, data_sets_colors=data_sets_colors,
                              data_sets_labels=data_sets_labels, y_ranges=[-0.00088, 0.00016])
 
     # plot_df = df_diff_def_all[(df_diff_def_all['div'] == 120) & (df_diff_def_all['cent'] == 8) &
@@ -514,7 +526,7 @@ def plot_star_var_sys():
     # plot_sys(df_diff_def_all, 'bes_def', sys_sets_count, sys_info_dict,
     #          group_cols=['divs', 'energy', 'cent', 'data_type', 'total_protons'])
 
-    if df_def_dsigma_out_name is not None:
+    if df_def_dsigma_out_name is not None and calc_finals:
         df_def_dsigma = get_sys(df_dsigma_types, 'bes_def', sys_sets_count,
                                 group_cols=['divs', 'energy', 'cent', 'data_type', 'total_protons'])
         print(df_def_dsigma)
@@ -560,12 +572,17 @@ def plot_star_var_sys():
     #                                          data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.00054])
     #
     # dsig_avg_diff_all = dvar_vs_protons_energies(df_diff, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], all_sets,
-    #                                              plot=True, avg=True, plot_avg=True, y_ranges=[-0.00099, 0.00054])
+    #                                              plot=False, avg=True, plot_avg=False, y_ranges=[-0.00099, 0.00054])
     # dsig_avg_diff_def = get_sys(dsig_avg_diff, 'default', data_sets_plt, val_col='avg', err_col='avg_err',
     #                             group_cols=['divs', 'energy'])
     # print(dsig_avg_diff_def)
-    # plot_sys(dsig_avg_diff_all, 'default', all_sets, sys_info_dict,
-    #          val_col='avg', err_col='avg_err', group_cols=['divs', 'energy'])
+    # plot_sys(dsig_avg_diff_all, 'bes_def', all_sets, sys_info_dict,
+    #          val_col='avg', err_col='avg_err', group_cols=['divs', 'energy', 'cent'])
+    # plot_sys(dsig_avg_diff_all, 'bes_def', rand_sets, sys_info_dict,
+    #          val_col='avg', err_col='avg_err', group_cols=['divs', 'energy', 'cent'])
+    # plot_sys(dsig_avg_diff_all, 'bes_def', non_rand_sets, sys_info_dict,
+    #          val_col='avg', err_col='avg_err', group_cols=['divs', 'energy', 'cent'])
+    # plt.show()
     # plot_sys(dsig_avg_diff_all, 'default', data_sets_plt, sys_info_dict,
     #          val_col='avg', err_col='avg_err', group_cols=['divs', 'energy'])
     # plot_protons_avgs_vs_energy(dsig_avg_diff_def, data_sets_plt, data_sets_colors=data_sets_colors, alpha=0.6,
@@ -591,32 +608,47 @@ def plot_star_var_sys():
 
     # plt.show()
 
+    sets_run = all_sets if plot else sys_sets_count
     dsig_avgs_all, dsig_avgs_diff_v2sub = [], []
     # print(pd.unique(df_types['name']))
     for energy in energies_fit:
         print(f'Energy {energy}GeV')
-        dsig_avgs_div_all = dvar_vs_protons_cents(df_dsigma_types, divs_all, cents, energy, ['raw', 'mix', 'diff'],
-                                                  sys_sets_count, plot=False, avg=True)
+        jobs = [(df_dsigma_types[df_dsigma_types['name'] == set_i], divs_all, cents, energy, ['raw', 'mix', 'diff'],
+                 [set_i], None, False, True) for set_i in sets_run]
+        dsig_avgs_div_all = []
+        with Pool(threads) as pool:
+            for job_i in tqdm.tqdm(pool.istarmap(dvar_vs_protons_cents, jobs), total=len(jobs)):
+                dsig_avgs_div_all.append(job_i)
+        # dsig_avgs_div_all = dvar_vs_protons_cents(df_dsigma_types, divs_all, cents, energy, ['raw', 'mix', 'diff'],
+        #                                           sets_run, plot=False, avg=True)
+        dsig_avgs_div_all = pd.concat(dsig_avgs_div_all, ignore_index=True)
         # print(pd.unique(dsig_avgs_div_all['name']))
         dsig_avgs_all.append(dsig_avgs_div_all)
         dsig_avgs_div_diff = dsig_avgs_div_all[dsig_avgs_div_all['data_type'] == 'diff']
         dsig_avgs_div_diff = dsig_avgs_div_diff.drop('data_type', axis=1)
-        for data_set in sys_sets_count:
+        for data_set in sets_run:
             dsig_avgs_div_diff_set = subtract_dsigma_flow(dsig_avgs_div_diff, data_set,
                                                           data_set, v2_sys_vals[data_set], new_only=True)
             # print(data_set, dsig_avgs_div_diff_set)
             dsig_avgs_diff_v2sub.append(dsig_avgs_div_diff_set)
 
-    if df_def_avgs_out_name is not None:
+    if df_def_avgs_out_name is not None and calc_finals:
         dsig_avg_all = pd.concat(dsig_avgs_all, ignore_index=True)
         dsig_avgs_def_sys = get_sys(dsig_avg_all, 'bes_def', sys_sets_count, val_col='avg', err_col='avg_err',
                                     group_cols=['divs', 'energy', 'cent', 'data_type'])
         dsig_avgs_def_sys.to_csv(f'{base_path}{fits_out_base}/{df_def_avgs_out_name}', index=False)
 
     dsig_avgs_diff_v2sub = pd.concat(dsig_avgs_diff_v2sub, ignore_index=True)
+    if plot:
+        plot_sys(dsig_avgs_diff_v2sub, 'bes_def', non_rand_sets, sys_info_dict,
+                 val_col='avg', err_col='avg_err', group_cols=['divs', 'energy', 'cent'])
+        plot_sys(dsig_avgs_diff_v2sub, 'bes_def', rand_sets, sys_info_dict,
+                 val_col='avg', err_col='avg_err', group_cols=['divs', 'energy', 'cent'])
+        plt.show()
+
     dsig_avg_diff_v2sub = get_sys(dsig_avgs_diff_v2sub, 'bes_def', sys_sets_count, val_col='avg', err_col='avg_err',
                                   group_cols=['divs', 'energy', 'cent'])
-    if df_def_avgs_v2sub_out_name is not None:
+    if df_def_avgs_v2sub_out_name is not None and calc_finals:
         dsig_avg_diff_v2sub.to_csv(f'{base_path}{fits_out_base}/{df_def_avgs_v2sub_out_name}', index=False)
 
     # plt.show()

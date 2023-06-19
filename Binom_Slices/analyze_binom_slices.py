@@ -431,6 +431,12 @@ def add_sys_info(df, sys_info_dict, name_col='name'):
             return None
         if row['sys_type'] == 'm2r' and row['sys_val'] == '10':
             return 1.0
+        if row['sys_type'] == 'Efficiency':
+            val = round(float(f'0.{row["sys_val"]}') * 10 ** sys_info_dict[row['sys_type']]['decimal'], 3)
+            return int(100 - val)
+        if '_rand' in row['sys_type']:
+            return int(row['sys_val'])
+        # if row['sys_type']
         return round(float(f'0.{row["sys_val"]}') * 10 ** sys_info_dict[row['sys_type']]['decimal'], 3)
 
     def get_sys_val_str(row):
@@ -455,8 +461,20 @@ def get_set_dir(set_name, def_dir, base_dir):
     if set_name == 'default':
         new_dir = def_dir
     else:
-        sys_type, sys_val = split_string(set_name)
-        new_dir = '_'.join([set_name if sys_type in dir_key else dir_key for dir_key in def_dir.split('_')])
+        if 'all_rand_' in set_name:
+            set_num = int(set_name.replace('all_rand_', ''))
+            new_dir = '_'.join(def_dir.split('_')[:-1]) + f'_{set_num}/'
+            new_dir = new_dir.replace('_seed', '')
+        elif 'mix_rand_' in set_name:
+            set_num = int(set_name.replace('mix_rand_', ''))
+            new_dir = '_'.join(def_dir.split('_')[:-1]) + f'_{set_num}/'
+            new_dir = new_dir.replace('_seed', '_mixnoseed')
+        elif 'Efficiency' in set_name:
+            new_dir = def_dir.replace('_epbins1', f'_{set_name}_epbins1')
+        else:
+            sys_type, sys_val = split_string(set_name)
+            new_dir = '_'.join([set_name if sys_type in dir_key else dir_key for dir_key in def_dir.split('_')])
+    # print(f'{set_name} {base_dir}{new_dir}')
     return f'{base_dir}{new_dir}'
 
 
@@ -495,21 +513,17 @@ def plot_vs_sys(df, df_def_name, def_val, df_sys_set_names, sys_info_dict, group
 
 
 def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, val_col='val', err_col='err',
-             name_col='name'):
+             name_col='name', plot_barlow_decomp=False):
     if group_cols is None:
         group_cols = ['divs', 'energy', 'cent', 'data_type', 'total_protons']
 
     def_color = 'black'
 
-    # print(df_sys_set_names + [df_def_name])
-    # print(df['name'])
-    # print(df['name'].isin(list(df_sys_set_names) + [df_def_name]))
     df_filtered = df[df[name_col].isin(list(df_sys_set_names) + [df_def_name])]
     df_filtered[['sys_type', 'sys_val']] = df_filtered[name_col].apply(lambda x: pd.Series(split_string(x)))
 
     default_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
     sys_types = [sys_type for sys_type in df_filtered['sys_type'].unique() if sys_type != 'default']
-    print(sys_types)
     color_dict = {sys_type: color for sys_type, color in zip(sys_types, default_colors)}
     df_filtered['color'] = df_filtered['sys_type'].map(color_dict)
 
@@ -525,8 +539,10 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
         ax_errorbar.grid()
         ax_bar.set_title(', '.join([f'{col}={val}' for col, val in zip(group_cols, group_name)]))
 
-        fig_barlow_decomp, ax_barlow_decomp = plt.subplots(figsize=(8, 6), dpi=144)
-        ax_barlow_decomp.grid()
+        if plot_barlow_decomp:
+            fig_barlow_decomp, ax_barlow_decomp = plt.subplots(figsize=(8, 6), dpi=144)
+            ax_barlow_decomp.set_title(', '.join([f'{col}={val}' for col, val in zip(group_cols, group_name)]))
+            ax_barlow_decomp.grid()
 
         group_df_def = group_df[group_df[name_col] == df_def_name]
         assert len(group_df_def) == 1
@@ -547,15 +563,16 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
             group_df_sys['barlow'] = barlow_i
 
             sys_types = group_df_sys['sys_type'].values
-            ax_barlow_decomp.axhline(0, color='black')
-            ax_barlow_decomp.axhline(def_err**2, ls='--', label=r'$\sigma_d^2$')
-            ax_barlow_decomp.scatter(sys_types, (def_val - sys_val)**2, marker='_', s=50, label=r'$(d-v)^2$')
-            ax_barlow_decomp.scatter(sys_types, sys_err**2, marker='_', s=50, label=r'$\sigma_v^2$')
-            ax_barlow_decomp.scatter(sys_types, np.abs(def_err ** 2 - sys_err ** 2), s=50, marker='_',
-                                     label=r'$|\sigma_d^2 - \sigma_v^2|$')
-            ax_barlow_decomp.scatter(sys_types, barlow_i, marker='_', s=50,
-                                     label=r'$(d-v)^2 - |\sigma_d^2 - \sigma_v^2|$')
-            ax_barlow_decomp.legend()
+            if plot_barlow_decomp:
+                ax_barlow_decomp.axhline(0, color='black')
+                ax_barlow_decomp.axhline(def_err**2, ls='--', label=r'$\sigma_d^2$')
+                ax_barlow_decomp.scatter(sys_types, (def_val - sys_val)**2, marker='_', s=500, label=r'$(d-v)^2$')
+                ax_barlow_decomp.scatter(sys_types, sys_err**2, marker='_', s=500, label=r'$\sigma_v^2$')
+                ax_barlow_decomp.scatter(sys_types, np.abs(def_err ** 2 - sys_err ** 2), s=500, marker='_',
+                                         label=r'$|\sigma_d^2 - \sigma_v^2|$')
+                ax_barlow_decomp.scatter(sys_types, barlow_i, marker='_', s=500,
+                                         label=r'$(d-v)^2 - |\sigma_d^2 - \sigma_v^2|$')
+                ax_barlow_decomp.legend()
 
             ax_errorbar.axhline(def_val, color=def_color)
             # print(df_def_name, def_val, def_err)
@@ -565,6 +582,7 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
 
             for sys_type in group_df_sys['sys_type'].unique():
                 sys_type_df = group_df_sys[group_df_sys['sys_type'] == sys_type]
+                sys_type_df = sys_type_df.sort_values('sys_val')
                 ax_errorbar.errorbar(sys_type_df['sys_val_str'], sys_type_df[val_col], sys_type_df[err_col],
                                      color=sys_type_df['color'].values[0], ls='none', marker='o',
                                      label=sys_info_dict[sys_type][name_col])
@@ -572,12 +590,16 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
                               [barlow] + list(np.sqrt(barlow_i / 12.0)),
                               color=[def_color] + list(group_df_sys['color']))
             ax_bar.plot([bars[0].get_x(), bars[0].get_x() + bars[0].get_width()], [def_err, def_err], color='red')
-            ax_errorbar.set_xlim(right=len(group_df_sys['sys_type'].unique()) + 2)
+            ax_errorbar.set_xlim(right=ax_errorbar.get_xlim()[-1] + ax_errorbar.get_xlim()[-1] * 0.3)
             ax_errorbar.tick_params(axis='x', rotation=45)
+            for label in ax_errorbar.get_xticklabels():
+                label.set_ha('right')
             ax_errorbar.legend()
             fig.subplots_adjust(hspace=0.0)  # Adjust the vertical spacing between subplots
             fig.tight_layout()
             fig.subplots_adjust(hspace=0.0)  # Adjust the vertical spacing between subplots
+            if plot_barlow_decomp:
+                fig_barlow_decomp.tight_layout()
 
 
 def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False, avg=False,
@@ -1037,7 +1059,7 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
                 weight_avg = np.average(df['val'], weights=1 / df['err'] ** 2)
                 weight_avg_err = np.sqrt(1 / np.sum(1 / df['err'] ** 2))
                 avgs.append({'name': data_set, 'energy': energy, 'divs': div, 'amp': amp, 'spread': spread,
-                             'avg': weight_avg, 'avg_err': weight_avg_err,
+                             'avg': weight_avg, 'avg_err': weight_avg_err, 'cent': cent,
                              'avg_meas': Measure(weight_avg, weight_avg_err)})
                 if plot_avg:
                     if plot:
@@ -3477,6 +3499,7 @@ def read_flow_values(in_dir, v_type='v2'):
         vs.update({energy: {}})
         file_path = f'{in_dir}{dir_name}/{v_type}.txt'
         if not os.path.isfile(file_path):
+            print(f'{file_path} not found')
             continue
         with open(file_path, 'r') as file:
             lines = file.readlines()[1:]  # Skip column headers
