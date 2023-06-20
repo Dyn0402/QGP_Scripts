@@ -413,7 +413,8 @@ def plot_star_var_sys():
 
     plot = True
     calc_finals = False
-    threads = 10
+    threads = 15
+    sys_pdf_out_path = f'{base_path}systematic_plots.pdf'
     df_def_out_name = 'Binomial_Slice_Moments/binom_slice_vars_bes.csv'
     # df_def_out_name = None
     df_def_dsigma_out_name = 'Binomial_Slice_Moments/binom_slice_vars_bes_dsigma.csv'
@@ -640,19 +641,21 @@ def plot_star_var_sys():
 
     dsig_avgs_diff_v2sub = pd.concat(dsig_avgs_diff_v2sub, ignore_index=True)
     if plot:
-        plot_sys(dsig_avgs_diff_v2sub, 'bes_def', non_rand_sets, sys_info_dict,
-                 val_col='avg', err_col='avg_err', group_cols=['divs', 'energy', 'cent'])
-        plot_sys(dsig_avgs_diff_v2sub, 'bes_def', rand_sets, sys_info_dict,
-                 val_col='avg', err_col='avg_err', group_cols=['divs', 'energy', 'cent'])
-        plt.show()
+        dsig_avgs_diff_v2sub = dsig_avgs_diff_v2sub[(dsig_avgs_diff_v2sub['divs'] == 120) &
+                                                    (dsig_avgs_diff_v2sub['cent'] == 8)]
+        plot_sys(dsig_avgs_diff_v2sub, 'bes_def', non_rand_sets, sys_info_dict, val_col='avg', err_col='avg_err',
+                 group_cols=['divs', 'energy', 'cent'], pdf_out_path=sys_pdf_out_path)
+        plot_sys(dsig_avgs_diff_v2sub, 'bes_def', rand_sets, sys_info_dict, val_col='avg', err_col='avg_err',
+                 group_cols=['divs', 'energy', 'cent'], pdf_out_path=sys_pdf_out_path.replace('.pdf', '_rands.pdf'))
+        # plt.show()
 
     dsig_avg_diff_v2sub = get_sys(dsig_avgs_diff_v2sub, 'bes_def', sys_sets_count, val_col='avg', err_col='avg_err',
                                   group_cols=['divs', 'energy', 'cent'])
     if df_def_avgs_v2sub_out_name is not None and calc_finals:
         dsig_avg_diff_v2sub.to_csv(f'{base_path}{fits_out_base}/{df_def_avgs_v2sub_out_name}', index=False)
 
-    # plt.show()
-    # return
+    plt.show()
+    return
 
     # dsig_avgs = []
     # for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded

@@ -16,6 +16,7 @@ import matplotlib as mpl
 import matplotlib.ticker as mtick
 import matplotlib.gridspec as gridspec
 from mpl_toolkits import mplot3d
+from matplotlib.backends.backend_pdf import PdfPages
 import seaborn as sns
 import pandas as pd
 from scipy.optimize import curve_fit as cf
@@ -513,7 +514,7 @@ def plot_vs_sys(df, df_def_name, def_val, df_sys_set_names, sys_info_dict, group
 
 
 def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, val_col='val', err_col='err',
-             name_col='name', plot_barlow_decomp=False):
+             name_col='name', plot_barlow_decomp=False, pdf_out_path=None):
     if group_cols is None:
         group_cols = ['divs', 'energy', 'cent', 'data_type', 'total_protons']
 
@@ -525,11 +526,15 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
     default_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
     sys_types = [sys_type for sys_type in df_filtered['sys_type'].unique() if sys_type != 'default']
     color_dict = {sys_type: color for sys_type, color in zip(sys_types, default_colors)}
-    df_filtered['color'] = df_filtered['sys_type'].map(color_dict)
+    df_filtered.loc[:, 'color'] = df_filtered['sys_type'].map(color_dict)
+
+    if pdf_out_path is not None:
+        pdf_pages = PdfPages(pdf_out_path)
 
     df_set = df_filtered.groupby(group_cols)
 
     for group_name, group_df in df_set:
+        print(group_name)
         if df_def_name not in group_df[name_col].values:
             continue  # No default value so no systematic
         fig = plt.figure(figsize=(8, 6), dpi=144)
@@ -600,6 +605,16 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
             fig.subplots_adjust(hspace=0.0)  # Adjust the vertical spacing between subplots
             if plot_barlow_decomp:
                 fig_barlow_decomp.tight_layout()
+
+            if pdf_out_path is not None:
+                pdf_pages.savefig(fig)
+                plt.close(fig)
+                if plot_barlow_decomp:
+                    pdf_pages.savefig(fig_barlow_decomp)
+                    plt.close(fig_barlow_decomp)
+
+    if pdf_out_path is not None:
+        pdf_pages.close()
 
 
 def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False, avg=False,
