@@ -371,6 +371,33 @@ def stat_binom_vs_protons(df, stat, div, cent, energy, data_types, data_set_plt,
     fig.tight_layout()
 
 
+def calc_sys(def_val, def_err, sys_vals, sys_errs, return_vals='both'):
+    """
+    Calculate systematic uncertainties of all input systematics with respect to single default value.
+    Combine uncertainties (nominally just sum the squares). Return this combined uncertainty along with optionally the
+    individual uncertainties.
+    :param def_val: Default value
+    :param def_err: Default statistical uncertainty
+    :param sys_vals: Array of systematic variation values
+    :param sys_errs: Array of systematic variation statistical uncertainties
+    :param return_vals: String specifying what to return. If 'both' return individual systematic uncertainties along
+    with their combination. If 'combo' just return the combination of systematic uncertainties. If 'indiv' return
+    individual systematic uncertainties only.
+    :return: Depending on retrun_vals return individual systematic uncertainties and/or their combination.
+    """
+    barlow_i = np.sqrt(np.clip((def_val - sys_vals) ** 2 - np.abs(def_err ** 2 - sys_errs ** 2), a_min=0, a_max=None))
+
+    if 'indiv' in return_vals.lower():
+        return barlow_i
+
+    barlow = np.sqrt(np.sum(barlow_i**2))
+
+    if 'combo' in return_vals.lower():
+        return barlow
+
+    return barlow, barlow_i
+
+
 def get_sys(df, df_def_name, df_sys_set_names, group_cols=None, val_col='val', err_col='err'):
     """
     Calculate systematic uncertainties on the default set in df.
@@ -408,9 +435,11 @@ def get_sys(df, df_def_name, df_sys_set_names, group_cols=None, val_col='val', e
             sys_val = group_df_sys[val_col].values
             sys_err = group_df_sys[err_col].values
 
-            barlow_i = (def_val - sys_val) ** 2 - np.abs(def_err ** 2 - sys_err ** 2)
+            barlow, barlow_i = calc_sys(def_val, def_err, sys_val, sys_err)
+
+            # barlow_i = (def_val - sys_val) ** 2 - np.abs(def_err ** 2 - sys_err ** 2)
             # barlow = np.sqrt(np.maximum(barlow_i, 0)[0] / 12.0)
-            barlow = np.sqrt(np.sum(np.where(barlow_i < 0, 0, barlow_i)))
+            # barlow = np.sqrt(np.sum(np.where(barlow_i < 0, 0, barlow_i)))
             # print(barlow, list(zip(group_df_sys['name'].values, barlow_i)))
             # input()
 
@@ -443,7 +472,7 @@ def add_sys_info(df, sys_info_dict, name_col='name'):
     def get_sys_val_str(row):
         if row[name_col] == 'default':
             return None
-        return f'{row["sys_type"]}={row["sys_val"]}{sys_info_dict[row["sys_type"]]["val_unit"]}'
+        return f'{sys_info_dict[row["sys_type"]]["title"]}={row["sys_val"]}{sys_info_dict[row["sys_type"]]["val_unit"]}'
 
     df['sys_val'] = df.apply(get_sys_val, axis=1)
     df['sys_val_str'] = df.apply(get_sys_val_str, axis=1)
@@ -514,17 +543,23 @@ def plot_vs_sys(df, df_def_name, def_val, df_sys_set_names, sys_info_dict, group
 
 
 def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, val_col='val', err_col='err',
-             name_col='name', plot_barlow_decomp=False, pdf_out_path=None):
+             name_col='name', plot_barlow_decomp=False, plot_bars=True, y_label=None, pdf_out_path=None):
     if group_cols is None:
         group_cols = ['divs', 'energy', 'cent', 'data_type', 'total_protons']
 
     def_color = 'black'
+    def_title = 'default'
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
+                0: '70-80%', -1: '80-90%'}
+    title_maps = {'divs': lambda div: f'{div}°',
+                  'energy': lambda energy: f'{energy}GeV',
+                  'cent': lambda cent: f'{cent_map[cent]}'}
 
     df_filtered = df[df[name_col].isin(list(df_sys_set_names) + [df_def_name])]
     df_filtered[['sys_type', 'sys_val']] = df_filtered[name_col].apply(lambda x: pd.Series(split_string(x)))
 
     default_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-    sys_types = [sys_type for sys_type in df_filtered['sys_type'].unique() if sys_type != 'default']
+    sys_types = [sys_type for sys_type in df_filtered['sys_type'].unique() if sys_type != df_def_name]
     color_dict = {sys_type: color for sys_type, color in zip(sys_types, default_colors)}
     df_filtered.loc[:, 'color'] = df_filtered['sys_type'].map(color_dict)
 
@@ -538,11 +573,20 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
         if df_def_name not in group_df[name_col].values:
             continue  # No default value so no systematic
         fig = plt.figure(figsize=(8, 6), dpi=144)
-        gs = gridspec.GridSpec(2, 1, height_ratios=[1, 2])
-        ax_bar = plt.subplot(gs[0])
-        ax_errorbar = plt.subplot(gs[1], sharex=ax_bar)
+        ts = [title_maps[col](val) if col in title_maps else f'{col}={val}' for col, val in zip(group_cols, group_name)]
+        title = ', '.join(ts)
+        if plot_bars:
+            gs = gridspec.GridSpec(2, 1, height_ratios=[1, 2])
+            ax_bar = plt.subplot(gs[0])
+            ax_errorbar = plt.subplot(gs[1], sharex=ax_bar)
+            ax_bar.set_title(title)
+            if y_label is not None:
+                ax_bar.set_ylabel('Systematic Uncertainty')
+        else:
+            ax_errorbar = plt.subplot()
         ax_errorbar.grid()
-        ax_bar.set_title(', '.join([f'{col}={val}' for col, val in zip(group_cols, group_name)]))
+        if y_label is not None:
+            ax_errorbar.set_ylabel(y_label)
 
         if plot_barlow_decomp:
             fig_barlow_decomp, ax_barlow_decomp = plt.subplots(figsize=(8, 6), dpi=144)
@@ -562,10 +606,32 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
             sys_val = group_df_sys[val_col].values
             sys_err = group_df_sys[err_col].values
 
-            barlow_i = np.clip((def_val - sys_val) ** 2 - np.abs(def_err ** 2 - sys_err ** 2), a_min=0, a_max=None)
+            barlow_i = calc_sys(def_val, def_err, sys_val, sys_err, 'indiv')
+            # barlow_i = np.clip((def_val - sys_val) ** 2 - np.abs(def_err ** 2 - sys_err ** 2), a_min=0, a_max=None)
             # barlow = np.sqrt(np.max(barlow_i) / 12.0)
-            barlow = np.sqrt(np.sum(barlow_i / 12.0))
+            # barlow = np.sqrt(np.sum(barlow_i / 12.0))
             group_df_sys['barlow'] = barlow_i
+            group_df_sys['barlow_sum'] = barlow_i
+
+            group_df_sys['include_sys'] = group_df_sys.apply(
+                lambda row: False if sys_info_dict[row['sys_type']]['sys_vars'] is None else
+                row['sys_val'] in sys_info_dict[row['sys_type']]['sys_vars'], axis=1)
+
+            # print(group_df_sys)
+
+            max_indices = []  # For each systematic find index of variation to count in systematic total
+            for sys_type in group_df_sys['sys_type'].unique():
+                # print(sys_type, sys_info_dict[sys_type]['sys_vars'],
+                #       group_df_sys[(group_df_sys['sys_type'] == sys_type)]['sys_val'])
+                sys_mask = (group_df_sys['sys_type'] == sys_type) & (group_df_sys['include_sys'])  # Only 'sys_vars'
+                sys_barlows = group_df_sys.loc[sys_mask, 'barlow_sum']
+                if len(sys_barlows) > 0:
+                    max_indices.append(group_df_sys.loc[sys_mask, 'barlow_sum'].idxmax())
+            # print(f'max_indices: {max_indices}')
+            # print(group_df_sys.index.isin(max_indices))
+            group_df_sys.loc[~group_df_sys.index.isin(max_indices), 'barlow_sum'] = 0
+
+            barlow = np.sqrt(np.sum(group_df_sys['barlow_sum'].values**2))
 
             sys_types = group_df_sys['sys_type'].values
             if plot_barlow_decomp:
@@ -581,20 +647,25 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
 
             ax_errorbar.axhline(def_val, color=def_color)
             # print(df_def_name, def_val, def_err)
-            ax_errorbar.errorbar([df_def_name], [def_val], [def_err], color=def_color, ls='none', marker='o')
-            ax_errorbar.errorbar([df_def_name], [def_val], [barlow], color=def_color, linewidth=5, alpha=0.5,
+            ax_errorbar.errorbar([def_title], [def_val], [def_err], color=def_color, ls='none', marker='o',
+                                 label=def_title)
+            ax_errorbar.errorbar([def_title], [def_val], [barlow], color=def_color, linewidth=5, alpha=0.5,
                                  ls='none', marker=None)
 
             for sys_type in group_df_sys['sys_type'].unique():
                 sys_type_df = group_df_sys[group_df_sys['sys_type'] == sys_type]
                 sys_type_df = sys_type_df.sort_values('sys_val')
+                sys_type_sum_df = sys_type_df[sys_type_df['include_sys']]
                 ax_errorbar.errorbar(sys_type_df['sys_val_str'], sys_type_df[val_col], sys_type_df[err_col],
-                                     color=sys_type_df['color'].values[0], ls='none', marker='o',
+                                     color=sys_type_df['color'].values[0], ls='none', marker='o', zorder=10,
                                      label=sys_info_dict[sys_type][name_col])
-            bars = ax_bar.bar([df_def_name] + list(group_df_sys['sys_val_str']),
-                              [barlow] + list(np.sqrt(barlow_i / 12.0)),
-                              color=[def_color] + list(group_df_sys['color']))
-            ax_bar.plot([bars[0].get_x(), bars[0].get_x() + bars[0].get_width()], [def_err, def_err], color='red')
+                ax_errorbar.scatter(sys_type_sum_df['sys_val_str'], sys_type_sum_df[val_col], color='yellow', zorder=11,
+                                    marker='o', s=4)
+            if plot_bars:
+                bars = ax_bar.bar([def_title] + list(group_df_sys['sys_val_str']),
+                                  [barlow] + list(group_df_sys['barlow_sum'].values),
+                                  color=[def_color] + list(group_df_sys['color']))
+                ax_bar.plot([bars[0].get_x(), bars[0].get_x() + bars[0].get_width()], [def_err, def_err], color='red')
             ax_errorbar.set_xlim(right=ax_errorbar.get_xlim()[-1] + ax_errorbar.get_xlim()[-1] * 0.3)
             ax_errorbar.tick_params(axis='x', rotation=45)
             for label in ax_errorbar.get_xticklabels():
