@@ -441,7 +441,7 @@ def plot_star_var_sys():
 
     sys_info_dict = {
         'dca': {'name': 'dca', 'title': 'dca', 'decimal': 1, 'default': 1, 'sys_vars': [0.8, 1.2], 'val_unit': ' cm'},
-        'nsprx': {'name': 'nsigma proton x', 'title': 'nsig proton x', 'decimal': 1, 'default': 1, 'sys_vars': [0.9, 1.1], 'val_unit': ''},
+        'nsprx': {'name': r'n$\sigma$ proton', 'title': r'n$\sigma$ proton', 'decimal': 1, 'default': 1, 'sys_vars': [0.9, 1.1], 'val_unit': ''},
         'm2r': {'name': 'mass^2 range', 'title': 'm2 range', 'decimal': 0, 'default': 0.6, 'sys_vars': [0.4, 0.8], 'val_unit': ' GeV'},
         'nhfit': {'name': 'nHits fit', 'title': 'nhits fit', 'decimal': 2, 'default': 20, 'sys_vars': [15, 25], 'val_unit': ''},
         'Efficiency': {'name': 'efficiency', 'title': 'efficiency', 'decimal': 2, 'default': 0, 'sys_vars': [95.0, 90.0], 'val_unit': '%'},
@@ -644,10 +644,13 @@ def plot_star_var_sys():
         # dsig_avgs_diff_v2sub = dsig_avgs_diff_v2sub[(dsig_avgs_diff_v2sub['divs'] == 120) &
         #                                             (dsig_avgs_diff_v2sub['cent'] == 8)]
         plot_sys(dsig_avgs_diff_v2sub, 'bes_def', non_rand_sets, sys_info_dict, val_col='avg', err_col='avg_err',
-                 group_cols=['divs', 'energy', 'cent'], pdf_out_path=sys_pdf_out_path, y_label=r'$\Delta \sigma^2$')
+                 group_cols=['divs', 'energy', 'cent'], y_label=r'$\Delta \sigma^2$',
+                 # pdf_out_path=None)
+                 pdf_out_path=sys_pdf_out_path)
         plot_sys(dsig_avgs_diff_v2sub, 'bes_def', rand_sets, sys_info_dict, val_col='avg', err_col='avg_err',
-                 group_cols=['divs', 'energy', 'cent'], pdf_out_path=sys_pdf_out_path.replace('.pdf', '_rands.pdf'),
-                 plot_bars=False, y_label=r'$\Delta \sigma^2$')
+                 group_cols=['divs', 'energy', 'cent'], plot_bars=False, y_label=r'$\Delta \sigma^2$',
+                 # pdf_out_path=None)
+                 pdf_out_path=sys_pdf_out_path.replace('.pdf', '_rands.pdf'))
         # plt.show()
 
     dsig_avg_diff_v2sub = get_sys(dsig_avgs_diff_v2sub, 'bes_def', sys_sets_count, val_col='avg', err_col='avg_err',

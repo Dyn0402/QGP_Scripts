@@ -470,9 +470,12 @@ def add_sys_info(df, sys_info_dict, name_col='name'):
         return round(float(f'0.{row["sys_val"]}') * 10 ** sys_info_dict[row['sys_type']]['decimal'], 3)
 
     def get_sys_val_str(row):
+        val = row["sys_val"]
         if row[name_col] == 'default':
             return None
-        return f'{sys_info_dict[row["sys_type"]]["title"]}={row["sys_val"]}{sys_info_dict[row["sys_type"]]["val_unit"]}'
+        elif row['sys_type'] == 'nsprx':
+            val *= 2
+        return f'{sys_info_dict[row["sys_type"]]["title"]}={val}{sys_info_dict[row["sys_type"]]["val_unit"]}'
 
     df['sys_val'] = df.apply(get_sys_val, axis=1)
     df['sys_val_str'] = df.apply(get_sys_val_str, axis=1)
@@ -584,6 +587,7 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
                 ax_bar.set_ylabel('Systematic Uncertainty')
         else:
             ax_errorbar = plt.subplot()
+            ax_errorbar.set_title(title)
         ax_errorbar.grid()
         if y_label is not None:
             ax_errorbar.set_ylabel(y_label)
