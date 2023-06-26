@@ -447,6 +447,10 @@ def plot_star_var_sys():
         'Efficiency': {'name': 'efficiency', 'title': 'efficiency', 'decimal': 2, 'default': 0, 'sys_vars': [95.0, 90.0], 'val_unit': '%'},
         'mix_rand_': {'name': 'mix rand', 'title': 'mix rand', 'decimal': 1, 'default': 0, 'sys_vars': None, 'val_unit': ''},
         'all_rand_': {'name': 'all rand', 'title': 'all rand', 'decimal': 1, 'default': 0, 'sys_vars': None, 'val_unit': ''},
+        'sysrefshift': {'name': 'refmult3 shift', 'title': 'refmult3 shift', 'decimal': 1, 'default': 0, 'sys_vars': [-1, 1], 'val_unit': ''},
+        'dcxyqa': {'name': 'dcaxy qa', 'title': 'dcaxy qa', 'decimal': None, 'default': None, 'sys_vars': ['tight', 'loose'], 'val_unit': ''},
+        'pileupqa': {'name': 'pile-up qa', 'title': 'pile-up qa', 'decimal': None, 'default': None, 'sys_vars': ['tight', 'loose'], 'val_unit': ''},
+        'vz': {'name': 'vz cut', 'title': 'vz cut', 'decimal': None, 'default': None, 'sys_vars': ['vzlow7', 'vzhigh-7', 'vzlow-5_vzhigh5'], 'val_unit': ''},
     }
 
     # data_sets_plt = ['dca05', 'dca08', 'default', 'dca12', 'dca15']

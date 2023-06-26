@@ -66,7 +66,7 @@ def init_pars():
         # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
         'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': True,  # If True check csv_path and only run missing datasets, else run all datasets
-        'threads': 15,
+        'threads': 11,
         # 'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'stats': define_stats(['k2']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
@@ -237,7 +237,8 @@ def define_datasets(base_path):
     #                    all_divs])
 
     # BES1 Systematics
-    var_defaults = {'dca': 1, 'nsprx': 1, 'm2r': 6, 'm2s': 0, 'nhfit': 20, 'Efficiency': None}
+    var_defaults = {'dca': 1, 'nsprx': 1, 'm2r': 6, 'm2s': 0, 'nhfit': 20, 'Efficiency': None, 'dcxyqa': None,
+                    'pileupqa': None, 'sysrefshift': 0, 'vz': None}
     # exclude_keys = ['dca05', 'dca15', 'nsprx075', 'nsprx125', 'm2r2', 'm2r10']
     exclude_keys = []
     sub_sets = find_sys_sets(f'{base_path}Data/default_sys/', var_defaults, exclude_keys, True)
@@ -431,7 +432,10 @@ def find_sys_sets(path, var_defaults, exclude_keys=[], print_sets=False):
         for var, var_def_val in var_defaults.items():
             for dir_key in dir_keys:
                 if var in dir_key:
-                    key_val = int(dir_key.replace(var, ''))
+                    try:
+                        key_val = int(dir_key.replace(var, ''))
+                    except ValueError:
+                        key_val = dir_key.replace(var, '')
                     if key_val != var_def_val:
                         non_def_keys.append(dir_key)
         if len(non_def_keys) > 0:
@@ -573,8 +577,11 @@ def read_subset(raw_path, mix_path, info_path, div, stats, other_columns, min_ev
     min_counts = get_min_counts(info_path, min_events, div)
     div_diff = 'diff' if diff else 'divide'
 
+    if raw_az_data is None:
+        print(f'Raw data empty: {raw_path} {div}')
+        return df_subset
     for total_protons in raw_az_data.get_dist():
-        if mix_path is None or total_protons in mix_az_data.get_dist():
+        if mix_path is None or (mix_az_data is not None and total_protons in mix_az_data.get_dist()):
             for stat, stat_method in stats.items():
                 other_columns.update({'total_protons': total_protons})
                 if save_stat:
