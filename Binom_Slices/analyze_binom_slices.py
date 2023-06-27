@@ -466,6 +466,8 @@ def add_sys_info(df, sys_info_dict, name_col='name'):
             return int(100 - val)
         if '_rand' in row['sys_type']:
             return int(row['sys_val'])
+        if row['sys_type']['decimal'] is None:
+            return row['sys_val']
         # if row['sys_type']
         return round(float(f'0.{row["sys_val"]}') * 10 ** sys_info_dict[row['sys_type']]['decimal'], 3)
 
@@ -491,6 +493,7 @@ def split_string(string):
 
 
 def get_set_dir(set_name, def_dir, base_dir):
+    print(set_name)
     if set_name == 'default':
         new_dir = def_dir
     else:
@@ -504,6 +507,10 @@ def get_set_dir(set_name, def_dir, base_dir):
             new_dir = new_dir.replace('_seed', '_mixnoseed')
         elif 'Efficiency' in set_name:
             new_dir = def_dir.replace('_epbins1', f'_{set_name}_epbins1')
+        elif 'sysrefshift' in set_name:
+            new_dir = def_dir.replace('_epbins1', f'_epbins1_{set_name}')
+        elif any([x in set_name for x in ['sysrefshift', 'vzlow', 'vzhigh', 'pileupqa', 'dcxyqa']]):
+            new_dir = def_dir.replace('_epbins1', f'_epbins1_{set_name}')
         else:
             sys_type, sys_val = split_string(set_name)
             new_dir = '_'.join([set_name if sys_type in dir_key else dir_key for dir_key in def_dir.split('_')])

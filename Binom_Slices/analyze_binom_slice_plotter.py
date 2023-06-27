@@ -645,16 +645,16 @@ def plot_star_var_sys():
 
     dsig_avgs_diff_v2sub = pd.concat(dsig_avgs_diff_v2sub, ignore_index=True)
     if plot:
-        # dsig_avgs_diff_v2sub = dsig_avgs_diff_v2sub[(dsig_avgs_diff_v2sub['divs'] == 120) &
-        #                                             (dsig_avgs_diff_v2sub['cent'] == 8)]
+        dsig_avgs_diff_v2sub = dsig_avgs_diff_v2sub[(dsig_avgs_diff_v2sub['divs'] == 120) &
+                                                    (dsig_avgs_diff_v2sub['cent'] == 8)]
         plot_sys(dsig_avgs_diff_v2sub, 'bes_def', non_rand_sets, sys_info_dict, val_col='avg', err_col='avg_err',
                  group_cols=['divs', 'energy', 'cent'], y_label=r'$\Delta \sigma^2$',
-                 # pdf_out_path=None)
-                 pdf_out_path=sys_pdf_out_path)
+                 pdf_out_path=None)
+                 # pdf_out_path=sys_pdf_out_path)
         plot_sys(dsig_avgs_diff_v2sub, 'bes_def', rand_sets, sys_info_dict, val_col='avg', err_col='avg_err',
                  group_cols=['divs', 'energy', 'cent'], plot_bars=False, y_label=r'$\Delta \sigma^2$',
-                 # pdf_out_path=None)
-                 pdf_out_path=sys_pdf_out_path.replace('.pdf', '_rands.pdf'))
+                 pdf_out_path=None)
+                 # pdf_out_path=sys_pdf_out_path.replace('.pdf', '_rands.pdf'))
         # plt.show()
 
     dsig_avg_diff_v2sub = get_sys(dsig_avgs_diff_v2sub, 'bes_def', sys_sets_count, val_col='avg', err_col='avg_err',
