@@ -85,10 +85,12 @@ def run_experiment_no_bs(n_tracks, n_events, bin_width, samples, stats, stats_pl
     return n_exp, samples, n_events, bin_width, n_tracks, stat_vals, stat_errs_delta, alg
 
 
-def bin_experiment_no_bs(experiment, n_tracks, bin_width, samples, rng, alg=3):
+def bin_experiment_no_bs(experiment, n_tracks, bin_width, samples, rng, alg=3, sort=False):
     data = np.zeros(n_tracks + 1, dtype=int)
     for event in experiment:
         # event = rotate_event(event, rng.random() * 2 * np.pi)  # This doesn't matter with no phi dependence
+        if sort:
+            event = np.sort(event)
         if alg == 4:
             hist = get_resamples4(event, bin_width, samples, rng)
         else:
