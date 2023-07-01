@@ -12,11 +12,86 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+import uproot
+import awkward as ak
+import vector
+
+from Analysis_POCs.poc_functions import bin_experiment, bin_experiment_no_bs
+from PConsSim import PConsSim, rotate_vector
+from DistStats import DistStats
+
 
 def main():
     # chat_gpt_test()
-    momentum_test()
+    # single_event_test()
+    # momentum_test()
+    full_test()
     print('donzo')
+
+
+def full_test():
+    vector.register_awkward()
+    rng = np.random.default_rng(42)
+
+    n_tracks = 100
+    n_protons = 40
+    n_events = 1000
+    energy = 2  # Currently just the range of momenta
+    y_max, pt_max, p_max = 0.5, 2, 2
+
+    bin_width = np.deg2rad(120)
+    resamples = 72
+
+    experiment_tracks = {}
+    for event_i in range(n_events):
+        event = PConsSim(energy, n_tracks, rng=rng)
+        event.rotate_tracks()
+        tracks = event.get_m_tracks(n_protons)
+        tracks = ak.Array({'px': tracks[:, 0], 'py': tracks[:, 1], 'pz': tracks[:, 2], 'M': tracks[:, 0] * 0},
+                          with_name='Momentum4D')
+        # print(tracks.p)
+        tracks = tracks[(abs(tracks.rapidity) < y_max) & (tracks.pt < pt_max) & (tracks.p < p_max)]
+        # print(len(tracks))
+        tracks = np.array(tracks.phi)
+        tracks[tracks < 0] += 2 * np.pi
+        if len(tracks) == 27:
+            plot_momenta(event.get_m_tracks(n_tracks), event.net_momentum_vec)
+            # plot_momenta(event.get_m_tracks(n_tracks), event.net_momentum_vec)
+        # tracks = np.array(np.random.uniform(0, 2 * np.pi, size=len(tracks)))
+        if len(tracks) not in experiment_tracks:
+            experiment_tracks.update({len(tracks): [tracks]})
+        else:
+            experiment_tracks[len(tracks)].append(tracks)
+
+    n_protons_list = sorted([x for x in experiment_tracks.keys() if x > 1])
+    dsig_2_list, dsig_2_err_list = [], []
+    for n_proton in n_protons_list:
+        p = bin_width / (2 * np.pi)
+        binom_var = n_proton * p * (1 - p)
+        print(f'{n_proton} {experiment_tracks[n_proton]}')
+        data = bin_experiment_no_bs(experiment_tracks[n_proton], n_proton, bin_width, resamples, rng, alg=3, sort=True)
+        stats = DistStats(data, unbinned=False)
+        delta_sig_2 = (stats.get_k_stat(2) - binom_var) / (n_proton * (n_proton - 1))
+        dsig_2_list.append(delta_sig_2.val)
+        dsig_2_err_list.append(delta_sig_2.err)
+        print(f'{n_proton} protons: mean: {stats.get_mean()}, variance: {stats.get_variance()}, delta_sig_2: {delta_sig_2}')
+
+    plt.axhline(0, color='black')
+    plt.grid()
+    plt.errorbar(n_protons_list, dsig_2_list, yerr=dsig_2_err_list, marker='o', ls='none')
+    plt.show()
+
+
+def single_event_test():
+    n_part = 50
+
+    event = PConsSim(5, n_part)
+    # print(event.get_m_tracks(20))
+    plot_momenta(event.get_m_tracks(n_part), event.net_momentum_vec)
+    event.rotate_tracks()
+    # print(event.get_m_tracks(20))
+    plot_momenta(event.get_m_tracks(n_part), event.net_momentum_vec)
+    plt.show()
 
 
 def momentum_test():
@@ -100,31 +175,6 @@ def chat_gpt_test():
     plt.show()
 
 
-def rotate_vector(vec, vec_target, angle_fraction=None):
-    vec_unit = vec / np.linalg.norm(vec)
-    vec_target_unit = vec_target / np.linalg.norm(vec_target)
-
-    # Find the angle and axis of rotation
-    angle = np.arccos(np.dot(vec_unit, vec_target_unit))
-    angle = angle * angle_fraction if angle_fraction is not None else angle
-    axis = np.cross(vec_unit, vec_target_unit)
-    axis = axis / np.linalg.norm(axis)
-
-    # Create the rotation matrix
-    c = np.cos(angle)
-    s = np.sin(angle)
-    C = 1 - c
-    rot_matrix = np.array(
-        [[axis[0] ** 2 * C + c, axis[0] * axis[1] * C - axis[2] * s, axis[0] * axis[2] * C + axis[1] * s],
-         [axis[1] * axis[0] * C + axis[2] * s, axis[1] ** 2 * C + c, axis[1] * axis[2] * C - axis[0] * s],
-         [axis[2] * axis[0] * C - axis[1] * s, axis[2] * axis[1] * C + axis[0] * s, axis[2] ** 2 * C + c]])
-
-    # Apply the rotation matrix to vec1
-    rotated_vec1 = np.dot(rot_matrix, vec)
-
-    return rotated_vec1
-
-
 def plot_vectors(vectors):
     # Create a 3D figure and add axes
     fig = plt.figure()
@@ -157,6 +207,11 @@ def plot_momenta(momenta, net_momentum_vec):
     plt.quiver(0, 0, 0, *(net_momentum_vec / net_momentum), length=net_momentum, color='red')
     plt.quiver(0, 0, 0, *(-net_momentum_vec / net_momentum), length=net_momentum, color='orange')
     plt.tight_layout()
+
+
+def rapidity(px, py, pz, m):
+    e = np.sqrt(m ** 2 + px ** 2 + py ** 2 + pz ** 2)
+    return np.arctanh(pz / e)
 
 
 if __name__ == '__main__':
