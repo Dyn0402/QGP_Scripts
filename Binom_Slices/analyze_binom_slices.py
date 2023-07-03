@@ -398,13 +398,13 @@ def calc_sys(def_val, def_err, sys_vals, sys_errs, return_vals='both'):
     return barlow, barlow_i
 
 
-def get_sys(df, df_def_name, df_sys_set_names, group_cols=None, val_col='val', err_col='err'):
+def get_sys(df, df_def_name, df_sys_dict, group_cols=None, val_col='val', err_col='err'):
     """
     Calculate systematic uncertainties on the default set in df.
     Only ready to take single variation per systematic variable.
     :param df: Dataframe
     :param df_def_name: Default set name
-    :param df_sys_set_names: Names of systematic sets to be analyzed
+    :param df_sys_dict: Dictionary of systematic sets to be analyzed. {set_type: [set_names]}
     :param group_cols: Name of columns by which to group values.
     For example, energies and centralities should be separate
     :param val_col: Name of column containing the values of interest
@@ -414,7 +414,8 @@ def get_sys(df, df_def_name, df_sys_set_names, group_cols=None, val_col='val', e
     if group_cols is None:
         group_cols = ['divs', 'energy', 'cent', 'data_type', 'total_protons']
 
-    df_filtered = df[df['name'].isin(df_sys_set_names + [df_def_name])]
+    sys_set_names = [y for x in df_sys_dict.values() for y in x]
+    df_filtered = df[df['name'].isin(list(sys_set_names) + [df_def_name])]
     df_set = df_filtered.groupby(group_cols)
     df_def_sys = []
 
@@ -432,16 +433,14 @@ def get_sys(df, df_def_name, df_sys_set_names, group_cols=None, val_col='val', e
         else:
             group_df_sys = group_df[group_df['name'] != df_def_name]
 
-            sys_val = group_df_sys[val_col].values
-            sys_err = group_df_sys[err_col].values
+            barlow = 0
+            for sys_type, sys_names in df_sys_dict.items():
+                group_df_sys_type = group_df_sys[group_df_sys['name'].isin(sys_names)]
+                sys_val = group_df_sys_type[val_col].values
+                sys_err = group_df_sys_type[err_col].values
 
-            barlow, barlow_i = calc_sys(def_val, def_err, sys_val, sys_err)
-
-            # barlow_i = (def_val - sys_val) ** 2 - np.abs(def_err ** 2 - sys_err ** 2)
-            # barlow = np.sqrt(np.maximum(barlow_i, 0)[0] / 12.0)
-            # barlow = np.sqrt(np.sum(np.where(barlow_i < 0, 0, barlow_i)))
-            # print(barlow, list(zip(group_df_sys['name'].values, barlow_i)))
-            # input()
+                barlow += calc_sys(def_val, def_err, sys_val, sys_err, 'indiv')**2
+            barlow = np.sqrt(barlow)
 
         df_entry = group_df_def.reset_index().to_dict(orient='records')[0]
         df_entry.update({'sys': barlow})
@@ -483,6 +482,29 @@ def add_sys_info(df, sys_info_dict, name_col='name'):
     df['sys_val_str'] = df.apply(get_sys_val_str, axis=1)
 
     return df
+
+
+def sys_info_dict_to_var_names(sys_info_dict):
+    """
+    Given sys_info_dict, return dictionary of all systematics data set names to be combined for systematics.
+    :param sys_info_dict:
+    :return: Dictionary of systematic data set names to be combined. {key: [data_set_names]}
+    """
+    sys_vars_names = {}
+    for key in sys_info_dict:
+        if sys_info_dict[key]['sys_vars'] is not None:
+            sys_vars_names.update({key: []})
+            for sys_var_val in sys_info_dict[key]['sys_vars']:
+                if sys_info_dict[key]['decimal'] is None:
+                    sys_vars_names[key].append(f'{key}{sys_var_val}')
+                else:
+                    if key == 'Efficiency':
+                        sys_var_val = 100 - sys_var_val
+                    str_val = sys_var_val / 10 ** sys_info_dict[key]['decimal']
+                    str_val = str(round(str_val, sys_info_dict[key]['decimal'] + 1)).replace('0.', '')
+                    sys_vars_names[key].append(f'{key}{str_val}')
+    print(sys_vars_names)
+    print([y for x in sys_vars_names.values() for y in x])
 
 
 def split_string(string):

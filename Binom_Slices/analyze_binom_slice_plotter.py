@@ -453,6 +453,9 @@ def plot_star_var_sys():
         'vz': {'name': 'vz cut', 'title': 'vz cut', 'decimal': None, 'default': None, 'sys_vars': ['vzlow7', 'vzhigh-7', 'vzlow-5_vzhigh5'], 'val_unit': ''},
     }
 
+    sys_include_sets = sys_info_dict_to_var_names(sys_info_dict)
+    sys_include_names = [y for x in sys_include_sets.values() for y in x]
+
     # data_sets_plt = ['dca05', 'dca08', 'default', 'dca12', 'dca15']
     # data_sets_colors = dict(zip(data_sets_plt, ['blue', 'green', 'black', 'red', 'purple']))
     # data_sys_sets_vals = [0.5, 0.8, 1.0, 1.2, 1.5]
@@ -488,7 +491,7 @@ def plot_star_var_sys():
     # def_val = 0.6
     data_sets_labels = dict(zip(data_sets_plt, ['bes_def', 'dca08', 'nsprx09', 'm2r4', 'nhfit25']))
     # sys_sets_count = ['bes_def', 'dca08', 'nsprx09', 'm2r4', 'nhfit25']
-    sys_sets_count = ['bes_def', 'dca08', 'nsprx09', 'm2r4', 'nhfit25', 'Eff05']
+    # sys_sets_count = ['bes_def', 'dca08', 'nsprx09', 'm2r4', 'nhfit25', 'Eff05']
 
     df = pd.read_csv(df_path)
     df = df.dropna()
@@ -511,7 +514,7 @@ def plot_star_var_sys():
 
     # Get k2 raw, mix, diff systematics
     if df_def_out_name is not None and calc_finals:
-        df_def_with_sys = get_sys(df, 'bes_def', sys_sets_count,
+        df_def_with_sys = get_sys(df, 'bes_def', sys_include_sets,
                                   group_cols=['divs', 'energy', 'cent', 'data_type', 'total_protons'])
         df_def_with_sys.to_csv(f'{base_path}{df_def_out_name}', index=False)
 
@@ -522,7 +525,7 @@ def plot_star_var_sys():
     df_dsigma_types = pd.concat([df_raw, df_mix, df_diff])
 
     dvar_vs_protons_energies(df_diff, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'],
-                             sys_sets_count, star_prelim=True,
+                             data_sets_plt, star_prelim=True,
                              plot=False, avg=True, plot_avg=False, data_sets_colors=data_sets_colors,
                              data_sets_labels=data_sets_labels, y_ranges=[-0.00088, 0.00016])
 
@@ -532,7 +535,7 @@ def plot_star_var_sys():
     #          group_cols=['divs', 'energy', 'cent', 'data_type', 'total_protons'])
 
     if df_def_dsigma_out_name is not None and calc_finals:
-        df_def_dsigma = get_sys(df_dsigma_types, 'bes_def', sys_sets_count,
+        df_def_dsigma = get_sys(df_dsigma_types, 'bes_def', sys_include_sets,
                                 group_cols=['divs', 'energy', 'cent', 'data_type', 'total_protons'])
         print(df_def_dsigma)
         df_def_dsigma.to_csv(f'{base_path}{df_def_dsigma_out_name}', index=False)
@@ -613,7 +616,7 @@ def plot_star_var_sys():
 
     # plt.show()
 
-    sets_run = all_sets if plot else sys_sets_count
+    sets_run = all_sets if plot else sys_include_names
     dsig_avgs_all, dsig_avgs_diff_v2sub = [], []
     # print(pd.unique(df_types['name']))
     for energy in energies_fit:
@@ -639,7 +642,7 @@ def plot_star_var_sys():
 
     if df_def_avgs_out_name is not None and calc_finals:
         dsig_avg_all = pd.concat(dsig_avgs_all, ignore_index=True)
-        dsig_avgs_def_sys = get_sys(dsig_avg_all, 'bes_def', sys_sets_count, val_col='avg', err_col='avg_err',
+        dsig_avgs_def_sys = get_sys(dsig_avg_all, 'bes_def', sys_include_sets, val_col='avg', err_col='avg_err',
                                     group_cols=['divs', 'energy', 'cent', 'data_type'])
         dsig_avgs_def_sys.to_csv(f'{base_path}{fits_out_base}/{df_def_avgs_out_name}', index=False)
 
@@ -657,7 +660,7 @@ def plot_star_var_sys():
                  # pdf_out_path=sys_pdf_out_path.replace('.pdf', '_rands.pdf'))
         # plt.show()
 
-    dsig_avg_diff_v2sub = get_sys(dsig_avgs_diff_v2sub, 'bes_def', sys_sets_count, val_col='avg', err_col='avg_err',
+    dsig_avg_diff_v2sub = get_sys(dsig_avgs_diff_v2sub, 'bes_def', sys_include_sets, val_col='avg', err_col='avg_err',
                                   group_cols=['divs', 'energy', 'cent'])
     if df_def_avgs_v2sub_out_name is not None and calc_finals:
         dsig_avg_diff_v2sub.to_csv(f'{base_path}{fits_out_base}/{df_def_avgs_v2sub_out_name}', index=False)
