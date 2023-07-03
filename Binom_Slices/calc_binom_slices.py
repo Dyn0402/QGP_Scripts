@@ -64,9 +64,9 @@ def init_pars():
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_stats_sim.csv',
         # 'csv_path': 'D:/Transfer/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim_new.csv',
         # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
-        'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
-        'only_new': True,  # If True check csv_path and only run missing datasets, else run all datasets
-        'threads': 8,
+        'csv_append': False,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
+        'only_new': False,  # If True check csv_path and only run missing datasets, else run all datasets
+        'threads': 15,
         # 'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'stats': define_stats(['k2']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
