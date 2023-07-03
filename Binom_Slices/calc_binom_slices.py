@@ -26,7 +26,6 @@ from pickle_methods import *
 
 
 def main():
-    sleep(3600 * 7)
     pars = init_pars()
     read_data(pars)
 
@@ -139,7 +138,7 @@ def define_datasets(base_path):
         # ['bes_def', '', ['default'], [], ['resample'], range(60), all_energies, [8], all_divs],
         # ['bes_resample_def', '', ['default', 'resample'], [], ['alg3', 'epbins1'], [0], all_energies, all_cents,
         #  all_divs],
-        ['bes_def', '', ['default'], [], ['alg3', 'sys', 'epbins1', 'calcv2'],
+        ['bes_def', '', ['default'], [], ['alg3', 'sys', 'epbins1', 'calcv2', 'test'],
          ['calcv2', 'epbins1', 'resample', 'seed'], all_energies,
          all_cents, all_divs],
         # ['bes_single', '', ['default', 'single'], [], ['alg3'], [0], all_energies, [8], all_divs],
@@ -247,8 +246,8 @@ def define_datasets(base_path):
     sub_sets = find_sys_sets(f'{base_path}Data/default_sys/', var_defaults, exclude_keys, True)
     print(f'sys_sets len {len(sub_sets)}')
     for sub_set, sub_set_dir_name in sub_sets.items():
-        entry_vals.append([f'bes_sys_{sub_set}', '', ['default', 'sys'], [], [], [sub_set_dir_name],
-                           all_energies, all_cents, all_divs])
+        entry_vals.append([f'bes_sys_{sub_set}', '', ['default', 'sys'], [], ['test', 'misruns', 'old'],
+                           [sub_set_dir_name], all_energies, all_cents, all_divs])
 
     # Mix randomization
     for i in range(5):

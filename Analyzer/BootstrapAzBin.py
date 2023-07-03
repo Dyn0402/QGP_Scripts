@@ -35,18 +35,21 @@ class BootstrapAzBin:
 
                 line = line.strip().split('\t')
                 if len(line) == 2:
-                    total_particles = int(line[0])
-                    bin_particles_string = line[1].split(' ')
-                    if len(bin_particles_string) > 0:
-                        data[total_particles] = []
-                    i = 0
-                    for entry in bin_particles_string:
-                        entry = entry.split(':')
-                        while int(entry[0]) > i:
-                            data[total_particles].append(0)
+                    try:
+                        total_particles = int(line[0])
+                        bin_particles_string = line[1].split(' ')
+                        if len(bin_particles_string) > 0:
+                            data[total_particles] = []
+                        i = 0
+                        for entry in bin_particles_string:
+                            entry = entry.split(':')
+                            while int(entry[0]) > i:
+                                data[total_particles].append(0)
+                                i += 1
+                            data[total_particles].append(int(entry[1]))
                             i += 1
-                        data[total_particles].append(int(entry[1]))
-                        i += 1
+                    except ValueError:
+                        print(f'Bootstrap read error {self.path}')
 
             self.append_set(data)
 
