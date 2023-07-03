@@ -14,6 +14,8 @@ import pandas as pd
 from pandas.errors import EmptyDataError
 import os
 
+from time import sleep
+
 from multiprocessing import Pool
 import tqdm
 import istarmap  # Needed for tqdm
@@ -24,6 +26,7 @@ from pickle_methods import *
 
 
 def main():
+    sleep(3600 * 7)
     pars = init_pars()
     read_data(pars)
 
@@ -32,9 +35,9 @@ def main():
 
 def init_pars():
     pars = {
-        'base_path': 'F:/Research/',
+        # 'base_path': 'F:/Research/',
         # 'base_path': 'D:/Transfer/Research/',
-        # 'base_path': '/media/ucla/Research/',
+        'base_path': '/media/ucla/Research/',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_cfev.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_stats_ampt_eff.csv',
@@ -49,7 +52,7 @@ def init_pars():
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_vars_bes_sys.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_vars_bes_rand_sys_test.csv',
-        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+        'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
                     'binom_slice_vars_bes_sys.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_var_cent8_2source_closure_tests.csv',
