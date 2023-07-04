@@ -439,7 +439,7 @@ def get_sys(df, df_def_name, df_sys_dict, group_cols=None, val_col='val', err_co
                 sys_val = group_df_sys_type[val_col].values
                 sys_err = group_df_sys_type[err_col].values
 
-                barlow += calc_sys(def_val, def_err, sys_val, sys_err, 'indiv')**2
+                barlow += np.max(calc_sys(def_val, def_err, sys_val, sys_err, 'indiv')**2)
             barlow = np.sqrt(barlow)
 
         df_entry = group_df_def.reset_index().to_dict(orient='records')[0]
@@ -452,7 +452,8 @@ def get_sys(df, df_def_name, df_sys_dict, group_cols=None, val_col='val', err_co
 
 def add_sys_info(df, sys_info_dict, name_col='name'):
     sys_name_dict = {sys_type: sys_info[name_col] for sys_type, sys_info in sys_info_dict.items()}
-    df[['sys_type', 'sys_val']] = df[name_col].apply(lambda x: pd.Series(split_string(x)))
+    # df[['sys_type', 'sys_val']] = df[name_col].apply(lambda x: pd.Series(split_string(x)))
+    df[['sys_type', 'sys_val']] = df[name_col].apply(lambda x: pd.Series(split_sys_type_val(x)))
     df['sys_name'] = df['sys_type'].map(sys_name_dict)
 
     def get_sys_val(row):
@@ -465,7 +466,7 @@ def add_sys_info(df, sys_info_dict, name_col='name'):
             return int(100 - val)
         if '_rand' in row['sys_type']:
             return int(row['sys_val'])
-        if row['sys_type']['decimal'] is None:
+        if sys_info_dict[row['sys_type']]['decimal'] is None:
             return row['sys_val']
         # if row['sys_type']
         return round(float(f'0.{row["sys_val"]}') * 10 ** sys_info_dict[row['sys_type']]['decimal'], 3)
@@ -476,7 +477,36 @@ def add_sys_info(df, sys_info_dict, name_col='name'):
             return None
         elif row['sys_type'] == 'nsprx':
             val *= 2
-        return f'{sys_info_dict[row["sys_type"]]["title"]}={val}{sys_info_dict[row["sys_type"]]["val_unit"]}'
+        elif row['sys_type'] == 'vz':
+            if val == 'high-7':
+                val = '[-50, -11.7]' if row['energy'] == 7 else '[-30, -7]'
+            elif val == 'low7':
+                val = '[11.7, 50]' if row['energy'] == 7 else '[7, 30]'
+            elif val == 'low-5_vzhigh5':
+                val = '[-8.3, 8.3]' if row['energy'] == 7 else '[-5, 5]'
+        elif row['sys_type'] == 'sysrefshift':
+            if int(val) == 1:
+                val = '+1'
+        elif row['sys_type'] == 'dcxyqa':
+            if val == 'loose':
+                val = r'$\sigma$ + 1'
+            if val == 'tight':
+                val = r'$\sigma$ - 1'
+            if val == '2loose':
+                val = r'$\sigma$ + 2'
+            if val == '2tight':
+                val = r'$\sigma$ - 2'
+        elif row['sys_type'] == 'pileupqa':
+            if val == 'loose':
+                val = r'$\sigma$ = 4'
+            if val == 'tight':
+                val = r'$\sigma$ = 2'
+            if val == '2loose':
+                val = r'$\sigma$ = 5'
+            if val == '2tight':
+                val = r'$\sigma$ = 1.5'
+
+        return f'{sys_info_dict[row["sys_type"]]["title"]} = {val}{sys_info_dict[row["sys_type"]]["val_unit"]}'
 
     df['sys_val'] = df.apply(get_sys_val, axis=1)
     df['sys_val_str'] = df.apply(get_sys_val_str, axis=1)
@@ -503,8 +533,25 @@ def sys_info_dict_to_var_names(sys_info_dict):
                     str_val = sys_var_val / 10 ** sys_info_dict[key]['decimal']
                     str_val = str(round(str_val, sys_info_dict[key]['decimal'] + 1)).replace('0.', '')
                     sys_vars_names[key].append(f'{key}{str_val}')
-    print(sys_vars_names)
-    print([y for x in sys_vars_names.values() for y in x])
+    # print(sys_vars_names)
+    # print([y for x in sys_vars_names.values() for y in x])
+    return sys_vars_names
+
+
+def split_sys_type_val(sys_name):
+    if any([x in sys_name for x in ['vzlow', 'vzhigh']]):
+        return 'vz', sys_name[2:]
+    for sys_type in ['dcxyqa', 'pileupqa', 'sysrefshift']:
+        if sys_type in sys_name:
+            return sys_type, sys_name.replace(sys_type, '')
+    # if 'dcxyqa' in sys_name:
+    #     return 'dcxyqa', sys_name.replace('dcxyqa', '')
+    # if 'pileupqa' in sys_name:
+    #     return 'pileupqa', sys_name.replace('pileupqa', '')
+    # if 'sysrefshift' in sys_name:
+    #     pass
+    else:
+        return split_string(sys_name)
 
 
 def split_string(string):
@@ -514,11 +561,34 @@ def split_string(string):
     return string, ''
 
 
+def sort_on_sys_info_dict(df, sys_info_dict):
+    sys_type_map = dict(zip(sys_info_dict.keys(), range(len(sys_info_dict))))
+    df['sys_type_index'] = df['sys_type'].map(sys_type_map)
+    # print(df.columns)
+    # df['sys_val_index'] = df.apply(lambda x: sys_info_dict[x['sys_type']]['sys_vars'].index(x['sys_val']), axis=1)
+
+    def get_sys_val_index(row):
+        sys_vars = sys_info_dict[row['sys_type']]['sys_vars']
+        if sys_vars is None:
+            return 1
+        val_index = len(sys_vars) + 1
+        if row['sys_val'] in sys_vars:
+            val_index = sys_vars.index(row['sys_val'])
+
+        return val_index
+
+    df['sys_val_index'] = df.apply(get_sys_val_index, axis=1)
+
+    return df
+
+
 def get_set_dir(set_name, def_dir, base_dir):
-    print(set_name)
+    # print(set_name)
     if set_name == 'default':
         new_dir = def_dir
     else:
+        if any([x in set_name for x in ['sysrefshift', 'dcxyqa', 'pileupqa', 'vzlow', 'vzhigh']]):
+            def_dir = def_dir.replace('_seed', '')
         if 'all_rand_' in set_name:
             set_num = int(set_name.replace('all_rand_', ''))
             new_dir = '_'.join(def_dir.split('_')[:-1]) + f'_{set_num}/'
@@ -588,10 +658,11 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
                   'cent': lambda cent: f'{cent_map[cent]}'}
 
     df_filtered = df[df[name_col].isin(list(df_sys_set_names) + [df_def_name])]
-    df_filtered[['sys_type', 'sys_val']] = df_filtered[name_col].apply(lambda x: pd.Series(split_string(x)))
+    df_filtered[['sys_type', 'sys_val']] = df_filtered[name_col].apply(lambda x: pd.Series(split_sys_type_val(x)))
 
     default_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
     sys_types = [sys_type for sys_type in df_filtered['sys_type'].unique() if sys_type != df_def_name]
+    print(sys_types)
     color_dict = {sys_type: color for sys_type, color in zip(sys_types, default_colors)}
     df_filtered.loc[:, 'color'] = df_filtered['sys_type'].map(color_dict)
 
@@ -604,7 +675,7 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
         print(group_name)
         if df_def_name not in group_df[name_col].values:
             continue  # No default value so no systematic
-        fig = plt.figure(figsize=(8, 6), dpi=144)
+        fig = plt.figure(figsize=(13.33, 6.16), dpi=144)
         ts = [title_maps[col](val) if col in title_maps else f'{col}={val}' for col, val in zip(group_cols, group_name)]
         title = ', '.join(ts)
         if plot_bars:
@@ -685,9 +756,11 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
             ax_errorbar.errorbar([def_title], [def_val], [barlow], color=def_color, linewidth=5, alpha=0.5,
                                  ls='none', marker=None)
 
+            group_df_sys = sort_on_sys_info_dict(group_df_sys, sys_info_dict)
+            group_df_sys = group_df_sys.sort_values(by=['sys_type_index', 'sys_val_index'])
             for sys_type in group_df_sys['sys_type'].unique():
                 sys_type_df = group_df_sys[group_df_sys['sys_type'] == sys_type]
-                sys_type_df = sys_type_df.sort_values('sys_val')
+                # sys_type_df = sys_type_df.sort_values('sys_val')
                 sys_type_sum_df = sys_type_df[sys_type_df['include_sys']]
                 ax_errorbar.errorbar(sys_type_df['sys_val_str'], sys_type_df[val_col], sys_type_df[err_col],
                                      color=sys_type_df['color'].values[0], ls='none', marker='o', zorder=10,
@@ -699,7 +772,8 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
                                   [barlow] + list(group_df_sys['barlow_sum'].values),
                                   color=[def_color] + list(group_df_sys['color']))
                 ax_bar.plot([bars[0].get_x(), bars[0].get_x() + bars[0].get_width()], [def_err, def_err], color='red')
-            ax_errorbar.set_xlim(right=ax_errorbar.get_xlim()[-1] + ax_errorbar.get_xlim()[-1] * 0.3)
+                # ax_bar.set_xticklabels([])
+            ax_errorbar.set_xlim(right=ax_errorbar.get_xlim()[-1] + ax_errorbar.get_xlim()[-1] * 0.15)
             ax_errorbar.tick_params(axis='x', rotation=45)
             for label in ax_errorbar.get_xticklabels():
                 label.set_ha('right')

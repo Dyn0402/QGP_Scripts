@@ -435,8 +435,8 @@ def plot_star_var_sys():
     exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
     cent_plt = 7
     cents = [1, 2, 3, 4, 5, 6, 7, 8]
-    energies_fit = [7, 11, 19, 27, 39, 62]
-    # energies_fit = [7]
+    # energies_fit = [7, 11, 19, 27, 39, 62]
+    energies_fit = [7]
     samples = 72  # For title purposes only
 
     sys_info_dict = {
@@ -447,10 +447,10 @@ def plot_star_var_sys():
         'Efficiency': {'name': 'efficiency', 'title': 'efficiency', 'decimal': 2, 'default': 0, 'sys_vars': [95.0, 90.0], 'val_unit': '%'},
         'mix_rand_': {'name': 'mix rand', 'title': 'mix rand', 'decimal': 1, 'default': 0, 'sys_vars': None, 'val_unit': ''},
         'all_rand_': {'name': 'all rand', 'title': 'all rand', 'decimal': 1, 'default': 0, 'sys_vars': None, 'val_unit': ''},
-        'sysrefshift': {'name': 'refmult3 shift', 'title': 'refmult3 shift', 'decimal': 1, 'default': 0, 'sys_vars': [-1, 1], 'val_unit': ''},
+        'sysrefshift': {'name': 'refmult3 shift', 'title': 'ref3 shift', 'decimal': None, 'default': 0, 'sys_vars': [-1, 1], 'val_unit': ''},
         'dcxyqa': {'name': 'dcaxy qa', 'title': 'dcaxy qa', 'decimal': None, 'default': None, 'sys_vars': ['tight', 'loose'], 'val_unit': ''},
         'pileupqa': {'name': 'pile-up qa', 'title': 'pile-up qa', 'decimal': None, 'default': None, 'sys_vars': ['tight', 'loose'], 'val_unit': ''},
-        'vz': {'name': 'vz cut', 'title': 'vz cut', 'decimal': None, 'default': None, 'sys_vars': ['vzlow7', 'vzhigh-7', 'vzlow-5_vzhigh5'], 'val_unit': ''},
+        'vz': {'name': 'vz range', 'title': 'vz', 'decimal': None, 'default': None, 'sys_vars': ['low7', 'high-7', 'low-5_vzhigh5'], 'val_unit': ' cm'},
     }
 
     sys_include_sets = sys_info_dict_to_var_names(sys_info_dict)
@@ -660,9 +660,9 @@ def plot_star_var_sys():
                  # pdf_out_path=sys_pdf_out_path.replace('.pdf', '_rands.pdf'))
         # plt.show()
 
-    dsig_avg_diff_v2sub = get_sys(dsig_avgs_diff_v2sub, 'bes_def', sys_include_sets, val_col='avg', err_col='avg_err',
-                                  group_cols=['divs', 'energy', 'cent'])
     if df_def_avgs_v2sub_out_name is not None and calc_finals:
+        dsig_avg_diff_v2sub = get_sys(dsig_avgs_diff_v2sub, 'bes_def', sys_include_sets, val_col='avg',
+                                      err_col='avg_err', group_cols=['divs', 'energy', 'cent'])
         dsig_avg_diff_v2sub.to_csv(f'{base_path}{fits_out_base}/{df_def_avgs_v2sub_out_name}', index=False)
 
     plt.show()
