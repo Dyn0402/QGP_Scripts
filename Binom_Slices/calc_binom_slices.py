@@ -26,6 +26,7 @@ from pickle_methods import *
 
 
 def main():
+    sleep(3600 * 9)
     pars = init_pars()
     read_data(pars)
 
@@ -52,7 +53,7 @@ def init_pars():
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_vars_bes_rand_sys_test.csv',
         'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
-                    'binom_slice_vars_bes_sys.csv',
+                    'binom_slice_vars_bes_sys2.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_var_cent8_2source_closure_tests.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
