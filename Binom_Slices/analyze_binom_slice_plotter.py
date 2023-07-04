@@ -22,7 +22,7 @@ from analyze_binom_slices import *
 
 
 def main():
-    # plot_paper_figs()
+    plot_paper_figs()
 
     # plot_star_model_var()
     # plot_vs_cent_var()
@@ -138,7 +138,7 @@ def plot_paper_figs():
     df_model = pd.read_csv(df_model_path)
     df_model.dropna()
     print(df_model)
-    return
+    # return
 
     df_dsigma = pd.read_csv(df_dsigma_path)
     df_dsigma = df_dsigma.dropna()
@@ -411,9 +411,11 @@ def plot_star_var_sys():
     sys_default_dir = 'rapid05_resample_norotate_seed_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_0/'
     df_name = 'Binomial_Slice_Moments/binom_slice_vars_bes_sys.csv'
 
-    plot = True
-    calc_finals = False
-    threads = 10
+    # plot = True
+    plot = False
+    # calc_finals = False
+    calc_finals = True
+    threads = 14
     sys_pdf_out_path = f'{base_path}systematic_plots.pdf'
     df_def_out_name = 'Binomial_Slice_Moments/binom_slice_vars_bes.csv'
     # df_def_out_name = None
@@ -435,22 +437,36 @@ def plot_star_var_sys():
     exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
     cent_plt = 7
     cents = [1, 2, 3, 4, 5, 6, 7, 8]
-    # energies_fit = [7, 11, 19, 27, 39, 62]
-    energies_fit = [7]
+    energies_fit = [7, 11, 19, 27, 39, 62]
+    # energies_fit = [7]
     samples = 72  # For title purposes only
 
     sys_info_dict = {
-        'dca': {'name': 'dca', 'title': 'dca', 'decimal': 1, 'default': 1, 'sys_vars': [0.8, 1.2], 'val_unit': ' cm'},
-        'nsprx': {'name': r'n$\sigma$ proton', 'title': r'n$\sigma$ proton', 'decimal': 1, 'default': 1, 'sys_vars': [0.9, 1.1], 'val_unit': ''},
-        'm2r': {'name': 'mass^2 range', 'title': 'm2 range', 'decimal': 0, 'default': 0.6, 'sys_vars': [0.4, 0.8], 'val_unit': ' GeV'},
-        'nhfit': {'name': 'nHits fit', 'title': 'nhits fit', 'decimal': 2, 'default': 20, 'sys_vars': [15, 25], 'val_unit': ''},
-        'Efficiency': {'name': 'efficiency', 'title': 'efficiency', 'decimal': 2, 'default': 0, 'sys_vars': [95.0, 90.0], 'val_unit': '%'},
-        'mix_rand_': {'name': 'mix rand', 'title': 'mix rand', 'decimal': 1, 'default': 0, 'sys_vars': None, 'val_unit': ''},
-        'all_rand_': {'name': 'all rand', 'title': 'all rand', 'decimal': 1, 'default': 0, 'sys_vars': None, 'val_unit': ''},
-        'sysrefshift': {'name': 'refmult3 shift', 'title': 'ref3 shift', 'decimal': None, 'default': 0, 'sys_vars': [-1, 1], 'val_unit': ''},
-        'dcxyqa': {'name': 'dcaxy qa', 'title': 'dcaxy qa', 'decimal': None, 'default': None, 'sys_vars': ['tight', 'loose'], 'val_unit': ''},
-        'pileupqa': {'name': 'pile-up qa', 'title': 'pile-up qa', 'decimal': None, 'default': None, 'sys_vars': ['tight', 'loose'], 'val_unit': ''},
-        'vz': {'name': 'vz range', 'title': 'vz', 'decimal': None, 'default': None, 'sys_vars': ['low7', 'high-7', 'low-5_vzhigh5'], 'val_unit': ' cm'},
+        'vz': {'name': 'vz range', 'title': 'vz', 'decimal': None, 'default': None,
+               'sys_vars': ['low7', 'high-7', 'low-5_vzhigh5'], 'val_unit': ' cm',
+               'sys_var_order': ['low7', 'low-5_vzhigh5', 'high-7']},
+        'Efficiency': {'name': 'efficiency', 'title': 'efficiency', 'decimal': 2, 'default': 0,
+                       'sys_vars': [95.0, 90.0], 'val_unit': '%', 'sys_var_order': [95.0, 90.0, 85.0, 80.0]},
+        'dca': {'name': 'dca', 'title': 'dca', 'decimal': 1, 'default': 1, 'sys_vars': [0.8, 1.2], 'val_unit': ' cm',
+                'sys_var_order': [0.5, 0.8, 1.2, 1.5]},
+        'nsprx': {'name': r'n$\sigma$ proton', 'title': r'n$\sigma$ proton', 'decimal': 1, 'default': 1,
+                  'sys_vars': [0.9, 1.1], 'val_unit': '', 'sys_var_order': [0.75, 0.9, 1.1, 1.25]},
+        'm2r': {'name': r'$m^2$ range', 'title': 'm2 range', 'decimal': 0, 'default': 0.6, 'sys_vars': [0.4, 0.8],
+                'val_unit': ' GeV', 'sys_var_order': [0.2, 0.4, 0.8, 1.0]},
+        'nhfit': {'name': 'nHits fit', 'title': 'nhits fit', 'decimal': 2, 'default': 20, 'sys_vars': [15, 25],
+                  'val_unit': '', 'sys_var_order': [15, 25]},
+        'sysrefshift': {'name': 'refmult3 shift', 'title': 'ref3 shift', 'decimal': None, 'default': 0,
+                        'sys_vars': ['-1', '1'], 'val_unit': '', 'sys_var_order': ['-1', '1']},
+        'dcxyqa': {'name': 'dcaxy qa', 'title': 'dcaxy qa', 'decimal': None, 'default': None,
+                   'sys_vars': ['tight', 'loose'], 'val_unit': '',
+                   'sys_var_order': ['2tight', 'tight', 'loose', '2loose']},
+        'pileupqa': {'name': 'pile-up qa', 'title': 'pile-up qa', 'decimal': None, 'default': None,
+                     'sys_vars': ['tight', 'loose'], 'val_unit': '',
+                     'sys_var_order': ['2tight', 'tight', 'loose', '2loose']},
+        'mix_rand_': {'name': 'mix rand', 'title': 'mix rand', 'decimal': 1, 'default': 0, 'sys_vars': None,
+                      'val_unit': '', 'sys_var_order': None},
+        'all_rand_': {'name': 'all rand', 'title': 'all rand', 'decimal': 1, 'default': 0, 'sys_vars': None,
+                      'val_unit': '', 'sys_var_order': None},
     }
 
     sys_include_sets = sys_info_dict_to_var_names(sys_info_dict)
@@ -648,16 +664,16 @@ def plot_star_var_sys():
 
     dsig_avgs_diff_v2sub = pd.concat(dsig_avgs_diff_v2sub, ignore_index=True)
     if plot:
-        dsig_avgs_diff_v2sub = dsig_avgs_diff_v2sub[(dsig_avgs_diff_v2sub['divs'] == 120) &
-                                                    (dsig_avgs_diff_v2sub['cent'] == 8)]
+        # dsig_avgs_diff_v2sub = dsig_avgs_diff_v2sub[(dsig_avgs_diff_v2sub['divs'] == 120) &
+        #                                             (dsig_avgs_diff_v2sub['cent'] == 8)]
         plot_sys(dsig_avgs_diff_v2sub, 'bes_def', non_rand_sets, sys_info_dict, val_col='avg', err_col='avg_err',
                  group_cols=['divs', 'energy', 'cent'], y_label=r'$\Delta \sigma^2$',
-                 pdf_out_path=None)
-                 # pdf_out_path=sys_pdf_out_path)
-        plot_sys(dsig_avgs_diff_v2sub, 'bes_def', rand_sets, sys_info_dict, val_col='avg', err_col='avg_err',
-                 group_cols=['divs', 'energy', 'cent'], plot_bars=False, y_label=r'$\Delta \sigma^2$',
-                 pdf_out_path=None)
-                 # pdf_out_path=sys_pdf_out_path.replace('.pdf', '_rands.pdf'))
+                 # pdf_out_path=None)
+                 pdf_out_path=sys_pdf_out_path)
+        # plot_sys(dsig_avgs_diff_v2sub, 'bes_def', rand_sets, sys_info_dict, val_col='avg', err_col='avg_err',
+        #          group_cols=['divs', 'energy', 'cent'], plot_bars=False, y_label=r'$\Delta \sigma^2$',
+        #          pdf_out_path=None)
+        #          # pdf_out_path=sys_pdf_out_path.replace('.pdf', '_rands.pdf'))
         # plt.show()
 
     if df_def_avgs_v2sub_out_name is not None and calc_finals:

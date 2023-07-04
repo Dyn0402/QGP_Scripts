@@ -439,7 +439,8 @@ def get_sys(df, df_def_name, df_sys_dict, group_cols=None, val_col='val', err_co
                 sys_val = group_df_sys_type[val_col].values
                 sys_err = group_df_sys_type[err_col].values
 
-                barlow += np.max(calc_sys(def_val, def_err, sys_val, sys_err, 'indiv')**2)
+                barlow_i = calc_sys(def_val, def_err, sys_val, sys_err, 'indiv')**2
+                barlow += np.max(barlow_i) if barlow_i.size > 0 else 0
             barlow = np.sqrt(barlow)
 
         df_entry = group_df_def.reset_index().to_dict(orient='records')[0]
@@ -568,7 +569,7 @@ def sort_on_sys_info_dict(df, sys_info_dict):
     # df['sys_val_index'] = df.apply(lambda x: sys_info_dict[x['sys_type']]['sys_vars'].index(x['sys_val']), axis=1)
 
     def get_sys_val_index(row):
-        sys_vars = sys_info_dict[row['sys_type']]['sys_vars']
+        sys_vars = sys_info_dict[row['sys_type']]['sys_var_order']
         if sys_vars is None:
             return 1
         val_index = len(sys_vars) + 1
@@ -763,10 +764,12 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
                 # sys_type_df = sys_type_df.sort_values('sys_val')
                 sys_type_sum_df = sys_type_df[sys_type_df['include_sys']]
                 ax_errorbar.errorbar(sys_type_df['sys_val_str'], sys_type_df[val_col], sys_type_df[err_col],
-                                     color=sys_type_df['color'].values[0], ls='none', marker='o', zorder=10,
+                                     color=sys_type_df['color'].values[0], ls='none', marker='o', zorder=9,
                                      label=sys_info_dict[sys_type][name_col])
-                ax_errorbar.scatter(sys_type_sum_df['sys_val_str'], sys_type_sum_df[val_col], color='yellow', zorder=11,
+                ax_errorbar.scatter(sys_type_sum_df['sys_val_str'], sys_type_sum_df[val_col], color='black', zorder=10,
                                     marker='o', s=4)
+                ax_errorbar.scatter(sys_type_sum_df['sys_val_str'], sys_type_sum_df[val_col], color='yellow', zorder=11,
+                                    marker='o', s=1)
             if plot_bars:
                 bars = ax_bar.bar([def_title] + list(group_df_sys['sys_val_str']),
                                   [barlow] + list(group_df_sys['barlow_sum'].values),
