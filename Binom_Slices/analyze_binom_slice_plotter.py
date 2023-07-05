@@ -22,7 +22,7 @@ from analyze_binom_slices import *
 
 
 def main():
-    # plot_paper_figs()
+    plot_paper_figs()
 
     # plot_star_model_var()
     # plot_vs_cent_var()
@@ -71,11 +71,11 @@ def plot_paper_figs():
                          'CFEVb342_rapid05_resample_norotate_epbins1_0/'
     # df_name = 'Binomial_Slice_Moments/binom_slice_stats_var_epbins1.csv'
     df_model_name = 'Binomial_Slice_Moments/binom_slice_stats_var_epbins1.csv'
-    df_name = 'Binomial_Slice_Moments/binom_slice_vars_bes.csv'
-    df_dsigma_name = 'Binomial_Slice_Moments/binom_slice_vars_bes_dsigma.csv'
+    df_name = 'Bes_with_Sys/binom_slice_vars_bes.csv'
+    df_dsigma_name = 'Bes_with_Sys/binom_slice_vars_bes_dsigma.csv'
     fits_out_base = 'Base_Zero_Fits'
-    df_def_avgs_out_name = 'dsig_tprotons_avgs_bes.csv'
-    df_def_avgs_v2sub_out_name = 'dsig_tprotons_avgs_v2sub_bes.csv'
+    df_def_avgs_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_bes.csv'
+    df_def_avgs_v2sub_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_bes.csv'
     # df_tproton_avgs_name = 'dsig_tprotons_avgs_cent8.csv'
     # df_partitions_fits_name = 'partitions_fits_cent8.csv'
     df_path = base_path + df_name
@@ -156,8 +156,8 @@ def plot_paper_figs():
     #                             data_sets_labels=data_sets_labels, title=f'{cent_map[cent_plt]} Centrality, {div_plt}° '
     #                                                                      f'Partitions, {samples} Samples per Event')
 
-    dsig_avgs_all = pd.read_csv(f'{base_path}{fits_out_base}/{df_def_avgs_out_name}')
-    dsig_avgs_v2_sub = pd.read_csv(f'{base_path}{fits_out_base}/{df_def_avgs_v2sub_out_name}')
+    dsig_avgs_all = pd.read_csv(f'{base_path}{df_def_avgs_out_name}')
+    dsig_avgs_v2_sub = pd.read_csv(f'{base_path}{df_def_avgs_v2sub_out_name}')
 
     dsig_avgs_v2_sub_cent8 = dsig_avgs_v2_sub[dsig_avgs_v2_sub['cent'] == 8]
     plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, ['bes_def'], data_sets_colors=data_sets_colors, fit=True,
@@ -411,11 +411,11 @@ def plot_star_var_sys():
     sys_default_dir = 'rapid05_resample_norotate_seed_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_0/'
     df_name = 'Binomial_Slice_Moments/binom_slice_vars_bes_sys.csv'
 
+    # plot = True
     plot = False
-    # plot = False
     # calc_finals = False
     calc_finals = True
-    threads = 10
+    threads = 15
     sys_pdf_out_path = f'{base_path}systematic_plots.pdf'
     df_def_out_name = 'Bes_with_Sys/binom_slice_vars_bes.csv'
     # df_def_out_name = None
@@ -438,7 +438,7 @@ def plot_star_var_sys():
     cent_plt = 7
     cents = [1, 2, 3, 4, 5, 6, 7, 8]
     energies_fit = [7, 11, 19, 27, 39, 62]
-    # energies_fit = [7]
+    # energies_fit = [7, 11]
     samples = 72  # For title purposes only
 
     sys_info_dict = {
@@ -510,6 +510,7 @@ def plot_star_var_sys():
     df['name'] = df['name'].str.replace('bes_sys_', '')
     all_sets = pd.unique(df['name'])
     print(all_sets)
+    print(sys_include_names)
 
     rand_sets = [set_name for set_name in all_sets if '_rand' in set_name]
     non_rand_sets = [set_name for set_name in all_sets if '_rand' not in set_name]
@@ -518,7 +519,7 @@ def plot_star_var_sys():
     v2_sys_vals = {name: {2: read_flow_values(get_set_dir(name, sys_default_dir, sys_dir))} for name in all_sets
                    if name != 'bes_def'}
     v2_sys_vals.update({'bes_def': v2_star_vals})
-    print(v2_sys_vals)
+    # print(v2_sys_vals)
 
     df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
     df = df[df['stat'] == stat_plot]
@@ -627,7 +628,7 @@ def plot_star_var_sys():
 
     # plt.show()
 
-    sets_run = all_sets if plot else sys_include_names
+    sets_run = all_sets if plot else sys_include_names + ['bes_def']
     dsig_avgs_all, dsig_avgs_diff_v2sub = [], []
     print(sets_run)
     for energy in energies_fit:
@@ -665,8 +666,8 @@ def plot_star_var_sys():
         #                                             (dsig_avgs_diff_v2sub['cent'] == 8)]
         plot_sys(dsig_avgs_diff_v2sub, 'bes_def', non_rand_sets, sys_info_dict, val_col='avg', err_col='avg_err',
                  group_cols=['divs', 'energy', 'cent'], y_label=r'$\Delta \sigma^2$',
-                 # pdf_out_path=None)
-                 pdf_out_path=sys_pdf_out_path)
+                 pdf_out_path=None)
+                 # pdf_out_path=sys_pdf_out_path)
         # plot_sys(dsig_avgs_diff_v2sub, 'bes_def', rand_sets, sys_info_dict, val_col='avg', err_col='avg_err',
         #          group_cols=['divs', 'energy', 'cent'], plot_bars=False, y_label=r'$\Delta \sigma^2$',
         #          pdf_out_path=None)
