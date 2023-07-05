@@ -22,7 +22,7 @@ from analyze_binom_slices import *
 
 
 def main():
-    plot_paper_figs()
+    # plot_paper_figs()
 
     # plot_star_model_var()
     # plot_vs_cent_var()
@@ -411,20 +411,19 @@ def plot_star_var_sys():
     sys_default_dir = 'rapid05_resample_norotate_seed_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_0/'
     df_name = 'Binomial_Slice_Moments/binom_slice_vars_bes_sys.csv'
 
-    # plot = True
     plot = False
+    # plot = False
     # calc_finals = False
     calc_finals = True
-    threads = 14
+    threads = 10
     sys_pdf_out_path = f'{base_path}systematic_plots.pdf'
-    df_def_out_name = 'Binomial_Slice_Moments/binom_slice_vars_bes.csv'
+    df_def_out_name = 'Bes_with_Sys/binom_slice_vars_bes.csv'
     # df_def_out_name = None
-    df_def_dsigma_out_name = 'Binomial_Slice_Moments/binom_slice_vars_bes_dsigma.csv'
+    df_def_dsigma_out_name = 'Bes_with_Sys/binom_slice_vars_bes_dsigma.csv'
     # df_def_dsigma_out_name = None
-    # df_def_dsigma_avgs_out_name = 'Binomial_Slice_Moments/binom_slice_vars_bes_dsigma_avgs.csv'
+    df_def_avgs_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_bes.csv'
+    df_def_avgs_v2sub_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_bes.csv'
     fits_out_base = 'Base_Zero_Fits'
-    df_def_avgs_out_name = 'dsig_tprotons_avgs_bes.csv'
-    df_def_avgs_v2sub_out_name = 'dsig_tprotons_avgs_v2sub_bes.csv'
     # df_partitions_fits_name = 'partitions_fits_cent8.csv'
     df_path = base_path + df_name
 
@@ -434,6 +433,7 @@ def plot_star_var_sys():
     stat_plot = 'k2'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
     div_plt = 180
     divs_all = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300]
+    # divs_all = [60, 120, 180]
     exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
     cent_plt = 7
     cents = [1, 2, 3, 4, 5, 6, 7, 8]
@@ -503,16 +503,11 @@ def plot_star_var_sys():
 
     data_sets_plt = ['bes_def', 'dca08', 'nsprx09', 'm2r4', 'nhfit25']
     data_sets_colors = dict(zip(data_sets_plt, ['black', 'green', 'black', 'red', 'purple']))
-    # data_sys_sets_vals = [0.2, .04, 0.6, 0.8, 1.0]
-    # def_val = 0.6
     data_sets_labels = dict(zip(data_sets_plt, ['bes_def', 'dca08', 'nsprx09', 'm2r4', 'nhfit25']))
-    # sys_sets_count = ['bes_def', 'dca08', 'nsprx09', 'm2r4', 'nhfit25']
-    # sys_sets_count = ['bes_def', 'dca08', 'nsprx09', 'm2r4', 'nhfit25', 'Eff05']
 
     df = pd.read_csv(df_path)
     df = df.dropna()
     df['name'] = df['name'].str.replace('bes_sys_', '')
-    # df['name'] = df['name'].str.replace('bes_def', 'default')
     all_sets = pd.unique(df['name'])
     print(all_sets)
 
@@ -634,7 +629,7 @@ def plot_star_var_sys():
 
     sets_run = all_sets if plot else sys_include_names
     dsig_avgs_all, dsig_avgs_diff_v2sub = [], []
-    # print(pd.unique(df_types['name']))
+    print(sets_run)
     for energy in energies_fit:
         print(f'Energy {energy}GeV')
         jobs = [(df_dsigma_types[df_dsigma_types['name'] == set_i], divs_all, cents, energy, ['raw', 'mix', 'diff'],
@@ -658,9 +653,11 @@ def plot_star_var_sys():
 
     if df_def_avgs_out_name is not None and calc_finals:
         dsig_avg_all = pd.concat(dsig_avgs_all, ignore_index=True)
+        print(dsig_avg_all)
         dsig_avgs_def_sys = get_sys(dsig_avg_all, 'bes_def', sys_include_sets, val_col='avg', err_col='avg_err',
                                     group_cols=['divs', 'energy', 'cent', 'data_type'])
-        dsig_avgs_def_sys.to_csv(f'{base_path}{fits_out_base}/{df_def_avgs_out_name}', index=False)
+        print(dsig_avgs_def_sys)
+        dsig_avgs_def_sys.to_csv(f'{base_path}{df_def_avgs_out_name}', index=False)
 
     dsig_avgs_diff_v2sub = pd.concat(dsig_avgs_diff_v2sub, ignore_index=True)
     if plot:
@@ -677,9 +674,11 @@ def plot_star_var_sys():
         # plt.show()
 
     if df_def_avgs_v2sub_out_name is not None and calc_finals:
+        print(dsig_avgs_diff_v2sub)
         dsig_avg_diff_v2sub = get_sys(dsig_avgs_diff_v2sub, 'bes_def', sys_include_sets, val_col='avg',
                                       err_col='avg_err', group_cols=['divs', 'energy', 'cent'])
-        dsig_avg_diff_v2sub.to_csv(f'{base_path}{fits_out_base}/{df_def_avgs_v2sub_out_name}', index=False)
+        print(dsig_avg_diff_v2sub)
+        dsig_avg_diff_v2sub.to_csv(f'{base_path}{df_def_avgs_v2sub_out_name}', index=False)
 
     plt.show()
     return
