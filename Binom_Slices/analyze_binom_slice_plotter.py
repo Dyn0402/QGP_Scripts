@@ -22,7 +22,7 @@ from analyze_binom_slices import *
 
 
 def main():
-    plot_paper_figs()
+    # plot_paper_figs()
 
     # plot_star_model_var()
     # plot_vs_cent_var()
@@ -30,7 +30,7 @@ def main():
     # get_sim_mapping_var()
     # plot_all_zero_base()
 
-    # plot_star_var_sys()
+    plot_star_var_sys()
     # make_models_csv()
     # plot_star_var_rand_sys()
 
@@ -396,24 +396,29 @@ def plot_star_var_sys():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
     base_path = 'F:/Research/Results/Azimuth_Analysis/'
-    v2_star_in_dir = 'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/' \
-                     'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/'
+    # v2_star_in_dir = 'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/' \
+    #                  'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/'
+    v2_star_in_dir = 'F:/Research/Data/default/' \
+                     'rapid05_resample_norotate_seed_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_0/'
     sys_dir = 'F:/Research/Data/default_sys/'
     sys_default_dir = 'rapid05_resample_norotate_seed_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_0/'
     df_name = 'Binomial_Slice_Moments/binom_slice_vars_bes_sys.csv'
 
     # plot = True
     plot = False
-    calc_finals = False
-    # calc_finals = True
+    # calc_finals = False
+    calc_finals = True
     threads = 12
     sys_pdf_out_path = f'{base_path}systematic_plots.pdf'
-    df_def_out_name = 'Bes_with_Sys/binom_slice_vars_bes.csv'
-    # df_def_out_name = None
-    df_def_dsigma_out_name = 'Bes_with_Sys/binom_slice_vars_bes_dsigma.csv'
-    # df_def_dsigma_out_name = None
-    df_def_avgs_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_bes.csv'
-    df_def_avgs_v2sub_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_bes.csv'
+    # df_def_out_name = 'Bes_with_Sys/binom_slice_vars_bes.csv'
+    df_def_out_name = None
+    # df_def_dsigma_out_name = 'Bes_with_Sys/binom_slice_vars_bes_dsigma.csv'
+    df_def_dsigma_out_name = None
+    df_def_dsigma_v2sub_out_name = 'Bes_with_Sys/binom_slice_vars_bes_dsigma_v2sub.csv'
+    # df_def_avgs_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_bes.csv'
+    df_def_avgs_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_bes2.csv'
+    # df_def_avgs_v2sub_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_bes.csv'
+    df_def_avgs_v2sub_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_bes2.csv'
     fits_out_base = 'Base_Zero_Fits'
     # df_partitions_fits_name = 'partitions_fits_cent8.csv'
     df_path = base_path + df_name
@@ -542,6 +547,10 @@ def plot_star_var_sys():
                                 group_cols=['divs', 'energy', 'cent', 'data_type', 'total_protons'])
         print(df_def_dsigma)
         df_def_dsigma.to_csv(f'{base_path}{df_def_dsigma_out_name}', index=False)
+
+    # if df_def_dsigma_v2sub_out_name is not None and calc_finals:
+    #     df_def_dsigma['meas'] = df_def_dsigma.apply(lambda row: Measure(row['val'], row['err']), axis=1)
+    #     subtract_dsigma_flow(df_def_dsigma, 'bes_def', 'bes_def_v2sub', v2_sys_vals['bes_def'], new_only=True, meas_col='meas')
 
     # plt.show()
     # return

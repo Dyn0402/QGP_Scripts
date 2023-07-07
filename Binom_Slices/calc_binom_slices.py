@@ -26,7 +26,7 @@ from pickle_methods import *
 
 
 def main():
-    sleep(3600 * 9)
+    # sleep(3600 * 9)
     pars = init_pars()
     read_data(pars)
 
@@ -35,9 +35,9 @@ def main():
 
 def init_pars():
     pars = {
-        # 'base_path': 'F:/Research/',
+        'base_path': 'F:/Research/',
         # 'base_path': 'D:/Transfer/Research/',
-        'base_path': '/media/ucla/Research/',
+        # 'base_path': '/media/ucla/Research/',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_cfev.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_stats_ampt_eff.csv',
@@ -49,11 +49,11 @@ def init_pars():
         #             'binom_slice_stats_ampt_flow_closure.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cents.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_v2_ck2.csv',
-        # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_vars_bes_sys.csv',
+        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_vars_bes_sys3.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_vars_bes_rand_sys_test.csv',
-        'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
-                    'binom_slice_vars_bes_sys2.csv',
+        # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+        #             'binom_slice_vars_bes_sys2.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_var_cent8_2source_closure_tests.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
@@ -69,7 +69,7 @@ def init_pars():
         # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
         'csv_append': False,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': False,  # If True check csv_path and only run missing datasets, else run all datasets
-        'threads': 15,
+        'threads': 10,
         # 'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'stats': define_stats(['k2']),
         'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
@@ -240,27 +240,27 @@ def define_datasets(base_path):
     #                    all_divs])
 
     # BES1 Systematics
-    var_defaults = {'dca': 1, 'nsprx': 1, 'm2r': 6, 'm2s': 0, 'nhfit': 20, 'Efficiency': None, 'dcxyqa': None,
-                    'pileupqa': None, 'sysrefshift': 0, 'vz': None}
-    # exclude_keys = ['dca05', 'dca15', 'nsprx075', 'nsprx125', 'm2r2', 'm2r10']
-    exclude_keys = []
-    sub_sets = find_sys_sets(f'{base_path}Data/default_sys/', var_defaults, exclude_keys, True)
-    print(f'sys_sets len {len(sub_sets)}')
-    for sub_set, sub_set_dir_name in sub_sets.items():
-        entry_vals.append([f'bes_sys_{sub_set}', '', ['default', 'sys'], [], ['test', 'misruns', 'old'],
-                           [sub_set_dir_name], all_energies, all_cents, all_divs])
-
-    # Mix randomization
-    for i in range(5):
-        mix_rand_sub_name = f'rapid05_resample_norotate_mixnoseed_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_{i}'
-        entry_vals.append([f'bes_sys_mix_rand_{i}', '', ['default', 'sys'], [], [], [mix_rand_sub_name],
-                           all_energies, all_cents, all_divs])
-
-    # All randomization
-    for i in range(7):
-        all_rand_sub_name = f'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_{i}'
-        entry_vals.append([f'bes_sys_all_rand_{i}', '', ['default', 'sys'], [], [], [all_rand_sub_name],
-                           all_energies, all_cents, all_divs])
+    # var_defaults = {'dca': 1, 'nsprx': 1, 'm2r': 6, 'm2s': 0, 'nhfit': 20, 'Efficiency': None, 'dcxyqa': None,
+    #                 'pileupqa': None, 'sysrefshift': 0, 'vz': None}
+    # # exclude_keys = ['dca05', 'dca15', 'nsprx075', 'nsprx125', 'm2r2', 'm2r10']
+    # exclude_keys = []
+    # sub_sets = find_sys_sets(f'{base_path}Data/default_sys/', var_defaults, exclude_keys, True)
+    # print(f'sys_sets len {len(sub_sets)}')
+    # for sub_set, sub_set_dir_name in sub_sets.items():
+    #     entry_vals.append([f'bes_sys_{sub_set}', '', ['default', 'sys'], [], ['test', 'misruns', 'old'],
+    #                        [sub_set_dir_name], all_energies, all_cents, all_divs])
+    #
+    # # Mix randomization
+    # for i in range(5):
+    #     mix_rand_sub_name = f'rapid05_resample_norotate_mixnoseed_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_{i}'
+    #     entry_vals.append([f'bes_sys_mix_rand_{i}', '', ['default', 'sys'], [], [], [mix_rand_sub_name],
+    #                        all_energies, all_cents, all_divs])
+    #
+    # # All randomization
+    # for i in range(7):
+    #     all_rand_sub_name = f'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_{i}'
+    #     entry_vals.append([f'bes_sys_all_rand_{i}', '', ['default', 'sys'], [], [], [all_rand_sub_name],
+    #                        all_energies, all_cents, all_divs])
 
     # for i in range(12):
     #     entry_vals.append([f'bes_rand_sys_{i}', '', ['default', 'sys', 'test'], [], ['rand'], [i],
