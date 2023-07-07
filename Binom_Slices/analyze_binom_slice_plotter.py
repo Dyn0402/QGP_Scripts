@@ -22,7 +22,7 @@ from analyze_binom_slices import *
 
 
 def main():
-    # plot_paper_figs()
+    plot_paper_figs()
 
     # plot_star_model_var()
     # plot_vs_cent_var()
@@ -30,8 +30,8 @@ def main():
     # get_sim_mapping_var()
     # plot_all_zero_base()
 
-    plot_star_var_sys()
-    append_models()
+    # plot_star_var_sys()
+    make_models_csv()
     # plot_star_var_rand_sys()
 
     # plot_vs_cent_var_fits()
@@ -63,26 +63,28 @@ def plot_paper_figs():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
     base_path = 'F:/Research/Results/Azimuth_Analysis/'
-    v2_star_in_dir = 'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/' \
-                     'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/'
-    v2_ampt_in_dir = 'F:/Research/Data_Ampt_New_Coal/default_resample_epbins1/Ampt_rapid05_resample_norotate_epbins1_0/'
-    v2_cf_in_dir = 'F:/Research/Data_CF/default_resample_epbins1/CF_rapid05_resample_norotate_epbins1_0/'
-    v2_cfev_in_dir = 'F:/Research/Data_CFEV/default_resample_epbins1/CFEV_rapid05_resample_norotate_epbins1_0/'
-    v2_cfevb342_in_dir = 'F:/Research/Data_CFEVb342/default_resample_epbins1/' \
-                         'CFEVb342_rapid05_resample_norotate_epbins1_0/'
+    # v2_star_in_dir = 'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/' \
+    #                  'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/'
+    # v2_ampt_in_dir = 'F:/Research/Data_Ampt_New_Coal/default_resample_epbins1/Ampt_rapid05_resample_norotate_epbins1_0/'
+    # v2_cf_in_dir = 'F:/Research/Data_CF/default_resample_epbins1/CF_rapid05_resample_norotate_epbins1_0/'
+    # v2_cfev_in_dir = 'F:/Research/Data_CFEV/default_resample_epbins1/CFEV_rapid05_resample_norotate_epbins1_0/'
+    # v2_cfevb342_in_dir = 'F:/Research/Data_CFEVb342/default_resample_epbins1/' \
+    #                      'CFEVb342_rapid05_resample_norotate_epbins1_0/'
     # df_name = 'Binomial_Slice_Moments/binom_slice_stats_var_epbins1.csv'
-    df_model_name = 'Binomial_Slice_Moments/binom_slice_stats_var_epbins1.csv'
     df_name = 'Bes_with_Sys/binom_slice_vars_bes.csv'
+    df_model_name = 'Bes_with_Sys/binom_slice_vars_model.csv'
     df_dsigma_name = 'Bes_with_Sys/binom_slice_vars_bes_dsigma.csv'
-    fits_out_base = 'Base_Zero_Fits'
+    df_dsigma_model_name = 'Bes_with_Sys/binom_slice_vars_model_dsigma.csv'
     df_def_avgs_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_bes.csv'
+    df_def_avgs_out_model_name = 'Bes_with_Sys/dsig_tprotons_avgs_model.csv'
     df_def_avgs_v2sub_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_bes.csv'
+    df_def_avgs_v2sub_out_model_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_model.csv'
+    fits_out_base = 'Base_Zero_Fits'
     # df_tproton_avgs_name = 'dsig_tprotons_avgs_cent8.csv'
     # df_partitions_fits_name = 'partitions_fits_cent8.csv'
-    df_path = base_path + df_name
-    df_model_path = base_path + df_model_name
-    df_dsigma_path = base_path + df_dsigma_name
-    sim_sets = []
+    # df_path = base_path + df_name
+    # df_model_path = base_path + df_model_name
+    # df_dsigma_path = base_path + df_dsigma_name
 
     # if df_def_avgs_out_name is not None:
     #     dsig_avgs_def_sys.to_csv(f'{base_path}{fits_out_base}/{df_def_avgs_out_name}', index=False)
@@ -111,6 +113,8 @@ def plot_paper_figs():
     data_sets_plt = ['bes_def', 'ampt_new_coal_epbins1', 'cf_resample_epbins1', 'cfev_resample_epbins1']
     data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple']))
     data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST', 'MUSIC+FIST EV $1fm^3$']))
+    data_sets_markers = dict(zip(data_sets_plt, [dict(zip(['raw', 'mix', 'diff'], [x, x, x]))
+                                                 for x in ['o', 's', '^', '*']]))
 
     cent_ref_name = 'mean_cent_ref.csv'
     cent_ref_df = pd.read_csv(f'F:/Research/Results/Azimuth_Analysis/{cent_ref_name}')
@@ -122,37 +126,24 @@ def plot_paper_figs():
     # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red']))
     # data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT']))
 
-    all_sets_plt = data_sets_plt + sim_sets[:]
-
-    # v2_star_vals = {2: read_flow_values(v2_star_in_dir)}
-    # v2_ampt_vals = {2: read_flow_values(v2_ampt_in_dir)}
-    # v2_cf_vals = {2: read_flow_values(v2_cf_in_dir)}
-    # v2_cfev_vals = {2: read_flow_values(v2_cfev_in_dir)}
-    # v2_cfevb342_vals = {2: read_flow_values(v2_cfevb342_in_dir)}
-
-    df = pd.read_csv(df_path)
-    df = df.dropna()
-    df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
+    df = pd.read_csv(f'{base_path}{df_name}')
+    df_model = pd.read_csv(f'{base_path}{df_model_name}')
+    df = pd.concat([df, df_model])
+    # df = df.dropna()
     df = df[df['stat'] == stat_plot]
-    # df = df[df['name'].str.contains('bes')]
 
-    df_model = pd.read_csv(df_model_path)
-    df_model.dropna()
-    # print(df_model)
-    # return
-
-    df_dsigma = pd.read_csv(df_dsigma_path)
-    df_dsigma = df_dsigma.dropna()
-    df_dsigma['energy'] = df_dsigma.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
+    df_dsigma = pd.read_csv(f'{base_path}{df_dsigma_name}')
+    df_dsigma_model = pd.read_csv(f'{base_path}{df_dsigma_model_name}')
+    df_dsigma = pd.concat([df_dsigma, df_dsigma_model])
+    # df_dsigma = df_dsigma.dropna()
 
     dvar_vs_protons(df_dsigma, div_plt, cent_plt, [39], ['raw', 'mix', 'diff'], ['bes_def'],
                     plot=True, avg=False, star_prelim=True, alpha=1.0, y_ranges=[-0.0007, 0.00055],
                     marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^'}})
 
-    # df_model_sys = df_dsigma
-    dvar_vs_protons(df_dsigma, div_plt, cent_plt, [39], ['raw', 'mix', 'diff'], ['bes_def'],
+    dvar_vs_protons(df_dsigma, div_plt, cent_plt, [39], ['diff'], data_sets_plt, data_sets_colors=data_sets_colors,
                     plot=True, avg=False, star_prelim=True, alpha=1.0, y_ranges=[-0.0007, 0.00055],
-                    marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^'}})
+                    data_sets_labels=data_sets_labels, marker_map=data_sets_markers)
 
     dvar_vs_protons_energies(df_dsigma, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], ['bes_def'],
                              star_prelim=True, plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
@@ -163,7 +154,12 @@ def plot_paper_figs():
     #                                                                      f'Partitions, {samples} Samples per Event')
 
     dsig_avgs_all = pd.read_csv(f'{base_path}{df_def_avgs_out_name}')
+    dsig_avgs_all_model = pd.read_csv(f'{base_path}{df_def_avgs_out_model_name}')
+    dsig_avgs_all = pd.concat([dsig_avgs_all, dsig_avgs_all_model])
+
     dsig_avgs_v2_sub = pd.read_csv(f'{base_path}{df_def_avgs_v2sub_out_name}')
+    dsig_avgs_v2_sub_model = pd.read_csv(f'{base_path}{df_def_avgs_v2sub_out_model_name}')
+    dsig_avgs_v2_sub = pd.concat([dsig_avgs_v2_sub, dsig_avgs_v2_sub_model])
 
     dsig_avgs_v2_sub_cent8 = dsig_avgs_v2_sub[dsig_avgs_v2_sub['cent'] == 8]
     plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, ['bes_def'], data_sets_colors=data_sets_colors, fit=True,
@@ -419,9 +415,9 @@ def plot_star_var_sys():
 
     # plot = True
     plot = False
-    # calc_finals = False
-    calc_finals = True
-    threads = 15
+    calc_finals = False
+    # calc_finals = True
+    threads = 12
     sys_pdf_out_path = f'{base_path}systematic_plots.pdf'
     df_def_out_name = 'Bes_with_Sys/binom_slice_vars_bes.csv'
     # df_def_out_name = None
@@ -672,8 +668,8 @@ def plot_star_var_sys():
         #                                             (dsig_avgs_diff_v2sub['cent'] == 8)]
         plot_sys(dsig_avgs_diff_v2sub, 'bes_def', non_rand_sets, sys_info_dict, val_col='avg', err_col='avg_err',
                  group_cols=['divs', 'energy', 'cent'], y_label=r'$\Delta \sigma^2$',
-                 pdf_out_path=None)
-                 # pdf_out_path=sys_pdf_out_path)
+                 # pdf_out_path=None)
+                 pdf_out_path=sys_pdf_out_path)
         # plot_sys(dsig_avgs_diff_v2sub, 'bes_def', rand_sets, sys_info_dict, val_col='avg', err_col='avg_err',
         #          group_cols=['divs', 'energy', 'cent'], plot_bars=False, y_label=r'$\Delta \sigma^2$',
         #          pdf_out_path=None)
@@ -749,7 +745,7 @@ def plot_star_var_sys():
     plt.show()
 
 
-def append_models():
+def make_models_csv():
     base_path = 'F:/Research/Results/Azimuth_Analysis/'
     v2_ampt_in_dir = 'F:/Research/Data_Ampt_New_Coal/default_resample_epbins1/Ampt_rapid05_resample_norotate_epbins1_0/'
     v2_cf_in_dir = 'F:/Research/Data_CF/default_resample_epbins1/CF_rapid05_resample_norotate_epbins1_0/'

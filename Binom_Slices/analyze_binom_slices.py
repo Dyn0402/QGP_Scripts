@@ -800,7 +800,7 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
 
 def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False, avg=False,
                     hist=False, data_sets_colors=None, data_sets_labels=None, star_prelim=False, alpha=0.6,
-                    marker_map=None):
+                    marker_map=None, errbar_alpha=0.2):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     data = []
@@ -884,7 +884,7 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
                             marker=marker, ls='', color=c, alpha=alpha, zorder=zo)
                 if 'sys' in df:
                     ax.errorbar(df['total_protons'], df['val'], df['sys'], marker='', ls='', elinewidth=4,
-                                color=c, alpha=0.4, zorder=zo)
+                                color=c, alpha=errbar_alpha, zorder=zo)
 
         if avg and len(df) > 1:
             weight_avg = np.average(df['val'], weights=1 / df['err'] ** 2)
@@ -1166,7 +1166,7 @@ def stat_vs_protons_energies(df, stat, divs, cent, energies, data_types, data_se
 
 def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False,
                              avg=False, plot_avg=False, hist=False, data_sets_colors=None, data_sets_labels=None,
-                             star_prelim=False, marker_map=None, alpha=1.0):
+                             star_prelim=False, marker_map=None, alpha=1.0, errbar_alpha=0.2):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     energy_data = []
@@ -1249,7 +1249,7 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
                                 marker=marker, ls='', color=c, alpha=alpha, zorder=zo)
                     if 'sys' in df:
                         ax.errorbar(df['total_protons'], df['val'], df['sys'], marker='', ls='',
-                                    elinewidth=3, color=c, alpha=0.4, zorder=zo)
+                                    elinewidth=3, color=c, alpha=errbar_alpha, zorder=zo)
 
             if avg and len(df) > 1:
                 weight_avg = np.average(df['val'], weights=1 / df['err'] ** 2)
@@ -1659,7 +1659,8 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
 
 
 def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, data_sets_labels=None,
-                        exclude_divs=[], verbose=False, plt_energies=True, title=None, alpha=1, ylab=None, plot=True):
+                        exclude_divs=[], verbose=False, plt_energies=True, title=None, alpha=1, ylab=None, plot=True,
+                        errbar_alpha=0.2):
     energies = pd.unique(df['energy'])
     if plt_energies and plot:
         fig, ax = plt.subplots()
@@ -1705,6 +1706,9 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                     energy_fig, energy_ax = energy_fig_axs[energy]
                     energy_ax.errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['avg_err'], ls='none',
                                        marker='o', label=lab_energy, color=color, alpha=alpha)
+                    if 'sys' in df_cent.columns:
+                        energy_ax.errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['sys'], ls='', elinewidth=4,
+                                           marker='', color=color, alpha=errbar_alpha)
                     if plt_energies:
                         ax.errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['avg_err'], ls='none',
                                     marker=markers[energy_marker], label=lab, color=color, alpha=alpha)
@@ -1713,9 +1717,9 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                                                    marker='o', label=lab_energy, color=color, alpha=alpha)
                         if 'sys' in df_cent.columns:
                             ax.errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['sys'], ls='', elinewidth=4,
-                                        marker='', color=color, alpha=0.3)
+                                        marker='', color=color, alpha=errbar_alpha)
                             ax_panels[energy].errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['sys'],
-                                                       ls='', marker='', color=color, alpha=0.3, elinewidth=4)
+                                                       ls='', marker='', color=color, alpha=errbar_alpha, elinewidth=4)
                 if fit and df_cent.size > 1:
                     try:
                         df_cent = df_cent[~df_cent.divs.isin(exclude_divs)]
@@ -2666,7 +2670,8 @@ def plot_protons_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
 
 
 def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None,
-                              fit=False, cent_ref=None, ref_type=None, data_sets_energies_cmaps=None, ls='-'):
+                              fit=False, cent_ref=None, ref_type=None, data_sets_energies_cmaps=None, ls='-',
+                              alpha=0.6, errbar_alpha=0.2):
     fig_avg, ax_avg = plt.subplots(figsize=(6.66, 5), dpi=144)
     ax_avg.axhline(0, color='black')
     fig_avg.canvas.manager.set_window_title(f'Dsigma2 Avg vs Centrality')
@@ -2704,16 +2709,16 @@ def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
             ls = 'none' if fit else ls
             if colors is None and color is None:
                 ax_avg.errorbar(x, df_energy['avg'], xerr=x_err, yerr=df_energy['avg_err'], marker='o', ls=ls,
-                                label=lab, alpha=0.6)
+                                label=lab, alpha=alpha)
                 if 'sys' in df_energy.columns:
                     ax_avg.errorbar(x, df_energy['avg'], xerr=0, yerr=df_energy['sys'], marker='', ls='',
-                                    elinewidth=4, alpha=0.3)
+                                    elinewidth=4, alpha=errbar_alpha)
             else:
                 ax_avg.errorbar(x, df_energy['avg'], xerr=x_err, yerr=df_energy['avg_err'], marker='o', ls=ls,
-                                color=color, label=lab, alpha=0.6)
+                                color=color, label=lab, alpha=alpha)
                 if 'sys' in df_energy.columns:
                     ax_avg.errorbar(x, df_energy['avg'], xerr=0, yerr=df_energy['sys'], marker='', ls='',
-                                    color=color, elinewidth=4, alpha=0.3)
+                                    color=color, elinewidth=4, alpha=errbar_alpha)
             if fit:
                 p0 = [-0.02, 0.0001]
                 x_fit = np.linspace(min(x), max(x), 1000)
