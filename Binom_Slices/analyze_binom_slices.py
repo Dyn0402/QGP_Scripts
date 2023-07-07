@@ -800,7 +800,7 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
 
 def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False, avg=False,
                     hist=False, data_sets_colors=None, data_sets_labels=None, star_prelim=False, alpha=0.6,
-                    marker_map=None, errbar_alpha=0.2):
+                    marker_map=None, errbar_alpha=0.2, legend_pos='lower center'):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     data = []
@@ -828,6 +828,8 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
                             lab = 'Single Event'
                         elif data_type == 'mix':
                             lab = 'Mixed Event'
+                        elif data_type == 'diff':
+                            lab = 'Single Event - Mixed Event'
                     else:
                         lab += f' {data_type.capitalize()}'
                 df_set = df_set.sort_values(by=['total_protons'])
@@ -906,18 +908,16 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
                     fig_hist.tight_layout()
 
     if plot:
+        eta_line = r'|y| < 0.5'
+        pt_line = r'0.4 < $p_T$ < 2.0 GeV'
+        ax.text(0.26, 0.91, f'Au+Au\n{eta_line}\n{pt_line}', ha='left', va='top',
+                transform=ax.transAxes)
         if star_prelim:
-            ax.text(0.02, 0.98, 'STAR Preliminary', fontsize=15, ha='left', va='top',
+            ax.text(0.26, 0.98, 'STAR Preliminary', fontsize=15, ha='left', va='top',
                     transform=ax.transAxes)
-            eta_line = r'|y| < 0.5'
-            pt_line = r'0.4 < $p_T$ < 2.0 GeV'
-            ax.text(0.02, 0.91, f'Au+Au\n{eta_line}\n{pt_line}', ha='left', va='top',
-                    transform=ax.transAxes)
-            ax.text(0.65, 0.98, 'statistical uncertainty only', fontsize=8, ha='left', va='top',
-                    transform=ax.transAxes)
-            ax.legend(loc='upper center', framealpha=1.0).set_zorder(10)
+            ax.legend(loc=legend_pos, framealpha=1.0).set_zorder(10)
         else:
-            ax.legend(loc='upper center')
+            ax.legend(loc=legend_pos).set_zorder(10)
         fig.tight_layout()
 
     return pd.DataFrame(avgs)
@@ -1166,7 +1166,7 @@ def stat_vs_protons_energies(df, stat, divs, cent, energies, data_types, data_se
 
 def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False,
                              avg=False, plot_avg=False, hist=False, data_sets_colors=None, data_sets_labels=None,
-                             star_prelim=False, marker_map=None, alpha=1.0, errbar_alpha=0.2):
+                             star_prelim=False, marker_map=None, alpha=1.0, errbar_alpha=0.2, avgs_df=None):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     energy_data = []
@@ -1194,7 +1194,7 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
                     if len(data_types) > 1:
                         lab += f' {data_type.capitalize()}'
                     df_set = df_set.sort_values(by=['total_protons'])
-                    data.append((df_set, lab, data_set, df_set['amp'].iloc[0], df_set['spread'].iloc[0]))
+                    data.append((df_set, lab, data_set, data_type, div, df_set['amp'].iloc[0], df_set['spread'].iloc[0]))
         energy_data.append(data)
 
     if plot or plot_avg:
@@ -1227,7 +1227,7 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
     for data, ax, energy in zip(energy_data, ax_energies[:len(energies)], energies):
         if plot or plot_avg:
             color = iter(plt.cm.rainbow(np.linspace(0, 1, len(data))))
-        for i, (df, lab, data_set, amp, spread) in enumerate(data):
+        for i, (df, lab, data_set, data_type, div, amp, spread) in enumerate(data):
             zo = len(data) - i + 4
             if plot or plot_avg:
                 if data_sets_colors is None:
@@ -1251,19 +1251,29 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
                         ax.errorbar(df['total_protons'], df['val'], df['sys'], marker='', ls='',
                                     elinewidth=3, color=c, alpha=errbar_alpha, zorder=zo)
 
+            if avgs_df is not None and plot_avg:
+                avg_df = avgs_df[(avgs_df['name'] == data_set) & (avgs_df['energy'] == energy) &
+                                 (avgs_df['divs'] == div) & (avgs_df['cent'] == cent) &
+                                 (avgs_df['data_type'] == data_type)]
+                if len(avg_df) != 1:
+                    print(f'Degenerate! {avgs_df}')
+                else:
+                    avg, avg_err, avg_sys = avg_df['avg'].iloc[0], avg_df['avg_err'].iloc[0], avg_df['sys'].iloc[0]
+                    ax.axhline(avg, ls='--', color=c)
+                    ax.axhspan(avg + avg_err, avg - avg_err, alpha=0.4, color=c)
+                    ax.axhspan(avg + avg_sys, avg - avg_sys, alpha=0.4, color=c)
             if avg and len(df) > 1:
                 weight_avg = np.average(df['val'], weights=1 / df['err'] ** 2)
                 weight_avg_err = np.sqrt(1 / np.sum(1 / df['err'] ** 2))
                 avgs.append({'name': data_set, 'energy': energy, 'divs': div, 'amp': amp, 'spread': spread,
                              'avg': weight_avg, 'avg_err': weight_avg_err, 'cent': cent,
                              'avg_meas': Measure(weight_avg, weight_avg_err)})
-                if plot_avg:
+                if plot_avg and avgs_df is None:
                     if plot:
                         ax.axhline(weight_avg, ls='--', color=c)
-                        ax.axhspan(weight_avg + weight_avg_err, weight_avg - weight_avg_err, alpha=0.4, color=c)
                     else:
                         ax.axhline(weight_avg, ls='--', color=c, label=lab)
-                        ax.axhspan(weight_avg + weight_avg_err, weight_avg - weight_avg_err, alpha=0.4, color=c)
+                    ax.axhspan(weight_avg + weight_avg_err, weight_avg - weight_avg_err, alpha=0.4, color=c)
                     if hist:
                         sigs = (df['val'] - weight_avg) / df['err']  # Should probably add weight_avg_err in quad
                         fig_hist, ax_hist = plt.subplots()
@@ -1278,15 +1288,13 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
     if plot or plot_avg:
         if len(data_sets_plt) * len(data_types) > 1:
             ax_energies[-1].legend(loc='lower right', framealpha=1.0).set_zorder(10)
+        eta_line = r'|y| < 0.5'
+        pt_line = r'0.4 < $p_T$ < 2.0 GeV'
+        ax_energies[4].text(0.5, 0.65, f'Au+Au\n{eta_line}\n{pt_line}', ha='left', va='top',
+                            transform=ax_energies[4].transAxes)
         if star_prelim:
             ax_energies[4].text(0.5, 0.75, 'STAR Preliminary', fontsize=15, ha='left', va='top',
                                 transform=ax_energies[4].transAxes)
-            eta_line = r'|y| < 0.5'
-            pt_line = r'0.4 < $p_T$ < 2.0 GeV'
-            ax_energies[4].text(0.5, 0.65, f'Au+Au\n{eta_line}\n{pt_line}', ha='left', va='top',
-                                transform=ax_energies[4].transAxes)
-            ax_energies[2].text(0.2, 0.97, 'statistical uncertainty only', ha='left', va='top',
-                                transform=ax_energies[2].transAxes)
         fig.tight_layout()
         fig.subplots_adjust(wspace=0.0, hspace=0.0)
         fig.canvas.manager.set_window_title(f'binom_slices_{divs[0]}')
