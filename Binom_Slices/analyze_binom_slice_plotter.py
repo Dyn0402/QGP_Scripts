@@ -22,7 +22,7 @@ from analyze_binom_slices import *
 
 
 def main():
-    # plot_paper_figs()
+    plot_paper_figs()
 
     # plot_star_model_var()
     # plot_vs_cent_var()
@@ -30,7 +30,7 @@ def main():
     # get_sim_mapping_var()
     # plot_all_zero_base()
 
-    plot_star_var_sys()
+    # plot_star_var_sys()
     # make_models_csv()
     # plot_star_var_rand_sys()
 
@@ -63,18 +63,13 @@ def plot_paper_figs():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
     base_path = 'F:/Research/Results/Azimuth_Analysis/'
-    # v2_star_in_dir = 'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/' \
-    #                  'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/'
-    # v2_ampt_in_dir = 'F:/Research/Data_Ampt_New_Coal/default_resample_epbins1/Ampt_rapid05_resample_norotate_epbins1_0/'
-    # v2_cf_in_dir = 'F:/Research/Data_CF/default_resample_epbins1/CF_rapid05_resample_norotate_epbins1_0/'
-    # v2_cfev_in_dir = 'F:/Research/Data_CFEV/default_resample_epbins1/CFEV_rapid05_resample_norotate_epbins1_0/'
-    # v2_cfevb342_in_dir = 'F:/Research/Data_CFEVb342/default_resample_epbins1/' \
-    #                      'CFEVb342_rapid05_resample_norotate_epbins1_0/'
     # df_name = 'Binomial_Slice_Moments/binom_slice_stats_var_epbins1.csv'
     df_name = 'Bes_with_Sys/binom_slice_vars_bes.csv'
     df_model_name = 'Bes_with_Sys/binom_slice_vars_model.csv'
     df_dsigma_name = 'Bes_with_Sys/binom_slice_vars_bes_dsigma.csv'
     df_dsigma_model_name = 'Bes_with_Sys/binom_slice_vars_model_dsigma.csv'
+    df_dsigma_v2sub_name = 'Bes_with_Sys/binom_slice_vars_bes_dsigma_v2sub.csv'
+    df_dsigma_v2sub_model_name = 'Bes_with_Sys/binom_slice_vars_model_dsigma_v2sub.csv'
     df_def_avgs_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_bes.csv'
     df_def_avgs_out_model_name = 'Bes_with_Sys/dsig_tprotons_avgs_model.csv'
     df_def_avgs_v2sub_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_bes.csv'
@@ -82,15 +77,6 @@ def plot_paper_figs():
     fits_out_base = 'Base_Zero_Fits'
     # df_tproton_avgs_name = 'dsig_tprotons_avgs_cent8.csv'
     # df_partitions_fits_name = 'partitions_fits_cent8.csv'
-    # df_path = base_path + df_name
-    # df_model_path = base_path + df_model_name
-    # df_dsigma_path = base_path + df_dsigma_name
-
-    # if df_def_avgs_out_name is not None:
-    #     dsig_avgs_def_sys.to_csv(f'{base_path}{fits_out_base}/{df_def_avgs_out_name}', index=False)
-    #
-    # if df_def_avgs_v2sub_out_name is not None:
-    #     dsig_avg_diff_v2sub.to_csv(f'{base_path}{fits_out_base}/{df_def_avgs_v2sub_out_name}', index=False)
 
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
@@ -131,13 +117,31 @@ def plot_paper_figs():
                     plot=True, avg=False, alpha=1.0, y_ranges=[-0.00085, 0.00055],
                     data_sets_labels=data_sets_labels, marker_map=data_sets_markers, legend_pos='lower right')
 
+    df_dsigma_v2sub = pd.read_csv(f'{base_path}{df_dsigma_v2sub_name}')
+    df_dsigma_v2sub_model = pd.read_csv(f'{base_path}{df_dsigma_v2sub_model_name}')
+    df_dsigma_v2sub = pd.concat([df_dsigma_v2sub, df_dsigma_v2sub_model])
+
+    dvar_vs_protons(df_dsigma_v2sub, div_plt, cent_plt, [39], ['diff'], data_sets_plt,
+                    data_sets_colors=data_sets_colors, plot=True, avg=False, alpha=1.0, y_ranges=[-0.00085, 0.00055],
+                    data_sets_labels=data_sets_labels, marker_map=data_sets_markers, legend_pos='lower right')
+
+    df_dsigma_v2sub_diffs = df_dsigma_v2sub[df_dsigma_v2sub['data_type'] == 'diff'].assign(data_type='v2_sub')
+    df_dsigma_with_v2sub = pd.concat([df_dsigma, df_dsigma_v2sub_diffs])
+    dvar_vs_protons(df_dsigma_with_v2sub, div_plt, cent_plt, [39], ['raw', 'mix', 'diff', 'v2_sub'], ['bes_def'],
+                    plot=True, avg=False, alpha=1.0, y_ranges=[-0.00085, 0.00055],
+                    marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^', 'v2_sub': '*'}})
+
+    dvar_vs_protons(df_dsigma_with_v2sub, div_plt, cent_plt, [39], ['diff', 'v2_sub'], ['bes_def'],
+                    plot=True, avg=False, alpha=1.0, y_ranges=[-0.00085, 0.00055],
+                    marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^', 'v2_sub': '*'}})
+
     dsig_avgs_all = pd.read_csv(f'{base_path}{df_def_avgs_out_name}')
     dsig_avgs_all_model = pd.read_csv(f'{base_path}{df_def_avgs_out_model_name}')
     dsig_avgs_all = pd.concat([dsig_avgs_all, dsig_avgs_all_model])
 
-    dsig_avgs_v2_sub = pd.read_csv(f'{base_path}{df_def_avgs_v2sub_out_name}')
-    dsig_avgs_v2_sub_model = pd.read_csv(f'{base_path}{df_def_avgs_v2sub_out_model_name}')
-    dsig_avgs_v2_sub = pd.concat([dsig_avgs_v2_sub, dsig_avgs_v2_sub_model])
+    dsig_avgs_v2sub = pd.read_csv(f'{base_path}{df_def_avgs_v2sub_out_name}')
+    dsig_avgs_v2sub_model = pd.read_csv(f'{base_path}{df_def_avgs_v2sub_out_model_name}')
+    dsig_avgs_v2sub = pd.concat([dsig_avgs_v2sub, dsig_avgs_v2sub_model])
 
     dvar_vs_protons_energies(df_dsigma, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], ['bes_def'],
                              plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
@@ -147,13 +151,11 @@ def plot_paper_figs():
     #                             data_sets_labels=data_sets_labels, title=f'{cent_map[cent_plt]} Centrality, {div_plt}° '
     #                                                                      f'Partitions, {samples} Samples per Event')
 
-
-
-    dsig_avgs_v2_sub_cent8 = dsig_avgs_v2_sub[dsig_avgs_v2_sub['cent'] == 8]
+    dsig_avgs_v2_sub_cent8 = dsig_avgs_v2sub[dsig_avgs_v2sub['cent'] == 8]
     # plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, ['bes_def'], data_sets_colors=data_sets_colors, fit=True,
     #                     data_sets_labels=data_sets_labels, plt_energies=False)
 
-    dsig_avgs_v2_sub_div120 = dsig_avgs_v2_sub[dsig_avgs_v2_sub['divs'] == 120]
+    dsig_avgs_v2_sub_div120 = dsig_avgs_v2sub[dsig_avgs_v2sub['divs'] == 120]
     plot_protons_avgs_vs_cent(dsig_avgs_v2_sub_div120, ['bes_def'], data_sets_colors=data_sets_colors, fit=False,
                               data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,
                               title=f'{div_plt}° Partitions, {samples} Samples per Event')
@@ -416,9 +418,9 @@ def plot_star_var_sys():
     df_def_dsigma_out_name = None
     df_def_dsigma_v2sub_out_name = 'Bes_with_Sys/binom_slice_vars_bes_dsigma_v2sub.csv'
     # df_def_avgs_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_bes.csv'
-    df_def_avgs_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_bes2.csv'
+    df_def_avgs_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_bes.csv'
     # df_def_avgs_v2sub_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_bes.csv'
-    df_def_avgs_v2sub_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_bes2.csv'
+    df_def_avgs_v2sub_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_bes.csv'
     fits_out_base = 'Base_Zero_Fits'
     # df_partitions_fits_name = 'partitions_fits_cent8.csv'
     df_path = base_path + df_name
@@ -515,9 +517,7 @@ def plot_star_var_sys():
     v2_sys_vals = {name: {2: read_flow_values(get_set_dir(name, sys_default_dir, sys_dir))} for name in all_sets
                    if name != 'bes_def'}
     v2_sys_vals.update({'bes_def': v2_star_vals})
-    # print(v2_sys_vals)
 
-    df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
     df = df[df['stat'] == stat_plot]
 
     # Get k2 raw, mix, diff systematics
@@ -532,10 +532,10 @@ def plot_star_var_sys():
     df_raw, df_mix, df_diff = calc_dsigma(df, ['raw', 'mix', 'diff'])
     df_dsigma_types = pd.concat([df_raw, df_mix, df_diff])
 
-    dvar_vs_protons_energies(df_diff, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'],
-                             data_sets_plt, star_prelim=True,
-                             plot=False, avg=True, plot_avg=False, data_sets_colors=data_sets_colors,
-                             data_sets_labels=data_sets_labels, y_ranges=[-0.00088, 0.00016])
+    # dvar_vs_protons_energies(df_diff, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'],
+    #                          data_sets_plt, star_prelim=True,
+    #                          plot=False, avg=True, plot_avg=False, data_sets_colors=data_sets_colors,
+    #                          data_sets_labels=data_sets_labels, y_ranges=[-0.00088, 0.00016])
 
     # plot_df = df_diff_def_all[(df_diff_def_all['div'] == 120) & (df_diff_def_all['cent'] == 8) &
     #                           (df_diff_def_all['data_type'] == 'raw') & (df_diff_def_all['energy'] == 'raw')]
@@ -548,9 +548,19 @@ def plot_star_var_sys():
         print(df_def_dsigma)
         df_def_dsigma.to_csv(f'{base_path}{df_def_dsigma_out_name}', index=False)
 
-    # if df_def_dsigma_v2sub_out_name is not None and calc_finals:
-    #     df_def_dsigma['meas'] = df_def_dsigma.apply(lambda row: Measure(row['val'], row['err']), axis=1)
-    #     subtract_dsigma_flow(df_def_dsigma, 'bes_def', 'bes_def_v2sub', v2_sys_vals['bes_def'], new_only=True, meas_col='meas')
+    # Calculate v2 subtraction for each total_protons value
+    if df_def_dsigma_v2sub_out_name is not None and calc_finals:
+        df_dsigma_types['meas'] = df_dsigma_types.apply(lambda row: Measure(row['val'], row['err']), axis=1)
+        df_def_dsigma_v2sub = []
+        for set_name in sys_include_names + ['bes_def']:
+            set_v2sub = subtract_dsigma_flow(df_dsigma_types, set_name, set_name, v2_sys_vals[set_name],
+                                             new_only=True, val_col='val', err_col='err', meas_col='meas')
+            df_def_dsigma_v2sub.append(set_v2sub)
+        df_def_dsigma_v2sub = pd.concat(df_def_dsigma_v2sub)
+        df_def_dsigma_v2sub = get_sys(df_def_dsigma_v2sub, 'bes_def', sys_include_sets,
+                                      group_cols=['divs', 'energy', 'cent', 'data_type', 'total_protons'])
+        print(df_def_dsigma_v2sub)
+        df_def_dsigma_v2sub.to_csv(f'{base_path}{df_def_dsigma_v2sub_out_name}', index=False)
 
     # plt.show()
     # return
@@ -757,6 +767,7 @@ def make_models_csv():
     # df_def_out_name = None
     df_def_dsigma_out_name = 'Bes_with_Sys/binom_slice_vars_model_dsigma.csv'
     # df_def_dsigma_out_name = None
+    df_def_dsigma_v2sub_out_name = 'Bes_with_Sys/binom_slice_vars_model_dsigma_v2sub.csv'
     df_def_avgs_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_model.csv'
     df_def_avgs_v2sub_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_model.csv'
     fits_out_base = 'Base_Zero_Fits'
@@ -796,6 +807,22 @@ def make_models_csv():
     df_raw, df_mix, df_diff = calc_dsigma(df, ['raw', 'mix', 'diff'])
     df_dsigma_types = pd.concat([df_raw, df_mix, df_diff])
     df_dsigma_types.to_csv(f'{base_path}{df_def_dsigma_out_name}', index=False)
+
+    # Calculate dsigma with v2 subtracted
+    # df_dsigma_types['meas'] = df_dsigma_types.apply(lambda row: Measure(row['val'], row['err']), axis=1)
+    # df_def_dsigma_v2sub = subtract_dsigma_flow(df_dsigma_types, 'bes_def', 'bes_def', v2_sys_vals['bes_def'],
+    #                                            new_only=True, val_col='val', err_col='err', meas_col='meas')
+    # df_def_dsigma_v2sub.to_csv(f'{base_path}{df_def_dsigma_v2sub_out_name}', index=False)
+
+    # Calculate v2 subtraction for each total_protons value
+    df_dsigma_types['meas'] = df_dsigma_types.apply(lambda row: Measure(row['val'], row['err']), axis=1)
+    df_def_dsigma_v2sub = []
+    for set_name in all_sets:
+        set_v2sub = subtract_dsigma_flow(df_dsigma_types, set_name, set_name, v2_sys_vals[set_name],
+                                         new_only=True, val_col='val', err_col='err', meas_col='meas')
+        df_def_dsigma_v2sub.append(set_v2sub)
+    df_def_dsigma_v2sub = pd.concat(df_def_dsigma_v2sub)
+    df_def_dsigma_v2sub.to_csv(f'{base_path}{df_def_dsigma_v2sub_out_name}', index=False)
 
     sets_run = all_sets
     dsig_avgs_all, dsig_avgs_diff_v2sub = [], []

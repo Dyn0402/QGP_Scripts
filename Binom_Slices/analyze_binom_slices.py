@@ -830,6 +830,8 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
                             lab = 'Mixed Event'
                         elif data_type == 'diff':
                             lab = 'Single Event - Mixed Event'
+                        elif data_type == 'v2_sub':
+                            lab = 'Single Event - Mixed Event - v2 Correction'
                     else:
                         lab += f' {data_type.capitalize()}'
                 df_set = df_set.sort_values(by=['total_protons'])
@@ -869,6 +871,8 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
                         c = 'green'
                     elif data_type in ['diff', 'sub']:
                         c = 'red'
+                    elif data_type == 'v2_sub':
+                        c = 'black'
                 else:
                     c = next(color)
             else:
@@ -3769,8 +3773,6 @@ def subtract_dsigma_flow(avg_df, data_set_name, new_name, vs, div=None, cent=Non
         df_new[meas_col] = new_avg
         df_new[val_col] = new_avg_vals
         df_new[err_col] = new_avg_errs
-        df_new = df_new.assign(avg_test=new_avg_vals)
-        df_new = df_new.assign(avg_err_test=new_avg_errs)
 
     if new_only:
         return df_new
