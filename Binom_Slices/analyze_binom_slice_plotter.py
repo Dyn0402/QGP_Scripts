@@ -22,11 +22,11 @@ from analyze_binom_slices import *
 
 
 def main():
-    plot_paper_figs()
+    # plot_paper_figs()
 
     # plot_star_model_var()
     # plot_vs_cent_var()
-    # plot_sims_var()
+    plot_sims_var()
     # get_sim_mapping_var()
     # plot_all_zero_base()
 
@@ -111,17 +111,19 @@ def plot_paper_figs():
 
     dvar_vs_protons(df_dsigma, div_plt, cent_plt, [39], ['raw', 'mix', 'diff'], ['bes_def'],
                     plot=True, avg=False, alpha=1.0, y_ranges=[-0.00085, 0.00055],
+                    data_sets_labels={'bes_def': {'raw': 'Single Event', 'mix': 'Mixed Event',
+                                                  'diff': 'Single Event - Mixed Event'}},
                     marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^'}})
 
     dvar_vs_protons(df_dsigma, div_plt, cent_plt, [39], ['diff'], data_sets_plt, data_sets_colors=data_sets_colors,
-                    plot=True, avg=False, alpha=1.0, y_ranges=[-0.00085, 0.00055],
+                    plot=True, avg=False, alpha=1.0, y_ranges=[-0.00085, 0.00055], ylabel=r'$\Delta\sigma^2$',
                     data_sets_labels=data_sets_labels, marker_map=data_sets_markers, legend_pos='lower right')
 
     df_dsigma_v2sub = pd.read_csv(f'{base_path}{df_dsigma_v2sub_name}')
     df_dsigma_v2sub_model = pd.read_csv(f'{base_path}{df_dsigma_v2sub_model_name}')
     df_dsigma_v2sub = pd.concat([df_dsigma_v2sub, df_dsigma_v2sub_model])
 
-    dvar_vs_protons(df_dsigma_v2sub, div_plt, cent_plt, [39], ['diff'], data_sets_plt,
+    dvar_vs_protons(df_dsigma_v2sub, div_plt, cent_plt, [39], ['diff'], data_sets_plt, ylabel=r'$\Delta\sigma^2$',
                     data_sets_colors=data_sets_colors, plot=True, avg=False, alpha=1.0, y_ranges=[-0.00085, 0.00055],
                     data_sets_labels=data_sets_labels, marker_map=data_sets_markers, legend_pos='lower right')
 
@@ -131,29 +133,48 @@ def plot_paper_figs():
                     plot=True, avg=False, alpha=1.0, y_ranges=[-0.00085, 0.00055],
                     marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^', 'v2_sub': '*'}})
 
-    dvar_vs_protons(df_dsigma_with_v2sub, div_plt, cent_plt, [39], ['diff', 'v2_sub'], ['bes_def'],
-                    plot=True, avg=False, alpha=1.0, y_ranges=[-0.00085, 0.00055],
+    dvar_vs_protons(df_dsigma_with_v2sub, div_plt, cent_plt, [39], ['raw', 'diff', 'v2_sub'], ['bes_def'],
+                    plot=True, avg=False, alpha=1.0, y_ranges=[-0.00085, 0.00005], ylabel=r'$\Delta\sigma^2$',
+                    data_sets_labels={'bes_def': {'raw': 'Uncorrected', 'diff': 'Mixed Corrected',
+                                                  'v2_sub': 'Mixed and Flow Corrected'}},
+                    data_sets_colors={'bes_def': {'raw': 'blue', 'diff': 'red', 'v2_sub': 'black'}},
                     marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^', 'v2_sub': '*'}})
 
     dsig_avgs_all = pd.read_csv(f'{base_path}{df_def_avgs_out_name}')
     dsig_avgs_all_model = pd.read_csv(f'{base_path}{df_def_avgs_out_model_name}')
     dsig_avgs_all = pd.concat([dsig_avgs_all, dsig_avgs_all_model])
 
+    dvar_vs_protons_energies(df_dsigma, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], ['bes_def'],
+                             plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
+                             data_sets_labels=data_sets_labels, y_ranges=[-0.00088, 0.00016], avgs_df=dsig_avgs_all,
+                             ylabel=r'$\Delta\sigma^2$')
+
     dsig_avgs_v2sub = pd.read_csv(f'{base_path}{df_def_avgs_v2sub_out_name}')
     dsig_avgs_v2sub_model = pd.read_csv(f'{base_path}{df_def_avgs_v2sub_out_model_name}')
     dsig_avgs_v2sub = pd.concat([dsig_avgs_v2sub, dsig_avgs_v2sub_model])
 
-    dvar_vs_protons_energies(df_dsigma, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], ['bes_def'],
+    dsig_avgs_v2sub['data_type'] = 'diff'
+    dvar_vs_protons_energies(df_dsigma_v2sub, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], ['bes_def'],
                              plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
-                             data_sets_labels=data_sets_labels, y_ranges=[-0.00088, 0.00016], avgs_df=dsig_avgs_all)
+                             data_sets_labels=data_sets_labels, y_ranges=[-0.00088, 0.00016], avgs_df=dsig_avgs_v2sub,
+                             ylabel=r'$\Delta\sigma^2$')
+
+    dvar_vs_protons_energies(df_dsigma_v2sub, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], data_sets_plt,
+                             plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
+                             data_sets_labels=data_sets_labels, y_ranges=[-0.00088, 0.00016], avgs_df=dsig_avgs_v2sub,
+                             ylabel=r'$\Delta\sigma^2$')
 
     # plot_protons_avgs_vs_energy(dsig_avg, ['bes_def'], data_sets_colors=data_sets_colors,
     #                             data_sets_labels=data_sets_labels, title=f'{cent_map[cent_plt]} Centrality, {div_plt}° '
     #                                                                      f'Partitions, {samples} Samples per Event')
 
     dsig_avgs_v2_sub_cent8 = dsig_avgs_v2sub[dsig_avgs_v2sub['cent'] == 8]
-    # plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, ['bes_def'], data_sets_colors=data_sets_colors, fit=True,
-    #                     data_sets_labels=data_sets_labels, plt_energies=False)
+    plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, ['bes_def'], data_sets_colors=data_sets_colors, fit=True,
+                        data_sets_labels=data_sets_labels, plot_energy_panels=True, ylab=r'$\widebar{\Delta\sigma^2}$')
+    dsig_avgs_v2_sub_cent8_div120 = dsig_avgs_v2sub[(dsig_avgs_v2sub['cent'] == 8) & (dsig_avgs_v2sub['divs'] == 120)]
+    plot_protons_avgs_vs_energy(dsig_avgs_v2_sub_cent8_div120, data_sets_plt, data_sets_colors=data_sets_colors,
+                                data_sets_labels=data_sets_labels, alpha=1,
+                                title=f'{cent_map[8]} Centrality, {div_plt}° Partitions, {samples} Samples per Event')
 
     dsig_avgs_v2_sub_div120 = dsig_avgs_v2sub[dsig_avgs_v2sub['divs'] == 120]
     plot_protons_avgs_vs_cent(dsig_avgs_v2_sub_div120, ['bes_def'], data_sets_colors=data_sets_colors, fit=False,
@@ -384,7 +405,7 @@ def plot_star_model_var():
                         data_sets_labels=data_sets_labels)
 
     df_fits = plot_dvar_avgs_divs(dsig_avgs, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
-                                  data_sets_labels=data_sets_labels, plt_energies=False)
+                                  data_sets_labels=data_sets_labels, plot_energy_panels=False)
     if df_partitions_fits_name is not None:
         df_fits.to_csv(f'{base_path}{fits_out_base}/{df_partitions_fits_name}', index=False)
 
@@ -414,8 +435,8 @@ def plot_star_var_sys():
     sys_pdf_out_path = f'{base_path}systematic_plots.pdf'
     # df_def_out_name = 'Bes_with_Sys/binom_slice_vars_bes.csv'
     df_def_out_name = None
-    # df_def_dsigma_out_name = 'Bes_with_Sys/binom_slice_vars_bes_dsigma.csv'
-    df_def_dsigma_out_name = None
+    df_def_dsigma_out_name = 'Bes_with_Sys/binom_slice_vars_bes_dsigma.csv'
+    # df_def_dsigma_out_name = None
     df_def_dsigma_v2sub_out_name = 'Bes_with_Sys/binom_slice_vars_bes_dsigma_v2sub.csv'
     # df_def_avgs_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_bes.csv'
     df_def_avgs_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_bes.csv'
@@ -739,7 +760,7 @@ def plot_star_var_sys():
     #                     data_sets_labels=data_sets_labels)
 
     df_fits = plot_dvar_avgs_divs(dsig_avgs_diff_v2sub, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,
-                                  data_sets_labels=data_sets_labels, plt_energies=False)
+                                  data_sets_labels=data_sets_labels, plot_energy_panels=False)
     # if df_partitions_fits_name is not None:
     #     df_fits.to_csv(f'{base_path}{fits_out_base}/{df_partitions_fits_name}', index=False)
 
@@ -1078,14 +1099,15 @@ def plot_sims_var():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
     base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
-    df_name = 'binom_slice_stats_sim.csv'
+    # df_name = 'binom_slice_stats_sim.csv'
+    df_name = 'binom_slice_stats_sim_demos.csv'
     df_path = base_path + df_name
     sim_sets = []
 
     # amps = ['002', '004', '006', '008', '01']  # ['002', '006', '01']
-    amps = ['002', '006', '01']  # ['002', '006', '01']
+    amps = ['002', '004', '006', '008', '01']  # ['002', '006', '01']
     # spreads = ['03', '04', '05', '06', '07', '08', '09', '1', '11', '12']
-    spreads = ['1', '12']
+    spreads = ['08', '1', '12']
     # spreads = ['1', '15']
     # amps = ['0', '002', '004', '005', '006', '008', '01', '0125', '015', '0175', '02', '0225', '025', '03', '035', '04',
     #         '045', '05', '06', '07', '08', '09', '1', '125', '15', '175', '2', '225', '25', '3', '35', '4', '45', '5',
@@ -1095,7 +1117,7 @@ def plot_sims_var():
     for amp in amps:
         for spread in spreads:
             sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}')
-            # sim_sets.append(f'sim_clmul_amp{amp}_spread{spread}')
+            sim_sets.append(f'sim_clmul_amp{amp}_spread{spread}')
     # sim_sets = sorted(sim_sets, reverse=True)
     # sim_sets = sim_sets[:int(len(sim_sets) / 2)] + sorted(sim_sets[int(len(sim_sets) / 2):])
 
@@ -1145,15 +1167,21 @@ def plot_sims_var():
     print(pd.unique(dsig_avgs['amp']))
     print(pd.unique(dsig_avgs['spread']))
     plot_dvar_avgs_divs(dsig_avgs, all_sets_plt, data_sets_colors=data_sets_colors, fit=False,
-                        data_sets_labels=data_sets_labels)
-    plot_dvar_avgs_divs(dsig_avgs, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
-                        data_sets_labels=data_sets_labels)
+                        data_sets_labels=data_sets_labels, plot_energy_panels=False)
+    df_fits = plot_dvar_avgs_divs(dsig_avgs, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
+                                  data_sets_labels=data_sets_labels, plot_energy_panels=False)
+    dsig_avgs_sqrt = dsig_avgs.copy()
+    dsig_avgs_sqrt['avg'] = np.sqrt(np.abs(dsig_avgs['avg'])) * np.sign(dsig_avgs['avg'])
+    df_fits_sqrt = plot_dvar_avgs_divs(dsig_avgs_sqrt, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
+                                       data_sets_labels=data_sets_labels, plot_energy_panels=False)
     # # plt.show()
-    # proton_fits_div = protons_fits[protons_fits['divs'] == div_plt]
-    # plot_protons_fits_vs_amp(proton_fits_div, all_sets_plt, data_sets_colors, data_sets_labels)
+    proton_fits_div = dsig_avgs[dsig_avgs['divs'] == div_plt]
+    print(proton_fits_div)
+    plot_dsig_fits_vs_amp(proton_fits_div, all_sets_plt, data_sets_colors, data_sets_labels)
     # # plt.show()
     # # print(df_fits)
-    # sigma_fits = plot_slope_div_fits_simpars(df_fits)
+    sigma_fits = plot_slope_div_fits_simpars(df_fits)
+    sigma_fits = plot_slope_div_fits_simpars(df_fits_sqrt)
     # plt.show()
     # plot_sigma_fits_interp(sigma_fits)
 
@@ -1362,7 +1390,7 @@ def get_sim_mapping_var():
     print(pd.unique(dsig_avgs['amp']))
     print(pd.unique(dsig_avgs['spread']))
     df_fits = plot_dvar_avgs_divs(dsig_avgs, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
-                                  data_sets_labels=data_sets_labels, plt_energies=False)
+                                  data_sets_labels=data_sets_labels, plot_energy_panels=False)
     if df_partitions_fits_name is not None:
         df_fits.to_csv(f'{base_path}{fits_out_base}/{df_partitions_fits_name}', index=False)
 
@@ -1710,10 +1738,10 @@ def plot_vs_cent_var():
         dsig_avgs.to_csv(f'{base_path}{fits_out_base}/{df_tproton_avgs_name}', index=False)
 
     plot_dvar_avgs_divs(dsig_avgs, all_sets_plt, data_sets_colors=data_sets_colors, fit=True, plot=True,
-                        data_sets_labels=data_sets_labels, plt_energies=True)
+                        data_sets_labels=data_sets_labels, plot_energy_panels=True)
 
     df_fits = plot_dvar_avgs_divs(dsig_avgs, all_sets_plt, data_sets_colors=data_sets_colors, fit=True, plot=False,
-                                  data_sets_labels=data_sets_labels, plt_energies=False)
+                                  data_sets_labels=data_sets_labels, plot_energy_panels=False)
     if df_partitions_fits_name is not None:
         df_fits.to_csv(f'{base_path}{fits_out_base}/{df_partitions_fits_name}', index=False)
 
@@ -3378,20 +3406,20 @@ def plot_efficiency_closure_tests():
         colors = dict(zip(data_sets, ['blue', 'green', 'red']))
         labels = dict(zip(data_sets, [data_set + x for x in [' Raw', ' Mix', ' Sub']]))
         plot_dvar_avgs_divs(protons_fits, data_sets, data_sets_colors=colors, fit=False, data_sets_labels=labels,
-                            plt_energies=False, title=data_set)
+                            plot_energy_panels=False, title=data_set)
 
     data_sets = ['flow_eff_res15_v207_raw', 'flow_eff_res15_v207_sub', 'flow_res15_v207_raw']
     colors = dict(zip(data_sets, ['blue', 'red', 'orange']))
     labels = dict(zip(data_sets, ['Flow + Efficiency Raw', 'Flow + Efficiency Raw-Mix', 'Flow Raw']))
     plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
-                        plt_energies=False, alpha=0.6, title='Flow v2=0.07 Efficiency Correction')
+                        plot_energy_panels=False, alpha=0.6, title='Flow v2=0.07 Efficiency Correction')
 
     data_sets = ['simpleclust_eff_raw', 'simpleclust_eff_sub', 'simpleclust_raw']
     colors = dict(zip(data_sets, ['blue', 'red', 'orange']))
     labels = dict(zip(data_sets, ['Simple Clustering + Efficiency Raw', 'Simple Clustering + Efficiency Raw-Mix',
                                   'Simple Clustering Raw']))
     plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
-                        plt_energies=False, alpha=0.6, title='Simple Clustering (s05, a2) Efficiency Correction')
+                        plot_energy_panels=False, alpha=0.6, title='Simple Clustering (s05, a2) Efficiency Correction')
 
     for s, a in [('1', '01'), ('08', '01'), ('05', '01'), ('01', '01')]:
         data_sets = [f'anticlflow_eff_s{s}_a{a}_raw', f'anticlflow_eff_s{s}_a{a}_sub', f'anticlmulti_s{s}_a{a}_raw']
@@ -3399,7 +3427,7 @@ def plot_efficiency_closure_tests():
         labels = dict(zip(data_sets, ['Anti-Clustering + Efficiency Raw', 'Anti-Clustering + Efficiency Raw-Mix',
                                       'Anti-Clustering Raw']))
         plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
-                            plt_energies=False, alpha=0.6,
+                            plot_energy_panels=False, alpha=0.6,
                             title=f'Anti-Clustering (s{s}, a{a}) Efficiency Correction')
 
     for s, a in [('1', '01'), ('08', '01'), ('05', '01'), ('01', '01')]:
@@ -3409,7 +3437,7 @@ def plot_efficiency_closure_tests():
         labels = dict(zip(data_sets, ['Anti-Clustering (Independent) + Efficiency Raw',
                                       'Anti-Clustering (Independent) + Efficiency Raw-Mix', 'Anti-Clustering Raw']))
         plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
-                            plt_energies=False, alpha=0.6,
+                            plot_energy_panels=False, alpha=0.6,
                             title=f'Anti-Clustering (Independent) (s{s}, a{a}) Efficiency Correction')
 
     data_sets = [f'anticlflowindep_eff_s05_a01_v207_raw', f'anticlflowindep_eff_s05_a01_v207_sub',
@@ -3419,15 +3447,15 @@ def plot_efficiency_closure_tests():
                                   'Anti-Clustering (Independent) + Efficiency + Flow Raw-Mix',
                                   'Anti-Clustering + Flow Raw']))
     plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
-                        plt_energies=False, alpha=0.6,
+                        plot_energy_panels=False, alpha=0.6,
                         title=f'Anti-Clustering (Independent) (s{s}, a{a}) + Flow v2=0.07 Efficiency Correction')
 
-    # data_sets = ['anticlflow_eff_s1_a01_v207_raw', 'anticlflow_eff_s1_a01_v207_sub', '']
-    # colors = dict(zip(data_sets, ['blue', 'red', 'orange']))
-    # labels = dict(zip(data_sets, ['Anti-Clustering + Flow + Efficiency Raw',
-    #                               'Anti-Clustering + Flow + Efficiency Raw-Mix', 'Anti-Clustering + Flow Raw']))
-    # plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
-    #                     plt_energies=False, alpha=0.6, title='Flow v2=0.07 Efficiency Correction')
+    data_sets = ['anticlflow_eff_s1_a01_v207_raw', 'anticlflow_eff_s1_a01_v207_sub', '']
+    colors = dict(zip(data_sets, ['blue', 'red', 'orange']))
+    labels = dict(zip(data_sets, ['Anti-Clustering + Flow + Efficiency Raw',
+                                  'Anti-Clustering + Flow + Efficiency Raw-Mix', 'Anti-Clustering + Flow Raw']))
+    plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
+                        plot_energy_panels=False, alpha=0.6, title='Flow v2=0.07 Efficiency Correction')
 
     plt.show()
 
