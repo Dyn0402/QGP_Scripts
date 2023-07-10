@@ -35,8 +35,9 @@ def main():
     # eff_gaus_combo()
     # eff_gaus_combo2()
     # gaus_v2_combo2()
-    eff_plotting()
+    # eff_plotting()
     v2_plotting()
+    # vn_analytic_plotting()
     print('donzo')
 
 
@@ -1076,7 +1077,7 @@ def eff_plotting():
 def v2_plotting():
     func2 = vn_pdf
     n = 2
-    v2 = 0.07
+    v2 = 0.1
     psi = np.pi / 3
     func2_args = (v2, psi, n)
     fig, ax = plt.subplots(dpi=144, figsize=(6, 3))
@@ -1084,6 +1085,47 @@ def v2_plotting():
     plot_az_bin_example(func2, func2_args, np.pi / 4, np.pi / 4 + np.deg2rad(100))
     ax.set_title('Elliptic Flow Azimuthal Probability Distribution')
     fig.tight_layout()
+
+    plt.show()
+
+
+def vn_analytic_plotting():
+    v_mag = 0.1
+    psi = np.pi / 3
+    ns = [2, 3, 4, 5]
+
+    fig_prob, ax_prob = plt.subplots(dpi=144, figsize=(8, 3))
+    fig_dsig, ax_dsig = plt.subplots(dpi=144, figsize=(8, 3))
+    fig_dsig_v2_comp, ax_dsig_v2_comp = plt.subplots(dpi=144, figsize=(8, 3))
+    w = np.linspace(0, 2 * np.pi, 1000)
+
+    for n in ns:
+        ax_prob.plot(w, vn_pdf(w, v_mag, psi, n), label=fr'$v_{n}$')  # w in place of phi, same range though different
+        ax_dsig.plot(w, vn_divs(w, v_mag, n=n), label=fr'$v_{n}$')
+
+    dsigs = []
+    for w_i in w:
+        ep_diff, ep2 = get_partition_variance(vn_pdf, (v_mag, psi, 2), w_i)
+        dsigs.append(ep_diff)
+    ax_dsig_v2_comp.plot(w, dsigs, label='Numerical')
+    ax_dsig_v2_comp.plot(w, vn_divs(w, v_mag, n=2), ls='--', label='Analytic')
+
+    for ax in [ax_prob, ax_dsig, ax_dsig_v2_comp]:
+        ax.legend()
+        ax.set_ylim(bottom=0)
+
+    ax_prob.set_title('Probability Densities')
+    ax_dsig.set_title(r'$\Delta\sigma^2$')
+    ax_dsig_v2_comp.set_title(r'$\Delta\sigma^2$ Analytic vs Numerical')
+    ax_prob.set_ylabel('Probability')
+    ax_dsig.set_ylabel(r'$\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2$')
+    ax_dsig_v2_comp.set_ylabel(r'$\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2$')
+    ax_prob.set_xlabel(r'$\phi$')
+    ax_dsig.set_xlabel(r'Azimuthal Partition Width $w$')
+    ax_dsig_v2_comp.set_xlabel(r'Azimuthal Partition Width $w$')
+    fig_prob.tight_layout()
+    fig_dsig.tight_layout()
+    fig_dsig_v2_comp.tight_layout()
 
     plt.show()
 
@@ -1238,8 +1280,8 @@ def get_partitions_covariance(func, func_pars, width, sep):
 
 
 def get_efficiency_pdf(energy=62, plot=False):
-    set_name = 'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_0'
-    qa_path = f'F:/Research/Data/default_resample/{set_name}/{energy}GeV/QA_{energy}GeV.root'
+    set_name = 'rapid05_resample_norotate_seed_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_0'
+    qa_path = f'F:/Research/Data/default/{set_name}/{energy}GeV/QA_{energy}GeV.root'
     with uproot.open(qa_path) as file:
         hist_name = f'post_phi_{set_name}_{energy}'
         hist = file[hist_name]

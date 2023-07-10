@@ -26,11 +26,11 @@ def main():
 
     # plot_star_model_var()
     # plot_vs_cent_var()
-    plot_sims_var()
+    # plot_sims_var()
     # get_sim_mapping_var()
     # plot_all_zero_base()
 
-    # plot_star_var_sys()
+    plot_star_var_sys()
     # make_models_csv()
     # plot_star_var_rand_sys()
 
