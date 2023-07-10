@@ -1096,7 +1096,8 @@ def plot_sims():
 
 
 def plot_sims_var():
-    plt.rcParams["figure.figsize"] = (6.66, 5)
+    # plt.rcParams["figure.figsize"] = (6.66, 5)
+    plt.rcParams["figure.figsize"] = (8, 4)
     plt.rcParams["figure.dpi"] = 144
     base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
     # df_name = 'binom_slice_stats_sim.csv'
@@ -1106,9 +1107,11 @@ def plot_sims_var():
 
     # amps = ['002', '004', '006', '008', '01']  # ['002', '006', '01']
     amps = ['002', '004', '006', '008', '01']  # ['002', '006', '01']
+    # amps = ['006', '01']  # ['002', '006', '01']
     # spreads = ['03', '04', '05', '06', '07', '08', '09', '1', '11', '12']
     spreads = ['08', '1', '12']
-    # spreads = ['1', '15']
+    # spreads = ['04', '12']
+    # spreads = ['1']
     # amps = ['0', '002', '004', '005', '006', '008', '01', '0125', '015', '0175', '02', '0225', '025', '03', '035', '04',
     #         '045', '05', '06', '07', '08', '09', '1', '125', '15', '175', '2', '225', '25', '3', '35', '4', '45', '5',
     #         '6', '7', '8', '9', '99']
@@ -1118,8 +1121,8 @@ def plot_sims_var():
         for spread in spreads:
             sim_sets.append(f'sim_aclmul_amp{amp}_spread{spread}')
             sim_sets.append(f'sim_clmul_amp{amp}_spread{spread}')
-    # sim_sets = sorted(sim_sets, reverse=True)
-    # sim_sets = sim_sets[:int(len(sim_sets) / 2)] + sorted(sim_sets[int(len(sim_sets) / 2):])
+    sim_sets = sorted(sim_sets, reverse=True)
+    sim_sets = sim_sets[:int(len(sim_sets) / 2)] + sorted(sim_sets[int(len(sim_sets) / 2):])
 
     stat_plot = 'k2'
     div_plt = 120
@@ -1151,37 +1154,37 @@ def plot_sims_var():
 
     df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
 
-    df_diff = calc_dsigma(df)
+    df_raw, df_mix, df_diff = calc_dsigma(df, data_types=['raw', 'mix', 'diff'])
 
-    dvar_vs_protons(df_diff, div_plt, cent_plt, ['sim'], ['diff'], all_sets_plt, plot=True, avg=True,
-                    data_sets_labels=data_sets_labels)
+    dvar_vs_protons(df_raw, div_plt, cent_plt, ['sim'], ['raw'], all_sets_plt, plot=True, avg=True,
+                    data_sets_labels=data_sets_labels, ylabel=r'$\Delta\sigma^2$',
+                    title=f'Gaussian Correlation Model: {div_plt}° Partitions, 72 Samples per Event')
 
     dsig_avgs = []
     for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
         print(f'Div {div}')
-        dsig_avgs_div_diff = dvar_vs_protons(df_diff, div, cent_plt, energies_fit, ['diff'], all_sets_plt, plot=False,
-                                             avg=True)
-        dsig_avgs.append(dsig_avgs_div_diff)
+        dsig_avgs_div = dvar_vs_protons(df_raw, div, cent_plt, energies_fit, ['raw'], all_sets_plt, plot=False,
+                                        avg=True)
+        dsig_avgs.append(dsig_avgs_div)
     dsig_avgs = pd.concat(dsig_avgs, ignore_index=True)
     print(dsig_avgs)
     print(pd.unique(dsig_avgs['amp']))
     print(pd.unique(dsig_avgs['spread']))
     plot_dvar_avgs_divs(dsig_avgs, all_sets_plt, data_sets_colors=data_sets_colors, fit=False,
-                        data_sets_labels=data_sets_labels, plot_energy_panels=False)
+                        data_sets_labels=data_sets_labels, plot_energy_panels=False, ylab=r'$\widebar{\Delta\sigma^2}$',
+                        title=f'Gaussian Correlation Model: 72 Samples per Event')
     df_fits = plot_dvar_avgs_divs(dsig_avgs, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
-                                  data_sets_labels=data_sets_labels, plot_energy_panels=False)
-    dsig_avgs_sqrt = dsig_avgs.copy()
-    dsig_avgs_sqrt['avg'] = np.sqrt(np.abs(dsig_avgs['avg'])) * np.sign(dsig_avgs['avg'])
-    df_fits_sqrt = plot_dvar_avgs_divs(dsig_avgs_sqrt, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
-                                       data_sets_labels=data_sets_labels, plot_energy_panels=False)
-    # # plt.show()
+                                  data_sets_labels=data_sets_labels, plot_energy_panels=False,
+                                  ylab=r'$\widebar{\Delta\sigma^2}$',
+                                  title=f'Gaussian Correlation Model: 72 Samples per Event')
+    # plt.show()
     proton_fits_div = dsig_avgs[dsig_avgs['divs'] == div_plt]
     print(proton_fits_div)
-    plot_dsig_fits_vs_amp(proton_fits_div, all_sets_plt, data_sets_colors, data_sets_labels)
+    plot_dsig_fits_vs_amp(proton_fits_div, all_sets_plt, data_sets_colors, data_sets_labels,
+                          title=f'Gaussian Correlation Model: {div_plt}° Partitions, 72 Samples per Event')
     # # plt.show()
     # # print(df_fits)
     sigma_fits = plot_slope_div_fits_simpars(df_fits)
-    sigma_fits = plot_slope_div_fits_simpars(df_fits_sqrt)
     # plt.show()
     # plot_sigma_fits_interp(sigma_fits)
 
