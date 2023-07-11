@@ -835,23 +835,37 @@ def eff_gaus_combo2():
     fig.tight_layout()
 
     mu = np.pi
-    sigma = 0.1
-    amp = 0.5
-    func2 = base_gaus_pdf
-    func2_args = (mu, sigma, amp, 1. / get_norm(func2, (mu, sigma, amp, 1)))
+    sigma = 0.8
+    amp = 0.1
+    # func2 = base_gaus_pdf
+    func2 = base_gaus_pdf_wrap
+    # func2_args = (mu, sigma, amp, 1. / get_norm(func2, (mu, sigma, amp, 1)))
+    func2_args = (mu, sigma, amp)
     func2_name = 'Gaussian Cluster'
     fig, ax = plt.subplots(dpi=144, figsize=(6, 3))
     plot_pdf(func2, func2_args)
     ax.set_ylim(bottom=0)
     fig.tight_layout()
 
-    func3 = lambda x, mu_, sigma_, amp_, c_, c_combo_: c_combo_ * func1(x) * base_gaus_pdf(x, mu_, sigma_, amp_, c_)
+    # func3 = lambda x, mu_, sigma_, amp_, c_, c_combo_: c_combo_ * func1(x) * base_gaus_pdf(x, mu_, sigma_, amp_, c_)
+    func3 = lambda x, mu_, sigma_, amp_, c_combo_: c_combo_ * func1(x) * base_gaus_pdf_wrap(x, mu_, sigma_, amp_)
     func3_args = [*func1_args, *func2_args, 1. / get_norm(func3, (*func1_args, *func2_args, 1))]
     func3_name = 'Combination'
     fig, ax = plt.subplots(dpi=144, figsize=(6, 3))
     plot_pdf(func3, func3_args)
     ax.set_ylim(bottom=0)
     fig.tight_layout()
+
+    fig_pdfs, ax_pdfs = plt.subplots(dpi=144, figsize=(8, 4))
+    xs = np.linspace(0, 2 * np.pi, 1000)
+    ax_pdfs.plot(xs, func1(xs, *func1_args), label=func1_name)
+    ax_pdfs.plot(xs, func2(xs, *func2_args), label=func2_name)
+    # ax_pdfs.plot(xs, func3(xs, *func3_args), label=func3_name)
+    ax_pdfs.set_xlabel(r'$\phi$')
+    ax_pdfs.set_ylabel('Probability')
+    ax_pdfs.set_ylim(bottom=0)
+    ax_pdfs.legend()
+    fig_pdfs.tight_layout()
 
     fig_pp, ax_pp = plt.subplots(dpi=144, figsize=(6, 3))
     fig_norm, ax_norm = plt.subplots(dpi=144, figsize=(7, 3))
@@ -908,10 +922,10 @@ def eff_gaus_combo2():
     for func_name, y in pp_minus_p2_dict.items():
         ax_v2_div_eff.plot(widths, y, label=func_name)
     combo_div_eff = np.array(pp_minus_p2_dict['Combination']) - np.array(pp_minus_p2_dict['Efficiency'])
-    ax_v2_div_eff.plot(widths, combo_div_eff, label='Combo - Eff')
+    ax_v2_div_eff.plot(widths, combo_div_eff, ls='--', label='Combo - Efficiency')
     ax_v2_div_eff.set_xlabel('Partition Width (w)')
-    ax_v2_div_eff.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
-    ax_v2_div_eff.legend()
+    ax_v2_div_eff.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2$')
+    ax_v2_div_eff.legend(loc='upper left')
     fig_v2_div_eff.tight_layout()
 
     fig_ft, ax_ft = plt.subplots(dpi=144)
@@ -996,7 +1010,7 @@ def gaus_v2_combo2():
         for width in widths:
             if func_name == 'Combination':
                 pp_minus_p2_psi, pp_psi = [], []
-                for psi in np.linspace(0, 2 * np.pi, 100):
+                for psi in np.linspace(0, 2 * np.pi, 1000):
                     func_args[5] = psi
                     # print(func_args)
                     pp_minus_p2, pp = get_partition_variance(func, func_args, width)
@@ -1324,6 +1338,17 @@ def gaus_pdf(phi, mu, sigma):
 
 def base_gaus_pdf(phi, mu, sigma, amp, normalization):
     return normalization * (1 + amp * np.exp(-0.5 * ((phi - mu) / sigma)**2))
+
+
+def base_gaus_pdf_wrap(phi, mu, sigma, amp, wrap=3):
+    gaus_pdf = 1 + amp * np.exp(-0.5 * ((phi - mu) / sigma)**2)
+    for i in range(wrap):
+        phi_right = phi + i * 2 * np.pi
+        gaus_pdf += amp * np.exp(-0.5 * ((phi_right - mu) / sigma)**2)
+        phi_left = phi - i * 2 * np.pi
+        gaus_pdf += amp * np.exp(-0.5 * ((phi_left - mu) / sigma)**2)
+
+    return gaus_pdf / get_norm(base_gaus_pdf, (mu, sigma, amp, 1))
 
 
 # def quad_180_sin(x, a, c, )
