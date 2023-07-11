@@ -30,7 +30,7 @@ def main():
     # get_sim_mapping_var()
     # plot_all_zero_base()
 
-    plot_star_var_sys()
+    # plot_star_var_sys()
     # make_models_csv()
     # plot_star_var_rand_sys()
 
@@ -47,6 +47,7 @@ def main():
     # plot_vs_cent_nofit()
     # plot_vs_cent_fittest()
     # plot_ampt_efficiency()
+    plot_ampt_efficiency_var()
     # plot_flow()
     # plot_flow_k2()
     # plot_ampt_v2_closure()
@@ -2482,6 +2483,95 @@ def plot_ampt_efficiency():
                 df_fits_ratio.append({'data_set': data_set, 'energy': energy_shifted, 'baseline': base_div.val,
                                       'base_err': base_div.err, 'zero_mag': zero_div.val, 'zero_mag_err': zero_div.err})
     plot_slope_div_fits(pd.DataFrame(df_fits_ratio), data_sets_colors, data_sets_labels, ref_line=1)
+
+    plt.show()
+
+
+def plot_ampt_efficiency_var():
+    plt.rcParams["figure.figsize"] = (6.66, 5)
+    plt.rcParams["figure.dpi"] = 144
+    base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+    v2_ampt_in_dir = 'F:/Research/Data_Ampt_New_Coal/default_resample_epbins1/Ampt_rapid05_resample_norotate_epbins1_0/'
+    df_name = 'binom_slice_vars_ampt_eff.csv'
+    save_fits = False
+    fits_out_base = 'Base_Zero_Fits/'
+    df_tproton_fits_name = 'ampt_eff_tprotons_fits.csv'
+    df_partitions_fits_name = 'ampt_eff_partitions_fits.csv'
+    df_path = base_path + df_name
+
+    threads = 10
+
+    stat_plot = 'k2'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
+    divs_all = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300]
+    div_plt = 120
+    exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
+    cents = [1, 2, 3, 4, 5, 6, 7, 8]
+    cent_plt = 8
+    energies_fit = [7, 11, 19, 27, 39, 62]
+    data_types_plt = ['diff']
+    samples = 72  # For title purposes only
+
+    data_sets_plt = ['ampt_new_coal_resample_def', 'ampt_new_coal_resample_eff1', 'ampt_new_coal_resample_eff2',
+                     'ampt_new_coal_resample_eff3', 'ampt_new_coal_resample_eff4']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple', 'green']))
+    data_sets_labels = dict(zip(data_sets_plt, ['100%', '90%', '80%', '70%', '60%']))
+
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
+                0: '70-80%', -1: '80-90%'}
+
+    df = pd.read_csv(df_path)
+    df = df.dropna()
+    df = df[df['stat'] == stat_plot]
+    print(pd.unique(df['name']))
+
+    v2_ampt_vals = {2: read_flow_values(v2_ampt_in_dir)}
+
+    df_raw, df_mix, df_diff = calc_dsigma(df, ['raw', 'mix', 'diff'])
+    df_diff['meas'] = df_diff.apply(lambda row: Measure(row['val'], row['err']), axis=1)
+
+    df_def_dsigma_v2sub = []
+    for set_name in data_sets_plt:
+        set_v2sub = subtract_dsigma_flow(df_diff, set_name, set_name, v2_ampt_vals,
+                                         new_only=True, val_col='val', err_col='err', meas_col='meas')
+        df_def_dsigma_v2sub.append(set_v2sub)
+    df_dsigma_v2sub = pd.concat(df_def_dsigma_v2sub)
+
+    dvar_vs_protons_energies(df_dsigma_v2sub, [div_plt], cent_plt, energies_fit, data_types_plt,
+                             list(reversed(data_sets_plt)), plot=True, avg=True, plot_avg=True, alpha=0.6,
+                             data_sets_colors=data_sets_colors, data_sets_labels=data_sets_labels,
+                             ylabel=r'$\Delta\sigma^2$', kin_loc=(0.62, 0.4), y_ranges=[-0.00068, 0.00012])
+
+    dsig_avgs_v2sub = []
+    for energy in energies_fit:
+        print(f'Energy {energy}GeV')
+        jobs = [(df_diff[df_diff['name'] == set_i], divs_all, cents, energy, ['diff'],
+                 [set_i], None, False, True) for set_i in data_sets_plt]
+        dsig_avgs = []
+        with Pool(threads) as pool:
+            for job_i in tqdm.tqdm(pool.istarmap(dvar_vs_protons_cents, jobs), total=len(jobs)):
+                dsig_avgs.append(job_i)
+        dsig_avgs = pd.concat(dsig_avgs, ignore_index=True).drop('data_type', axis=1)
+        for data_set in data_sets_plt:
+            dsig_avgs_set = subtract_dsigma_flow(dsig_avgs, data_set, data_set, v2_ampt_vals, new_only=True)
+            dsig_avgs_v2sub.append(dsig_avgs_set)
+
+    dsig_avgs_v2sub = pd.concat(dsig_avgs_v2sub, ignore_index=True)
+
+    dsig_avgs_v2sub_cent8 = dsig_avgs_v2sub[dsig_avgs_v2sub['cent'] == cent_plt]
+    df_fits = plot_dvar_avgs_divs(dsig_avgs_v2sub_cent8, data_sets_plt, fit=True, data_sets_colors=data_sets_colors,
+                                  data_sets_labels=data_sets_labels, plot_energy_panels=True,
+                                  ylab=r'$\widebar{\Delta\sigma^2}$', plot_indiv=False)
+
+    dsig_avgs_v2sub_div120_cent8 = dsig_avgs_v2sub[(dsig_avgs_v2sub['cent'] == cent_plt) &
+                                                   (dsig_avgs_v2sub['divs'] == div_plt)]
+    plot_protons_avgs_vs_energy(dsig_avgs_v2sub_div120_cent8, data_sets_plt, data_sets_colors=data_sets_colors,
+                                data_sets_labels=data_sets_labels, alpha=1,
+                                title=f'{cent_map[8]} Centrality, {div_plt}° Partitions, {samples} Samples per Event')
+
+    plt.rcParams["figure.figsize"] = (8, 4)
+    plt.rcParams["figure.dpi"] = 144
+
+    plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
 
     plt.show()
 

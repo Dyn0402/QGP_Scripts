@@ -1184,7 +1184,7 @@ def stat_vs_protons_energies(df, stat, divs, cent, energies, data_types, data_se
 def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False,
                              avg=False, plot_avg=False, hist=False, data_sets_colors=None, data_sets_labels=None,
                              star_prelim=False, marker_map=None, alpha=1.0, errbar_alpha=0.2, avgs_df=None,
-                             ylabel=None):
+                             ylabel=None, kin_loc=None):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     energy_data = []
@@ -1310,7 +1310,9 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
             ax_energies[-1].legend(loc='lower right', framealpha=1.0).set_zorder(10)
         eta_line = r'|y| < 0.5'
         pt_line = r'0.4 < $p_T$ < 2.0 GeV'
-        ax_energies[4].text(0.5, 0.65, f'Au+Au\n{eta_line}\n{pt_line}', ha='left', va='top',
+        if kin_loc is None:
+            kin_loc = (0.5, 0.65)
+        ax_energies[4].text(*kin_loc, f'Au+Au\n{eta_line}\n{pt_line}', ha='left', va='top',
                             transform=ax_energies[4].transAxes)
         if star_prelim:
             ax_energies[4].text(0.5, 0.75, 'STAR Preliminary', fontsize=15, ha='left', va='top',
