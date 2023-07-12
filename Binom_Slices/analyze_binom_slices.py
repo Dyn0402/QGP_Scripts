@@ -2603,7 +2603,7 @@ def plot_protons_fits_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
 
 
 def plot_protons_avgs_vs_energy(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None, alpha=1):
-    fig_avg, ax_avg = plt.subplots(figsize=(6.66, 5), dpi=144)
+    fig_avg, ax_avg = plt.subplots()
     ax_avg.axhline(0, color='gray')
     fig_avg.canvas.manager.set_window_title(f'Dsigma2 Averages vs Energy')
     for data_set in data_sets_plt:

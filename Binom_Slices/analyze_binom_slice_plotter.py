@@ -47,7 +47,7 @@ def main():
     # plot_vs_cent_nofit()
     # plot_vs_cent_fittest()
     # plot_ampt_efficiency()
-    plot_ampt_efficiency_var()
+    # plot_ampt_efficiency_var()
     # plot_flow()
     # plot_flow_k2()
     # plot_ampt_v2_closure()
@@ -56,7 +56,7 @@ def main():
     # plot_flow_v2_closure_raw()
     # plot_flow_eff_test()
     # plot_anticl_flow_closure_test()
-    # plot_efficiency_closure_tests()
+    plot_efficiency_closure_tests()
     print('donzo')
 
 
@@ -2562,14 +2562,13 @@ def plot_ampt_efficiency_var():
                                   data_sets_labels=data_sets_labels, plot_energy_panels=True,
                                   ylab=r'$\widebar{\Delta\sigma^2}$', plot_indiv=False)
 
+    plt.rcParams["figure.figsize"] = (8, 4)
+
     dsig_avgs_v2sub_div120_cent8 = dsig_avgs_v2sub[(dsig_avgs_v2sub['cent'] == cent_plt) &
                                                    (dsig_avgs_v2sub['divs'] == div_plt)]
     plot_protons_avgs_vs_energy(dsig_avgs_v2sub_div120_cent8, data_sets_plt, data_sets_colors=data_sets_colors,
                                 data_sets_labels=data_sets_labels, alpha=1,
                                 title=f'{cent_map[8]} Centrality, {div_plt}° Partitions, {samples} Samples per Event')
-
-    plt.rcParams["figure.figsize"] = (8, 4)
-    plt.rcParams["figure.dpi"] = 144
 
     plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
 
@@ -3465,14 +3464,16 @@ def plot_efficiency_closure_tests():
     df_mix.loc[:, 'val'] = (df_mix['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
     df_mix.loc[:, 'err'] = df_mix['err'] / (tp * (tp - 1))
 
-    dvar_vs_protons(df_raw, div_plt, cent_plt, [62], ['raw'], all_sets, plot=True, avg=True)
-    dvar_vs_protons(df_mix, div_plt, cent_plt, [62], ['mix'], all_sets, plot=True, avg=True)
+    df_raw, df_mix = calc_dsigma(df[df['stat'] == stat_plot], data_types=['raw', 'mix'])
+
+    # dvar_vs_protons(df_raw, div_plt, cent_plt, [62], ['raw'], all_sets, plot=True, avg=True)
+    # dvar_vs_protons(df_mix, div_plt, cent_plt, [62], ['mix'], all_sets, plot=True, avg=True)
     df_sub = subtract_avgs(df_raw.drop(columns=['data_type']), df_mix.drop(columns=['data_type']),
                            val_col='val', err_col='err')
     df_sub['data_type'] = 'sub'
-    dvar_vs_protons(df_sub, div_plt, cent_plt, [62], ['sub'], all_sets, plot=True, avg=True)
-    dvar_vs_protons(pd.concat([df_raw, df_mix, df_sub], ignore_index=True), div_plt, cent_plt, [62],
-                    ['raw', 'mix', 'sub'], all_sets, plot=True, avg=True)
+    # dvar_vs_protons(df_sub, div_plt, cent_plt, [62], ['sub'], all_sets, plot=True, avg=True)
+    # dvar_vs_protons(pd.concat([df_raw, df_mix, df_sub], ignore_index=True), div_plt, cent_plt, [62],
+    #                 ['raw', 'mix', 'sub'], all_sets, plot=True, avg=True)
 
     protons_fits = []
     for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
@@ -3494,61 +3495,75 @@ def plot_efficiency_closure_tests():
         protons_fits.append(protons_fits_div_sub)
     protons_fits = pd.concat(protons_fits, ignore_index=True)
 
-    for data_set in all_sets:
-        data_sets = [data_set + x for x in ['_raw', '_mix', '_sub']]
-        colors = dict(zip(data_sets, ['blue', 'green', 'red']))
-        labels = dict(zip(data_sets, [data_set + x for x in [' Raw', ' Mix', ' Sub']]))
-        plot_dvar_avgs_divs(protons_fits, data_sets, data_sets_colors=colors, fit=False, data_sets_labels=labels,
-                            plot_energy_panels=False, title=data_set)
+    # for data_set in all_sets:
+    #     data_sets = [data_set + x for x in ['_raw', '_mix', '_sub']]
+    #     colors = dict(zip(data_sets, ['blue', 'green', 'red']))
+    #     labels = dict(zip(data_sets, [data_set + x for x in [' Raw', ' Mix', ' Sub']]))
+    #     plot_dvar_avgs_divs(protons_fits, data_sets, data_sets_colors=colors, fit=False, data_sets_labels=labels,
+    #                         plot_energy_panels=False, title=data_set)
+
+    plt.rcParams["figure.figsize"] = (8, 4)
 
     data_sets = ['flow_eff_res15_v207_raw', 'flow_eff_res15_v207_sub', 'flow_res15_v207_raw']
     colors = dict(zip(data_sets, ['blue', 'red', 'orange']))
-    labels = dict(zip(data_sets, ['Flow + Efficiency Raw', 'Flow + Efficiency Raw-Mix', 'Flow Raw']))
+    labels = dict(zip(data_sets, ['Flow + Efficiency Single', 'Flow + Efficiency Single-Mixed', 'Flow Single']))
     plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
-                        plot_energy_panels=False, alpha=0.6, title='Flow v2=0.07 Efficiency Correction')
+                        plot_energy_panels=False, alpha=0.6, title='Flow v2=0.07 Efficiency Correction',
+                        ylab=r'$\widebar{\Delta\sigma^2}$')
+    xs = np.linspace(0, 360, 1000)
+    plt.plot(xs, vn_divs(np.deg2rad(xs), 0.07, 2), color='gray', label='Flow Analytical')
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, 0.7))
 
     data_sets = ['simpleclust_eff_raw', 'simpleclust_eff_sub', 'simpleclust_raw']
     colors = dict(zip(data_sets, ['blue', 'red', 'orange']))
-    labels = dict(zip(data_sets, ['Simple Clustering + Efficiency Raw', 'Simple Clustering + Efficiency Raw-Mix',
-                                  'Simple Clustering Raw']))
+    labels = dict(zip(data_sets, ['Simple Clustering + Efficiency Single',
+                                  'Simple Clustering + Efficiency Single-Mixed', 'Simple Clustering Single']))
     plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
-                        plot_energy_panels=False, alpha=0.6, title='Simple Clustering (s05, a2) Efficiency Correction')
+                        plot_energy_panels=False, alpha=0.6, title='Simple Clustering (s05, a2) Efficiency Correction',
+                        ylab=r'$\widebar{\Delta\sigma^2}$')
 
     for s, a in [('1', '01'), ('08', '01'), ('05', '01'), ('01', '01')]:
         data_sets = [f'anticlflow_eff_s{s}_a{a}_raw', f'anticlflow_eff_s{s}_a{a}_sub', f'anticlmulti_s{s}_a{a}_raw']
         colors = dict(zip(data_sets, ['blue', 'red', 'orange']))
-        labels = dict(zip(data_sets, ['Anti-Clustering + Efficiency Raw', 'Anti-Clustering + Efficiency Raw-Mix',
-                                      'Anti-Clustering Raw']))
+        labels = dict(zip(data_sets, ['Repulsive Model + Efficiency Single',
+                                      'Repulsive Model + Efficiency Single-Mixed', 'Repulsive Model Single']))
+        s, a = round(float('0.' + s) * 10, 1), round(float('0.' + a) * 10, 1)
         plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
-                            plot_energy_panels=False, alpha=0.6,
-                            title=f'Anti-Clustering (s{s}, a{a}) Efficiency Correction')
+                            plot_energy_panels=False, alpha=0.6, ylab=r'$\widebar{\Delta\sigma^2}$',
+                            title=rf'Repulsive Simulation ($\sigma={s}$, $A={a}$) Efficiency Correction')
 
     for s, a in [('1', '01'), ('08', '01'), ('05', '01'), ('01', '01')]:
         data_sets = [f'anticlflowindep_eff_s{s}_a{a}_raw', f'anticlflowindep_eff_s{s}_a{a}_sub',
                      f'anticlmulti_s{s}_a{a}_raw']
         colors = dict(zip(data_sets, ['blue', 'red', 'orange']))
-        labels = dict(zip(data_sets, ['Anti-Clustering (Independent) + Efficiency Raw',
-                                      'Anti-Clustering (Independent) + Efficiency Raw-Mix', 'Anti-Clustering Raw']))
+        labels = dict(zip(data_sets, ['Repulsive Model (Independent) + Efficiency Single',
+                                      'Repulsive Model (Independent) + Efficiency Single-Mixed',
+                                      'Repulsive Model Single']))
+        s, a = round(float('0.' + s) * 10, 1), round(float('0.' + a) * 10, 1)
         plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
-                            plot_energy_panels=False, alpha=0.6,
-                            title=f'Anti-Clustering (Independent) (s{s}, a{a}) Efficiency Correction')
+                            plot_energy_panels=False, alpha=0.6,  ylab=r'$\widebar{\Delta\sigma^2}$',
+                            title=rf'Repulsive Model (Independent) ($\sigma={s}$, $A={a}$) Efficiency Correction')
 
     data_sets = [f'anticlflowindep_eff_s05_a01_v207_raw', f'anticlflowindep_eff_s05_a01_v207_sub',
                  f'anticlflowindep_s05_a01_v207_raw']
     colors = dict(zip(data_sets, ['blue', 'red', 'orange']))
-    labels = dict(zip(data_sets, ['Anti-Clustering (Independent) + Efficiency + Flow Raw',
-                                  'Anti-Clustering (Independent) + Efficiency + Flow Raw-Mix',
-                                  'Anti-Clustering + Flow Raw']))
+    labels = dict(zip(data_sets, ['Repulsive Model (Independent) + Efficiency + Flow Single',
+                                  'Repulsive Model (Independent) + Efficiency + Flow Single-Mixed',
+                                  'Repulsive Model + Flow Single']))
+    s, a = round(float('0.' + '05') * 10, 1), round(float('0.' + '01') * 10, 1)
     plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
-                        plot_energy_panels=False, alpha=0.6,
-                        title=f'Anti-Clustering (Independent) (s{s}, a{a}) + Flow v2=0.07 Efficiency Correction')
+                        plot_energy_panels=False, alpha=0.6, ylab=r'$\widebar{\Delta\sigma^2}$',
+                        title=rf'Repulsive Model (Independent) ($\sigma={s}$, $A={a}$) + \
+                        Flow v2=0.07 Efficiency Correction')
 
     data_sets = ['anticlflow_eff_s1_a01_v207_raw', 'anticlflow_eff_s1_a01_v207_sub', '']
     colors = dict(zip(data_sets, ['blue', 'red', 'orange']))
-    labels = dict(zip(data_sets, ['Anti-Clustering + Flow + Efficiency Raw',
-                                  'Anti-Clustering + Flow + Efficiency Raw-Mix', 'Anti-Clustering + Flow Raw']))
+    labels = dict(zip(data_sets, ['Repulsive Model + Flow + Efficiency Single',
+                                  'Repulsive Model + Flow + Efficiency Single-Mixed',
+                                  'Repulsive Model + Flow Single']))
     plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
-                        plot_energy_panels=False, alpha=0.6, title='Flow v2=0.07 Efficiency Correction')
+                        plot_energy_panels=False, alpha=0.6, title='Flow v2=0.07 Efficiency Correction',
+                        ylab=r'$\widebar{\Delta\sigma^2}$')
 
     plt.show()
 
