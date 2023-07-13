@@ -2728,6 +2728,8 @@ def plot_protons_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
 def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None,
                               fit=False, cent_ref=None, ref_type=None, data_sets_energies_cmaps=None, ls='-',
                               alpha=0.6, errbar_alpha=0.2):
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
+                0: '70-80%', -1: '80-90%'}
     fig_avg, ax_avg = plt.subplots(figsize=(6.66, 5), dpi=144)
     ax_avg.axhline(0, color='black')
     fig_avg.canvas.manager.set_window_title(f'Dsigma2 Avg vs Centrality')
@@ -2755,6 +2757,7 @@ def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
 
             if cent_ref is None:
                 x = df_energy['cent']
+                # x = [cent_map[xi] for xi in df_energy['cent']]
                 x_err = None
             else:
                 cent_energy = cent_ref[(cent_ref['data_set'] == data_set) & (cent_ref['energy'] == energy)]

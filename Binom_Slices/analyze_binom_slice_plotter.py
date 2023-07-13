@@ -192,6 +192,10 @@ def plot_paper_figs():
                               data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,
                               title=f'{div_plt}° Partitions, {samples} Samples per Event',
                               data_sets_energies_cmaps={'bes_def': 'tab10'}, alpha=0.8, errbar_alpha=0.3)
+    plot_protons_avgs_vs_cent(dsig_avgs_v2_sub_div120, ['bes_def'], data_sets_colors=data_sets_colors, fit=False,
+                              data_sets_labels=data_sets_labels, cent_ref=None, ref_type=None,
+                              title=f'{div_plt}° Partitions, {samples} Samples per Event',
+                              data_sets_energies_cmaps={'bes_def': 'tab10'}, alpha=0.8, errbar_alpha=0.3)
 
     # plot_div_fits_vs_cent(dsig_avgs_v2_sub, ['bes_def'], data_sets_colors=data_sets_colors,
     #                       data_sets_labels=data_sets_labels, title=None, fit=False, cent_ref=cent_ref_df,
