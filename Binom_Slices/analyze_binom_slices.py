@@ -1105,7 +1105,7 @@ def stat_vs_protons_energies(df, stat, divs, cent, energies, data_types, data_se
                 ax.set_ylim(0.71, 1.09)
             elif stat == 'non-excess kurtosis':
                 ax.set_ylim(0.92, 1.06)
-            ax.set_xlim(0, 69)
+            ax.set_xlim(0, 69.9)
 
     fits = []
     for data, ax, energy in zip(energy_data, ax_energies[:len(energies)], energies):
@@ -1239,7 +1239,7 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
                     ax.set_ylabel(rf'$\Delta \sigma^2$')
             if y_ranges:
                 ax.set_ylim(y_ranges)
-            ax.set_xlim(0, 69)
+            ax.set_xlim(0, 69.9)
     else:
         ax_energies = [None] * len(energies)
 
@@ -1690,7 +1690,8 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
 
 def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, data_sets_labels=None,
                         exclude_divs=[], verbose=False, plot_energy_panels=True, title=None, alpha=1, ylab=None,
-                        plot=True, errbar_alpha=0.2, plot_indiv=True, plot_energies_fig=False):
+                        plot=True, errbar_alpha=0.2, plot_indiv=True, plot_energies_fig=False, ylim=None,
+                        leg_panel=0):
     energies = pd.unique(df['energy'])
     if plot:
         if plot_energies_fig:
@@ -1804,6 +1805,8 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
             ylab = r'$\widebar{\Delta\sigma^2}_{single} - \widebar{\Delta\sigma^2}_{mix}$'
 
         if plot_energies_fig:
+            if ylim is not None:
+                ax.set_ylim(ylim)
             if title != '' and title is not None:
                 ax.set_title(title)
             ax.set_ylabel(ylab)
@@ -1812,6 +1815,8 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
 
         if plot_indiv:
             for energy_i, (energy, (energy_fig, energy_ax)) in enumerate(energy_fig_axs.items()):
+                if ylim is not None:
+                    energy_ax.set_ylim(ylim)
                 if title is None:
                     energy_ax.set_title(f'{energy} GeV')
                 else:
@@ -1828,6 +1833,8 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
 
         if plot_energy_panels:
             for energy_i, energy in enumerate(energies):
+                if ylim is not None:
+                    ax_panels[energy].set_ylim(ylim)
                 ax_panels[energy].axhline(0, color='gray', alpha=0.8, zorder=0)
                 ax_panels[energy].text(0.5, 0.9, f'{energy} GeV', size='x-large', ha='center', va='top',
                                        transform=ax_panels[energy].transAxes)
@@ -1835,7 +1842,7 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                     ax_panels[energy].set_xlabel('Azimuthal Partition Width')
                 if energy_i in [0, 3]:
                     ax_panels[energy].set_ylabel(ylab)
-                if energy_i == 0:
+                if energy_i == leg_panel:
                     # ax_panels[energy].legend(loc='lower left', bbox_to_anchor=(0.5, 0.85), framealpha=1.0)
                     ax_panels[energy].legend()
 
@@ -1996,7 +2003,7 @@ def plot_protons_fits_divs_flow(df, data_sets_plt, data_sets_colors=None):
     return pd.DataFrame(fit_pars)
 
 
-def plot_dsigma_fits_divs_flow(df, data_sets_plt, data_sets_colors=None):
+def plot_dsigma_fits_divs_flow(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None):
     fig, ax = plt.subplots(dpi=144)
     colors = iter(plt.cm.rainbow(np.linspace(0, 1, len(data_sets_plt))))
     ax.axhline(0, color='black')
@@ -2024,6 +2031,8 @@ def plot_dsigma_fits_divs_flow(df, data_sets_plt, data_sets_colors=None):
             ax.plot(x_divs, v2_divs(x_divs / 180 * np.pi, v2), color=color)
         else:
             lab = data_set
+        if data_sets_labels is not None:
+            lab = data_sets_labels[data_set]
 
         ax.errorbar(df_set['divs'], df_set['avg'], yerr=df_set['avg_err'], ls='none',
                     marker='o', label=lab, color=color)
@@ -2727,7 +2736,7 @@ def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
         df_set = df[df['name'] == data_set]
         if data_sets_energies_cmaps is not None:
             colors = iter([plt.cm.get_cmap(data_sets_energies_cmaps[data_set])(i)
-                           for i in np.linspace(1, 0.4, len(energies))])
+                           for i in np.linspace(0.1, 0.9, len(energies))])
         elif data_sets_colors is not None:
             color, colors = data_sets_colors[data_set], None
         else:

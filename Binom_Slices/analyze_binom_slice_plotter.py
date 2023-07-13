@@ -22,7 +22,7 @@ from analyze_binom_slices import *
 
 
 def main():
-    # plot_paper_figs()
+    plot_paper_figs()
 
     # plot_star_model_var()
     # plot_vs_cent_var()
@@ -56,7 +56,8 @@ def main():
     # plot_flow_v2_closure_raw()
     # plot_flow_eff_test()
     # plot_anticl_flow_closure_test()
-    plot_efficiency_closure_tests()
+    # plot_anticl_flow_closure_test_simple()
+    # plot_efficiency_closure_tests()
     print('donzo')
 
 
@@ -117,7 +118,7 @@ def plot_paper_figs():
                     marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^'}})
 
     dvar_vs_protons(df_dsigma, div_plt, cent_plt, [39], ['diff'], data_sets_plt, data_sets_colors=data_sets_colors,
-                    plot=True, avg=False, alpha=1.0, y_ranges=[-0.00085, 0.00055], ylabel=r'$\Delta\sigma^2$',
+                    plot=True, avg=False, alpha=1.0, y_ranges=[-0.00124, 0.0009], ylabel=r'$\Delta\sigma^2$',
                     data_sets_labels=data_sets_labels, marker_map=data_sets_markers, legend_pos='lower right')
 
     df_dsigma_v2sub = pd.read_csv(f'{base_path}{df_dsigma_v2sub_name}')
@@ -125,17 +126,17 @@ def plot_paper_figs():
     df_dsigma_v2sub = pd.concat([df_dsigma_v2sub, df_dsigma_v2sub_model])
 
     dvar_vs_protons(df_dsigma_v2sub, div_plt, cent_plt, [39], ['diff'], data_sets_plt, ylabel=r'$\Delta\sigma^2$',
-                    data_sets_colors=data_sets_colors, plot=True, avg=False, alpha=1.0, y_ranges=[-0.00085, 0.00055],
+                    data_sets_colors=data_sets_colors, plot=True, avg=False, alpha=1.0, y_ranges=[-0.00124, 0.0009],
                     data_sets_labels=data_sets_labels, marker_map=data_sets_markers, legend_pos='lower right')
 
     df_dsigma_v2sub_diffs = df_dsigma_v2sub[df_dsigma_v2sub['data_type'] == 'diff'].assign(data_type='v2_sub')
     df_dsigma_with_v2sub = pd.concat([df_dsigma, df_dsigma_v2sub_diffs])
     dvar_vs_protons(df_dsigma_with_v2sub, div_plt, cent_plt, [39], ['raw', 'mix', 'diff', 'v2_sub'], ['bes_def'],
-                    plot=True, avg=False, alpha=1.0, y_ranges=[-0.00085, 0.00055],
+                    plot=True, avg=False, alpha=1.0, y_ranges=[-0.00124, 0.0009],
                     marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^', 'v2_sub': '*'}})
 
     dvar_vs_protons(df_dsigma_with_v2sub, div_plt, cent_plt, [39], ['raw', 'diff', 'v2_sub'], ['bes_def'],
-                    plot=True, avg=False, alpha=1.0, y_ranges=[-0.00085, 0.00005], ylabel=r'$\Delta\sigma^2$',
+                    plot=True, avg=False, alpha=1.0, y_ranges=[-0.00124, 0.0009], ylabel=r'$\Delta\sigma^2$',
                     data_sets_labels={'bes_def': {'raw': 'Uncorrected', 'diff': 'Mixed Corrected',
                                                   'v2_sub': 'Mixed and Flow Corrected'}},
                     data_sets_colors={'bes_def': {'raw': 'blue', 'diff': 'red', 'v2_sub': 'black'}},
@@ -147,8 +148,8 @@ def plot_paper_figs():
 
     dvar_vs_protons_energies(df_dsigma, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], ['bes_def'],
                              plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
-                             data_sets_labels=data_sets_labels, y_ranges=[-0.00088, 0.00016], avgs_df=dsig_avgs_all,
-                             ylabel=r'$\Delta\sigma^2$')
+                             data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.0005], avgs_df=dsig_avgs_all,
+                             ylabel=r'$\Delta\sigma^2$', kin_loc=(0.65, 0.2))
 
     dsig_avgs_v2sub = pd.read_csv(f'{base_path}{df_def_avgs_v2sub_out_name}')
     dsig_avgs_v2sub_model = pd.read_csv(f'{base_path}{df_def_avgs_v2sub_out_model_name}')
@@ -157,21 +158,30 @@ def plot_paper_figs():
     dsig_avgs_v2sub['data_type'] = 'diff'
     dvar_vs_protons_energies(df_dsigma_v2sub, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], ['bes_def'],
                              plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
-                             data_sets_labels=data_sets_labels, y_ranges=[-0.00088, 0.00016], avgs_df=dsig_avgs_v2sub,
-                             ylabel=r'$\Delta\sigma^2$')
+                             data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.0005], avgs_df=dsig_avgs_v2sub,
+                             ylabel=r'$\Delta\sigma^2$', kin_loc=(0.65, 0.2))
+
+    dvar_vs_protons_energies(df_dsigma_v2sub, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], data_sets_plt,
+                             plot=True, avg=False, plot_avg=False, data_sets_colors=data_sets_colors,
+                             data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.0005], avgs_df=dsig_avgs_v2sub,
+                             ylabel=r'$\Delta\sigma^2$', kin_loc=(0.65, 0.2))
 
     dvar_vs_protons_energies(df_dsigma_v2sub, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], data_sets_plt,
                              plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
-                             data_sets_labels=data_sets_labels, y_ranges=[-0.00088, 0.00016], avgs_df=dsig_avgs_v2sub,
-                             ylabel=r'$\Delta\sigma^2$')
+                             data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.0005], avgs_df=dsig_avgs_v2sub,
+                             ylabel=r'$\Delta\sigma^2$', kin_loc=(0.65, 0.2))
 
     # plot_protons_avgs_vs_energy(dsig_avg, ['bes_def'], data_sets_colors=data_sets_colors,
     #                             data_sets_labels=data_sets_labels, title=f'{cent_map[cent_plt]} Centrality, {div_plt}° '
     #                                                                      f'Partitions, {samples} Samples per Event')
 
     dsig_avgs_v2_sub_cent8 = dsig_avgs_v2sub[dsig_avgs_v2sub['cent'] == 8]
-    plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, ['bes_def'], data_sets_colors=data_sets_colors, fit=True,
-                        data_sets_labels=data_sets_labels, plot_energy_panels=True, ylab=r'$\widebar{\Delta\sigma^2}$')
+    plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=False,
+                        data_sets_labels=data_sets_labels, plot_energy_panels=True, ylab=r'$\widebar{\Delta\sigma^2}$',
+                        plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5)
+    plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,
+                        data_sets_labels=data_sets_labels, plot_energy_panels=True, ylab=r'$\widebar{\Delta\sigma^2}$',
+                        plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5)
     dsig_avgs_v2_sub_cent8_div120 = dsig_avgs_v2sub[(dsig_avgs_v2sub['cent'] == 8) & (dsig_avgs_v2sub['divs'] == 120)]
     plot_protons_avgs_vs_energy(dsig_avgs_v2_sub_cent8_div120, data_sets_plt, data_sets_colors=data_sets_colors,
                                 data_sets_labels=data_sets_labels, alpha=1,
@@ -180,7 +190,8 @@ def plot_paper_figs():
     dsig_avgs_v2_sub_div120 = dsig_avgs_v2sub[dsig_avgs_v2sub['divs'] == 120]
     plot_protons_avgs_vs_cent(dsig_avgs_v2_sub_div120, ['bes_def'], data_sets_colors=data_sets_colors, fit=False,
                               data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,
-                              title=f'{div_plt}° Partitions, {samples} Samples per Event')
+                              title=f'{div_plt}° Partitions, {samples} Samples per Event',
+                              data_sets_energies_cmaps={'bes_def': 'tab10'}, alpha=0.8, errbar_alpha=0.3)
 
     # plot_div_fits_vs_cent(dsig_avgs_v2_sub, ['bes_def'], data_sets_colors=data_sets_colors,
     #                       data_sets_labels=data_sets_labels, title=None, fit=False, cent_ref=cent_ref_df,
@@ -3339,16 +3350,16 @@ def plot_anticl_flow_closure_test():
     all_sets = pd.unique(df['name'])
     print(all_sets)
 
-    df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
+    # df_raw = df[(df['data_type'] == 'raw') & (df['stat'] == stat_plot)]
+    # p, tp = df_raw['divs'] / 360, df_raw['total_protons']
+    # df_raw.loc[:, 'val'] = (df_raw['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
+    # df_raw.loc[:, 'err'] = df_raw['err'] / (tp * (tp - 1))
+    # df_mix = df[(df['data_type'] == 'mix') & (df['stat'] == stat_plot)]
+    # p, tp = df_mix['divs'] / 360, df_mix['total_protons']
+    # df_mix.loc[:, 'val'] = (df_mix['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
+    # df_mix.loc[:, 'err'] = df_mix['err'] / (tp * (tp - 1))
 
-    df_raw = df[(df['data_type'] == 'raw') & (df['stat'] == stat_plot)]
-    p, tp = df_raw['divs'] / 360, df_raw['total_protons']
-    df_raw.loc[:, 'val'] = (df_raw['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
-    df_raw.loc[:, 'err'] = df_raw['err'] / (tp * (tp - 1))
-    df_mix = df[(df['data_type'] == 'mix') & (df['stat'] == stat_plot)]
-    p, tp = df_mix['divs'] / 360, df_mix['total_protons']
-    df_mix.loc[:, 'val'] = (df_mix['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
-    df_mix.loc[:, 'err'] = df_mix['err'] / (tp * (tp - 1))
+    df_raw, df_mix = calc_dsigma(df[df['stat'] == stat_plot], data_types=['raw', 'mix'])
 
     dvar_vs_protons(df_raw, div_plt, cent_plt, [62], ['raw'], all_sets, plot=True, avg=True)
     dvar_vs_protons(df_mix, div_plt, cent_plt, [62], ['mix'], all_sets, plot=True, avg=True)
@@ -3425,6 +3436,93 @@ def plot_anticl_flow_closure_test():
     plt.show()
 
 
+def plot_anticl_flow_closure_test_simple():
+    plt.rcParams["figure.figsize"] = (6.66, 5)
+    plt.rcParams["figure.dpi"] = 144
+    base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+    # base_path = 'C:/Users/Dylan/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+    # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
+    df_name = 'binom_slice_flow_anticl_convo_test.csv'
+    df_name = 'binom_slice_var_cent8_2source_closure_tests.csv'
+    df_name = 'binom_slice_var_cent8_v2_anticl_closure.csv'
+    # save_fits = False
+    # v2_fit_out_dir = 'F:/Research/Results/Flow_Correction/'
+    # v2_fit_out_dir = None
+    # fits_out_base = 'Base_Zero_Fits/'
+    # df_tproton_fits_name = None  # 'flow_tprotons_fits.csv'
+    # df_partitions_fits_name = 'flow_partitions_fits.csv'
+    df_path = base_path + df_name
+
+    stat_plot = 'k2'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
+    div_plt = 120
+    exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
+    cent_plt = 8
+    energies_fit = [62]
+    data_types_plt = ['raw']
+    samples = 72  # For title purposes only
+
+    # data_sets_plt = ['flow_resample_res15_v207', 'anticlmulti_resample_s05_a05',
+    #                  'anticlflow_resample_res15_v207_s05_a05']
+    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue']))
+    # data_sets_labels = dict(zip(data_sets_plt, ['flow', 'anticlustering', 'both']))
+
+    df = pd.read_csv(df_path)
+    df = df.dropna()
+
+    # Delete this block if I append v2 value to end of name in calc script
+    # df_no_flow = df[df['name'].str.contains('anticlmulti')]
+    # df_flow = df[df['name'].str.contains('anticlflow')]
+    # df_flow.loc[:, 'name'] = df_flow['name'] + '_v207'
+    # df = pd.concat([df_flow, df_no_flow], ignore_index=True)
+
+    all_sets = pd.unique(df['name'])
+    print(all_sets)
+
+    # df_raw = df[(df['data_type'] == 'raw') & (df['stat'] == stat_plot)]
+    # p, tp = df_raw['divs'] / 360, df_raw['total_protons']
+    # df_raw.loc[:, 'val'] = (df_raw['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
+    # df_raw.loc[:, 'err'] = df_raw['err'] / (tp * (tp - 1))
+    # df_mix = df[(df['data_type'] == 'mix') & (df['stat'] == stat_plot)]
+    # p, tp = df_mix['divs'] / 360, df_mix['total_protons']
+    # df_mix.loc[:, 'val'] = (df_mix['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
+    # df_mix.loc[:, 'err'] = df_mix['err'] / (tp * (tp - 1))
+
+    df_raw, df_mix = calc_dsigma(df[df['stat'] == stat_plot], data_types=['raw', 'mix'])
+
+    dvar_vs_protons(df_raw, div_plt, cent_plt, [62], ['raw'], all_sets, plot=True, avg=True)
+    dvar_vs_protons(df_mix, div_plt, cent_plt, [62], ['mix'], all_sets, plot=True, avg=True)
+    df_sub = subtract_avgs(df_raw.drop(columns=['data_type']), df_mix.drop(columns=['data_type']),
+                           val_col='val', err_col='err')
+    df_sub['data_type'] = 'sub'
+    dvar_vs_protons(df_sub, div_plt, cent_plt, [62], ['sub'], all_sets, plot=True, avg=True)
+    dvar_vs_protons(pd.concat([df_raw, df_mix, df_sub], ignore_index=True), div_plt, cent_plt, [62],
+                    ['raw', 'mix', 'sub'], all_sets, plot=True, avg=True)
+
+    protons_fits = []
+    for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
+        print(f'Div {div}')
+        protons_fits_div_raw = dvar_vs_protons(df_raw, div, cent_plt, energies_fit, ['raw'], all_sets, plot=False,
+                                               avg=True)
+        protons_fits.append(protons_fits_div_raw)
+    protons_fits = pd.concat(protons_fits, ignore_index=True)
+
+    for flow_set in [set_name for set_name in all_sets if 'anticlflow' in set_name and '_eff_' not in set_name]:
+        no_flow_set = flow_set[:flow_set.find('_v2')].replace('anticlflow', 'anticlmulti')
+
+        print(pd.unique(protons_fits['name']))
+        print(flow_set)
+        anticl_plus_v2 = protons_fits[protons_fits['name'] == flow_set]
+        fits = [anticl_plus_v2.copy(), protons_fits[protons_fits['name'] == no_flow_set]]
+        fits = pd.concat([anticl_plus_v2, *fits], ignore_index=True)
+        # data_sets_colors.update({'corrected_v2': 'olive'})
+        data_sets_labels = None
+        if '_s01_a01' in no_flow_set:
+            data_sets_labels = {no_flow_set: 'Pure Repulsive Model', flow_set: 'Repulsive Model + Flow'}
+        plot_dsigma_fits_divs_flow(fits, [no_flow_set, flow_set], data_sets_labels=data_sets_labels)
+
+    plt.show()
+
+
 def plot_efficiency_closure_tests():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
@@ -3455,14 +3553,14 @@ def plot_efficiency_closure_tests():
 
     df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
 
-    df_raw = df[(df['data_type'] == 'raw') & (df['stat'] == stat_plot)]
-    p, tp = df_raw['divs'] / 360, df_raw['total_protons']
-    df_raw.loc[:, 'val'] = (df_raw['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
-    df_raw.loc[:, 'err'] = df_raw['err'] / (tp * (tp - 1))
-    df_mix = df[(df['data_type'] == 'mix') & (df['stat'] == stat_plot)]
-    p, tp = df_mix['divs'] / 360, df_mix['total_protons']
-    df_mix.loc[:, 'val'] = (df_mix['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
-    df_mix.loc[:, 'err'] = df_mix['err'] / (tp * (tp - 1))
+    # df_raw = df[(df['data_type'] == 'raw') & (df['stat'] == stat_plot)]
+    # p, tp = df_raw['divs'] / 360, df_raw['total_protons']
+    # df_raw.loc[:, 'val'] = (df_raw['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
+    # df_raw.loc[:, 'err'] = df_raw['err'] / (tp * (tp - 1))
+    # df_mix = df[(df['data_type'] == 'mix') & (df['stat'] == stat_plot)]
+    # p, tp = df_mix['divs'] / 360, df_mix['total_protons']
+    # df_mix.loc[:, 'val'] = (df_mix['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
+    # df_mix.loc[:, 'err'] = df_mix['err'] / (tp * (tp - 1))
 
     df_raw, df_mix = calc_dsigma(df[df['stat'] == stat_plot], data_types=['raw', 'mix'])
 
