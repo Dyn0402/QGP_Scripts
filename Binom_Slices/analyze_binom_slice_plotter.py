@@ -22,7 +22,7 @@ from analyze_binom_slices import *
 
 
 def main():
-    plot_paper_figs()
+    # plot_paper_figs()
 
     # plot_star_model_var()
     # plot_vs_cent_var()
@@ -56,8 +56,8 @@ def main():
     # plot_flow_v2_closure_raw()
     # plot_flow_eff_test()
     # plot_anticl_flow_closure_test()
-    # plot_anticl_flow_closure_test_simple()
-    plot_efficiency_closure_tests()
+    plot_anticl_flow_closure_test_simple()
+    # plot_efficiency_closure_tests()
     print('donzo')
 
 
