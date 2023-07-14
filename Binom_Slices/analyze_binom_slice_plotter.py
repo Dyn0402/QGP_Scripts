@@ -57,7 +57,7 @@ def main():
     # plot_flow_eff_test()
     # plot_anticl_flow_closure_test()
     # plot_anticl_flow_closure_test_simple()
-    # plot_efficiency_closure_tests()
+    plot_efficiency_closure_tests()
     print('donzo')
 
 

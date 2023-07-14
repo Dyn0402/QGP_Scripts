@@ -34,10 +34,10 @@ def main():
     # eff_v2_combo2()
     # eff_gaus_combo()
     # eff_gaus_combo2()
-    gaus_v2_combo2()
+    # gaus_v2_combo2()
     # eff_plotting()
     # v2_plotting()
-    # vn_analytic_plotting()
+    vn_analytic_plotting()
     print('donzo')
 
 
@@ -1143,8 +1143,8 @@ def vn_analytic_plotting():
     ax_dsig.set_title(r'$\Delta\sigma^2$')
     ax_dsig_v2_comp.set_title(r'$\Delta\sigma^2$ Analytic vs Numerical')
     ax_prob.set_ylabel('Probability')
-    ax_dsig.set_ylabel(r'$\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2$')
-    ax_dsig_v2_comp.set_ylabel(r'$\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2$')
+    ax_dsig.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2$')
+    ax_dsig_v2_comp.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2$')
     ax_prob.set_xlabel(r'$\phi$')
     ax_dsig.set_xlabel(r'Azimuthal Partition Width $w$')
     ax_dsig_v2_comp.set_xlabel(r'Azimuthal Partition Width $w$')
