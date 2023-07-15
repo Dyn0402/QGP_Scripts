@@ -20,6 +20,8 @@ import istarmap  # Needed for tqdm
 
 from analyze_binom_slices import *
 
+from integrate_pdf_var import base_gaus_pdf_wrap, get_partition_variance
+
 
 def main():
     # plot_paper_figs()
@@ -56,8 +58,8 @@ def main():
     # plot_flow_v2_closure_raw()
     # plot_flow_eff_test()
     # plot_anticl_flow_closure_test()
-    plot_anticl_flow_closure_test_simple()
-    # plot_efficiency_closure_tests()
+    # plot_anticl_flow_closure_test_simple()
+    plot_efficiency_closure_tests()
     print('donzo')
 
 
@@ -3444,17 +3446,7 @@ def plot_anticl_flow_closure_test_simple():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
     base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
-    # base_path = 'C:/Users/Dylan/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
-    # base_path = 'D:/Transfer/Research/Results/Azimuth_Analysis/'
-    df_name = 'binom_slice_flow_anticl_convo_test.csv'
-    df_name = 'binom_slice_var_cent8_2source_closure_tests.csv'
-    df_name = 'binom_slice_var_cent8_v2_anticl_closure.csv'
-    # save_fits = False
-    # v2_fit_out_dir = 'F:/Research/Results/Flow_Correction/'
-    # v2_fit_out_dir = None
-    # fits_out_base = 'Base_Zero_Fits/'
-    # df_tproton_fits_name = None  # 'flow_tprotons_fits.csv'
-    # df_partitions_fits_name = 'flow_partitions_fits.csv'
+    df_name = 'binom_slice_vars_2source_tests.csv'
     df_path = base_path + df_name
 
     stat_plot = 'k2'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
@@ -3464,11 +3456,6 @@ def plot_anticl_flow_closure_test_simple():
     energies_fit = [62]
     data_types_plt = ['raw']
     samples = 72  # For title purposes only
-
-    # data_sets_plt = ['flow_resample_res15_v207', 'anticlmulti_resample_s05_a05',
-    #                  'anticlflow_resample_res15_v207_s05_a05']
-    # data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue']))
-    # data_sets_labels = dict(zip(data_sets_plt, ['flow', 'anticlustering', 'both']))
 
     df = pd.read_csv(df_path)
     df = df.dropna()
@@ -3482,47 +3469,79 @@ def plot_anticl_flow_closure_test_simple():
     all_sets = pd.unique(df['name'])
     print(all_sets)
 
-    # df_raw = df[(df['data_type'] == 'raw') & (df['stat'] == stat_plot)]
-    # p, tp = df_raw['divs'] / 360, df_raw['total_protons']
-    # df_raw.loc[:, 'val'] = (df_raw['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
-    # df_raw.loc[:, 'err'] = df_raw['err'] / (tp * (tp - 1))
-    # df_mix = df[(df['data_type'] == 'mix') & (df['stat'] == stat_plot)]
-    # p, tp = df_mix['divs'] / 360, df_mix['total_protons']
-    # df_mix.loc[:, 'val'] = (df_mix['val'] - (tp * p * (1 - p))) / (tp * (tp - 1))
-    # df_mix.loc[:, 'err'] = df_mix['err'] / (tp * (tp - 1))
-
-    df_raw, df_mix = calc_dsigma(df[df['stat'] == stat_plot], data_types=['raw', 'mix'])
+    df_raw, df_mix, df_diff = calc_dsigma(df[df['stat'] == stat_plot], data_types=['raw', 'mix', 'diff'])
 
     dvar_vs_protons(df_raw, div_plt, cent_plt, [62], ['raw'], all_sets, plot=True, avg=True)
     dvar_vs_protons(df_mix, div_plt, cent_plt, [62], ['mix'], all_sets, plot=True, avg=True)
-    df_sub = subtract_avgs(df_raw.drop(columns=['data_type']), df_mix.drop(columns=['data_type']),
-                           val_col='val', err_col='err')
-    df_sub['data_type'] = 'sub'
-    dvar_vs_protons(df_sub, div_plt, cent_plt, [62], ['sub'], all_sets, plot=True, avg=True)
-    dvar_vs_protons(pd.concat([df_raw, df_mix, df_sub], ignore_index=True), div_plt, cent_plt, [62],
-                    ['raw', 'mix', 'sub'], all_sets, plot=True, avg=True)
 
-    protons_fits = []
+    dvar_vs_protons(df_diff, div_plt, cent_plt, [62], ['diff'], all_sets, plot=True, avg=True)
+    dvar_vs_protons(pd.concat([df_raw, df_mix, df_diff], ignore_index=True), div_plt, cent_plt, [62],
+                    ['raw', 'mix', 'diff'], all_sets, plot=True, avg=True)
+
+    dsigma_avgs = []
     for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
         print(f'Div {div}')
-        protons_fits_div_raw = dvar_vs_protons(df_raw, div, cent_plt, energies_fit, ['raw'], all_sets, plot=False,
-                                               avg=True)
-        protons_fits.append(protons_fits_div_raw)
-    protons_fits = pd.concat(protons_fits, ignore_index=True)
+        dsigma_avgs_raw = dvar_vs_protons(df_raw, div, cent_plt, energies_fit, ['raw'], all_sets, plot=False, avg=True)
+        dsigma_avgs.append(dsigma_avgs_raw)
+    dsigma_avgs = pd.concat(dsigma_avgs, ignore_index=True)
 
     for flow_set in [set_name for set_name in all_sets if 'anticlflow' in set_name and '_eff_' not in set_name]:
         no_flow_set = flow_set[:flow_set.find('_v2')].replace('anticlflow', 'anticlmulti')
 
-        print(pd.unique(protons_fits['name']))
         print(flow_set)
-        anticl_plus_v2 = protons_fits[protons_fits['name'] == flow_set]
-        fits = [anticl_plus_v2.copy(), protons_fits[protons_fits['name'] == no_flow_set]]
+        anticl_plus_v2 = dsigma_avgs[dsigma_avgs['name'] == flow_set]
+        fits = [anticl_plus_v2.copy(), dsigma_avgs[dsigma_avgs['name'] == no_flow_set]]
         fits = pd.concat([anticl_plus_v2, *fits], ignore_index=True)
         # data_sets_colors.update({'corrected_v2': 'olive'})
         data_sets_labels = None
         if '_s01_a01' in no_flow_set:
             data_sets_labels = {no_flow_set: 'Pure Repulsive Model', flow_set: 'Repulsive Model + Flow'}
         plot_dsigma_fits_divs_flow(fits, [no_flow_set, flow_set], data_sets_labels=data_sets_labels)
+
+    # mu = np.pi
+    # sigma = 0.5
+    # amp = 0.2
+    # func = base_gaus_pdf_wrap
+    # func_args = (mu, sigma, amp)
+    # func_name = 'Gaussian Cluster'
+    # widths = np.linspace(0, 2 * np.pi, 250)
+    # dsigmas = []
+    # for width in widths:
+    #     dsigmas.append(get_partition_variance(func, func_args, width)[0])
+    # fig, ax = plt.subplots()
+    # ax.plot(np.rad2deg(widths), dsigmas)
+    # df_simple_clust = dsigma_avgs[dsigma_avgs['name'] == 'simpleclust']
+    # ax.errorbar(df_simple_clust['divs'], df_simple_clust['avg'], yerr=df_simple_clust['avg_err'], ls='none', marker='o',
+    #             alpha=0.6)
+
+    simplecl_flow_sets = [x for x in all_sets if 'simpleclust_flow' in x]
+    plot_dvar_avgs_divs(dsigma_avgs, simplecl_flow_sets, fit=False, plot_energy_panels=False, plot_indiv=True)
+    for flow_set in simplecl_flow_sets:
+        df_set = dsigma_avgs[dsigma_avgs['name'] == flow_set]
+        divs = np.array(df_set['divs'])
+        avgs = np.array(df_set['avg'])
+        v2 = 0
+        for element in flow_set.split('_'):
+            if 'v2' in element:
+                v2 = float('0.' + element.strip('v2'))
+                break
+        y_sub = avgs - v2_divs(divs / 180 * np.pi, v2)
+        plt.errorbar(divs, y_sub, yerr=df_set['avg_err'], ls='none',
+                    marker='x', label=f'{flow_set} - v2(div)')
+
+    # for flow_set in [set_name for set_name in all_sets if 'simpleclust_flow' in set_name and '_eff_' not in set_name]:
+    #     no_flow_set = flow_set[:flow_set.find('_v2')].replace('anticlflow', 'anticlmulti')
+    #
+    #     print(pd.unique(dsigma_avgs['name']))
+    #     print(flow_set)
+    #     anticl_plus_v2 = dsigma_avgs[dsigma_avgs['name'] == flow_set]
+    #     fits = [anticl_plus_v2.copy(), dsigma_avgs[dsigma_avgs['name'] == no_flow_set]]
+    #     fits = pd.concat([anticl_plus_v2, *fits], ignore_index=True)
+    #     # data_sets_colors.update({'corrected_v2': 'olive'})
+    #     data_sets_labels = None
+    #     if '_s01_a01' in no_flow_set:
+    #         data_sets_labels = {no_flow_set: 'Pure Repulsive Model', flow_set: 'Repulsive Model + Flow'}
+    #     plot_dsigma_fits_divs_flow(fits, [no_flow_set, flow_set], data_sets_labels=data_sets_labels)
 
     plt.show()
 

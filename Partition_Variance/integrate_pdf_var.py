@@ -33,7 +33,7 @@ def main():
     # eff_v2_combo()
     # eff_v2_combo2()
     # eff_gaus_combo()
-    # eff_gaus_combo2()
+    eff_gaus_combo2()
     # gaus_v2_combo2()
     # eff_plotting()
     # v2_plotting()
