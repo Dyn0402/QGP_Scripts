@@ -33,11 +33,12 @@ def main():
     # eff_v2_combo()
     # eff_v2_combo2()
     # eff_gaus_combo()
-    eff_gaus_combo2()
+    # eff_gaus_combo2()
     # gaus_v2_combo2()
+    gaus_v2_combo3()
     # eff_plotting()
     # v2_plotting()
-    vn_analytic_plotting()
+    # vn_analytic_plotting()
     print('donzo')
 
 
@@ -84,14 +85,14 @@ def gaus_fit():
     ax.axhline(0, color='black')
     ax.plot(widths, pp_minus_p2_terms)
     ax.set_xlabel('Partition Width (w)')
-    ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2$')
+    ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2$')
 
     width_fit_low, width_fit_high = np.deg2rad([60, 300])
     fig, ax = plt.subplots(dpi=144)
     ax.axhline(0, color='black')
     ax.scatter(widths, pp_minus_p2_terms)
     ax.set_xlabel('Partition Width (w)')
-    ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2$')
+    ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2$')
     width_filter = (width_fit_low < widths) & (widths < width_fit_high)
     # print(widths[width_filter], np.array(lin_terms)[width_filter])
     popt_quad, pcov_quad = cf(quad_180_rad, widths[width_filter], np.array(pp_minus_p2_terms)[width_filter])
@@ -113,7 +114,7 @@ def gaus_fit():
     ax.plot(xs_fit_plot, quad_cos(xs_fit_plot, *p0), color='olive', alpha=0.4, label='Combo Initial Guess')
     ax.plot(xs_fit_plot, quad_cos(xs_fit_plot, *popt), color='olive', label='Combo')
     ax.set_xlabel('Partition Width (w)')
-    ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2$')
+    ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2$')
     ax.legend()
     fig.tight_layout()
 
@@ -130,7 +131,7 @@ def gaus_fit():
     ax.plot(xs_fit_plot, quad_cos(xs_fit_plot, *p0), color='olive', alpha=0.7, ls='--', label='Combo Initial Guess')
     ax.plot(xs_fit_plot, quad_cos(xs_fit_plot, *popt), color='olive', label='Combo')
     ax.set_xlabel('Partition Width (w)')
-    ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2$')
+    ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2$')
     ax.legend()
     fig.tight_layout()
 
@@ -296,7 +297,7 @@ def gaus_test_fits():
     ax.plot(xs_fit_plot, func_fit(xs_fit_plot, *p0), color='olive', alpha=0.7, ls='--', label='Combo Initial Guess')
     ax.plot(xs_fit_plot, func_fit(xs_fit_plot, *popt), color='olive', label='Combo')
     ax.set_xlabel('Partition Width (w)')
-    ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2$')
+    ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2$')
     ax.legend()
     fig.tight_layout()
 
@@ -369,7 +370,7 @@ def gaus_fit_dependence():
         ax.axhline(0, color='black')
         ax.scatter(widths, pp_minus_p2_terms)
         ax.set_xlabel('Partition Width (w)')
-        ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2$')
+        ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2$')
         ax.set_ylim(bottom=-ax.get_ylim()[-1] * 0.05)
         ax.plot(xs_fit_plot, quad_cos(xs_fit_plot, *p0), color='olive', alpha=0.7, ls='--', label='Combo Initial Guess')
         ax.plot(xs_fit_plot, quad_cos(xs_fit_plot, *popt), color='olive', label='Combo')
@@ -460,13 +461,13 @@ def convo_test():
         pp_minus_p2_dict.update({func_name: pp_minus_p2_terms})
         # pp_minus_p2_dict.update({func_name: pp_terms})
     ax_norm.set_xlabel('Partition Width (w)')
-    ax_norm.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
+    ax_norm.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2\right] / \left[p (1-p)\right]$')
     ax_norm.legend()
     ax_norm_convo.set_xlabel('Partition Width (w)')
-    ax_norm_convo.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
+    ax_norm_convo.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2\right] / \left[p (1-p)\right]$')
     ax_norm_convo.legend()
     ax.set_xlabel('Partition Width (w)')
-    ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2$')
+    ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2$')
     ax.legend()
     ax_pp.legend()
     fig_norm.tight_layout()
@@ -554,13 +555,13 @@ def eff_v2_combo():
         pp_minus_p2_dict.update({func_name: pp_minus_p2_terms})
         # pp_minus_p2_dict.update({func_name: pp_terms})
     ax_norm.set_xlabel('Partition Width (w)')
-    ax_norm.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
+    ax_norm.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2\right] / \left[p (1-p)\right]$')
     ax_norm.legend()
     ax_norm_convo.set_xlabel('Partition Width (w)')
-    ax_norm_convo.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
+    ax_norm_convo.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2\right] / \left[p (1-p)\right]$')
     ax_norm_convo.legend()
     ax.set_xlabel('Partition Width (w)')
-    ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2$')
+    ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2$')
     ax.legend()
     ax_pp.legend()
     fig_norm.tight_layout()
@@ -575,7 +576,7 @@ def eff_v2_combo():
     combo_div_eff = np.array(pp_minus_p2_dict['Combination']) - np.array(pp_minus_p2_dict['Efficiency'])
     ax_v2_div_eff.plot(widths, combo_div_eff, label='Combo - Eff')
     ax_v2_div_eff.set_xlabel('Partition Width (w)')
-    ax_v2_div_eff.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
+    ax_v2_div_eff.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2\right] / \left[p (1-p)\right]$')
     ax_v2_div_eff.legend()
     fig_v2_div_eff.tight_layout()
 
@@ -669,13 +670,13 @@ def eff_v2_combo2():
         pp_minus_p2_dict.update({func_name: pp_minus_p2_terms})
         # pp_minus_p2_dict.update({func_name: pp_terms})
     ax_norm.set_xlabel('Partition Width (w)')
-    ax_norm.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
+    ax_norm.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2\right] / \left[p (1-p)\right]$')
     ax_norm.legend()
     ax_norm_convo.set_xlabel('Partition Width (w)')
-    ax_norm_convo.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
+    ax_norm_convo.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2\right] / \left[p (1-p)\right]$')
     ax_norm_convo.legend()
     ax.set_xlabel('Partition Width (w)')
-    ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2$')
+    ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2$')
     ax.legend()
     ax_pp.legend()
     fig_norm.tight_layout()
@@ -690,7 +691,7 @@ def eff_v2_combo2():
     combo_div_eff = np.array(pp_minus_p2_dict['Combination']) - np.array(pp_minus_p2_dict['Efficiency'])
     ax_v2_div_eff.plot(widths, combo_div_eff, label='Combo - Eff')
     ax_v2_div_eff.set_xlabel('Partition Width (w)')
-    ax_v2_div_eff.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
+    ax_v2_div_eff.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2\right] / \left[p (1-p)\right]$')
     ax_v2_div_eff.legend()
     fig_v2_div_eff.tight_layout()
 
@@ -774,13 +775,13 @@ def eff_gaus_combo():
         pp_minus_p2_dict.update({func_name: pp_minus_p2_terms})
         # pp_minus_p2_dict.update({func_name: pp_terms})
     ax_norm.set_xlabel('Partition Width (w)')
-    ax_norm.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
+    ax_norm.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2\right] / \left[p (1-p)\right]$')
     ax_norm.legend()
     ax_norm_convo.set_xlabel('Partition Width (w)')
-    ax_norm_convo.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
+    ax_norm_convo.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2\right] / \left[p (1-p)\right]$')
     ax_norm_convo.legend()
     ax.set_xlabel('Partition Width (w)')
-    ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2$')
+    ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2$')
     ax.legend()
     ax_pp.legend()
     fig_norm.tight_layout()
@@ -795,7 +796,7 @@ def eff_gaus_combo():
     combo_div_eff = np.array(pp_minus_p2_dict['Combination']) - np.array(pp_minus_p2_dict['Efficiency'])
     ax_v2_div_eff.plot(widths, combo_div_eff, label='Combo - Eff')
     ax_v2_div_eff.set_xlabel('Partition Width (w)')
-    ax_v2_div_eff.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
+    ax_v2_div_eff.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2\right] / \left[p (1-p)\right]$')
     ax_v2_div_eff.legend()
     fig_v2_div_eff.tight_layout()
 
@@ -903,13 +904,13 @@ def eff_gaus_combo2():
         pp_minus_p2_dict.update({func_name: pp_minus_p2_terms})
         # pp_minus_p2_dict.update({func_name: pp_terms})
     ax_norm.set_xlabel('Partition Width (w)')
-    ax_norm.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
+    ax_norm.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2\right] / \left[p (1-p)\right]$')
     ax_norm.legend()
     ax_norm_convo.set_xlabel('Partition Width (w)')
-    ax_norm_convo.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
+    ax_norm_convo.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2\right] / \left[p (1-p)\right]$')
     ax_norm_convo.legend()
     ax.set_xlabel('Partition Width (w)')
-    ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2$')
+    ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2$')
     ax.legend()
     ax_pp.legend()
     fig_norm.tight_layout()
@@ -924,7 +925,7 @@ def eff_gaus_combo2():
     combo_div_eff = np.array(pp_minus_p2_dict['Combination']) - np.array(pp_minus_p2_dict['Efficiency'])
     ax_v2_div_eff.plot(widths, combo_div_eff, ls='--', label='Combo - Efficiency')
     ax_v2_div_eff.set_xlabel('Partition Width (w)')
-    ax_v2_div_eff.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2$')
+    ax_v2_div_eff.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2$')
     ax_v2_div_eff.legend(loc='upper left')
     fig_v2_div_eff.tight_layout()
 
@@ -955,8 +956,10 @@ def eff_gaus_combo2():
 def gaus_v2_combo2():
     mu = np.pi
     sigma = 0.8
-    amp = 0.18
-    func1 = base_gaus_pdf
+    amp = 0.6
+    # func1 = base_gaus_pdf
+    func1 = base_gaus_pdf_wrap
+    # func1_args = (mu, sigma, amp, 1. / get_norm(func1, (mu, sigma, amp, 1)))
     func1_args = (mu, sigma, amp, 1. / get_norm(func1, (mu, sigma, amp, 1)))
     func1_name = 'Gaussian Cluster'
     fig, ax = plt.subplots(dpi=144, figsize=(6, 3))
@@ -977,6 +980,8 @@ def gaus_v2_combo2():
 
     func3 = lambda x, mu_, sigma_, amp_, c_, v2_, psi_, n_, c_combo_: \
         c_combo_ * base_gaus_pdf(x, mu_, sigma_, amp_, c_) * vn_pdf(x, v2_, psi_, n_)
+    # func3 = lambda x, mu_, sigma_, amp_, c_, v2_, psi_, n_, c_combo_: \
+    #     c_combo_ * base_gaus_pdf_wrap(x, mu_, sigma_, amp_) * vn_pdf(x, v2_, psi_, n_)
     func3_args = [*func1_args, *func2_args, 1. / get_norm(func3, (*func1_args, *func2_args, 1))]
     func3_name = 'Combination'
     fig, ax = plt.subplots(dpi=144, figsize=(6, 3))
@@ -1008,9 +1013,10 @@ def gaus_v2_combo2():
             [(func1, func1_args, func1_name), (func2, func2_args, func2_name), (func3, func3_args, func3_name)]:
         pp_terms, pp_minus_p2_terms, pp_minus_p2_norm_terms = [], [], []
         for width in widths:
+            print(f'{func_name}: width = {width}')
             if func_name == 'Combination':
                 pp_minus_p2_psi, pp_psi = [], []
-                for psi in np.linspace(0, 2 * np.pi, 1000):
+                for psi in np.linspace(0, 2 * np.pi, 100):
                     func_args[5] = psi
                     # print(func_args)
                     pp_minus_p2, pp = get_partition_variance(func, func_args, width)
@@ -1032,13 +1038,13 @@ def gaus_v2_combo2():
         pp_minus_p2_dict.update({func_name: pp_minus_p2_terms})
         # pp_minus_p2_dict.update({func_name: pp_terms})
     ax_norm.set_xlabel('Partition Width (w)')
-    ax_norm.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
+    ax_norm.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2\right] / \left[p (1-p)\right]$')
     ax_norm.legend()
     ax_norm_convo.set_xlabel('Partition Width (w)')
-    ax_norm_convo.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
+    ax_norm_convo.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2\right] / \left[p (1-p)\right]$')
     ax_norm_convo.legend()
     ax.set_xlabel('Partition Width (w)')
-    ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2$')
+    ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2$')
     ax.legend()
     ax_pp.legend()
     fig_norm.tight_layout()
@@ -1050,12 +1056,20 @@ def gaus_v2_combo2():
     ax_v2_div_eff.axhline(0, color='black')
     for func_name, y in pp_minus_p2_dict.items():
         ax_v2_div_eff.plot(widths, y, label=func_name)
-    combo_div_eff = np.array(pp_minus_p2_dict['Combination']) - np.array(pp_minus_p2_dict['Elliptic Flow'])
-    ax_v2_div_eff.plot(widths, combo_div_eff, ls='--', label='Combo - Ellpitic Flow')
+    combo_div_eff = np.array(pp_minus_p2_dict['Combination']) - np.array(pp_minus_p2_dict[func2_name])
+    ax_v2_div_eff.plot(widths, combo_div_eff, ls='--', label='Combo - Elliptic Flow')
     ax_v2_div_eff.set_xlabel('Partition Width (w)')
-    ax_v2_div_eff.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2$')
+    ax_v2_div_eff.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2$')
     ax_v2_div_eff.legend(loc='upper left')
     fig_v2_div_eff.tight_layout()
+
+    fig_corr_dev, ax_corr_dev = plt.subplots(dpi=144, figsize=(8, 3))
+    ax_corr_dev.axhline(0, color='black')
+    ax_corr_dev.plot(widths, np.array(pp_minus_p2_dict[func1_name]) - combo_div_eff)
+    ax_corr_dev.set_title('Deviation of Correction from True')
+    ax_corr_dev.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2$')
+    ax_corr_dev.set_xlabel('Partition Width (w)')
+    fig_corr_dev.tight_layout()
 
     fig_ft, ax_ft = plt.subplots(dpi=144)
     yf_dict, yf_plt_dict = {}, {}
@@ -1079,6 +1093,105 @@ def gaus_v2_combo2():
     ax_ft.set_ylabel('Power')
     ax_ft.set_xlim(-0.1, 2.5)
     fig_ft.tight_layout()
+
+    plt.show()
+
+
+def gaus_v2_combo3():
+    mu = np.pi
+    sigma = 0.8
+    amp = 0.6
+    # func1 = base_gaus_pdf
+    func1 = base_gaus_pdf_wrap
+    # func1_args = (mu, sigma, amp, 1. / get_norm(func1, (mu, sigma, amp, 1)))
+    func1_args = (mu, sigma, amp, 1. / get_norm_scipy(func1, (mu, sigma, amp, 1)))
+    func1_name = 'Gaussian Cluster'
+    fig, ax = plt.subplots(dpi=144, figsize=(6, 3))
+    plot_pdf(func1, func1_args)
+    ax.set_ylim(bottom=0)
+    fig.tight_layout()
+
+    func2 = vn_pdf
+    n = 2
+    v2 = 0.1
+    psi = np.pi / 3
+    func2_args = (v2, psi, n)
+    func2_name = 'Elliptic Flow'
+    fig, ax = plt.subplots(dpi=144, figsize=(6, 3))
+    plot_pdf(func2, func2_args)
+    ax.set_ylim(bottom=0)
+    fig.tight_layout()
+
+    func3 = lambda x, mu_, sigma_, amp_, c_, v2_, psi_, n_, c_combo_: \
+        c_combo_ * base_gaus_pdf(x, mu_, sigma_, amp_, c_) * vn_pdf(x, v2_, psi_, n_)
+    # func3 = lambda x, mu_, sigma_, amp_, c_, v2_, psi_, n_, c_combo_: \
+    #     c_combo_ * base_gaus_pdf_wrap(x, mu_, sigma_, amp_) * vn_pdf(x, v2_, psi_, n_)
+    func3_args = [*func1_args, *func2_args, 1. / get_norm_scipy(func3, (*func1_args, *func2_args, 1))]
+    func3_name = 'Combination'
+    fig, ax = plt.subplots(dpi=144, figsize=(6, 3))
+    plot_pdf(func3, func3_args)
+    ax.set_ylim(bottom=0)
+    fig.tight_layout()
+
+    fig_pdfs, ax_pdfs = plt.subplots(dpi=144, figsize=(8, 4))
+    xs = np.linspace(0, 2 * np.pi, 1000)
+    ax_pdfs.plot(xs, func1(xs, *func1_args), label=func1_name)
+    ax_pdfs.plot(xs, func2(xs, *func2_args), label=func2_name)
+    # ax_pdfs.plot(xs, func3(xs, *func3_args), label=func3_name)
+    ax_pdfs.set_xlabel(r'$\phi$')
+    ax_pdfs.set_ylabel('Probability')
+    ax_pdfs.set_ylim(bottom=0)
+    ax_pdfs.legend()
+    fig_pdfs.tight_layout()
+
+    fig, ax = plt.subplots(dpi=144, figsize=(7, 3))
+    ax.axhline(0, color='black')
+    widths = np.linspace(0, 2 * np.pi, 100)
+    pp_minus_p2_dict = {}
+    for func, func_args, func_name in \
+            [(func1, func1_args, func1_name), (func2, func2_args, func2_name), (func3, func3_args, func3_name)]:
+        pp_minus_p2_terms = []
+        for width in widths:
+            print(f'{func_name}: width = {width}')
+            if func_name == 'Combination':
+                def avg_orient(psi_in, func_in, func_args_in, width_in):
+                    func_args_in[5] = psi_in
+                    func_args_in[-1] = 1
+                    func_args_in[-1] = 1. / get_norm_scipy(func_in, func_args_in)
+                    return get_partition_variance_scipy(func_in, tuple(func_args_in), width_in)[0]
+
+                pp_minus_p2 = quad(avg_orient, 0, 2 * np.pi, args=(func, func_args, width))[0] / (2 * np.pi)
+            else:
+                pp_minus_p2 = get_partition_variance_scipy(func, func_args, width)[0]
+            pp_minus_p2_terms.append(pp_minus_p2)
+        ax.plot(widths, pp_minus_p2_terms, label=func_name)
+        pp_minus_p2_dict.update({func_name: pp_minus_p2_terms})
+    ax.set_xlabel('Partition Width (w)')
+    ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2$')
+    ax.legend()
+    fig.tight_layout()
+
+    fig_v2_div_eff, ax_v2_div_eff = plt.subplots(dpi=144, figsize=(8, 3))
+    ax_v2_div_eff.axhline(0, color='black')
+    for func_name, y in pp_minus_p2_dict.items():
+        ax_v2_div_eff.plot(widths, y, label=func_name)
+    combo_div_eff = np.array(pp_minus_p2_dict['Combination']) - np.array(pp_minus_p2_dict[func2_name])
+    combo_div_err = np.array(pp_minus_p2_dict['Combination']) * np.mean(pp_minus_p2_dict[func2_name])
+    ax_v2_div_eff.plot(widths, combo_div_eff, ls='--', label='Combo - Elliptic Flow', color='red')
+    ax_v2_div_eff.fill_between(widths, combo_div_eff - combo_div_err, combo_div_eff + combo_div_err, color='red',
+                               alpha=0.3)
+    ax_v2_div_eff.set_xlabel('Partition Width (w)')
+    ax_v2_div_eff.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2$')
+    ax_v2_div_eff.legend(loc='upper left')
+    fig_v2_div_eff.tight_layout()
+
+    fig_corr_dev, ax_corr_dev = plt.subplots(dpi=144, figsize=(8, 3))
+    ax_corr_dev.axhline(0, color='black')
+    ax_corr_dev.plot(widths, np.array(pp_minus_p2_dict[func1_name]) - combo_div_eff)
+    ax_corr_dev.set_title('Deviation of Correction from True')
+    ax_corr_dev.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2$')
+    ax_corr_dev.set_xlabel('Partition Width (w)')
+    fig_corr_dev.tight_layout()
 
     plt.show()
 
@@ -1192,38 +1305,38 @@ def plot_variance(func, func_args):
     ax.axhline(0, color='black')
     ax.plot(widths, pp_minus_p2_terms)
     ax.set_xlabel('Partition Width (w)')
-    ax.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\phi - p^2\right] / \left[p (1-p)\right]$')
+    ax.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2\right] / \left[p (1-p)\right]$')
     fig.tight_layout()
 
     # var = get_partition_variance(func, func_args, width)
     plt.show()
 
 
-def get_partition_variance_scipy(width, p, p_args):
-    # norm = quad(p, 0, 2 * np.pi, args=p_args)
-    # Need to deal with wrapping non-periodic functions!
-    # def p2(x,  vn, psi, n):
-    #     pass
-    # p2 = lambda x, vn, psi, n: p(x, vn, psi, n)**2
-    # pq = lambda x, vn, psi, n: p(x, vn, psi, n) * (1 - p(x, vn, psi, n))
-    ep = quad(int_pdf, 0, 2 * np.pi, args=(width, p, p_args))[0] / (2 * np.pi)
-    ep2 = quad(int_pdf2, 0, 2 * np.pi, args=(width, p, p_args))[0] / (2 * np.pi)
-    # epq = quad(int_pdf, 0, 2 * np.pi, args=(width, pq, p_args))
-
-    return ep2
-    # return ep2[0] - ep[0]**2
-    # print(quad(int_pdf, 0, 2 * np.pi, args=(width, p, p_args)))
-
-
-def int_pdf(low_bound, width, func, func_args):
-    # print(func_args)
-    return quad(func, low_bound, low_bound + width, args=func_args)[0]
-
-
-def int_pdf2(low_bound, width, func, func_args):
-    # print(func_args)
-    # print(f'low= {low_bound}, width= {width}, func: {func}, func_args: {func_args}')
-    return quad(func, low_bound, low_bound + width, args=func_args)[0]**2
+# def get_partition_variance_scipy(width, p, p_args):
+#     # norm = quad(p, 0, 2 * np.pi, args=p_args)
+#     # Need to deal with wrapping non-periodic functions!
+#     # def p2(x,  vn, psi, n):
+#     #     pass
+#     # p2 = lambda x, vn, psi, n: p(x, vn, psi, n)**2
+#     # pq = lambda x, vn, psi, n: p(x, vn, psi, n) * (1 - p(x, vn, psi, n))
+#     ep = quad(int_pdf, 0, 2 * np.pi, args=(width, p, p_args))[0] / (2 * np.pi)
+#     ep2 = quad(int_pdf2, 0, 2 * np.pi, args=(width, p, p_args))[0] / (2 * np.pi)
+#     # epq = quad(int_pdf, 0, 2 * np.pi, args=(width, pq, p_args))
+#
+#     return ep2
+#     # return ep2[0] - ep[0]**2
+#     # print(quad(int_pdf, 0, 2 * np.pi, args=(width, p, p_args)))
+#
+#
+# def int_pdf(low_bound, width, func, func_args):
+#     # print(func_args)
+#     return quad(func, low_bound, low_bound + width, args=func_args)[0]
+#
+#
+# def int_pdf2(low_bound, width, func, func_args):
+#     # print(func_args)
+#     # print(f'low= {low_bound}, width= {width}, func: {func}, func_args: {func_args}')
+#     return quad(func, low_bound, low_bound + width, args=func_args)[0] ** 2
 
 
 def get_partition_variance(func, func_args, width, bounds=(0, 2 * np.pi), points=1000):
@@ -1249,6 +1362,24 @@ def get_partition_variance(func, func_args, width, bounds=(0, 2 * np.pi), points
     return ep2 - ep**2, ep2
 
 
+def get_partition_variance_scipy(func, func_args, width, bounds=(0, 2 * np.pi)):
+    """
+    Assumes a normailzed input pdf func. Numerically integrates to calculate delta_sigma^2.
+    :param func: PDF function, must be normalized
+    :param func_args: Arguments to be passed to func
+    :param width: Width of azimuthal partition in radians
+    :param bounds: Bounds of the psi integration
+    :return:
+    """
+    def func_square(psi, func, width, func_args):
+        return quad(func, psi, psi + width, args=func_args)[0] ** 2
+
+    e_p2 = quad(func_square, *bounds, args=(func, width, func_args))[0] / (2 * np.pi)
+    e_p = width / (2 * np.pi)
+
+    return e_p2 - e_p**2, e_p2
+
+
 def get_norm(func, func_args):
     points = 1000
     bounds = (0, 2 * np.pi)
@@ -1259,6 +1390,10 @@ def get_norm(func, func_args):
     pdf_norm = np.sum(func(xs, *func_args)) * dx
 
     return pdf_norm
+
+
+def get_norm_scipy(func, func_args, bounds=(0, 2 * np.pi)):
+    return quad(func, *bounds, args=tuple(func_args))[0]
 
 
 def get_partitions_covariance(func, func_pars, width, sep):
@@ -1336,19 +1471,22 @@ def gaus_pdf(phi, mu, sigma):
     return np.exp(-0.5 * ((phi - mu) / sigma)**2) / (sigma * np.sqrt(2 * np.pi))
 
 
-def base_gaus_pdf(phi, mu, sigma, amp, normalization):
+def base_gaus_pdf(phi_in, mu, sigma, amp, normalization):
+    phi = phi_in % (2 * np.pi)
     return normalization * (1 + amp * np.exp(-0.5 * ((phi - mu) / sigma)**2))
 
 
-def base_gaus_pdf_wrap(phi, mu, sigma, amp, wrap=3):
+def base_gaus_pdf_wrap(phi_in, mu, sigma, amp, normalization, wrap=3):
+    phi = phi_in % (2 * np.pi)
     gaus_pdf = 1 + amp * np.exp(-0.5 * ((phi - mu) / sigma)**2)
-    for i in range(wrap):
+    for i in range(1, wrap + 1):
         phi_right = phi + i * 2 * np.pi
         gaus_pdf += amp * np.exp(-0.5 * ((phi_right - mu) / sigma)**2)
         phi_left = phi - i * 2 * np.pi
         gaus_pdf += amp * np.exp(-0.5 * ((phi_left - mu) / sigma)**2)
 
-    return gaus_pdf / get_norm(base_gaus_pdf, (mu, sigma, amp, 1))
+    # return gaus_pdf / get_norm(base_gaus_pdf, (mu, sigma, amp, 1))
+    return normalization * gaus_pdf
 
 
 # def quad_180_sin(x, a, c, )
