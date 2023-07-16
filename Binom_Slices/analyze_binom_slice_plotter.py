@@ -59,7 +59,8 @@ def main():
     # plot_flow_eff_test()
     # plot_anticl_flow_closure_test()
     # plot_anticl_flow_closure_test_simple()
-    plot_efficiency_closure_tests()
+    # plot_efficiency_closure_tests()
+    plot_closure_tests()
     print('donzo')
 
 
@@ -3685,6 +3686,59 @@ def plot_efficiency_closure_tests():
     plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
                         plot_energy_panels=False, alpha=0.6, title='Flow v2=0.07 Efficiency Correction',
                         ylab=r'$\widebar{\Delta\sigma^2}$')
+
+    plt.show()
+
+
+def plot_closure_tests():
+    plt.rcParams["figure.figsize"] = (6.66, 5)
+    plt.rcParams["figure.dpi"] = 144
+    base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
+    df_name = 'binom_slice_vars_2source_tests.csv'
+    df_path = base_path + df_name
+
+    stat_plot = 'k2'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
+    div_plt = 120
+    exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
+    cent_plt = 8
+    energies_fit = [62]
+    data_types_plt = ['raw']
+    samples = 72  # For title purposes only
+
+    df = pd.read_csv(df_path)
+
+    all_sets = pd.unique(df['name'])
+    print(all_sets)
+
+    df_raw, df_mix, df_diff = calc_dsigma(df[df['stat'] == stat_plot], data_types=['raw', 'mix', 'diff'])
+    df_types = pd.concat([df_raw, df_mix, df_diff], ignore_index=True)
+
+    dsigma_avgs = []
+    for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
+        print(f'Div {div}')
+        dsigma_avgs_types = dvar_vs_protons(df_types, div, cent_plt, energies_fit, ['raw', 'mix', 'diff'], all_sets,
+                                            plot=False, avg=True)
+        dsigma_avgs.append(dsigma_avgs_types)
+    dsigma_avgs = pd.concat(dsigma_avgs, ignore_index=True)
+
+    simple_clust = dsigma_avgs[(dsigma_avgs['name'] == 'simpleclust') & (dsigma_avgs['data_type'] == 'raw')]
+    simple_clust_eff = dsigma_avgs[(dsigma_avgs['name'] == 'simpleclust_eff') & (dsigma_avgs['data_type'] == 'raw')]
+    simple_clust_eff_cor = dsigma_avgs[(dsigma_avgs['name'] == 'simpleclust_eff') &
+                                       (dsigma_avgs['data_type'] == 'diff')]
+    plot_closures(simple_clust, simple_clust_eff, simple_clust_eff_cor, title='Simple Clustering Efficiency Correction')
+
+    flow = dsigma_avgs[(dsigma_avgs['name'] == 'flow_res15_v207') & (dsigma_avgs['data_type'] == 'raw')]
+    flow_eff = dsigma_avgs[(dsigma_avgs['name'] == 'flow_eff_res15_v207') & (dsigma_avgs['data_type'] == 'raw')]
+    flow_eff_cor = dsigma_avgs[(dsigma_avgs['name'] == 'flow_eff_res15_v207') & (dsigma_avgs['data_type'] == 'diff')]
+    plot_closures(flow, flow_eff, flow_eff_cor, title='Flow + Efficiency, Efficiency Correction')
+
+    v2 = 0.07
+    flow_eff_v2cor = flow_eff.copy()
+    flow_eff_v2cor['avg_meas'] = flow_eff['avg_meas'] - v2_divs(np.deg2rad(flow_eff['divs']), v2)
+    flow_eff_v2cor['avg'] = flow_eff_v2cor['avg_meas'].apply(lambda x: x.val)
+    flow_eff_v2cor['avg_err'] = flow_eff_v2cor['avg_meas'].apply(lambda x: x.err)
+    flow_eff_mix = dsigma_avgs[(dsigma_avgs['name'] == 'flow_eff_res15_v207') & (dsigma_avgs['data_type'] == 'mix')]
+    plot_closures(flow_eff_mix, flow_eff, flow_eff_v2cor, title='Flow + Efficiency, V2 Correction')
 
     plt.show()
 

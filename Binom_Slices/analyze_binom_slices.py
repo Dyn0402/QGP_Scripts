@@ -111,7 +111,7 @@ def inv_invx_odr(pars, x):
     return pars[0] / x + pars[1]
 
 
-def quad(x, a, b, c):
+def quad_func(x, a, b, c):
     return a * x ** 2 + b * x + c
 
 
@@ -907,13 +907,14 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
         if avg and len(df) > 1:
             weight_avg = np.average(df['val'], weights=1 / df['err'] ** 2)
             weight_avg_err = np.sqrt(1 / np.sum(1 / df['err'] ** 2))
-            avgs.append({'name': data_set, 'energy': energy, 'divs': div, 'cent': cent, 'amp': amp, 'spread': spread,
+            avgs.append({'name': data_set, 'energy': energy, 'divs': div, 'cent': cent,
+                         'data_type': data_type, 'amp': amp, 'spread': spread,
                          'avg': weight_avg, 'avg_err': weight_avg_err, 'avg_meas': Measure(weight_avg, weight_avg_err)})
             if plot:
                 ax.axhline(weight_avg, ls='--', color=c)
                 ax.axhspan(weight_avg + weight_avg_err, weight_avg - weight_avg_err, alpha=0.4, color=c)
                 if hist:
-                    sigs = (df['val'] - weight_avg) / df['err']  # Should probably add weight_avg_err in quad
+                    sigs = (df['val'] - weight_avg) / df['err']  # Should probably add weight_avg_err in quad_func
                     fig_hist, ax_hist = plt.subplots()
                     ax_hist.set_title(f'{lab}')
                     ax_hist.set_xlabel('Standard Deviations from Average')
@@ -1295,7 +1296,7 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
                         ax.axhline(weight_avg, ls='--', color=c, label=lab)
                     ax.axhspan(weight_avg + weight_avg_err, weight_avg - weight_avg_err, alpha=0.4, color=c)
                     if hist:
-                        sigs = (df['val'] - weight_avg) / df['err']  # Should probably add weight_avg_err in quad
+                        sigs = (df['val'] - weight_avg) / df['err']  # Should probably add weight_avg_err in quad_func
                         fig_hist, ax_hist = plt.subplots()
                         ax_hist.set_title(f'{lab}')
                         ax_hist.set_xlabel('Standard Deviations from Average')
@@ -1526,7 +1527,7 @@ def dvar_vs_protons_cents(df, divs, cents, energy, data_types, data_sets_plt, y_
                     ax.axhline(weight_avg, ls='--', color=c)
                     ax.axhspan(weight_avg + weight_avg_err, weight_avg - weight_avg_err, alpha=0.4, color=c)
                     if hist:
-                        sigs = (df['val'] - weight_avg) / df['err']  # Should probably add weight_avg_err in quad
+                        sigs = (df['val'] - weight_avg) / df['err']  # Should probably add weight_avg_err in quad_func
                         fig_hist, ax_hist = plt.subplots()
                         ax_hist.set_title(f'{lab}')
                         ax_hist.set_xlabel('Standard Deviations from Linear Fit')
@@ -3735,12 +3736,12 @@ def flow_vs_v2(df, div, res, out_dir=None):
     ax.axhline(0, color='black')
     ax.axvline(0, color='black')
     ax.errorbar(v2s, slope_vals, slope_errs, marker='o', ls='none', alpha=0.8)
-    popt, pcov = cf(quad, v2s, slope_vals, sigma=slope_errs, absolute_sigma=True)
+    popt, pcov = cf(quad_func, v2s, slope_vals, sigma=slope_errs, absolute_sigma=True)
     print('With constant and linear terms: ', [f'{val} +- {err}' for val, err in zip(popt, np.sqrt(np.diag(pcov)))])
     popt2, pcov2 = cf(x2, v2s, slope_vals, sigma=slope_errs, absolute_sigma=True)
     print('Just quadratic term: ', [f'{val} +- {err}' for val, err in zip(popt2, np.sqrt(np.diag(pcov2)))])
     xs = np.linspace(0, 0.07, 200)
-    ax.plot(xs, quad(xs, *popt), ls='--', color='red', label='3 Parameter')
+    ax.plot(xs, quad_func(xs, *popt), ls='--', color='red', label='3 Parameter')
     ax.plot(xs, x2(xs, *popt2), ls='--', color='green', label='1 Parameter')
     ax.legend()
     ax.grid()
@@ -3754,6 +3755,36 @@ def flow_vs_v2(df, div, res, out_dir=None):
             file.write('v2\tslope slope_err\n')
             for v2, slope_val, slope_err in zip(v2s, slope_vals, slope_errs):
                 file.write(f'{v2}\t{slope_val} {slope_err}\n')
+
+
+def plot_closures(df_base, df_combo, df_corrected, alpha=0.6, title=None):
+    fig = plt.figure()
+    gs = gridspec.GridSpec(2, 1, height_ratios=[0.7, 0.3], hspace=0)
+    ax = fig.add_subplot(gs[0])
+    ax_diff = fig.add_subplot(gs[1], sharex=ax)
+    ax_diff.axhline(0, color='black')
+    ax.errorbar(df_base['divs'], df_base['avg'], yerr=df_base['avg_err'], ls='none', marker='o',
+                alpha=alpha, label='Base')
+    for data_set in pd.unique(df_combo['name']):
+        df_combo_set = df_combo[df_combo['name'] == data_set]
+        ax.errorbar(df_combo_set['divs'], df_combo_set['avg'], yerr=df_combo_set['avg_err'], ls='none', marker='o',
+                    alpha=alpha, label='Combination')
+    for data_set in pd.unique(df_corrected['name']):
+        df_cor_set = df_corrected[df_corrected['name'] == data_set]
+        ax.errorbar(df_cor_set['divs'], df_cor_set['avg'], yerr=df_cor_set['avg_err'], ls='none', marker='o',
+                    alpha=alpha, label='Corrected')
+        df_diff = np.array(df_base['avg_meas']) - np.array(df_cor_set['avg_meas'])
+        ax_diff.errorbar(df_base['divs'], [x.val for x in df_diff], yerr=[x.err for x in df_diff], ls='none',
+                         marker='o', alpha=alpha, label=data_set)
+    ax.legend()
+    ax.set_ylabel(r'$\widebar{\Delta\sigma^2}$')
+    ax_diff.set_ylabel('Correction Deviation')
+    # ax_diff.legend()
+    if title is not None:
+        fig.suptitle(title, fontsize=16)
+
+    fig.tight_layout()
+    fig.subplots_adjust(hspace=0.0)
 
 
 def calc_dsigma(df, data_types='diff'):
@@ -3918,7 +3949,3 @@ class MyBounds:
         tmax = bool(np.all(x <= self.xmax))
         tmin = bool(np.all(x >= self.xmin))
         return tmax and tmin
-
-
-if __name__ == '__main__':
-    main()
