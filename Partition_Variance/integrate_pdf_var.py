@@ -38,7 +38,7 @@ def main():
     gaus_v2_combo3()
     # eff_plotting()
     # v2_plotting()
-    # vn_analytic_plotting()
+    vn_analytic_plotting()
     print('donzo')
 
 
@@ -1100,7 +1100,7 @@ def gaus_v2_combo2():
 def gaus_v2_combo3():
     mu = np.pi
     sigma = 0.8
-    amp = 0.6
+    amp = 0.4
     # func1 = base_gaus_pdf
     func1 = base_gaus_pdf_wrap
     # func1_args = (mu, sigma, amp, 1. / get_norm(func1, (mu, sigma, amp, 1)))
@@ -1113,7 +1113,7 @@ def gaus_v2_combo3():
 
     func2 = vn_pdf
     n = 2
-    v2 = 0.1
+    v2 = 0.07
     psi = np.pi / 3
     func2_args = (v2, psi, n)
     func2_name = 'Elliptic Flow'
@@ -1176,7 +1176,12 @@ def gaus_v2_combo3():
     for func_name, y in pp_minus_p2_dict.items():
         ax_v2_div_eff.plot(widths, y, label=func_name)
     combo_div_eff = np.array(pp_minus_p2_dict['Combination']) - np.array(pp_minus_p2_dict[func2_name])
-    combo_div_err = np.array(pp_minus_p2_dict['Combination']) * np.mean(pp_minus_p2_dict[func2_name])
+    # combo_div_err = np.array(pp_minus_p2_dict['Combination'])**1.5 + np.mean(pp_minus_p2_dict[func2_name])**1.5
+    combo_div_err = (np.array(pp_minus_p2_dict['Combination']) * np.mean(pp_minus_p2_dict[func2_name]))**0.75
+    # combo_div_err_theory = np.array(pp_minus_p2_dict[func1_name])**1.5 + np.array(pp_minus_p2_dict[func2_name])**1.5
+    combo_div_err_theory = combo_div_err.copy()
+    combo_div_err *= 2
+    combo_div_err_theory *= 0
     ax_v2_div_eff.plot(widths, combo_div_eff, ls='--', label='Combo - Elliptic Flow', color='red')
     ax_v2_div_eff.fill_between(widths, combo_div_eff - combo_div_err, combo_div_eff + combo_div_err, color='red',
                                alpha=0.3)
@@ -1188,6 +1193,10 @@ def gaus_v2_combo3():
     fig_corr_dev, ax_corr_dev = plt.subplots(dpi=144, figsize=(8, 3))
     ax_corr_dev.axhline(0, color='black')
     ax_corr_dev.plot(widths, np.array(pp_minus_p2_dict[func1_name]) - combo_div_eff)
+    cor_diff = np.array(pp_minus_p2_dict[func1_name]) - combo_div_eff
+    ax_corr_dev.fill_between(widths, cor_diff - combo_div_err, cor_diff + combo_div_err, color='blue', alpha=0.3)
+    ax_corr_dev.fill_between(widths, cor_diff - combo_div_err_theory, cor_diff + combo_div_err_theory, color='green',
+                             alpha=0.3)
     ax_corr_dev.set_title('Deviation of Correction from True')
     ax_corr_dev.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2$')
     ax_corr_dev.set_xlabel('Partition Width (w)')
@@ -1216,7 +1225,7 @@ def v2_plotting():
     func2 = vn_pdf
     n = 2
     v2 = 0.1
-    psi = np.pi / 3
+    psi = 0
     func2_args = (v2, psi, n)
     fig, ax = plt.subplots(dpi=144, figsize=(6, 3))
 
@@ -1282,8 +1291,12 @@ def plot_az_bin_example(func, pars, bin_low, bin_high):
     plot_pdf(func, pars, xs=xs)
     xs_bin = np.linspace(bin_low, bin_high, 1000)
     plt.fill_between(xs_bin, func(xs_bin, *pars), color='gray')
+    func_max = max(func(xs_bin, *pars))
+    plt.text(bin_low, -0.1 * func_max, r'$\psi$', ha='center')
+    plt.text(bin_high, -0.1 * func_max, r'$\psi+w$', ha='center')
     plt.xlim(0, 2 * np.pi)
     plt.ylim(bottom=0)
+    plt.tight_layout()
 
 
 def plot_variance(func, func_args):
@@ -1364,13 +1377,45 @@ def get_partition_variance(func, func_args, width, bounds=(0, 2 * np.pi), points
 
 def get_partition_variance_scipy(func, func_args, width, bounds=(0, 2 * np.pi)):
     """
-    Assumes a normailzed input pdf func. Numerically integrates to calculate delta_sigma^2.
+    Assumes a normalized input pdf func. Numerically integrates to calculate delta_sigma^2.
     :param func: PDF function, must be normalized
     :param func_args: Arguments to be passed to func
     :param width: Width of azimuthal partition in radians
     :param bounds: Bounds of the psi integration
     :return:
     """
+    def func_square(psi, func, width, func_args):
+        return quad(func, psi, psi + width, args=func_args)[0] ** 2
+
+    e_p2 = quad(func_square, *bounds, args=(func, width, func_args))[0] / (2 * np.pi)
+    e_p = width / (2 * np.pi)
+
+    return e_p2 - e_p**2, e_p2
+
+
+def get_partion_int_squared(psi, func, width, func_args):
+    """
+    Square input
+    :param psi:
+    :param func:
+    :param width:
+    :param func_args:
+    :return:
+    """
+    return quad(func, 0, width, args=func_args)[0] ** 2
+
+
+def get_partition_variance_scipy_test(func, func_args, psi_indices, width, bounds=(0, 2 * np.pi)):
+    """
+    Assumes a normalized input pdf func. Numerically integrates to calculate delta_sigma^2.
+    :param func: PDF function, must be normalized
+    :param func_args: Arguments to be passed to func
+    :param width: Width of azimuthal partition in radians
+    :param bounds: Bounds of the psi integration
+    :return:
+    """
+
+
     def func_square(psi, func, width, func_args):
         return quad(func, psi, psi + width, args=func_args)[0] ** 2
 
