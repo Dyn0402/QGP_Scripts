@@ -32,7 +32,6 @@ def main():
     # convo_test()
     # eff_v2_combo()
     # eff_v2_combo2()
-    # eff_gaus_combo()
     eff_gaus_combo()
     # gaus_v2_combo()
     # eff_plotting()
@@ -754,7 +753,8 @@ def eff_v2_combo2():
 
 
 def eff_gaus_combo():
-    func1_pre = get_efficiency_pdf(62)
+    func1_pre, func1_points = get_efficiency_pdf(62, return_centers=True)
+    func1_points = np.concatenate([func1_points - 2 * np.pi, func1_points, func1_points + 2 * np.pi])
     func1_norm = get_norm(func1_pre, ())
     func1 = lambda x, psi: func1_pre(x - psi) / func1_norm
     psi_eff = 0
@@ -796,8 +796,46 @@ def eff_gaus_combo():
     ax_pdfs.legend()
     fig_pdfs.tight_layout()
 
-    func_list = [(func1, func1_args, func1_name), (func2, func2_args, func2_name), (func3, func3_args, func3_name)]
-    widths, dsigma_dict = integrate_funcs(func_list)
+    # print(quad(func1, 1, 4, args=(0,)))
+    # print(quad(func1, 1, 4, args=(0,), limit=func1_points.size * 2,
+    #            points=func1_points[np.where((1 <= func1_points <= 4))]))
+    # pnts = func1_points[np.where((func1_points >= 1) & (func1_points <= 4))]
+    # print(quad(func1, 1, 4, args=(0,), limit=func1_points.size * 2,
+    #            points=pnts))
+    # print(np.sum(func1(pnts, *func1_args)) * (4 - 1) / pnts.size)
+    plt.show()
+
+    psis = np.arange(0, 2 * np.pi, 0.1) + 0.05
+    widths = np.linspace(0, 2 * np.pi, 100)
+    dsigmas = []
+    for width in widths:
+        # points = func1_points
+        # points = points[np.where((points >= 0) & (points <= width))]
+        dsigma = 0
+        p2 = (width / (2 * np.pi))**2
+        for psi_i in psis:
+            # for phi_j in phis:
+            # x = integrate_partition(psi_i, (func1, width, func1_args, func1_points))
+            points = func1_points[np.where((func1_points >= psi_i) & (func1_points <= psi_i + width))]
+            x = np.sum(func1(points, (0,))) * width / points.size
+            dsigma += (x**2 - p2) / (2 * np.pi)
+        dsigmas.append(dsigma)
+        print(width, x)
+    plt.plot(widths, dsigmas)
+    plt.show()
+
+    # points = pnts - phis[0]
+    # integral = np.sum(func(points, *func_args)) * width / points.size
+    # (integral ** 2 - p2) / (2 * np.pi) ** len(phis)
+    # print()
+
+    # plt.show()
+
+    # func_list = [(func1, func1_args, func1_name), (func2, func2_args, func2_name), (func3, func3_args, func3_name)]
+    func_list = [(func1, func1_args, func1_name),]
+    func_points = {func1_name: func1_points, func3_name: func1_points}
+    widths, dsigma_dict = integrate_funcs(func_list, func_points=func_points)
+    plt.show()
     subtract_funcs(widths, dsigma_dict, func3_name, func2_name, func1_name)
     plt.show()
 
@@ -852,21 +890,24 @@ def gaus_v2_combo():
     plt.show()
 
 
-def integrate_funcs(func_list, ):
+def integrate_funcs(func_list, func_points=None):
     fig, ax = plt.subplots(dpi=144, figsize=(7, 3))
     ax.axhline(0, color='black')
-    widths = np.linspace(0, 2 * np.pi, 100)
+    # widths = np.linspace(0, 2 * np.pi, 100)
+    widths = np.linspace(6, 2 * np.pi, 3)
     dsigma_dict = {}
     for func, func_args, func_name in func_list:
         dsigma_terms = []
         for width in widths:
             print(f'{func_name}: width = {width}')
+            points = None
+            if func_points is not None and func_name in func_points:
+                points = func_points[func_name]
             if func_name == 'Combination':
-                pass
                 psi_bounds = [[0, 2 * np.pi], [0, 2 * np.pi]]
-                dsigma = nquad(integrate_partition, psi_bounds, args=((func, width, func_args),))[0]
+                dsigma = nquad(integrate_partition, psi_bounds, args=((func, width, func_args, points),))[0]
             else:
-                dsigma = quad(integrate_partition, 0, 2 * np.pi, args=((func, width, func_args),))[0]
+                dsigma = quad(integrate_partition, 0, 2 * np.pi, args=((func, width, func_args, points),))[0]
             dsigma_terms.append(dsigma)
         ax.plot(widths, dsigma_terms, label=func_name)
         dsigma_dict.update({func_name: dsigma_terms})
@@ -1037,33 +1078,6 @@ def plot_variance(func, func_args):
     plt.show()
 
 
-# def get_partition_variance_scipy(width, p, p_args):
-#     # norm = quad(p, 0, 2 * np.pi, args=p_args)
-#     # Need to deal with wrapping non-periodic functions!
-#     # def p2(x,  vn, psi, n):
-#     #     pass
-#     # p2 = lambda x, vn, psi, n: p(x, vn, psi, n)**2
-#     # pq = lambda x, vn, psi, n: p(x, vn, psi, n) * (1 - p(x, vn, psi, n))
-#     ep = quad(int_pdf, 0, 2 * np.pi, args=(width, p, p_args))[0] / (2 * np.pi)
-#     ep2 = quad(int_pdf2, 0, 2 * np.pi, args=(width, p, p_args))[0] / (2 * np.pi)
-#     # epq = quad(int_pdf, 0, 2 * np.pi, args=(width, pq, p_args))
-#
-#     return ep2
-#     # return ep2[0] - ep[0]**2
-#     # print(quad(int_pdf, 0, 2 * np.pi, args=(width, p, p_args)))
-#
-#
-# def int_pdf(low_bound, width, func, func_args):
-#     # print(func_args)
-#     return quad(func, low_bound, low_bound + width, args=func_args)[0]
-#
-#
-# def int_pdf2(low_bound, width, func, func_args):
-#     # print(func_args)
-#     # print(f'low= {low_bound}, width= {width}, func: {func}, func_args: {func_args}')
-#     return quad(func, low_bound, low_bound + width, args=func_args)[0] ** 2
-
-
 def get_partition_variance(func, func_args, width, bounds=(0, 2 * np.pi), points=1000):
     xs = np.linspace(*bounds, points)
     bound_range = bounds[-1] - bounds[0]
@@ -1106,22 +1120,55 @@ def get_partition_variance_scipy(func, func_args, width, bounds=(0, 2 * np.pi)):
 
 
 def integrate_partition(*args):
-    phis, func, width, func_args = args[:-1], *args[-1]  # Split input into n phi integral values and function arguments
+    phis, func, width, func_args, pnts = args[:-1], *args[-1]  # Split input into n phi integral values and other
+    if width == 0:
+        return 0
+
     func_args[:len(phis)] = phis  # Replace phis in func_args with current integration values
+
     if len(phis) > 1:
         func_args[-1] = 1  # Reset the function normalization to 1
-        func_args[-1] = 1. / get_norm_scipy(func, func_args)  # Recalculate proper normalization with current phis
+
     p2 = (width / (2 * np.pi))**2
-    return (quad(func, 0, width, args=tuple(func_args))[0] ** 2 - p2) / (2 * np.pi) ** len(phis)
+
+    if pnts is not None:  # Assuming that phi which shifts points is the first one! Rather clunky
+        # points = pnts - phis[0] % (pnts[1] - pnts[0])
+        points = pnts.copy() + phis[0]
+        if len(phis) > 1:
+            points = pnts[np.where((pnts >= 0) & (pnts <= 2 * np.pi))]
+            func_args[-1] = 1. / get_norm(func, func_args, xs=points)  # Recalculate normalization with current phis
+        points = points[np.where((points >= 0) & (points <= width))]
+        integral = np.sum(func(points, *func_args)) * width / points.size
+        # print(f'Mine: {integral}')
+        # points = pnts + phis[0]
+        # points = points[np.where((points >= 0) & (points <= width))]
+        # integral = quad(func, 0, width, args=tuple(func_args), points=points)[0]
+        # print(f'Scipy: {integral}')
+
+        # points = pnts[np.where((pnts >= 0) & (pnts <= 2 * np.pi))]
+        # print(get_norm(func, func_args, xs=points))  # Recalculate normalization with current phis
+        # plt.plot(points, func(points, *func_args))
+        # plt.show()
+        # print(integral)
+    else:
+        if len(phis) > 1:
+            func_args[-1] = 1. / get_norm_scipy(func, func_args)  # Recalculate proper normalization with current phis
+        integral = quad(func, 0, width, args=tuple(func_args))[0]
+
+    return (integral ** 2 - p2) / (2 * np.pi) ** len(phis)
+
+    # return (quad(func, 0, width, args=tuple(func_args))[0] ** 2 - p2) / (2 * np.pi) ** len(phis)
 
 
-def get_norm(func, func_args):
-    points = 1000
-    bounds = (0, 2 * np.pi)
-    xs = np.linspace(*bounds, points)
+def get_norm(func, func_args, bounds=(0, 2 * np.pi), xs=None):
+    if xs is None:
+        points = 1000
+        xs = np.linspace(*bounds, points)
+    else:
+        points = xs.size
+
     bound_range = bounds[-1] - bounds[0]
     dx = bound_range / points
-    # pdf = func(xs, *func_args)
     pdf_norm = np.sum(func(xs, *func_args)) * dx
 
     return pdf_norm
@@ -1174,7 +1221,7 @@ def get_partitions_covariance(func, func_pars, width, sep):
     # return ep2 - ep**2, epq
 
 
-def get_efficiency_pdf(energy=62, plot=False):
+def get_efficiency_pdf(energy=62, plot=False, return_centers=False):
     set_name = 'rapid05_resample_norotate_seed_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_0'
     qa_path = f'F:/Research/Data/default/{set_name}/{energy}GeV/QA_{energy}GeV.root'
     with uproot.open(qa_path) as file:
@@ -1187,6 +1234,8 @@ def get_efficiency_pdf(energy=62, plot=False):
         xs = np.linspace(0, 2 * np.pi, 10000)
         plt.plot(xs, interpolation(xs), color='red', alpha=0.6)
         plt.show()
+    if return_centers:
+        return interpolation, hist_centers
     return interpolation
 
 
@@ -1194,7 +1243,8 @@ def get_periodic_interp(x, y):
     x_step = x[-1] - x[-2]
     x = np.append(x, [x[-1] + x_step])
     y = np.append(y, [y[0]])
-    interpolation = CubicSpline(x, y, bc_type='periodic', extrapolate='periodic')
+    # interpolation = CubicSpline(x, y, bc_type='periodic', extrapolate='periodic')
+    interpolation = lambda xx: np.interp(xx, x, y, period=2 * np.pi)
     return interpolation
 
 
