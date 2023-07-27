@@ -10,6 +10,8 @@ Created as QGP_Scripts/integrate_pdf_var
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec
+import matplotlib.ticker as mtick
 from scipy.integrate import quad, nquad
 from scipy.stats import norm
 from scipy.optimize import curve_fit as cf
@@ -30,7 +32,7 @@ def main():
     # flow_fourier_decomp()
     # gaus_fit_dependence()
     # eff_v2_combo()
-    # eff_gaus_combo()
+    eff_gaus_combo()
     # gaus_v2_combo()
     # eff_plotting()
     # v2_plotting()
@@ -80,14 +82,14 @@ def gaus_fit():
     fig, ax = plt.subplots()
     ax.axhline(0, color='black')
     ax.plot(widths, pp_minus_p2_terms)
-    ax.set_xlabel('Partition Width (w)')
+    ax.set_xlabel('Azimuthal Partition Width (w)')
     ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi} \delta p(\psi)^2 \,d\psi$')
 
     width_fit_low, width_fit_high = np.deg2rad([60, 300])
     fig, ax = plt.subplots(dpi=144)
     ax.axhline(0, color='black')
     ax.scatter(widths, pp_minus_p2_terms)
-    ax.set_xlabel('Partition Width (w)')
+    ax.set_xlabel('Azimuthal Partition Width (w)')
     ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi} \delta p(\psi)^2 \,d\psi$')
     width_filter = (width_fit_low < widths) & (widths < width_fit_high)
     # print(widths[width_filter], np.array(lin_terms)[width_filter])
@@ -109,7 +111,7 @@ def gaus_fit():
     popt, pcov = cf(quad_cos, widths[width_filter], np.array(pp_minus_p2_terms)[width_filter], p0=p0)
     ax.plot(xs_fit_plot, quad_cos(xs_fit_plot, *p0), color='olive', alpha=0.4, label='Combo Initial Guess')
     ax.plot(xs_fit_plot, quad_cos(xs_fit_plot, *popt), color='olive', label='Combo')
-    ax.set_xlabel('Partition Width (w)')
+    ax.set_xlabel('Azimuthal Partition Width (w)')
     ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi} \delta p(\psi)^2 \,d\psi$')
     ax.legend()
     fig.tight_layout()
@@ -126,7 +128,7 @@ def gaus_fit():
     popt, pcov = cf(quad_cos, widths[width_filter], np.array(pp_minus_p2_terms)[width_filter], p0=p0)
     ax.plot(xs_fit_plot, quad_cos(xs_fit_plot, *p0), color='olive', alpha=0.7, ls='--', label='Combo Initial Guess')
     ax.plot(xs_fit_plot, quad_cos(xs_fit_plot, *popt), color='olive', label='Combo')
-    ax.set_xlabel('Partition Width (w)')
+    ax.set_xlabel('Azimuthal Partition Width (w)')
     ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi} \delta p(\psi)^2 \,d\psi$')
     ax.legend()
     fig.tight_layout()
@@ -292,7 +294,7 @@ def gaus_test_fits():
     popt, pcov = cf(func_fit, widths, pp_minus_p2_terms, p0=p0)
     ax.plot(xs_fit_plot, func_fit(xs_fit_plot, *p0), color='olive', alpha=0.7, ls='--', label='Combo Initial Guess')
     ax.plot(xs_fit_plot, func_fit(xs_fit_plot, *popt), color='olive', label='Combo')
-    ax.set_xlabel('Partition Width (w)')
+    ax.set_xlabel('Azimuthal Partition Width (w)')
     ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi} \delta p(\psi)^2 \,d\psi$')
     ax.legend()
     fig.tight_layout()
@@ -319,7 +321,7 @@ def gaus_test_fits():
 
     print(popt)
 
-    ax.set_xlabel('Partition Width (w)')
+    ax.set_xlabel('Azimuthal Partition Width (w)')
     ax.set_ylabel('Fit Deviation')
     ax.grid()
     fig.tight_layout()
@@ -365,7 +367,7 @@ def gaus_fit_dependence():
         fig, ax = plt.subplots(dpi=144)
         ax.axhline(0, color='black')
         ax.scatter(widths, pp_minus_p2_terms)
-        ax.set_xlabel('Partition Width (w)')
+        ax.set_xlabel('Azimuthal Partition Width (w)')
         ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi} \delta p(\psi)^2 \,d\psi$')
         ax.set_ylim(bottom=-ax.get_ylim()[-1] * 0.05)
         ax.plot(xs_fit_plot, quad_cos(xs_fit_plot, *p0), color='olive', alpha=0.7, ls='--', label='Combo Initial Guess')
@@ -462,7 +464,7 @@ def eff_gaus_combo():
 
     mu = np.pi
     sigma = 0.8
-    amp = 0.1
+    amp = 0.3
     func2 = base_gaus_pdf_wrap
     func2_args = [mu, sigma, amp, 1. / get_norm_scipy(func2, (mu, sigma, amp, 1))]
     func2_name = 'Gaussian Cluster'
@@ -484,7 +486,7 @@ def eff_gaus_combo():
     xs = np.linspace(0, 2 * np.pi, 1000)
     ax_pdfs.plot(xs, func1(xs, *func1_args), label=func1_name)
     ax_pdfs.plot(xs, func2(xs, *func2_args), label=func2_name)
-    # ax_pdfs.plot(xs, func3(xs, *func3_args), label=func3_name)
+    ax_pdfs.plot(xs, func3(xs, *func3_args), label=func3_name)
     ax_pdfs.set_xlabel(r'$\phi$')
     ax_pdfs.set_ylabel('Probability')
     ax_pdfs.set_ylim(bottom=0)
@@ -494,7 +496,6 @@ def eff_gaus_combo():
     func_list = [(func1, func1_args, func1_name), (func2, func2_args, func2_name), (func3, func3_args, func3_name)]
     func_points = {func1_name: func1_points, func3_name: func1_points}
     widths, dsigma_dict = integrate_funcs(func_list, func_points=func_points)
-    plt.show()
     subtract_funcs(widths, dsigma_dict, func3_name, func2_name, func1_name)
     plt.show()
 
@@ -536,12 +537,13 @@ def gaus_v2_combo():
     xs = np.linspace(0, 2 * np.pi, 1000)
     ax_pdfs.plot(xs, func1(xs, *func1_args), label=func1_name)
     ax_pdfs.plot(xs, func2(xs, *func2_args), label=func2_name)
-    # ax_pdfs.plot(xs, func3(xs, *func3_args), label=func3_name)
+    ax_pdfs.plot(xs, func3(xs, *func3_args), label=func3_name)
     ax_pdfs.set_xlabel(r'$\phi$')
     ax_pdfs.set_ylabel('Probability')
     ax_pdfs.set_ylim(bottom=0)
     ax_pdfs.legend()
     fig_pdfs.tight_layout()
+    plt.show()
 
     func_list = [(func1, func1_args, func1_name), (func2, func2_args, func2_name), (func3, func3_args, func3_name)]
     widths, dsigma_dict = integrate_funcs(func_list)
@@ -569,7 +571,7 @@ def integrate_funcs(func_list, func_points=None):
 
         ax.plot(widths, dsigma_terms, label=func_name)
         dsigma_dict.update({func_name: dsigma_terms})
-    ax.set_xlabel('Partition Width (w)')
+    ax.set_xlabel('Azimuthal Partition Width (w)')
     ax.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi} \delta p(\psi)^2 \,d\psi$')
     ax.legend()
     fig.tight_layout()
@@ -584,36 +586,43 @@ def subtract_funcs(widths, dsigma_dict, combo_name='Combination', name_to_subtra
     if base_name is None:
         base_name = names.pop(0)
 
-    fig_v2_div_eff, ax_v2_div_eff = plt.subplots(dpi=144, figsize=(8, 3))
-    ax_v2_div_eff.axhline(0, color='black')
-    for func_name, y in dsigma_dict.items():
-        ax_v2_div_eff.plot(widths, y, label=func_name)
-    combo_div_eff = np.array(dsigma_dict[combo_name]) - np.array(dsigma_dict[name_to_subtract])
-    # combo_div_err = np.array(dsigma_dict['Combination'])**1.5 + np.mean(dsigma_dict[name_to_subtract])**1.5
-    combo_div_err = (np.array(dsigma_dict[combo_name]) * np.mean(dsigma_dict[name_to_subtract]))**0.75
-    # combo_div_err_theory = np.array(dsigma_dict[func1_name])**1.5 + np.array(dsigma_dict[name_to_subtract])**1.5
-    combo_div_err_theory = combo_div_err.copy()
-    combo_div_err *= 1
-    combo_div_err_theory *= 0
-    ax_v2_div_eff.plot(widths, combo_div_eff, ls='--', label=f'{combo_name} - {name_to_subtract}', color='red')
-    ax_v2_div_eff.fill_between(widths, combo_div_eff - combo_div_err, combo_div_eff + combo_div_err, color='red',
-                               alpha=0.3)
-    ax_v2_div_eff.set_xlabel('Partition Width (w)')
-    ax_v2_div_eff.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi} \delta p(\psi)^2 \,d\psi$')
-    ax_v2_div_eff.legend(loc='upper left')
-    fig_v2_div_eff.tight_layout()
+    fig = plt.figure(dpi=144, figsize=(8, 5))
+    gs = GridSpec(2, 1, height_ratios=[0.7, 0.3])
 
-    fig_corr_dev, ax_corr_dev = plt.subplots(dpi=144, figsize=(8, 3))
+    # fig_v2_div_eff, ax_integral = plt.subplots(dpi=144, figsize=(8, 3))
+    ax_integral = fig.add_subplot(gs[0])
+    ax_integral.axhline(0, color='black')
+    for func_name, y in dsigma_dict.items():
+        ax_integral.plot(widths, y, label=func_name)
+    combo_div_eff = np.array(dsigma_dict[combo_name]) - np.array(dsigma_dict[name_to_subtract])
+    # combo_div_err = (np.array(dsigma_dict[combo_name]) * np.mean(dsigma_dict[name_to_subtract]))**0.75
+    combo_div_err = np.array(dsigma_dict[combo_name]) * np.sqrt(np.mean(dsigma_dict[name_to_subtract]))
+    combo_div_err *= 1
+    diff_name = f'{combo_name} - {name_to_subtract}'
+    ax_integral.plot(widths, combo_div_eff, ls='--', label=diff_name, color='red')
+    ax_integral.fill_between(widths, combo_div_eff - combo_div_err, combo_div_eff + combo_div_err, color='red',
+                               alpha=0.3)
+    # ax_integral.set_xlabel('Azimuthal Partition Width (w)')
+    ax_integral.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi} \delta p(\psi)^2 \,d\psi$')
+    ax_integral.legend(loc='upper left')
+    ax_integral.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
+    # fig_v2_div_eff.tight_layout()
+
+    # fig_corr_dev, ax_corr_dev = plt.subplots(dpi=144, figsize=(8, 3))
+    ax_corr_dev = fig.add_subplot(gs[1], sharex=ax_integral)
     ax_corr_dev.axhline(0, color='black')
-    ax_corr_dev.plot(widths, np.array(dsigma_dict[base_name]) - combo_div_eff)
+    ax_corr_dev.plot(widths, np.array(dsigma_dict[base_name]) - combo_div_eff, color='red',
+                     label=f'{base_name} - ({diff_name})')
     cor_diff = np.array(dsigma_dict[base_name]) - combo_div_eff
-    ax_corr_dev.fill_between(widths, cor_diff - combo_div_err, cor_diff + combo_div_err, color='blue', alpha=0.3)
-    ax_corr_dev.fill_between(widths, cor_diff - combo_div_err_theory, cor_diff + combo_div_err_theory, color='green',
-                             alpha=0.3)
-    ax_corr_dev.set_title('Deviation of Correction from True')
+    ax_corr_dev.fill_between(widths, cor_diff - combo_div_err, cor_diff + combo_div_err, color='red', alpha=0.3)
+    # ax_corr_dev.set_title('Deviation of Correction from True')
     ax_corr_dev.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi} \delta p(\psi)^2 \,d\psi$')
-    ax_corr_dev.set_xlabel('Partition Width (w)')
-    fig_corr_dev.tight_layout()
+    ax_corr_dev.set_xlabel('Azimuthal Partition Width (w)')
+    ax_corr_dev.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1e'))
+    ax_corr_dev.legend(loc='lower left')
+    # fig_corr_dev.tight_layout()
+    fig.tight_layout()
+    fig.subplots_adjust(hspace=0.025)
 
 
 def eff_plotting():
@@ -653,8 +662,13 @@ def vn_analytic_plotting():
     ns = [2, 3, 4, 5]
 
     fig_prob, ax_prob = plt.subplots(dpi=144, figsize=(8, 3))
+    fig = plt.figure(dpi=144, figsize=(8, 5))
+    gs = GridSpec(2, 1, height_ratios=[0.7, 0.3])
     fig_dsig, ax_dsig = plt.subplots(dpi=144, figsize=(8, 3))
-    fig_dsig_v2_comp, ax_dsig_v2_comp = plt.subplots(dpi=144, figsize=(8, 3))
+    # fig_dsig_v2_comp, ax_dsig_v2_comp = plt.subplots(dpi=144, figsize=(8, 3))
+    ax_dsig_v2_comp = fig.add_subplot(gs[0])
+    ax_dsig_v2_comp_dev = fig.add_subplot(gs[1], sharex=ax_dsig_v2_comp)
+    ax_dsig_v2_comp_dev.axhline(0, color='black', lw=0.5)
     w = np.linspace(0, 2 * np.pi, 1000)
 
     for n in ns:
@@ -663,14 +677,16 @@ def vn_analytic_plotting():
 
     dsigs = []
     for w_i in w:
-        ep_diff, ep2 = get_partition_variance(vn_pdf, (psi, v_mag, 2), w_i)
-        dsigs.append(ep_diff)
+        dsig = nquad(integrate_partition, [[0, 2 * np.pi]], args=((vn_pdf, w_i, [psi, v_mag, 2], None),))[0]
+        dsigs.append(dsig)
     ax_dsig_v2_comp.plot(w, dsigs, label='Numerical')
     ax_dsig_v2_comp.plot(w, vn_divs(w, v_mag, n=2), ls='--', label='Analytic')
+    ax_dsig_v2_comp_dev.plot(w, dsigs - vn_divs(w, v_mag, n=2), label='Numerical - Analytic')
 
     for ax in [ax_prob, ax_dsig, ax_dsig_v2_comp]:
         ax.legend()
         ax.set_ylim(bottom=0)
+    ax_dsig_v2_comp_dev.legend()
 
     ax_prob.set_title('Probability Densities')
     ax_dsig.set_title(r'$\Delta\sigma^2$')
@@ -678,12 +694,19 @@ def vn_analytic_plotting():
     ax_prob.set_ylabel('Probability')
     ax_dsig.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi} \delta p(\psi)^2 \,d\psi$')
     ax_dsig_v2_comp.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi} \delta p(\psi)^2 \,d\psi$')
+    ax_dsig_v2_comp_dev.set_ylabel(r'$\frac{1}{2\pi}\int_{0}^{2\pi} \delta p(\psi)^2 \,d\psi$')
     ax_prob.set_xlabel(r'$\phi$')
     ax_dsig.set_xlabel(r'Azimuthal Partition Width $w$')
-    ax_dsig_v2_comp.set_xlabel(r'Azimuthal Partition Width $w$')
+    # ax_dsig_v2_comp.set_xlabel(r'Azimuthal Partition Width $w$')
+    ax_dsig_v2_comp_dev.set_xlabel(r'Azimuthal Partition Width $w$')
+    ax_dsig_v2_comp.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1e'))
+    ax_dsig_v2_comp.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
+    ax_dsig_v2_comp_dev.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1e'))
     fig_prob.tight_layout()
     fig_dsig.tight_layout()
-    fig_dsig_v2_comp.tight_layout()
+    # fig_dsig_v2_comp.tight_layout()
+    fig.tight_layout()
+    fig.subplots_adjust(hspace=0.1)
 
     plt.show()
 
@@ -728,7 +751,7 @@ def plot_variance(func, func_args):
     fig, ax = plt.subplots(dpi=144, figsize=(6, 3.5))
     ax.axhline(0, color='black')
     ax.plot(widths, pp_minus_p2_terms)
-    ax.set_xlabel('Partition Width (w)')
+    ax.set_xlabel('Azimuthal Partition Width (w)')
     ax.set_ylabel(r'$\left[\frac{1}{2\pi}\int_{0}^{2\pi}p(\psi)^2 \,d\psi - p^2\right] / \left[p (1-p)\right]$')
     fig.tight_layout()
 
