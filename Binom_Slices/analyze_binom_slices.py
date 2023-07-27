@@ -3765,23 +3765,33 @@ def plot_closures(df_base, df_combo, df_corrected, alpha=0.6, title=None):
     ax_diff.axhline(0, color='black')
     ax.errorbar(df_base['divs'], df_base['avg'], yerr=df_base['avg_err'], ls='none', marker='o',
                 alpha=alpha, label='Base')
-    for data_set in pd.unique(df_combo['name']):
-        df_combo_set = df_combo[df_combo['name'] == data_set]
-        ax.errorbar(df_combo_set['divs'], df_combo_set['avg'], yerr=df_combo_set['avg_err'], ls='none', marker='o',
-                    alpha=alpha, label='Combination')
-    for data_set in pd.unique(df_corrected['name']):
-        df_cor_set = df_corrected[df_corrected['name'] == data_set]
-        ax.errorbar(df_cor_set['divs'], df_cor_set['avg'], yerr=df_cor_set['avg_err'], ls='none', marker='o',
-                    alpha=alpha, label='Corrected')
-        df_diff = np.array(df_base['avg_meas']) - np.array(df_cor_set['avg_meas'])
-        ax_diff.errorbar(df_base['divs'], [x.val for x in df_diff], yerr=[x.err for x in df_diff], ls='none',
-                         marker='o', alpha=alpha, label=data_set)
+
+    ax.errorbar(df_combo['divs'], df_combo['avg'], yerr=df_combo['avg_err'], ls='none', marker='o',
+                alpha=alpha, label='Combination')
+
+    df_diff_err = np.array(df_combo['avg']) * \
+                  np.sqrt(np.mean(np.array(df_combo['avg']) - np.array(df_corrected['avg'])))
+    ax.errorbar(df_corrected['divs'], df_corrected['avg'], yerr=df_corrected['avg_err'], ls='none', marker='o',
+                alpha=alpha, label='Corrected')
+    ax.errorbar(df_corrected['divs'], df_corrected['avg'], yerr=df_diff_err, ls='none', marker=None, elinewidth=4,
+                alpha=0.2)
+    df_diff = np.array(df_base['avg_meas']) - np.array(df_corrected['avg_meas'])
+    ax_diff.errorbar(df_base['divs'], [x.val for x in df_diff], yerr=[x.err for x in df_diff], ls='none',
+                     marker='o', alpha=alpha, color='red', label='Base - Corrected')
+    ax_diff.errorbar(df_base['divs'], [x.val for x in df_diff], yerr=df_diff_err, ls='none', elinewidth=4,
+                     marker=None, alpha=0.2, color='red')
+
     ax.legend()
+    ax_diff.legend()
     ax.set_ylabel(r'$\widebar{\Delta\sigma^2}$')
-    ax_diff.set_ylabel('Correction Deviation')
-    # ax_diff.legend()
+    # ax_diff.set_ylabel('Correction Deviation')
+    ax_diff.set_ylabel(r'$\widebar{\Delta\sigma^2}$')
+    ax_diff.set_xlabel(r'Azimuthal Partition Width ($w$)')
+    ax.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
+    # ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1e'))
+    ax_diff.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1e'))
     if title is not None:
-        fig.suptitle(title, fontsize=16)
+        ax.set_title(title, fontsize=16)
 
     fig.tight_layout()
     fig.subplots_adjust(hspace=0.0)
