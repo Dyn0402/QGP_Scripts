@@ -390,7 +390,7 @@ def calc_sys(def_val, def_err, sys_vals, sys_errs, return_vals='both'):
     if 'indiv' in return_vals.lower():
         return barlow_i
 
-    barlow = np.sqrt(np.sum(barlow_i**2))
+    barlow = np.sqrt(np.sum(barlow_i ** 2))
 
     if 'combo' in return_vals.lower():
         return barlow
@@ -439,7 +439,7 @@ def get_sys(df, df_def_name, df_sys_dict, group_cols=None, val_col='val', err_co
                 sys_val = group_df_sys_type[val_col].values
                 sys_err = group_df_sys_type[err_col].values
 
-                barlow_i = calc_sys(def_val, def_err, sys_val, sys_err, 'indiv')**2
+                barlow_i = calc_sys(def_val, def_err, sys_val, sys_err, 'indiv') ** 2
                 barlow += np.max(barlow_i) if barlow_i.size > 0 else 0
             barlow = np.sqrt(barlow)
 
@@ -565,6 +565,7 @@ def split_string(string):
 def sort_on_sys_info_dict(df, sys_info_dict):
     sys_type_map = dict(zip(sys_info_dict.keys(), range(len(sys_info_dict))))
     df['sys_type_index'] = df['sys_type'].map(sys_type_map)
+
     # print(df.columns)
     # df['sys_val_index'] = df.apply(lambda x: sys_info_dict[x['sys_type']]['sys_vars'].index(x['sys_val']), axis=1)
 
@@ -736,14 +737,14 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
             # print(group_df_sys.index.isin(max_indices))
             group_df_sys.loc[~group_df_sys.index.isin(max_indices), 'barlow_sum'] = 0
 
-            barlow = np.sqrt(np.sum(group_df_sys['barlow_sum'].values**2))
+            barlow = np.sqrt(np.sum(group_df_sys['barlow_sum'].values ** 2))
 
             sys_types = group_df_sys['sys_type'].values
             if plot_barlow_decomp:
                 ax_barlow_decomp.axhline(0, color='black')
-                ax_barlow_decomp.axhline(def_err**2, ls='--', label=r'$\sigma_d^2$')
-                ax_barlow_decomp.scatter(sys_types, (def_val - sys_val)**2, marker='_', s=500, label=r'$(d-v)^2$')
-                ax_barlow_decomp.scatter(sys_types, sys_err**2, marker='_', s=500, label=r'$\sigma_v^2$')
+                ax_barlow_decomp.axhline(def_err ** 2, ls='--', label=r'$\sigma_d^2$')
+                ax_barlow_decomp.scatter(sys_types, (def_val - sys_val) ** 2, marker='_', s=500, label=r'$(d-v)^2$')
+                ax_barlow_decomp.scatter(sys_types, sys_err ** 2, marker='_', s=500, label=r'$\sigma_v^2$')
                 ax_barlow_decomp.scatter(sys_types, np.abs(def_err ** 2 - sys_err ** 2), s=500, marker='_',
                                          label=r'$|\sigma_d^2 - \sigma_v^2|$')
                 ax_barlow_decomp.scatter(sys_types, barlow_i, marker='_', s=500,
@@ -1213,7 +1214,8 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
                     if len(data_types) > 1:
                         lab += f' {data_type.capitalize()}'
                     df_set = df_set.sort_values(by=['total_protons'])
-                    data.append((df_set, lab, data_set, data_type, div, df_set['amp'].iloc[0], df_set['spread'].iloc[0]))
+                    data.append(
+                        (df_set, lab, data_set, data_type, div, df_set['amp'].iloc[0], df_set['spread'].iloc[0]))
         energy_data.append(data)
 
     if plot or plot_avg:
@@ -1692,7 +1694,7 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
 def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, data_sets_labels=None,
                         exclude_divs=[], verbose=False, plot_energy_panels=True, title=None, alpha=1, ylab=None,
                         plot=True, errbar_alpha=0.2, plot_indiv=True, plot_energies_fig=False, ylim=None,
-                        leg_panel=0):
+                        leg_panel=0, kin_info=True, star_prelim=False):
     energies = pd.unique(df['energy'])
     if plot:
         if plot_energies_fig:
@@ -1742,7 +1744,8 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                         energy_ax.errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['avg_err'], ls='none',
                                            marker='o', label=lab_energy, color=color, alpha=alpha)
                         if 'sys' in df_cent.columns:
-                            energy_ax.errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['sys'], ls='', elinewidth=4,
+                            energy_ax.errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['sys'], ls='',
+                                               elinewidth=4,
                                                marker='', color=color, alpha=errbar_alpha)
                     if plot_energies_fig:
                         ax.errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['avg_err'], ls='none',
@@ -1846,6 +1849,15 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                 if energy_i == leg_panel:
                     # ax_panels[energy].legend(loc='lower left', bbox_to_anchor=(0.5, 0.85), framealpha=1.0)
                     ax_panels[energy].legend()
+
+                if kin_info and energy_i == 1:
+                    eta_line = r'|y| < 0.5'
+                    pt_line = r'0.4 < $p_T$ < 2.0 GeV'
+                    ax_panels[energy].text(0.02, 0.02, f'Au+Au\n{eta_line}\n{pt_line}', ha='left', va='bottom',
+                                           transform=ax_panels[energy].transAxes)
+                if star_prelim and energy_i == 5:
+                    ax_panels[energy].text(0.26, 0.98, 'STAR Preliminary', fontsize=15, ha='left', va='top',
+                                           transform=ax_panels[energy].transAxes)
 
         if plot_energies_fig:
             fig.tight_layout()
@@ -2728,7 +2740,7 @@ def plot_protons_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
 
 def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None,
                               fit=False, cent_ref=None, ref_type=None, data_sets_energies_cmaps=None, ls='-',
-                              alpha=0.6, errbar_alpha=0.2):
+                              alpha=0.6, errbar_alpha=0.2, kin_info=True, star_prelim=False):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     fig_avg, ax_avg = plt.subplots(figsize=(6.66, 5), dpi=144)
@@ -2805,6 +2817,12 @@ def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
     ax_avg.grid()
     if title:
         ax_avg.set_title(title)
+    if kin_info:
+        eta_line = r'|y| < 0.5'
+        pt_line = r'0.4 < $p_T$ < 2.0 GeV'
+        ax_avg.text(0.2, 0.2, f'Au+Au\n{eta_line}\n{pt_line}', ha='left', va='bottom', transform=ax_avg.transAxes)
+    if star_prelim:
+        ax_avg.text(0.26, 0.98, 'STAR Preliminary', fontsize=15, ha='left', va='top', transform=ax_avg.transAxes)
     legend_avg = ax_avg.legend()
     # legend_avg.get_frame().set_alpha(0)
     fig_avg.tight_layout()

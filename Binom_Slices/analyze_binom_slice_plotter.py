@@ -24,7 +24,7 @@ from integrate_pdf_var import base_gaus_pdf_wrap, get_partition_variance
 
 
 def main():
-    # plot_paper_figs()
+    plot_paper_figs()
 
     # plot_star_model_var()
     # plot_vs_cent_var()
@@ -60,7 +60,7 @@ def main():
     # plot_anticl_flow_closure_test()
     # plot_anticl_flow_closure_test_simple()
     # plot_efficiency_closure_tests()
-    plot_closure_tests()
+    # plot_closure_tests()
     print('donzo')
 
 
@@ -185,6 +185,11 @@ def plot_paper_figs():
     plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,
                         data_sets_labels=data_sets_labels, plot_energy_panels=True, ylab=r'$\widebar{\Delta\sigma^2}$',
                         plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5)
+
+    plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, ['bes_def'], data_sets_colors=data_sets_colors, fit=False,
+                        data_sets_labels=data_sets_labels, plot_energy_panels=True, ylab=r'$\widebar{\Delta\sigma^2}$',
+                        plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5)
+
     dsig_avgs_v2_sub_cent8_div120 = dsig_avgs_v2sub[(dsig_avgs_v2sub['cent'] == 8) & (dsig_avgs_v2sub['divs'] == 120)]
     plot_protons_avgs_vs_energy(dsig_avgs_v2_sub_cent8_div120, data_sets_plt, data_sets_colors=data_sets_colors,
                                 data_sets_labels=data_sets_labels, alpha=1,
