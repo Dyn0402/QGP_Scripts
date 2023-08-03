@@ -32,8 +32,8 @@ def main():
     # flow_fourier_decomp()
     # gaus_fit_dependence()
     # eff_v2_combo()
-    eff_gaus_combo()
-    # gaus_v2_combo()
+    # eff_gaus_combo()
+    gaus_v2_combo()
     # eff_plotting()
     # v2_plotting()
     # vn_analytic_plotting()
@@ -543,7 +543,6 @@ def gaus_v2_combo():
     ax_pdfs.set_ylim(bottom=0)
     ax_pdfs.legend()
     fig_pdfs.tight_layout()
-    plt.show()
 
     func_list = [(func1, func1_args, func1_name), (func2, func2_args, func2_name), (func3, func3_args, func3_name)]
     widths, dsigma_dict = integrate_funcs(func_list)
@@ -597,7 +596,8 @@ def subtract_funcs(widths, dsigma_dict, combo_name='Combination', name_to_subtra
     combo_div_eff = np.array(dsigma_dict[combo_name]) - np.array(dsigma_dict[name_to_subtract])
     # combo_div_err = (np.array(dsigma_dict[combo_name]) * np.mean(dsigma_dict[name_to_subtract]))**0.75
     combo_div_err = np.array(dsigma_dict[combo_name]) * np.sqrt(np.mean(dsigma_dict[name_to_subtract]))
-    combo_div_err *= 1
+    # combo_div_err = np.array(dsigma_dict[combo_name]) * np.sqrt(dsigma_dict[name_to_subtract])
+    combo_div_err /= 2
     diff_name = f'{combo_name} - {name_to_subtract}'
     ax_integral.plot(widths, combo_div_eff, ls='--', label=diff_name, color='red')
     ax_integral.fill_between(widths, combo_div_eff - combo_div_err, combo_div_eff + combo_div_err, color='red',
