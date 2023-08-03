@@ -194,6 +194,9 @@ def plot_paper_figs():
     plot_protons_avgs_vs_energy(dsig_avgs_v2_sub_cent8_div120, data_sets_plt, data_sets_colors=data_sets_colors,
                                 data_sets_labels=data_sets_labels, alpha=1,
                                 title=f'{cent_map[8]} Centrality, {div_plt}° Partitions, {samples} Samples per Event')
+    plot_protons_avgs_vs_energy(dsig_avgs_v2_sub_cent8_div120, ['bes_def'], data_sets_colors=data_sets_colors,
+                                data_sets_labels=data_sets_labels, alpha=1,
+                                title=f'{cent_map[8]} Centrality, {div_plt}° Partitions, {samples} Samples per Event')
 
     dsig_avgs_v2_sub_div120 = dsig_avgs_v2sub[dsig_avgs_v2sub['divs'] == 120]
     plot_protons_avgs_vs_cent(dsig_avgs_v2_sub_div120, ['bes_def'], data_sets_colors=data_sets_colors, fit=False,
