@@ -2624,7 +2624,8 @@ def plot_protons_fits_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
     fig_int.tight_layout()
 
 
-def plot_protons_avgs_vs_energy(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None, alpha=1):
+def plot_protons_avgs_vs_energy(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None, alpha=1,
+                                kin_info=True, star_prelim=False):
     fig_avg, ax_avg = plt.subplots()
     ax_avg.axhline(0, color='gray')
     fig_avg.canvas.manager.set_window_title(f'Dsigma2 Averages vs Energy')
@@ -2652,6 +2653,12 @@ def plot_protons_avgs_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
     ax_avg.grid()
     if title:
         ax_avg.set_title(title)
+    if kin_info:
+        eta_line = r'|y| < 0.5'
+        pt_line = r'0.4 < $p_T$ < 2.0 GeV'
+        ax_avg.text(0.12, 0.68, f'Au+Au\n{eta_line}\n{pt_line}', ha='left', va='bottom', transform=ax_avg.transAxes)
+    if star_prelim:
+        ax_avg.text(0.26, 0.98, 'STAR Preliminary', fontsize=15, ha='left', va='top', transform=ax_avg.transAxes)
     legend_avg = ax_avg.legend()
     # legend_avg.get_frame().set_alpha(0)
     fig_avg.tight_layout()
@@ -2820,7 +2827,7 @@ def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
     if kin_info:
         eta_line = r'|y| < 0.5'
         pt_line = r'0.4 < $p_T$ < 2.0 GeV'
-        ax_avg.text(0.2, 0.2, f'Au+Au\n{eta_line}\n{pt_line}', ha='left', va='bottom', transform=ax_avg.transAxes)
+        ax_avg.text(0.18, 0.1, f'Au+Au\n{eta_line}\n{pt_line}', ha='left', va='bottom', transform=ax_avg.transAxes)
     if star_prelim:
         ax_avg.text(0.26, 0.98, 'STAR Preliminary', fontsize=15, ha='left', va='top', transform=ax_avg.transAxes)
     legend_avg = ax_avg.legend()
