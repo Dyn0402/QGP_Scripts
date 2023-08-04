@@ -464,7 +464,7 @@ def eff_gaus_combo():
 
     mu = np.pi
     sigma = 0.8
-    amp = 0.3
+    amp = 0.05
     func2 = base_gaus_pdf_wrap
     func2_args = [mu, sigma, amp, 1. / get_norm_scipy(func2, (mu, sigma, amp, 1))]
     func2_name = 'Gaussian Cluster'
@@ -496,14 +496,14 @@ def eff_gaus_combo():
     func_list = [(func1, func1_args, func1_name), (func2, func2_args, func2_name), (func3, func3_args, func3_name)]
     func_points = {func1_name: func1_points, func3_name: func1_points}
     widths, dsigma_dict = integrate_funcs(func_list, func_points=func_points)
-    subtract_funcs(widths, dsigma_dict, func3_name, func2_name, func1_name)
+    subtract_funcs(widths, dsigma_dict, func3_name, func1_name, func2_name)
     plt.show()
 
 
 def gaus_v2_combo():
     mu = np.pi
     sigma = 0.8
-    amp = 0.4
+    amp = 0.05
     func1 = base_gaus_pdf_wrap
     func1_args = [mu, sigma, amp, 1. / get_norm_scipy(func1, (mu, sigma, amp, 1))]
     func1_name = 'Gaussian Cluster'
@@ -595,7 +595,7 @@ def subtract_funcs(widths, dsigma_dict, combo_name='Combination', name_to_subtra
         ax_integral.plot(widths, y, label=func_name)
     combo_div_eff = np.array(dsigma_dict[combo_name]) - np.array(dsigma_dict[name_to_subtract])
     # combo_div_err = (np.array(dsigma_dict[combo_name]) * np.mean(dsigma_dict[name_to_subtract]))**0.75
-    combo_div_err = np.array(dsigma_dict[combo_name]) * np.sqrt(np.mean(dsigma_dict[name_to_subtract]))
+    combo_div_err = np.array(dsigma_dict[combo_name]) * np.sqrt(np.nanmean(dsigma_dict[name_to_subtract]))
     # combo_div_err = np.array(dsigma_dict[combo_name]) * np.sqrt(dsigma_dict[name_to_subtract])
     combo_div_err /= 2
     diff_name = f'{combo_name} - {name_to_subtract}'
