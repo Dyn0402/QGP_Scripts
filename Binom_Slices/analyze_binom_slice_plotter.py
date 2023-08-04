@@ -24,7 +24,7 @@ from integrate_pdf_var import base_gaus_pdf_wrap, get_partition_variance
 
 
 def main():
-    plot_paper_figs()
+    # plot_paper_figs()
 
     # plot_star_model_var()
     # plot_vs_cent_var()
@@ -3742,11 +3742,25 @@ def plot_closure_tests():
 
     v2 = 0.07
     flow_eff_v2cor = flow_eff.copy()
+    print(flow_eff)
     flow_eff_v2cor['avg_meas'] = flow_eff['avg_meas'] - v2_divs(np.deg2rad(flow_eff['divs']), v2)
     flow_eff_v2cor['avg'] = flow_eff_v2cor['avg_meas'].apply(lambda x: x.val)
     flow_eff_v2cor['avg_err'] = flow_eff_v2cor['avg_meas'].apply(lambda x: x.err)
     flow_eff_mix = dsigma_avgs[(dsigma_avgs['name'] == 'flow_eff_res15_v207') & (dsigma_avgs['data_type'] == 'mix')]
     plot_closures(flow_eff_mix, flow_eff, flow_eff_v2cor, title='Flow + Efficiency, V2 Correction')
+
+    v2s = ['1', '07', '05', '03']
+    for v2 in v2s:
+        v2_val = float(f'0.{v2}')
+        flow_clust = dsigma_avgs[(dsigma_avgs['name'] == f'simpleclust_flow_v2{v2}') &
+                                 (dsigma_avgs['data_type'] == 'raw')]
+        print(flow_clust)
+        flow_clust_cor = flow_clust.copy()
+        flow_clust_cor['avg_meas'] = flow_clust['avg_meas'] - v2_divs(np.deg2rad(flow_eff['divs']), v2_val)
+        flow_clust_cor['avg'] = flow_clust_cor['avg_meas'].apply(lambda x: x.val)
+        flow_clust_cor['avg_err'] = flow_clust_cor['avg_meas'].apply(lambda x: x.err)
+        plot_closures(simple_clust, flow_clust, flow_clust_cor,
+                      title=f'Flow + Simple Clustering, V2={v2_val:.2f} Correction')
 
     plt.show()
 
