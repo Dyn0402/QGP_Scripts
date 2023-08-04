@@ -3788,7 +3788,7 @@ def plot_closures(df_base, df_combo, df_corrected, alpha=0.6, title=None):
                 alpha=alpha, label='Combination')
 
     df_diff_err = np.array(df_combo['avg']) * \
-                  np.sqrt(np.mean(np.array(df_combo['avg']) - np.array(df_corrected['avg'])))
+                  np.sqrt(np.mean(np.array(df_combo['avg']) - np.array(df_corrected['avg']))) / 2
     ax.errorbar(df_corrected['divs'], df_corrected['avg'], yerr=df_corrected['avg_err'], ls='none', marker='o',
                 alpha=alpha, label='Corrected')
     ax.errorbar(df_corrected['divs'], df_corrected['avg'], yerr=df_diff_err, ls='none', marker=None, elinewidth=4,
