@@ -3782,32 +3782,39 @@ def flow_vs_v2(df, div, res, out_dir=None):
                 file.write(f'{v2}\t{slope_val} {slope_err}\n')
 
 
-def plot_closures(df_base, df_combo, df_corrected, alpha=0.6, title=None):
+def plot_closures(df_sig, df_combo, df_corrected, alpha=0.6, df_bkg=None, title=None):
     fig = plt.figure()
     gs = gridspec.GridSpec(2, 1, height_ratios=[0.7, 0.3], hspace=0)
     ax = fig.add_subplot(gs[0])
+    ax.axhline(0, color='black')
     ax_diff = fig.add_subplot(gs[1], sharex=ax)
     ax_diff.axhline(0, color='black')
-    ax.errorbar(df_base['divs'], df_base['avg'], yerr=df_base['avg_err'], ls='none', marker='o',
-                alpha=alpha, label='Base')
+    ax.errorbar(df_sig['divs'], df_sig['avg'], yerr=df_sig['avg_err'], ls='none', marker='o', color='blue',
+                alpha=alpha, label='Signal')
+    if df_bkg is not None:
+        ax.errorbar(df_bkg['divs'], df_bkg['avg'], yerr=df_bkg['avg_err'], ls='none', marker='o', color='green',
+                    alpha=alpha, label='Background')
 
-    ax.errorbar(df_combo['divs'], df_combo['avg'], yerr=df_combo['avg_err'], ls='none', marker='o',
+    ax.errorbar(df_combo['divs'], df_combo['avg'], yerr=df_combo['avg_err'], ls='none', marker='o', color='orange',
                 alpha=alpha, label='Combination')
 
-    df_diff_err = np.array(df_combo['avg']) * \
-                  np.sqrt(np.mean(np.array(df_combo['avg']) - np.array(df_corrected['avg']))) / 2
-    ax.errorbar(df_corrected['divs'], df_corrected['avg'], yerr=df_corrected['avg_err'], ls='none', marker='o',
-                alpha=alpha, label='Corrected')
+    # df_diff_err = np.array(df_combo['avg']) * \
+    #               np.sqrt(np.mean(np.array(df_combo['avg']) - np.array(df_corrected['avg']))) / 2
+    df_bkg = np.array(df_combo['avg']) - np.array(df_corrected['avg']) if df_bkg is None else df_bkg
+    df_diff_err = (np.array(df_sig['avg']) * np.mean(df_bkg['avg'])) ** 0.75
+    ax.errorbar(df_corrected['divs'], df_corrected['avg'], yerr=df_corrected['avg_err'], ls='none', marker='x',
+                color='red', alpha=0.9, label='Corrected')
     ax.errorbar(df_corrected['divs'], df_corrected['avg'], yerr=df_diff_err, ls='none', marker=None, elinewidth=4,
-                alpha=0.2)
-    df_diff = np.array(df_base['avg_meas']) - np.array(df_corrected['avg_meas'])
-    ax_diff.errorbar(df_base['divs'], [x.val for x in df_diff], yerr=[x.err for x in df_diff], ls='none',
-                     marker='o', alpha=alpha, color='red', label='Base - Corrected')
-    ax_diff.errorbar(df_base['divs'], [x.val for x in df_diff], yerr=df_diff_err, ls='none', elinewidth=4,
+                color='red', alpha=0.2)
+    df_diff = np.array(df_sig['avg_meas']) - np.array(df_corrected['avg_meas'])
+    ax_diff.errorbar(df_sig['divs'], [x.val for x in df_diff], yerr=[x.err for x in df_diff], ls='none',
+                     marker='o', alpha=alpha, color='red', label='Signal - Corrected')
+    ax_diff.errorbar(df_sig['divs'], [x.val for x in df_diff], yerr=df_diff_err, ls='none', elinewidth=4,
                      marker=None, alpha=0.2, color='red')
 
     ax.legend()
     ax_diff.legend()
+    ax_diff.set_xlim((0, 360))
     ax.set_ylabel(r'$\widebar{\Delta\sigma^2}$')
     # ax_diff.set_ylabel('Correction Deviation')
     ax_diff.set_ylabel(r'$\widebar{\Delta\sigma^2}$')

@@ -158,26 +158,56 @@ def define_datasets(base_path):
         # ['anticlflow_resample_res15_v207_s05_a05', '_Sim_tests',
         #  ['resample', 'anticlflow', 'spread05', 'amp05', 'res15', 'v207'], [], [], [0], [62], [8], all_divs],
 
-        #here
 
         ['flow_res15_v207', '_Sim_Flow',
          ['flow', 'resample', 'res15', 'v207'], [], ['Eff', 'anticlflow'], [0], [62], [8], all_divs],
+        ['flow_res15_v205', '_Sim_Flow',
+         ['flow', 'resample', 'res15', 'v205'], [], ['Eff', 'anticlflow'], [0], [62], [8], all_divs],
+        ['flow_res15_v203', '_Sim_Flow',
+         ['flow', 'resample', 'res15', 'v203'], [], ['Eff', 'anticlflow'], [0], [62], [8], all_divs],
         ['flow_eff_res15_v207', '_Sim_2source_Tests',
          ['flow', 'Eff', 'resample', 'res15', 'v207'], [], ['anticlflow'], [0], [62], [8], all_divs],
 
-        ['simpleclust', '_Sim_2source_Tests',
-         ['simpleclust', 'resample'], [], ['Eff', 'anticlflow', 'res99'], [0], [62], [8], all_divs],
-        ['simpleclust_eff', '_Sim_2source_Tests',
-         ['simpleclust', 'Eff', 'resample'], [], ['anticlflow'], [0], [62], [8], all_divs],
+        ['simpleclust_s08_a3', '_Sim_2source_Tests', ['simpleclust', 'resample', 'spread08', 'amp3', 'v20'],
+         [], ['Eff', 'anticlflow'], [0], [62], [8], all_divs],
+        ['simpleclust_s08_a05', '_Sim_2source_Tests', ['simpleclust', 'resample', 'spread08', 'amp05', 'v20'],
+         [], ['Eff', 'anticlflow'], [0], [62], [8], all_divs],
 
-        ['simpleclust_flow_v21', '_Sim_2source_Tests', ['simpleclust', 'spread08', 'amp18', 'v21', 'resample'],
+        ['simpleclust_s08_a3_eff', '_Sim_2source_Tests',
+         ['simpleclust', 'Eff', 'resample', 'spread08', 'amp3', 'v20'],
+         [], ['anticlflow'], [0], [62], [8], all_divs],
+        ['simpleclust_s08_a05_eff', '_Sim_2source_Tests',
+         ['simpleclust', 'Eff', 'resample', 'spread08', 'amp05', 'v20'],
+         [], ['anticlflow'], [0], [62], [8], all_divs],
+
+        ['simpleclust_s08_a3_flow_v21', '_Sim_2source_Tests', ['simpleclust', 'spread08', 'amp3', 'v21', 'resample'],
          [], ['anticlflow', 'Eff'], [0], [62], [8], all_divs],
-        ['simpleclust_flow_v207', '_Sim_2source_Tests', ['simpleclust', 'spread08', 'amp18', 'v207', 'resample'],
+        ['simpleclust_s08_a3_flow_v207', '_Sim_2source_Tests', ['simpleclust', 'spread08', 'amp3', 'v207', 'resample'],
          [], ['anticlflow', 'Eff'], [0], [62], [8], all_divs],
-        ['simpleclust_flow_v205', '_Sim_2source_Tests', ['simpleclust', 'spread08', 'amp18', 'v205', 'resample'],
+        ['simpleclust_s08_a3_flow_v205', '_Sim_2source_Tests', ['simpleclust', 'spread08', 'amp3', 'v205', 'resample'],
          [], ['anticlflow', 'Eff'], [0], [62], [8], all_divs],
-        ['simpleclust_flow_v203', '_Sim_2source_Tests', ['simpleclust', 'spread08', 'amp18', 'v203', 'resample'],
+        ['simpleclust_s08_a3_flow_v203', '_Sim_2source_Tests', ['simpleclust', 'spread08', 'amp3', 'v203', 'resample'],
          [], ['anticlflow', 'Eff'], [0], [62], [8], all_divs],
+
+        ['simpleclust_s08_a05_flow_v21', '_Sim_2source_Tests',
+         ['simpleclust', 'spread08', 'amp05', 'v21', 'resample'],
+         [], ['anticlflow', 'Eff'], [0], [62], [8], all_divs],
+        ['simpleclust_s08_a05_flow_v207', '_Sim_2source_Tests',
+         ['simpleclust', 'spread08', 'amp05', 'v207', 'resample'],
+         [], ['anticlflow', 'Eff'], [0], [62], [8], all_divs],
+        ['simpleclust_s08_a05_flow_v205', '_Sim_2source_Tests',
+         ['simpleclust', 'spread08', 'amp05', 'v205', 'resample'],
+         [], ['anticlflow', 'Eff'], [0], [62], [8], all_divs],
+        ['simpleclust_s08_a05_flow_v203', '_Sim_2source_Tests',
+         ['simpleclust', 'spread08', 'amp05', 'v203', 'resample'],
+         [], ['anticlflow', 'Eff'], [0], [62], [8], all_divs],
+
+        ['simpleclust_s08_a3_flow_v207_eff', '_Sim_2source_Tests',
+         ['simpleclust', 'spread08', 'amp3', 'v207', 'resample', 'Eff'],
+         [], ['anticlflow'], [0], [62], [8], all_divs],
+        ['simpleclust_s08_a05_flow_v207_eff', '_Sim_2source_Tests',
+         ['simpleclust', 'spread08', 'amp05', 'v207', 'resample', 'Eff'],
+         [], ['anticlflow'], [0], [62], [8], all_divs],
 
         ['anticlflow_eff_s1_a01', '_Sim_2source_Tests', ['resample', 'anticlflow', 'Eff', 'spread1', 'amp01', 'v20'],
          [], [], [0], [62], [8], all_divs],
@@ -209,7 +239,6 @@ def define_datasets(base_path):
         ['anticlflow_eff_s1_a01_v207', '_Sim_2source_Tests', ['resample', 'anticlflow', 'spread1', 'amp01', 'Eff'],
          [], [], [0], [62], [8], all_divs],
 
-        #here
 
         # ['anticlflowindep_eff_s1_a01', '_Sim_2source_Tests',
         #  ['resample', 'anticlflowindep', 'Eff', 'spread1', 'amp01', 'v20'], [], [], [0], [62], [8], all_divs],
