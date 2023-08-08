@@ -24,7 +24,7 @@ from integrate_pdf_var import base_gaus_pdf_wrap, get_partition_variance
 
 
 def main():
-    # plot_paper_figs()
+    plot_paper_figs()
 
     # plot_star_model_var()
     # plot_vs_cent_var()
