@@ -24,7 +24,7 @@ from integrate_pdf_var import base_gaus_pdf_wrap, get_partition_variance
 
 
 def main():
-    plot_paper_figs()
+    # plot_paper_figs()
 
     # plot_star_model_var()
     # plot_vs_cent_var()
@@ -99,7 +99,7 @@ def plot_paper_figs():
     data_sets_markers = dict(zip(data_sets_plt, [dict(zip(['raw', 'mix', 'diff'], [x, x, x]))
                                                  for x in ['o', 's', '^', '*']]))
 
-    cent_ref_name = 'mean_cent_ref.csv'
+    cent_ref_name = 'mean_cent_ref2.csv'
     cent_ref_df = pd.read_csv(f'F:/Research/Results/Azimuth_Analysis/{cent_ref_name}')
     ref_type = 'refn'  # 'refn'
     cent_ref_df = cent_ref_df.replace('bes_resample_def', 'bes_def')
@@ -201,6 +201,10 @@ def plot_paper_figs():
     dsig_avgs_v2_sub_div120 = dsig_avgs_v2sub[dsig_avgs_v2sub['divs'] == 120]
     plot_protons_avgs_vs_cent(dsig_avgs_v2_sub_div120, ['bes_def'], data_sets_colors=data_sets_colors, fit=False,
                               data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,
+                              title=f'{div_plt}° Partitions, {samples} Samples per Event',
+                              data_sets_energies_cmaps={'bes_def': 'tab10'}, alpha=0.8, errbar_alpha=0.3)
+    plot_protons_avgs_vs_cent(dsig_avgs_v2_sub_div120, ['bes_def'], data_sets_colors=data_sets_colors, fit=False,
+                              data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type='npart',
                               title=f'{div_plt}° Partitions, {samples} Samples per Event',
                               data_sets_energies_cmaps={'bes_def': 'tab10'}, alpha=0.8, errbar_alpha=0.3)
     plot_protons_avgs_vs_cent(dsig_avgs_v2_sub_div120, ['bes_def'], data_sets_colors=data_sets_colors, fit=False,

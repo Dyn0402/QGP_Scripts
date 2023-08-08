@@ -2819,6 +2819,8 @@ def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
     ax_avg.set_ylabel(r'$\widebar{\Delta\sigma^2}$')
     if ref_type is None:
         ax_avg.set_xlabel('Centrality')
+    elif ref_type == 'npart':
+        ax_avg.set_xlabel('Number of Participant Nucleons')
     else:
         ax_avg.set_xlabel('Reference Multiplicity')
     ax_avg.grid()
