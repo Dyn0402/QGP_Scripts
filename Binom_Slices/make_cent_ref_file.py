@@ -15,7 +15,7 @@ import pandas as pd
 import os
 import time
 
-# import ROOT
+import ROOT
 import awkward as ak
 import vector
 import uproot
@@ -33,7 +33,7 @@ def main():
 
 
 def make_cent_ref_csv():
-    df_out_path = '/home/dylan/Research/Results/Azimuth_Analysis/mean_cent_ref2.csv'
+    df_out_path = '/media/ucla/Research/Results/Azimuth_Analysis/mean_cent_ref2.csv'
     df_bes = get_bes_cent_ref()
     df_ampt = get_ampt_cent_ref()
     df = pd.DataFrame(df_bes + df_ampt)
@@ -43,8 +43,8 @@ def make_cent_ref_csv():
 def get_bes_cent_ref():
     energies = [7, 11, 19, 27, 39, 62]
     cents = [-1, 0, 1, 2, 3, 4, 5, 6, 7, 8]
-    path = '/home/dylan/Research/Data/qaonly/'
-    set_name = 'rapid05_resample_dca1_nsprx1_m2r6_m2s0_nhfit20_qaonly_0'
+    path = '/media/ucla/Research/Data/default/'
+    set_name = 'rapid05_resample_norotate_seed_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_0'
 
     print('Get BES Refmult Averages per Centrality')
     df = []
@@ -61,10 +61,11 @@ def get_bes_cent_ref():
             mean_refn = hist_refn.GetMean()
             sd_refn = hist_refn.GetRMS()
 
+            npart = npart_dict[cent] if cent in npart_dict else float('nan')
 
             df.append({'data_set': 'bes_resample_def', 'energy': energy, 'cent': cent, 'mean_ref_val': mean_ref,
                        'mean_ref_sd': sd_ref, 'mean_refn_val': mean_refn, 'mean_refn_sd': sd_refn,
-                       'mean_npart_val': npart_dict[cent], 'mean_npart_sd': 0})
+                       'mean_npart_val': npart, 'mean_npart_sd': 0})
     return df
 
 
@@ -75,9 +76,9 @@ def get_ampt_cent_ref():
     bin_edges = np.arange(-0.5, 801.5, 1)
     plot = False
 
-    threads = 15
-    ampt_tree_path = '/home/dylan/Research/AMPT_Trees_New_Coalescence/min_bias/string_melting/'
-    ampt_cent_path = '/home/dylan/Research/Ampt_Centralities_New_Coalescence/string_melting/'
+    threads = 11
+    ampt_tree_path = '/media/ucla/Research/AMPT_Trees_New_Coalescence/min_bias/string_melting/'
+    ampt_cent_path = '/media/ucla/Research/Ampt_Centralities_New_Coalescence/string_melting/'
 
     print('Get Ampt Refmult Averages per Centrality')
     df = []
@@ -142,7 +143,7 @@ def get_ampt_cent_ref():
 
 
 def get_bes_npart(energy):
-    hep_data_path = '/ucla/Research/Results/BES_NPart_HEP_Data/'
+    hep_data_path = '/media/ucla/Research/Results/BES_NPart_HEP_Data/'
 
     with open(f'{hep_data_path}{energy}GeV.csv', 'r') as file:
         lines = file.readlines()
