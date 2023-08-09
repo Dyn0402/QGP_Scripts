@@ -33,7 +33,7 @@ def main():
     # plot_all_zero_base()
 
     # plot_star_var_sys()
-    # make_models_csv()
+    make_models_csv()
     # plot_star_var_rand_sys()
 
     # plot_vs_cent_var_fits()
@@ -60,7 +60,7 @@ def main():
     # plot_anticl_flow_closure_test()
     # plot_anticl_flow_closure_test_simple()
     # plot_efficiency_closure_tests()
-    plot_closure_tests()
+    # plot_closure_tests()
     print('donzo')
 
 
@@ -464,14 +464,12 @@ def plot_star_var_sys():
     calc_finals = True
     threads = 12
     sys_pdf_out_path = f'{base_path}systematic_plots.pdf'
-    # df_def_out_name = 'Bes_with_Sys/binom_slice_vars_bes.csv'
-    df_def_out_name = None
+    df_def_out_name = 'Bes_with_Sys/binom_slice_vars_bes.csv'
+    # df_def_out_name = None
     df_def_dsigma_out_name = 'Bes_with_Sys/binom_slice_vars_bes_dsigma.csv'
     # df_def_dsigma_out_name = None
     df_def_dsigma_v2sub_out_name = 'Bes_with_Sys/binom_slice_vars_bes_dsigma_v2sub.csv'
-    # df_def_avgs_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_bes.csv'
     df_def_avgs_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_bes.csv'
-    # df_def_avgs_v2sub_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_bes.csv'
     df_def_avgs_v2sub_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_bes.csv'
     fits_out_base = 'Base_Zero_Fits'
     # df_partitions_fits_name = 'partitions_fits_cent8.csv'
@@ -581,8 +579,12 @@ def plot_star_var_sys():
     # Calculate dsigma with k2 values and get systematics
     df = df[df['stat'] == 'k2']
     df = df.drop('stat', axis=1)
+    print('Calc dsigma')
     df_raw, df_mix, df_diff = calc_dsigma(df, ['raw', 'mix', 'diff'])
     df_dsigma_types = pd.concat([df_raw, df_mix, df_diff])
+    print('Calc diff nlo error')
+    df_dsigma_types = add_diff_nlo_err(df_dsigma_types, group_cols=['energy', 'cent', 'name', 'total_protons'],
+                                       exclude_divs=[356, 89])
 
     # dvar_vs_protons_energies(df_diff, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'],
     #                          data_sets_plt, star_prelim=True,
@@ -602,6 +604,7 @@ def plot_star_var_sys():
 
     # Calculate v2 subtraction for each total_protons value
     if df_def_dsigma_v2sub_out_name is not None and calc_finals:
+        print('Calc v2 sub')
         df_dsigma_types['meas'] = df_dsigma_types.apply(lambda row: Measure(row['val'], row['err']), axis=1)
         df_def_dsigma_v2sub = []
         for set_name in sys_include_names + ['bes_def']:
@@ -611,11 +614,7 @@ def plot_star_var_sys():
         df_def_dsigma_v2sub = pd.concat(df_def_dsigma_v2sub)
         df_def_dsigma_v2sub = get_sys(df_def_dsigma_v2sub, 'bes_def', sys_include_sets,
                                       group_cols=['divs', 'energy', 'cent', 'data_type', 'total_protons'])
-        print(df_def_dsigma_v2sub)
         df_def_dsigma_v2sub.to_csv(f'{base_path}{df_def_dsigma_v2sub_out_name}', index=False)
-
-    # plt.show()
-    # return
 
     # print(df_diff_def['sys'])
     # print(df_diff_def)
@@ -815,13 +814,13 @@ def make_models_csv():
     df_name = 'Binomial_Slice_Moments/binom_slice_stats_var_epbins1.csv'
 
     threads = 10
-    df_def_out_name = 'Bes_with_Sys/binom_slice_vars_model.csv'
+    df_def_out_name = 'Bes_with_Sys/binom_slice_vars_model2.csv'
     # df_def_out_name = None
-    df_def_dsigma_out_name = 'Bes_with_Sys/binom_slice_vars_model_dsigma.csv'
+    df_def_dsigma_out_name = 'Bes_with_Sys/binom_slice_vars_model_dsigma2.csv'
     # df_def_dsigma_out_name = None
-    df_def_dsigma_v2sub_out_name = 'Bes_with_Sys/binom_slice_vars_model_dsigma_v2sub.csv'
-    df_def_avgs_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_model.csv'
-    df_def_avgs_v2sub_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_model.csv'
+    df_def_dsigma_v2sub_out_name = 'Bes_with_Sys/binom_slice_vars_model_dsigma_v2sub2.csv'
+    df_def_avgs_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_model2.csv'
+    df_def_avgs_v2sub_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_model2.csv'
     fits_out_base = 'Base_Zero_Fits'
     # df_partitions_fits_name = 'partitions_fits_cent8.csv'
 
@@ -857,7 +856,11 @@ def make_models_csv():
     df = df[df['stat'] == 'k2']
     df = df.drop('stat', axis=1)
     df_raw, df_mix, df_diff = calc_dsigma(df, ['raw', 'mix', 'diff'])
+    print('Calc dsigma')
     df_dsigma_types = pd.concat([df_raw, df_mix, df_diff])
+    print('Calc diff nlo error')
+    df_dsigma_types = add_diff_nlo_err(df_dsigma_types, group_cols=['energy', 'cent', 'name', 'total_protons'],
+                                       exclude_divs=[356, 89])
     df_dsigma_types.to_csv(f'{base_path}{df_def_dsigma_out_name}', index=False)
 
     # Calculate dsigma with v2 subtracted
@@ -3770,7 +3773,7 @@ def plot_closure_tests():
                           title=f'Simple Clustering (A={amp_val}) Flow (v2={v2_val:.2f}) Correction')
 
         flow_eff_clust_raw = dsigma_avgs[(dsigma_avgs['name'] == f'simpleclust_s08_a{amp}_flow_v207_eff')
-                                   & (dsigma_avgs['data_type'] == 'raw')]
+                                         & (dsigma_avgs['data_type'] == 'raw')]
 
     plt.show()
 

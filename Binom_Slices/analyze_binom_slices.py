@@ -371,6 +371,22 @@ def stat_binom_vs_protons(df, stat, div, cent, energy, data_types, data_set_plt,
     fig.tight_layout()
 
 
+def calc_nlo(df, exclude_divs):
+    df_og = df.copy()
+    df_mix_div_mean = df.loc[(df['data_type'] == 'mix') & (~df['divs'].isin(exclude_divs)), 'val'].mean()
+    df_diff_errs = (df.loc[df['data_type'] == 'diff', 'err'] ** 2 +
+                    abs(df.loc[df['data_type'] == 'diff', 'val'] * df_mix_div_mean) ** 1.5) ** 0.5
+    df.loc[df['data_type'] == 'diff', 'err'] = df_diff_errs
+    df_og['new_err'] = df['err']
+    # print(df_og.loc[:, ['data_type', 'divs', 'val', 'err', 'new_err']])
+    return df
+
+
+def add_diff_nlo_err(df, group_cols, exclude_divs):
+    df_group = df.groupby(group_cols).apply(calc_nlo, exclude_divs)
+    return df_group.reset_index(drop=True)
+
+
 def calc_sys(def_val, def_err, sys_vals, sys_errs, return_vals='both'):
     """
     Calculate systematic uncertainties of all input systematics with respect to single default value.
@@ -385,7 +401,10 @@ def calc_sys(def_val, def_err, sys_vals, sys_errs, return_vals='both'):
     individual systematic uncertainties only.
     :return: Depending on retrun_vals return individual systematic uncertainties and/or their combination.
     """
-    barlow_i = np.sqrt(np.clip((def_val - sys_vals) ** 2 - np.abs(def_err ** 2 - sys_errs ** 2), a_min=0, a_max=None))
+    try:
+        barlow_i = np.sqrt(np.clip((def_val - sys_vals) ** 2 - np.abs(def_err ** 2 - sys_errs ** 2), a_min=0, a_max=None))
+    except TypeError:
+        print(def_val, sys_vals, def_err, sys_errs)
 
     if 'indiv' in return_vals.lower():
         return barlow_i
@@ -3933,18 +3952,26 @@ def subtract_dsigma_flow(avg_df, data_set_name, new_name, vs, div=None, cent=Non
     # print(data_set_name, df_new)
     if len(df_new) > 0:
         df_new = df_new.assign(name=new_name)
-        if div is None and cent is not None:
-            new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent)
-                       for energy, div, avg in zip(df_new['energy'], df_new['divs'], df_new[meas_col])]
-        elif cent is None and div is not None:
-            new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent)
-                       for energy, cent, avg in zip(df_new['energy'], df_new['cent'], df_new[meas_col])]
-        elif cent is None and div is None:
-            new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent) for energy, cent, div, avg in
-                       zip(df_new['energy'], df_new['cent'], df_new['divs'], df_new[meas_col])]
-        else:
-            new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent)
-                       for energy, avg in zip(df_new['energy'], df_new[meas_col])]
+        # if div is None and cent is not None:
+        #     new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent)
+        #                for energy, div, avg in zip(df_new['energy'], df_new['divs'], df_new[meas_col])]
+        # elif cent is None and div is not None:
+        #     new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent)
+        #                for energy, cent, avg in zip(df_new['energy'], df_new['cent'], df_new[meas_col])]
+        # elif cent is None and div is None:
+        #     new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent) for energy, cent, div, avg in
+        #                zip(df_new['energy'], df_new['cent'], df_new['divs'], df_new[meas_col])]
+        # else:
+        #     new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent)
+        #                for energy, avg in zip(df_new['energy'], df_new[meas_col])]
+        if div is not None:
+            df_new['div'] = div
+        if cent is not None:
+            df_new['cent'] = cent
+        new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent) for energy, cent, div, avg in
+                   zip(df_new['energy'], df_new['cent'], df_new['divs'], df_new[meas_col])]
+        new_avg = [flow_error(vs, energy, cent, avg) for energy, cent, avg in
+                   zip(df_new['energy'], df_new['cent'], new_avg)]
         new_avg_vals, new_avg_errs = list(zip(*[(avg.val, avg.err) for avg in new_avg]))
         df_new[meas_col] = new_avg
         df_new[val_col] = new_avg_vals
@@ -3961,6 +3988,14 @@ def flow_correction(div, vs, energy, cent):
     for order, v in vs.items():
         correction += vn_divs(div, v[energy][cent], order)
     return correction
+
+
+def flow_error(vs, energy, cent, new_avg):
+    for order, v in vs.items():
+        div_avg = vn_divs(np.pi / (2 * order), v[energy][cent], order)
+        new_err = (abs(new_avg.val * div_avg.val)) ** 0.75
+        new_avg += Measure(0, new_err)
+    return new_avg
 
 
 def map_to_sim(baseline, zeros, interpolations):
