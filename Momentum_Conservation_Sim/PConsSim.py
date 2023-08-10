@@ -37,6 +37,7 @@ class PConsSim:
         self.net_momentum_vec = np.sum(self.momenta, axis=0)
         self.init_net_momentum = np.linalg.norm(self.net_momentum_vec)
         self.net_momentum = self.init_net_momentum
+        self.net_momentum_iterations = [self.net_momentum]
 
     def rotate_tracks(self):
         for i in range(self.iterations):
@@ -46,6 +47,23 @@ class PConsSim:
 
             self.net_momentum_vec = np.sum(self.momenta, axis=0)
             self.net_momentum = np.linalg.norm(self.net_momentum_vec)
+            self.net_momentum_iterations.append(self.net_momentum)
+            # print(self.net_momentum)
+
+    def rotate_tracks_debug(self):
+        for i in range(self.iterations):
+            angle_frac = self.angle_frac * self.net_momentum / self.init_net_momentum
+            angle_frac = 0.1
+            print(f'angle_frac: {angle_frac}')
+            for j in range(len(self.momenta)):
+                print(f'Pre: momentum {j}: {self.momenta[j]}, neg_net_p: {-self.net_momentum_vec}')
+                self.momenta[j] = rotate_vector_debug(self.momenta[j], -self.net_momentum_vec, angle_frac)
+                print(f'Post: momentum {j}: {self.momenta[j] / np.linalg.norm(self.momenta[j])}, '
+                      f'{-self.net_momentum_vec / np.linalg.norm(self.net_momentum_vec)}')
+
+            self.net_momentum_vec = np.sum(self.momenta, axis=0)
+            self.net_momentum = np.linalg.norm(self.net_momentum_vec)
+            self.net_momentum_iterations.append(self.net_momentum)
             # print(self.net_momentum)
 
     def get_m_tracks(self, m):
@@ -62,6 +80,32 @@ def rotate_vector(vec, vec_target, angle_fraction=None):
     angle = angle * angle_fraction if angle_fraction is not None else angle
     axis = np.cross(vec_unit, vec_target_unit)
     axis = axis / np.linalg.norm(axis)
+
+    # Create the rotation matrix
+    c = np.cos(angle)
+    s = np.sin(angle)
+    C = 1 - c
+    rot_matrix = np.array(
+        [[axis[0] ** 2 * C + c, axis[0] * axis[1] * C - axis[2] * s, axis[0] * axis[2] * C + axis[1] * s],
+         [axis[1] * axis[0] * C + axis[2] * s, axis[1] ** 2 * C + c, axis[1] * axis[2] * C - axis[0] * s],
+         [axis[2] * axis[0] * C - axis[1] * s, axis[2] * axis[1] * C + axis[0] * s, axis[2] ** 2 * C + c]])
+
+    # Apply the rotation matrix to vec1
+    rotated_vec1 = np.dot(rot_matrix, vec)
+
+    return rotated_vec1
+
+
+def rotate_vector_debug(vec, vec_target, angle_fraction=None):
+    vec_unit = vec / np.linalg.norm(vec)
+    vec_target_unit = vec_target / np.linalg.norm(vec_target)
+
+    # Find the angle and axis of rotation
+    angle = np.arccos(np.dot(vec_unit, vec_target_unit))
+    angle = angle * angle_fraction if angle_fraction is not None else angle
+    axis = np.cross(vec_unit, vec_target_unit)
+    axis = axis / np.linalg.norm(axis)
+    print(f'angle={angle}, axis={axis}')
 
     # Create the rotation matrix
     c = np.cos(angle)

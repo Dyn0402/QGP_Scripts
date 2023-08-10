@@ -22,10 +22,11 @@ from DistStats import DistStats
 
 
 def main():
-    # chat_gpt_test()
+    chat_gpt_test()
     # single_event_test()
     # momentum_test()
-    full_test()
+    # full_test()
+    # rotation_test()
     print('donzo')
 
 
@@ -91,13 +92,28 @@ def full_test():
 
 def single_event_test():
     n_part = 50
+    seed = 47
 
-    event = PConsSim(5, n_part)
+    bad_event = False
+    while not bad_event:
+        seed += 1
+        rng = np.random.default_rng(seed=seed)
+        event = PConsSim(5, n_part, rng=rng)
+        event.rotate_tracks()
+        p_net_0, p_net_f = event.init_net_momentum, event.net_momentum_iterations[-1]
+        print(f'Seed = {seed}: p_net_0 = {p_net_0}, p_net_f = {p_net_f}')
+        print(f'{event.net_momentum_iterations}')
+        if event.net_momentum_iterations[-1] > event.init_net_momentum:
+            bad_event = True
+    rng = np.random.default_rng(seed=seed)
+    event = PConsSim(5, n_part, rng=rng)
     # print(event.get_m_tracks(20))
     plot_momenta(event.get_m_tracks(n_part), event.net_momentum_vec)
-    event.rotate_tracks()
+    event.rotate_tracks_debug()
     # print(event.get_m_tracks(20))
     plot_momenta(event.get_m_tracks(n_part), event.net_momentum_vec)
+    fig, ax = plt.subplots()
+    ax.scatter(range(len(event.net_momentum_iterations)), event.net_momentum_iterations)
     plt.show()
 
 
@@ -133,14 +149,24 @@ def momentum_test():
     plt.show()
 
 
+def rotation_test():
+    v1 = np.array([1, 0, 0])  # Initial unit vector
+    v2 = np.array([0, 1, 0])  # Target unit vector
+
+    rotated_v1 = rotate_vector(v1, v2, angle_fraction=0.3)
+    print("Rotated v1:", rotated_v1)
+
+
 def chat_gpt_test():
     # Define the vectors
-    vec1 = np.array([1, 1, 0.5])  # Initial unit vector to be rotated
+    # vec1 = np.array([1, 1, 0.5])  # Initial unit vector to be rotated
+    vec1 = np.array([-1.12300128, 0.9577349, 0.13800545])  # Initial unit vector to be rotated
     # vec1 /= np.linalg.norm(vec1)
-    vec2 = np.array([0.1, 1, 0.2])  # Target unit vector
+    # vec2 = np.array([0.1, 1, 0.2])  # Target unit vector
+    vec2 = np.array([-1.89403927, 8.96250786, 14.5447655])  # Target unit vector
     # vec2 /= np.linalg.norm(vec2)
 
-    rotated_vec1 = rotate_vector(vec1, vec2)
+    rotated_vec1 = rotate_vector(vec1, vec2, angle_fraction=0.2)
 
     # Create a 3D figure and add axes
     fig = plt.figure()
@@ -163,9 +189,9 @@ def chat_gpt_test():
     # ax.quiver(0, 0, 0, vec2[0], vec2[1], vec2[2], color='blue', length=np.linalg.norm(vec2), label='vec2')
     # ax.quiver(0, 0, 0, rotated_vec1[0], rotated_vec1[1], rotated_vec1[2], color='green',
     #           length=np.linalg.norm(rotated_vec1), label='rotated vec1')
-    print(vec1)
+    print(vec1, np.linalg.norm(vec1))
     print(vec2)
-    print(rotated_vec1)
+    print(rotated_vec1, np.linalg.norm(rotated_vec1))
 
     # Add labels for the vectors
     ax.text(vec1[0], vec1[1], vec1[2], "vec1", color='red')
@@ -211,8 +237,9 @@ def plot_vectors(vectors):
 def plot_momenta(momenta, net_momentum_vec):
     plot_vectors(momenta)
     net_momentum = np.linalg.norm(net_momentum_vec)
-    plt.quiver(0, 0, 0, *(net_momentum_vec / net_momentum), length=net_momentum, color='red')
-    plt.quiver(0, 0, 0, *(-net_momentum_vec / net_momentum), length=net_momentum, color='orange')
+    plt.quiver(0, 0, 0, *(net_momentum_vec / net_momentum), length=net_momentum, color='red', label='Net Momentum')
+    plt.quiver(0, 0, 0, *(-net_momentum_vec / net_momentum), length=net_momentum, color='orange', label='-Net Momentum')
+    plt.legend()
     plt.tight_layout()
 
 
