@@ -24,7 +24,7 @@ from integrate_pdf_var import base_gaus_pdf_wrap, get_partition_variance
 
 
 def main():
-    # plot_paper_figs()
+    plot_paper_figs()
 
     # plot_star_model_var()
     # plot_vs_cent_var()
@@ -33,7 +33,7 @@ def main():
     # plot_all_zero_base()
 
     # plot_star_var_sys()
-    make_models_csv()
+    # make_models_csv()
     # plot_star_var_rand_sys()
 
     # plot_vs_cent_var_fits()
@@ -99,11 +99,11 @@ def plot_paper_figs():
     data_sets_markers = dict(zip(data_sets_plt, [dict(zip(['raw', 'mix', 'diff'], [x, x, x]))
                                                  for x in ['o', 's', '^', '*']]))
 
-    cent_ref_name = 'mean_cent_ref2.csv'
+    cent_ref_name = 'mean_cent_ref.csv'
     cent_ref_df = pd.read_csv(f'F:/Research/Results/Azimuth_Analysis/{cent_ref_name}')
     ref_type = 'refn'  # 'refn'
     cent_ref_df = cent_ref_df.replace('bes_resample_def', 'bes_def')
-    cent_ref_df = cent_ref_df.replace('ampt_new_coal_resample_def', 'ampt')
+    cent_ref_df = cent_ref_df.replace('ampt_new_coal_resample_def', 'ampt_new_coal_epbins1')
 
     df = pd.read_csv(f'{base_path}{df_name}')
     df_model = pd.read_csv(f'{base_path}{df_model_name}')
@@ -130,7 +130,8 @@ def plot_paper_figs():
 
     dvar_vs_protons(df_dsigma_v2sub, div_plt, cent_plt, [39], ['diff'], data_sets_plt, ylabel=r'$\Delta\sigma^2$',
                     data_sets_colors=data_sets_colors, plot=True, avg=False, alpha=1.0, y_ranges=[-0.00124, 0.0009],
-                    data_sets_labels=data_sets_labels, marker_map=data_sets_markers, legend_pos='lower right')
+                    data_sets_labels=data_sets_labels, marker_map=data_sets_markers, legend_pos='lower right',
+                    kin_info_loc=(0.22, 0.13), star_prelim_loc=(0.65, 0.96))  # <---
 
     df_dsigma_v2sub_diffs = df_dsigma_v2sub[df_dsigma_v2sub['data_type'] == 'diff'].assign(data_type='v2_sub')
     df_dsigma_with_v2sub = pd.concat([df_dsigma, df_dsigma_v2sub_diffs])
@@ -162,55 +163,77 @@ def plot_paper_figs():
     dvar_vs_protons_energies(df_dsigma_v2sub, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], ['bes_def'],
                              plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
                              data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.0005], avgs_df=dsig_avgs_v2sub,
-                             ylabel=r'$\Delta\sigma^2$', kin_loc=(0.65, 0.2))
+                             ylabel=r'$\Delta\sigma^2$', kin_loc=(0.55, 0.6), star_prelim_loc=(1, 0.54, 0.53))
 
     dvar_vs_protons_energies(df_dsigma_v2sub, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], data_sets_plt,
-                             plot=True, avg=False, plot_avg=False, data_sets_colors=data_sets_colors,
+                             plot=True, avg=False, plot_avg=False, data_sets_colors=data_sets_colors, no_hydro_label=1,
                              data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.0005], avgs_df=dsig_avgs_v2sub,
-                             ylabel=r'$\Delta\sigma^2$', kin_loc=(0.65, 0.2))
+                             ylabel=r'$\Delta\sigma^2$', kin_loc=(0.65, 0.2), star_prelim_loc=(1, 0.54, 0.78),
+                             marker_map=data_sets_markers)  # <---
 
     dvar_vs_protons_energies(df_dsigma_v2sub, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], data_sets_plt,
-                             plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
+                             plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors, no_hydro_label=1,
                              data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.0005], avgs_df=dsig_avgs_v2sub,
-                             ylabel=r'$\Delta\sigma^2$', kin_loc=(0.65, 0.2))
+                             ylabel=r'$\Delta\sigma^2$', kin_loc=(0.65, 0.2), star_prelim_loc=(1, 0.54, 0.78),
+                             marker_map=data_sets_markers)  # <---
 
     # plot_protons_avgs_vs_energy(dsig_avg, ['bes_def'], data_sets_colors=data_sets_colors,
     #                             data_sets_labels=data_sets_labels, title=f'{cent_map[cent_plt]} Centrality, {div_plt}° '
     #                                                                      f'Partitions, {samples} Samples per Event')
 
     dsig_avgs_v2_sub_cent8 = dsig_avgs_v2sub[dsig_avgs_v2sub['cent'] == 8]
-    plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=False,
+    plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=False,  # <---
                         data_sets_labels=data_sets_labels, plot_energy_panels=True, ylab=r'$\widebar{\Delta\sigma^2}$',
-                        plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5)
-    plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,
+                        plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5, star_prelim_loc=(1, 0.3, 0.7),
+                        xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event')
+    plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,  # <---
                         data_sets_labels=data_sets_labels, plot_energy_panels=True, ylab=r'$\widebar{\Delta\sigma^2}$',
-                        plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5)
+                        plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5, star_prelim_loc=(1, 0.3, 0.7),
+                        xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event')
 
     plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, ['bes_def'], data_sets_colors=data_sets_colors, fit=False,
                         data_sets_labels=data_sets_labels, plot_energy_panels=True, ylab=r'$\widebar{\Delta\sigma^2}$',
-                        plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5)
+                        plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5, star_prelim_loc=(1, 0.3, 0.7),
+                        xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event')
 
     dsig_avgs_v2_sub_cent8_div120 = dsig_avgs_v2sub[(dsig_avgs_v2sub['cent'] == 8) & (dsig_avgs_v2sub['divs'] == 120)]
-    plot_protons_avgs_vs_energy(dsig_avgs_v2_sub_cent8_div120, data_sets_plt, data_sets_colors=data_sets_colors,
-                                data_sets_labels=data_sets_labels, alpha=1,
+    plot_protons_avgs_vs_energy(dsig_avgs_v2_sub_cent8_div120, data_sets_plt, data_sets_colors=data_sets_colors,  # <---
+                                data_sets_labels=data_sets_labels, alpha=1, kin_info_loc=(0.73, 0.45),
+                                star_prelim_loc=(0.02, 0.75), marker_map=data_sets_markers,
                                 title=f'{cent_map[8]} Centrality, {div_plt}° Partitions, {samples} Samples per Event')
     plot_protons_avgs_vs_energy(dsig_avgs_v2_sub_cent8_div120, ['bes_def'], data_sets_colors=data_sets_colors,
-                                data_sets_labels=data_sets_labels, alpha=1,
+                                data_sets_labels=data_sets_labels, alpha=1, kin_info_loc=(0.123, 0.68),
+                                star_prelim_loc=(0.65, 0.9),
                                 title=f'{cent_map[8]} Centrality, {div_plt}° Partitions, {samples} Samples per Event')
 
     dsig_avgs_v2_sub_div120 = dsig_avgs_v2sub[dsig_avgs_v2sub['divs'] == 120]
+    data_sets_energies_colors = \
+        {'bes_def': {7: 'red', 11: 'blue', 19: 'green', 27: 'orange', 39: 'purple', 62: 'black'},
+         'ampt_new_coal_epbins1': {7: 'red', 11: 'blue', 19: 'green', 27: 'orange', 39: 'purple', 62: 'black'}}
+    vs_cent_sets = list(data_sets_energies_colors.keys())
     plot_protons_avgs_vs_cent(dsig_avgs_v2_sub_div120, ['bes_def'], data_sets_colors=data_sets_colors, fit=False,
-                              data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,
-                              title=f'{div_plt}° Partitions, {samples} Samples per Event',
-                              data_sets_energies_cmaps={'bes_def': 'tab10'}, alpha=0.8, errbar_alpha=0.3)
+                              data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,  # <---
+                              title=f'{div_plt}° Partitions, {samples} Samples per Event', alpha=0.8, errbar_alpha=0.3,
+                              kin_info_loc=(0.2, 0.1), star_prelim_loc=(0.6, 0.5),
+                              data_sets_energies_colors=data_sets_energies_colors)
     plot_protons_avgs_vs_cent(dsig_avgs_v2_sub_div120, ['bes_def'], data_sets_colors=data_sets_colors, fit=False,
-                              data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type='npart',
-                              title=f'{div_plt}° Partitions, {samples} Samples per Event',
-                              data_sets_energies_cmaps={'bes_def': 'tab10'}, alpha=0.8, errbar_alpha=0.3)
-    plot_protons_avgs_vs_cent(dsig_avgs_v2_sub_div120, ['bes_def'], data_sets_colors=data_sets_colors, fit=False,
-                              data_sets_labels=data_sets_labels, cent_ref=None, ref_type=None,
-                              title=f'{div_plt}° Partitions, {samples} Samples per Event',
-                              data_sets_energies_cmaps={'bes_def': 'tab10'}, alpha=0.8, errbar_alpha=0.3)
+                              data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type='npart',  # <---
+                              title=f'{div_plt}° Partitions, {samples} Samples per Event', alpha=0.8, errbar_alpha=0.3,
+                              kin_info_loc=(0.2, 0.1), star_prelim_loc=(0.6, 0.5),
+                              data_sets_energies_colors=data_sets_energies_colors)
+
+    plot_protons_avgs_vs_cent(dsig_avgs_v2_sub_div120, vs_cent_sets, data_sets_colors=data_sets_colors, fit=False,
+                              data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,  # <---
+                              title=f'{div_plt}° Partitions, {samples} Samples per Event', alpha=0.8, errbar_alpha=0.3,
+                              kin_info_loc=(0.2, 0.1), star_prelim_loc=(0.6, 0.5), marker_map=data_sets_markers,
+                              data_sets_energies_colors=data_sets_energies_colors)
+    plot_protons_avgs_vs_cent(dsig_avgs_v2_sub_div120, vs_cent_sets, data_sets_colors=data_sets_colors, fit=False,
+                              data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type='npart',  # <---
+                              title=f'{div_plt}° Partitions, {samples} Samples per Event', alpha=0.8, errbar_alpha=0.3,
+                              kin_info_loc=(0.2, 0.1), star_prelim_loc=(0.6, 0.5), marker_map=data_sets_markers,
+                              data_sets_energies_colors=data_sets_energies_colors)
+
+
 
     # plot_div_fits_vs_cent(dsig_avgs_v2_sub, ['bes_def'], data_sets_colors=data_sets_colors,
     #                       data_sets_labels=data_sets_labels, title=None, fit=False, cent_ref=cent_ref_df,
