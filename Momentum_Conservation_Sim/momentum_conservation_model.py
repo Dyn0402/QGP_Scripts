@@ -44,8 +44,10 @@ def full_test():
 
     experiment_tracks = {}
     for event_i in range(n_events):
+        if event_i % 100 == 0:
+            print(f'Event #{event_i}')
         event = PConsSim(energy, n_tracks, rng=rng)
-        event.rotate_tracks()
+        # event.rotate_tracks()
         tracks = event.get_m_tracks(n_protons)
         tracks = ak.Array({'px': tracks[:, 0], 'py': tracks[:, 1], 'pz': tracks[:, 2], 'M': tracks[:, 0] * 0},
                           with_name='Momentum4D')
@@ -78,6 +80,11 @@ def full_test():
 
     plt.axhline(0, color='black')
     plt.grid()
+    print(n_protons_list)
+    print(dsig_2_list)
+    print(dsig_2_err_list)
+    # plt.scatter(n_protons_list, dsig_2_list)
+    # plt.show()
     plt.errorbar(n_protons_list, dsig_2_list, yerr=dsig_2_err_list, marker='o', ls='none')
     plt.show()
 
