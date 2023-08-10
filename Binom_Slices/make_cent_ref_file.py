@@ -92,26 +92,26 @@ def get_ampt_cent_ref():
         tree_names = os.listdir(f'{ampt_tree_path}{energy}GeV')
         jobs = [(f'{ampt_tree_path}{energy}GeV/{tree_name}', ref3_edges, bin_edges) for tree_name in tree_names]
 
-        refmult_hists, refmult3_hists, npp_hists = [{cent: np.zeros(len(bin_edges) - 1) for cent in cents}
-                                                    for i in range(3)]
+        refmult_hists, refmult3_hists, npart_hists = [{cent: np.zeros(len(bin_edges) - 1) for cent in cents}
+                                                      for i in range(3)]
         with Pool(threads) as pool:
-            for refmult_h, refmult3_h, npp_h in tqdm.tqdm(pool.istarmap(read_ampt_tree, jobs), total=len(jobs)):
+            for refmult_h, refmult3_h, npart_h in tqdm.tqdm(pool.istarmap(read_ampt_tree, jobs), total=len(jobs)):
                 for cent in cents:
                     refmult_hists[cent] += refmult_h[cent]
                     refmult3_hists[cent] += refmult3_h[cent]
-                    npp_hists[cent] += npp_h[cent]
+                    npart_hists[cent] += npart_h[cent]
 
         bin_centers = (bin_edges[1:] + bin_edges[:-1]) / 2
         for cent in cents:
             ref_stats = DistStats(refmult_hists[cent])
             ref3_stats = DistStats(refmult3_hists[cent])
-            npp_stats = DistStats(npp_hists[cent])
+            npart_stats = DistStats(npart_hists[cent])
             ref_mean, ref_sd = ref_stats.get_mean().val, ref_stats.get_sd().val
             ref3_mean, ref3_sd = ref3_stats.get_mean().val, ref3_stats.get_sd().val
-            npp_mean, npp_sd = npp_stats.get_mean().val, npp_stats.get_sd().val
+            npart_mean, npart_sd = npart_stats.get_mean().val, npart_stats.get_sd().val
             if plot:
                 print(f'Cent {cent}:\nref={ref_mean} +- {ref_sd}\n ref3={ref3_mean} +- {ref3_sd}'
-                      f'\n npp={npp_mean} +- {npp_sd}')
+                      f'\n npp={npart_mean} +- {npart_sd}')
                 fig_ref, ax_ref = plt.subplots()
                 ax_ref.bar(bin_centers, refmult_hists[cent], width=1, align='center')
                 ax_ref.axvline(ref_mean, ls='--', color='red')
@@ -128,14 +128,14 @@ def get_ampt_cent_ref():
 
                 fig_npp, ax_npp = plt.subplots()
                 ax_npp.bar(bin_centers, refmult3_hists[cent], width=1, align='center')
-                ax_npp.axvline(npp_mean, ls='--', color='red')
-                ax_npp.axvspan(npp_mean - npp_sd, npp_mean + npp_sd, color='red', alpha=0.3)
+                ax_npp.axvline(npart_mean, ls='--', color='red')
+                ax_npp.axvspan(npart_mean - npart_sd, npart_mean + npart_sd, color='red', alpha=0.3)
                 ax_npp.set_title(f'{energy}GeV Centrality {cent} Number of Participants')
                 fig_npp.canvas.manager.set_window_title(f'{energy}GeV Centrality {cent} Number of Participants')
             df.append({'data_set': 'ampt_new_coal_resample_def', 'energy': energy, 'cent': cent,
                        'mean_ref_val': ref_stats.get_mean().val, 'mean_ref_sd': ref_stats.get_sd().val,
                        'mean_refn_val': ref3_stats.get_mean().val, 'mean_refn_sd': ref3_stats.get_sd().val,
-                       'mean_npart_val': npp_stats.get_mean().val, 'mean_npart_sd': npp_stats.get_sd().val})
+                       'mean_npart_val': npart_stats.get_mean().val, 'mean_npart_sd': npart_stats.get_sd().val})
     if plot:
         plt.show()
 
@@ -183,16 +183,16 @@ def ampt_str_edges_to_9(ref_str_edges):
 
 
 def read_ampt_tree(tree_path, ref3_edges, bin_edges):
-    refmult_hists, refmult3_hists, npp_hists = [{cent: np.zeros(len(bin_edges) - 1) for cent in ref3_edges.keys()}
-                                                for i in range(3)]
+    refmult_hists, refmult3_hists, npart_hists = [{cent: np.zeros(len(bin_edges) - 1) for cent in ref3_edges.keys()}
+                                                  for i in range(3)]
     with uproot.open(tree_path) as file:
-        tracks = file['tree'].arrays(['refmult', 'refmult3', 'npp'])
+        tracks = file['tree'].arrays(['refmult', 'refmult3', 'npp', 'npt'])
         for cent_bin, ref3_edges in ref3_edges.items():
             cent_bin_events = tracks[(tracks['refmult3'] >= ref3_edges[1]) & (tracks['refmult3'] < ref3_edges[0])]
             refmult_hists[cent_bin] += np.histogram(cent_bin_events['refmult'], bin_edges)[0]
             refmult3_hists[cent_bin] += np.histogram(cent_bin_events['refmult3'], bin_edges)[0]
-            npp_hists[cent_bin] += np.histogram(cent_bin_events['npp'], bin_edges)[0]
-    return refmult_hists, refmult3_hists, npp_hists
+            npart_hists[cent_bin] += np.histogram(cent_bin_events['npp'] + cent_bin_events['npt'], bin_edges)[0]
+    return refmult_hists, refmult3_hists, npart_hists
 
 
 if __name__ == '__main__':
