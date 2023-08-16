@@ -22,17 +22,17 @@ from DistStats import DistStats
 
 
 def main():
-    chat_gpt_test()
+    # chat_gpt_test()
     # single_event_test()
     # momentum_test()
-    # full_test()
+    full_test()
     # rotation_test()
     print('donzo')
 
 
 def full_test():
     vector.register_awkward()
-    rng = np.random.default_rng(42)
+    ss = np.random.SeedSequence(42)
 
     n_tracks = 100
     n_protons = 40
@@ -43,13 +43,26 @@ def full_test():
     bin_width = np.deg2rad(120)
     resamples = 72
 
+    child_seeds = ss.spawn(n_events)
+    rngs = [np.random.default_rng(s) for s in child_seeds]
+    # rng = np.random.default_rng(42)
+
     experiment_tracks = {}
-    for event_i in range(n_events):
+    for event_i, rng in zip(range(n_events), rngs):
         if event_i % 100 == 0:
             print(f'Event #{event_i}')
+
         event = PConsSim(energy, n_tracks, rng=rng)
-        # event.rotate_tracks()
+        event.rotate_tracks()
+
+        while event.init_net_momentum >= event.net_momentum:
+            angle_frac = event.angle_frac
+            event = PConsSim(energy, n_tracks, rng=rng)
+            event.angle_frac = angle_frac / 2
+            event.rotate_tracks()
+
         tracks = event.get_m_tracks(n_protons)
+
         tracks = ak.Array({'px': tracks[:, 0], 'py': tracks[:, 1], 'pz': tracks[:, 2], 'M': tracks[:, 0] * 0},
                           with_name='Momentum4D')
         # print(tracks.p)
@@ -77,7 +90,8 @@ def full_test():
         delta_sig_2 = (stats.get_k_stat(2) - binom_var) / (n_proton * (n_proton - 1))
         dsig_2_list.append(delta_sig_2.val)
         dsig_2_err_list.append(delta_sig_2.err)
-        print(f'{n_proton} protons: mean: {stats.get_mean()}, variance: {stats.get_variance()}, delta_sig_2: {delta_sig_2}')
+        print(
+            f'{n_proton} protons: mean: {stats.get_mean()}, variance: {stats.get_variance()}, delta_sig_2: {delta_sig_2}')
 
     plt.axhline(0, color='black')
     plt.grid()
@@ -105,15 +119,21 @@ def single_event_test():
         print(f'{event.net_momentum_iterations}')
         if event.net_momentum_iterations[-1] > event.init_net_momentum:
             bad_event = True
-    rng = np.random.default_rng(seed=seed)
-    event = PConsSim(5, n_part, rng=rng)
-    # print(event.get_m_tracks(20))
-    plot_momenta(event.get_m_tracks(n_part), event.net_momentum_vec)
-    event.rotate_tracks_debug()
-    # print(event.get_m_tracks(20))
-    plot_momenta(event.get_m_tracks(n_part), event.net_momentum_vec)
+    angle_frac_init = event.angle_frac
     fig, ax = plt.subplots()
-    ax.scatter(range(len(event.net_momentum_iterations)), event.net_momentum_iterations)
+    rng = np.random.default_rng(seed=seed)
+    for x in range(1, 10):
+        event = PConsSim(5, n_part, rng=rng)
+        event.angle_frac = angle_frac_init / x
+        # print(event.get_m_tracks(20))
+        # plot_momenta(event.get_m_tracks(n_part), event.net_momentum_vec)
+        # event.rotate_tracks_debug()
+        event.rotate_tracks()
+        # print(event.get_m_tracks(20))
+        # plot_momenta(event.get_m_tracks(n_part), event.net_momentum_vec)
+        ax.plot(range(len(event.net_momentum_iterations)), event.net_momentum_iterations,
+                label=f'{event.angle_frac}')
+    plt.legend()
     plt.show()
 
 

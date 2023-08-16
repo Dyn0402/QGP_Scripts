@@ -25,7 +25,8 @@ class PConsSim:
         self.n_particles = n_particles
         self.dim = dimension
 
-        self.angle_frac = 0.8 / np.sqrt(self.n_particles)
+        # self.angle_frac = 0.8 / np.sqrt(self.n_particles)
+        self.angle_frac = 0.3 / np.sqrt(self.n_particles)
         self.iterations = 4
 
         if rng is None:
@@ -53,13 +54,19 @@ class PConsSim:
     def rotate_tracks_debug(self):
         for i in range(self.iterations):
             angle_frac = self.angle_frac * self.net_momentum / self.init_net_momentum
-            angle_frac = 0.1
-            print(f'angle_frac: {angle_frac}')
+            # angle_frac = 0.1
+            print(f'\n\nangle_frac: {angle_frac}')
             for j in range(len(self.momenta)):
                 print(f'Pre: momentum {j}: {self.momenta[j]}, neg_net_p: {-self.net_momentum_vec}')
+                dot = np.dot(self.momenta[j] / np.linalg.norm(self.momenta[j]),
+                             -self.net_momentum_vec / np.linalg.norm(-self.net_momentum_vec))
+                print(f'Pre-dot: {dot}, angle: {np.rad2deg(np.arccos(dot))}')
                 self.momenta[j] = rotate_vector_debug(self.momenta[j], -self.net_momentum_vec, angle_frac)
                 print(f'Post: momentum {j}: {self.momenta[j] / np.linalg.norm(self.momenta[j])}, '
                       f'{-self.net_momentum_vec / np.linalg.norm(self.net_momentum_vec)}')
+                dot = np.dot(self.momenta[j] / np.linalg.norm(self.momenta[j]),
+                             -self.net_momentum_vec / np.linalg.norm(-self.net_momentum_vec))
+                print(f'Post-dot: {dot}, angle: {np.rad2deg(np.arccos(dot))}\n')
 
             self.net_momentum_vec = np.sum(self.momenta, axis=0)
             self.net_momentum = np.linalg.norm(self.net_momentum_vec)
