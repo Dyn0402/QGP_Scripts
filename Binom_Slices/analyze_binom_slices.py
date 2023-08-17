@@ -821,7 +821,7 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
 def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False, avg=False,
                     hist=False, data_sets_colors=None, data_sets_labels=None, star_prelim_loc=None, alpha=0.6,
                     marker_map=None, errbar_alpha=0.2, legend_pos='lower center', ylabel=None,
-                    kin_info_loc=(0.26, 0.91), title=None):
+                    kin_info_loc=(0.26, 0.91), title=None, data_sets_bands=None):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     data = []
@@ -909,7 +909,7 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
                     c = data_sets_colors[data_set][data_type]
                 else:
                     c = data_sets_colors[data_set]
-            if 'sim_' in data_set:
+            if data_sets_bands is not None and data_set in data_sets_bands:
                 ax.fill_between(df['total_protons'], df['val'] - df['err'], df['val'] + df['err'], label=lab, color=c,
                                 alpha=0.4)
             else:
@@ -1206,7 +1206,7 @@ def stat_vs_protons_energies(df, stat, divs, cent, energies, data_types, data_se
 def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False,
                              avg=False, plot_avg=False, hist=False, data_sets_colors=None, data_sets_labels=None,
                              star_prelim_loc=None, marker_map=None, alpha=1.0, errbar_alpha=0.2, avgs_df=None,
-                             ylabel=None, kin_loc=None, no_hydro_label=False, data_sets_bands=[]):
+                             ylabel=None, kin_loc=None, no_hydro_label=False, data_sets_bands=None):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     energy_map = {7: '7.7', 11: '11.5', 19: '19.6', 27: '27', 39: '39', 62: '62.4'}
@@ -1281,7 +1281,7 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
                 ax.text(0.95, 0.95, f'{energy_map[energy]} GeV', size='x-large', ha='right', va='top',
                         transform=ax.transAxes)
             if plot:
-                if data_set in data_sets_bands:
+                if data_sets_bands is not None and data_set in data_sets_bands:
                     ax.fill_between(df['total_protons'], df['val'] - df['err'], df['val'] + df['err'],
                                     label=lab, color=c, alpha=0.4)
                 else:
@@ -1749,6 +1749,7 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
             cents = pd.unique(df_energy['cent'])
             for cent in cents:
                 df_cent = df_energy[df_energy['cent'] == cent]
+                df_cent = df_cent[~df_cent.divs.isin(exclude_divs)]
                 df_cent.sort_values(by='divs')
                 if data_sets_colors is not None and data_set in data_sets_colors:
                     color = data_sets_colors[data_set]

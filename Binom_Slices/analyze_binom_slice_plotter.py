@@ -67,8 +67,8 @@ def main():
 def plot_paper_figs():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
-    # base_path = 'F:/Research/Results/Azimuth_Analysis/'
-    base_path = 'C:/Users/Dyn04/Research/'
+    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    # base_path = 'C:/Users/Dyn04/Research/'
     # df_name = 'Binomial_Slice_Moments/binom_slice_stats_var_epbins1.csv'
     df_name = 'Bes_with_Sys/binom_slice_vars_bes.csv'
     df_model_name = 'Bes_with_Sys/binom_slice_vars_model.csv'
@@ -124,7 +124,8 @@ def plot_paper_figs():
 
     dvar_vs_protons(df_dsigma, div_plt, cent_plt, [39], ['diff'], data_sets_plt, data_sets_colors=data_sets_colors,
                     plot=True, avg=False, alpha=1.0, y_ranges=[-0.00124, 0.0009], ylabel=r'$\Delta\sigma^2$',
-                    data_sets_labels=data_sets_labels, marker_map=data_sets_markers, legend_pos='lower right')
+                    data_sets_labels=data_sets_labels, marker_map=data_sets_markers, legend_pos='lower right',
+                    data_sets_bands=data_sets_bands)
 
     df_dsigma_v2sub = pd.read_csv(f'{base_path}{df_dsigma_v2sub_name}')
     df_dsigma_v2sub_model = pd.read_csv(f'{base_path}{df_dsigma_v2sub_model_name}')
@@ -133,7 +134,7 @@ def plot_paper_figs():
     dvar_vs_protons(df_dsigma_v2sub, div_plt, cent_plt, [39], ['diff'], data_sets_plt, ylabel=r'$\Delta\sigma^2$',
                     data_sets_colors=data_sets_colors, plot=True, avg=False, alpha=1.0, y_ranges=[-0.00124, 0.0009],
                     data_sets_labels=data_sets_labels, marker_map=data_sets_markers, legend_pos='lower right',
-                    kin_info_loc=(0.22, 0.13), star_prelim_loc=(0.65, 0.96))  # <---
+                    kin_info_loc=(0.22, 0.13), star_prelim_loc=(0.65, 0.96), data_sets_bands=data_sets_bands)  # <---
 
     df_dsigma_v2sub_diffs = df_dsigma_v2sub[df_dsigma_v2sub['data_type'] == 'diff'].assign(data_type='v2_sub')
     df_dsigma_with_v2sub = pd.concat([df_dsigma, df_dsigma_v2sub_diffs])
@@ -187,16 +188,19 @@ def plot_paper_figs():
     plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=False,  # <---
                         data_sets_labels=data_sets_labels, plot_energy_panels=True, ylab=r'$\langle\Delta\sigma^2\rangle$',
                         plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5, star_prelim_loc=(1, 0.3, 0.7),
-                        xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event')
+                        xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event',
+                        exclude_divs=exclude_divs)
     plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,  # <---
                         data_sets_labels=data_sets_labels, plot_energy_panels=True, ylab=r'\langle\Delta\sigma^2\rangle$',
                         plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5, star_prelim_loc=(1, 0.3, 0.7),
-                        xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event')
+                        xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event',
+                        exclude_divs=exclude_divs)
 
     plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, ['bes_def'], data_sets_colors=data_sets_colors, fit=False,
                         data_sets_labels=data_sets_labels, plot_energy_panels=True, ylab=r'$\langle\Delta\sigma^2\rangle$',
                         plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5, star_prelim_loc=(1, 0.3, 0.7),
-                        xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event')
+                        xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event',
+                        exclude_divs=exclude_divs)
 
     dsig_avgs_v2_sub_cent8_div120 = dsig_avgs_v2sub[(dsig_avgs_v2sub['cent'] == 8) & (dsig_avgs_v2sub['divs'] == 120)]
     plot_protons_avgs_vs_energy(dsig_avgs_v2_sub_cent8_div120, data_sets_plt, data_sets_colors=data_sets_colors,  # <---
