@@ -38,16 +38,16 @@ def main():
 def full_test():
     ss = np.random.SeedSequence(42)
 
-    n_tracks = [50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200, 240, 280, 320, 370, 420, 500, 590, 690, 800, 1000]
+    n_tracks = [50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200, 240, 280, 320, 390, 500, 640, 800, 1000]
     n_protons_frac = 0.4
-    n_events = 200000
+    n_events = 150000
     energy = 2  # Currently just the range of momenta
     y_max, pt_max, p_max = 0.5, 2, 2
 
     bin_width = np.deg2rad(120)
     resamples = 72
 
-    threads = 12
+    threads = 16
 
     n_rndms = (n_events + int(max(n_tracks) * n_protons_frac)) * len(n_tracks)
     rngs = iter([np.random.default_rng(s) for s in ss.spawn(n_rndms)])
@@ -109,13 +109,17 @@ def full_test():
             delta_sig_2 = (stats.get_k_stat(2) - binom_var) / (n_proton * (n_proton - 1))
             dsig_2_list.append(delta_sig_2.val)
             dsig_2_err_list.append(delta_sig_2.err * np.sqrt(resamples))
-            print(
-                f'{n_proton} protons: mean: {stats.get_mean()}, variance: {stats.get_variance()}, delta_sig_2: {delta_sig_2}')
+            # print(
+            #     f'{n_proton} protons: mean: {stats.get_mean()}, variance: {stats.get_variance()}, delta_sig_2: {delta_sig_2}')
 
         plt.figure()
         plt.axhline(0, color='black')
         plt.grid()
         plt.title(f'Total Particles {n_track}')
+        print(f'Total Particles {n_track}')
+        print(n_protons_list)
+        print(dsig_2_list)
+        print(dsig_2_err_list)
         dsig_2_list, dsig_2_err_list = np.array(dsig_2_list), np.array(dsig_2_err_list)
         weight_avg = np.average(dsig_2_list, weights=1 / dsig_2_err_list ** 2)
         weight_avg_err = np.sqrt(1 / np.sum(1 / dsig_2_err_list ** 2))
@@ -129,6 +133,7 @@ def full_test():
     plt.figure()
     plt.grid()
     plt.axhline(0, color='black')
+    print(r'$\langle \Delta \sigma^2 \rangle$')
     print(n_tracks)
     print(dsig_avgs)
     print(dsig_avg_errs)
