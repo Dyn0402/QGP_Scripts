@@ -67,7 +67,8 @@ def main():
 def plot_paper_figs():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
-    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    # base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    base_path = 'C:/Users/Dyn04/Research/'
     # df_name = 'Binomial_Slice_Moments/binom_slice_stats_var_epbins1.csv'
     df_name = 'Bes_with_Sys/binom_slice_vars_bes.csv'
     df_model_name = 'Bes_with_Sys/binom_slice_vars_model.csv'
@@ -88,7 +89,7 @@ def plot_paper_figs():
 
     stat_plot = 'k2'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
     div_plt = 120
-    exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
+    exclude_divs = [89, 356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
     cent_plt = 8
     energies_fit = [7, 11, 19, 27, 39, 62]
     samples = 72  # For title purposes only
@@ -98,9 +99,10 @@ def plot_paper_figs():
     data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST', 'MUSIC+FIST EV $1fm^3$']))
     data_sets_markers = dict(zip(data_sets_plt, [dict(zip(['raw', 'mix', 'diff'], [x, x, x]))
                                                  for x in ['o', 's', '^', '*']]))
+    data_sets_bands = ['ampt_new_coal_epbins1', 'cf_resample_epbins1', 'cfev_resample_epbins1']
 
     cent_ref_name = 'mean_cent_ref.csv'
-    cent_ref_df = pd.read_csv(f'F:/Research/Results/Azimuth_Analysis/{cent_ref_name}')
+    cent_ref_df = pd.read_csv(f'{base_path}{cent_ref_name}')
     ref_type = 'refn'  # 'refn'
     cent_ref_df = cent_ref_df.replace('bes_resample_def', 'bes_def')
     cent_ref_df = cent_ref_df.replace('ampt_new_coal_resample_def', 'ampt_new_coal_epbins1')
@@ -169,13 +171,13 @@ def plot_paper_figs():
                              plot=True, avg=False, plot_avg=False, data_sets_colors=data_sets_colors, no_hydro_label=1,
                              data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.0005], avgs_df=dsig_avgs_v2sub,
                              ylabel=r'$\Delta\sigma^2$', kin_loc=(0.65, 0.2), star_prelim_loc=(1, 0.54, 0.78),
-                             marker_map=data_sets_markers)  # <---
+                             marker_map=data_sets_markers, data_sets_bands=data_sets_bands)  # <---
 
     dvar_vs_protons_energies(df_dsigma_v2sub, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], data_sets_plt,
                              plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors, no_hydro_label=1,
                              data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.0005], avgs_df=dsig_avgs_v2sub,
                              ylabel=r'$\Delta\sigma^2$', kin_loc=(0.65, 0.2), star_prelim_loc=(1, 0.54, 0.78),
-                             marker_map=data_sets_markers)  # <---
+                             marker_map=data_sets_markers, data_sets_bands=data_sets_bands)  # <---
 
     # plot_protons_avgs_vs_energy(dsig_avg, ['bes_def'], data_sets_colors=data_sets_colors,
     #                             data_sets_labels=data_sets_labels, title=f'{cent_map[cent_plt]} Centrality, {div_plt}° '
@@ -183,16 +185,16 @@ def plot_paper_figs():
 
     dsig_avgs_v2_sub_cent8 = dsig_avgs_v2sub[dsig_avgs_v2sub['cent'] == 8]
     plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=False,  # <---
-                        data_sets_labels=data_sets_labels, plot_energy_panels=True, ylab=r'$\widebar{\Delta\sigma^2}$',
+                        data_sets_labels=data_sets_labels, plot_energy_panels=True, ylab=r'$\langle\Delta\sigma^2\rangle$',
                         plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5, star_prelim_loc=(1, 0.3, 0.7),
                         xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event')
     plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,  # <---
-                        data_sets_labels=data_sets_labels, plot_energy_panels=True, ylab=r'$\widebar{\Delta\sigma^2}$',
+                        data_sets_labels=data_sets_labels, plot_energy_panels=True, ylab=r'\langle\Delta\sigma^2\rangle$',
                         plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5, star_prelim_loc=(1, 0.3, 0.7),
                         xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event')
 
     plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, ['bes_def'], data_sets_colors=data_sets_colors, fit=False,
-                        data_sets_labels=data_sets_labels, plot_energy_panels=True, ylab=r'$\widebar{\Delta\sigma^2}$',
+                        data_sets_labels=data_sets_labels, plot_energy_panels=True, ylab=r'$\langle\Delta\sigma^2\rangle$',
                         plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5, star_prelim_loc=(1, 0.3, 0.7),
                         xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event')
 
@@ -203,7 +205,7 @@ def plot_paper_figs():
                                 title=f'{cent_map[8]} Centrality, {div_plt}° Partitions, {samples} Samples per Event')
     plot_protons_avgs_vs_energy(dsig_avgs_v2_sub_cent8_div120, ['bes_def'], data_sets_colors=data_sets_colors,
                                 data_sets_labels=data_sets_labels, alpha=1, kin_info_loc=(0.123, 0.68),
-                                star_prelim_loc=(0.65, 0.9),
+                                star_prelim_loc=(0.65, 0.9), leg_loc='lower right',
                                 title=f'{cent_map[8]} Centrality, {div_plt}° Partitions, {samples} Samples per Event')
 
     dsig_avgs_v2_sub_div120 = dsig_avgs_v2sub[dsig_avgs_v2sub['divs'] == 120]
@@ -449,7 +451,7 @@ def plot_star_model_var():
         colors = dict(zip(data_sets, ['blue', 'green', 'red']))
         labels = dict(zip(data_sets, [data_sets_labels[data_set] + x for x in [' Raw', ' Mix', ' Sub']]))
         plot_dvar_avgs_divs(dsig_avgs, data_sets, data_sets_colors=colors, fit=False, data_sets_labels=labels,
-                            ylab=r'$\widebar{\Delta\sigma^2}$')
+                            ylab=r'$\langle\Delta\sigma^2\rangle$')
     for data_set in data_sets_plt:
         data_sets = [data_set + x for x in ['_sub', '']]
         colors = dict(zip(data_sets, ['blue', 'red']))
@@ -803,7 +805,7 @@ def plot_star_var_sys():
     #     colors = dict(zip(data_sets, ['blue', 'green', 'red']))
     #     labels = dict(zip(data_sets, [data_sets_labels[data_set] + x for x in [' Raw', ' Mix', ' Sub']]))
     #     plot_dvar_avgs_divs(dsig_avgs, data_sets, data_sets_colors=colors, fit=False, data_sets_labels=labels,
-    #                         ylab=r'$\widebar{\Delta\sigma^2}$')
+    #                         ylab=r'$\langle\Delta\sigma^2\rangle$')
     # for data_set in data_sets_plt:
     #     data_sets = [data_set + x for x in ['_sub', '']]
     #     colors = dict(zip(data_sets, ['blue', 'red']))
@@ -988,13 +990,13 @@ def plot_star_var_rand_sys():
     fig, ax = plt.subplots(dpi=144)
     ax.grid()
     ax.axhline(np.average(dsig_avg['avg']), color='gray')
-    ax.set_title(r'Variation of $\widebar{\Delta\sigma^2}$ from Randomization Sources')
-    ax.set_ylabel(r'$\widebar{\Delta\sigma^2}$')
+    ax.set_title(r'Variation of $\langle\Delta\sigma^2\rangle$ from Randomization Sources')
+    ax.set_ylabel(r'$\langle\Delta\sigma^2\rangle$')
     ax.set_xlabel('Arbitrary run index')
     fig2, ax2 = plt.subplots()
     # plt.xticks(rotation=20)
     ax2.grid()
-    ax2.set_ylabel(r'Standard Deviation of $\widebar{\Delta\sigma^2}$')
+    ax2.set_ylabel(r'Standard Deviation of $\langle\Delta\sigma^2\rangle$')
     iterate_set_num = 0
     group_map = {'bes_rand_sys': 'File Order, Resampling, StRefMultCorr', 'bes_strefnoseed_sys': 'StRefMultCorr',
                  'bes_strefseed_sys': 'Resampling'}
@@ -1045,7 +1047,7 @@ def plot_star_var_rand_sys():
     #     colors = dict(zip(data_sets, ['blue', 'green', 'red']))
     #     labels = dict(zip(data_sets, [data_sets_labels[data_set] + x for x in [' Raw', ' Mix', ' Sub']]))
     #     plot_dvar_avgs_divs(dsig_avgs, data_sets, data_sets_colors=colors, fit=False, data_sets_labels=labels,
-    #                         ylab=r'$\widebar{\Delta\sigma^2}$')
+    #                         ylab=r'$\langle\Delta\sigma^2\rangle$')
     # for data_set in data_sets_plt:
     #     data_sets = [data_set + x for x in ['_sub', '']]
     #     colors = dict(zip(data_sets, ['blue', 'red']))
@@ -1228,11 +1230,11 @@ def plot_sims_var():
     print(pd.unique(dsig_avgs['amp']))
     print(pd.unique(dsig_avgs['spread']))
     plot_dvar_avgs_divs(dsig_avgs, all_sets_plt, data_sets_colors=data_sets_colors, fit=False,
-                        data_sets_labels=data_sets_labels, plot_energy_panels=False, ylab=r'$\widebar{\Delta\sigma^2}$',
+                        data_sets_labels=data_sets_labels, plot_energy_panels=False, ylab=r'$\langle\Delta\sigma^2\rangle$',
                         title=f'Gaussian Correlation Model: 72 Samples per Event')
     df_fits = plot_dvar_avgs_divs(dsig_avgs, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
                                   data_sets_labels=data_sets_labels, plot_energy_panels=False,
-                                  ylab=r'$\widebar{\Delta\sigma^2}$',
+                                  ylab=r'$\langle\Delta\sigma^2\rangle$',
                                   title=f'Gaussian Correlation Model: 72 Samples per Event')
     # plt.show()
     proton_fits_div = dsig_avgs[dsig_avgs['divs'] == div_plt]
@@ -2001,7 +2003,7 @@ def plot_vs_cent_var_fit_tests():
     x_fit = np.linspace(1, 400, 1000)
     fig, ax = plt.subplots()
     ax.set_xlabel('RefMult')
-    ax.set_ylabel(r'$\widebar{\Delta\sigma^2}$')
+    ax.set_ylabel(r'$\langle\Delta\sigma^2\rangle$')
     ax.set_title(f'{data_set} {energy}GeV {div}° Partition Width')
     ax.grid()
     ax.axhline(0, color='gray')
@@ -2016,7 +2018,7 @@ def plot_vs_cent_var_fit_tests():
 
     fig, ax = plt.subplots()
     ax.set_xlabel('RefMult')
-    ax.set_ylabel(r'$\widebar{\Delta\sigma^2}$ Fit Resituals')
+    ax.set_ylabel(r'$\langle\Delta\sigma^2\rangle$ Fit Resituals')
     ax.set_title(f'{data_set} {energy}GeV {div}° Partition Width')
     ax.grid()
     ax.axhline(0, color='black')
@@ -2066,7 +2068,7 @@ def plot_vs_cent_var_fit_tests():
 
     fig, ax = plt.subplots()
     ax.set_xlabel('RefMult')
-    ax.set_ylabel(r'$\widebar{\Delta\sigma^2}$')
+    ax.set_ylabel(r'$\langle\Delta\sigma^2\rangle$')
     ax.set_title(f'{data_set} {energy}GeV {div}° Partition Width')
     ax.grid()
     ax.axhline(0, color='gray')
@@ -2081,7 +2083,7 @@ def plot_vs_cent_var_fit_tests():
 
     fig, ax = plt.subplots()
     ax.set_xlabel('RefMult')
-    ax.set_ylabel(r'$\widebar{\Delta\sigma^2}$ Fit Resituals')
+    ax.set_ylabel(r'$\langle\Delta\sigma^2\rangle$ Fit Resituals')
     ax.set_title(f'{data_set} {energy}GeV {div}° Partition Width')
     ax.grid()
     ax.axhline(0, color='black')
@@ -2106,7 +2108,7 @@ def plot_vs_cent_var_fit_tests():
 
     fig, ax = plt.subplots()
     ax.set_xlabel('RefMult')
-    ax.set_ylabel(r'$\widebar{\Delta\sigma^2}$')
+    ax.set_ylabel(r'$\langle\Delta\sigma^2\rangle$')
     ax.set_title(f'{data_set} {div}° Partition Width')
     ax.grid()
     ax.axhline(0, color='gray')
@@ -2115,14 +2117,14 @@ def plot_vs_cent_var_fit_tests():
 
     fig2, ax2 = plt.subplots()
     ax2.set_xlabel('RefMult')
-    ax2.set_ylabel(r'$\widebar{\Delta\sigma^2}$ Fit Resituals')
+    ax2.set_ylabel(r'$\langle\Delta\sigma^2\rangle$ Fit Resituals')
     ax2.set_title(f'{data_set} {div}° Partition Width')
     ax2.grid()
     ax2.axhline(0, color='black')
 
     fig3, ax3 = plt.subplots()
     ax3.set_xlabel('RefMult')
-    ax3.set_ylabel(r'$\widebar{\Delta\sigma^2}$ Fit - $1/\sqrt{M}$ Term')
+    ax3.set_ylabel(r'$\langle\Delta\sigma^2\rangle$ Fit - $1/\sqrt{M}$ Term')
     ax3.set_title(f'{data_set} {div}° Partition Width')
     ax3.grid()
     ax3.axhline(0, color='black')
@@ -2616,7 +2618,7 @@ def plot_ampt_efficiency_var():
     dsig_avgs_v2sub_cent8 = dsig_avgs_v2sub[dsig_avgs_v2sub['cent'] == cent_plt]
     df_fits = plot_dvar_avgs_divs(dsig_avgs_v2sub_cent8, data_sets_plt, fit=True, data_sets_colors=data_sets_colors,
                                   data_sets_labels=data_sets_labels, plot_energy_panels=True,
-                                  ylab=r'$\widebar{\Delta\sigma^2}$', plot_indiv=False)
+                                  ylab=r'$\langle\Delta\sigma^2\rangle$', plot_indiv=False)
 
     plt.rcParams["figure.figsize"] = (8, 4)
 
@@ -3669,7 +3671,7 @@ def plot_efficiency_closure_tests():
     labels = dict(zip(data_sets, ['Flow + Efficiency Single', 'Flow + Efficiency Single-Mixed', 'Flow Single']))
     plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
                         plot_energy_panels=False, alpha=0.6, title='Flow v2=0.07 Efficiency Correction',
-                        ylab=r'$\widebar{\Delta\sigma^2}$')
+                        ylab=r'$\langle\Delta\sigma^2\rangle$')
     xs = np.linspace(0, 360, 1000)
     plt.plot(xs, vn_divs(np.deg2rad(xs), 0.07, 2), color='gray', label='Flow Analytical')
     plt.legend(loc='upper center', bbox_to_anchor=(0.5, 0.7))
@@ -3680,7 +3682,7 @@ def plot_efficiency_closure_tests():
                                   'Simple Clustering + Efficiency Single-Mixed', 'Simple Clustering Single']))
     plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
                         plot_energy_panels=False, alpha=0.6, title='Simple Clustering (s05, a2) Efficiency Correction',
-                        ylab=r'$\widebar{\Delta\sigma^2}$')
+                        ylab=r'$\langle\Delta\sigma^2\rangle$')
 
     for s, a in [('1', '01'), ('08', '01'), ('05', '01'), ('01', '01')]:
         data_sets = [f'anticlflow_eff_s{s}_a{a}_raw', f'anticlflow_eff_s{s}_a{a}_sub', f'anticlmulti_s{s}_a{a}_raw']
@@ -3689,7 +3691,7 @@ def plot_efficiency_closure_tests():
                                       'Repulsive Model + Efficiency Single-Mixed', 'Repulsive Model Single']))
         s, a = round(float('0.' + s) * 10, 1), round(float('0.' + a) * 10, 1)
         plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
-                            plot_energy_panels=False, alpha=0.6, ylab=r'$\widebar{\Delta\sigma^2}$',
+                            plot_energy_panels=False, alpha=0.6, ylab=r'$\langle\Delta\sigma^2\rangle$',
                             title=rf'Repulsive Simulation ($\sigma={s}$, $A={a}$) Efficiency Correction')
 
     for s, a in [('1', '01'), ('08', '01'), ('05', '01'), ('01', '01')]:
@@ -3701,7 +3703,7 @@ def plot_efficiency_closure_tests():
                                       'Repulsive Model Single']))
         s, a = round(float('0.' + s) * 10, 1), round(float('0.' + a) * 10, 1)
         plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
-                            plot_energy_panels=False, alpha=0.6, ylab=r'$\widebar{\Delta\sigma^2}$',
+                            plot_energy_panels=False, alpha=0.6, ylab=r'$\langle\Delta\sigma^2\rangle$',
                             title=rf'Repulsive Model (Independent) ($\sigma={s}$, $A={a}$) Efficiency Correction')
 
     data_sets = [f'anticlflowindep_eff_s05_a01_v207_raw', f'anticlflowindep_eff_s05_a01_v207_sub',
@@ -3712,7 +3714,7 @@ def plot_efficiency_closure_tests():
                                   'Repulsive Model + Flow Single']))
     s, a = round(float('0.' + '05') * 10, 1), round(float('0.' + '01') * 10, 1)
     plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
-                        plot_energy_panels=False, alpha=0.6, ylab=r'$\widebar{\Delta\sigma^2}$',
+                        plot_energy_panels=False, alpha=0.6, ylab=r'$\langle\Delta\sigma^2\rangle$',
                         title=rf'Repulsive Model (Independent) ($\sigma={s}$, $A={a}$) + \
                         Flow v2=0.07 Efficiency Correction')
 
@@ -3723,7 +3725,7 @@ def plot_efficiency_closure_tests():
                                   'Repulsive Model + Flow Single']))
     plot_dvar_avgs_divs(protons_fits, data_sets, fit=False, data_sets_colors=colors, data_sets_labels=labels,
                         plot_energy_panels=False, alpha=0.6, title='Flow v2=0.07 Efficiency Correction',
-                        ylab=r'$\widebar{\Delta\sigma^2}$')
+                        ylab=r'$\langle\Delta\sigma^2\rangle$')
 
     plt.show()
 

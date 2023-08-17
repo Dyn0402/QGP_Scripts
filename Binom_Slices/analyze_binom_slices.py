@@ -1206,9 +1206,10 @@ def stat_vs_protons_energies(df, stat, divs, cent, energies, data_types, data_se
 def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False,
                              avg=False, plot_avg=False, hist=False, data_sets_colors=None, data_sets_labels=None,
                              star_prelim_loc=None, marker_map=None, alpha=1.0, errbar_alpha=0.2, avgs_df=None,
-                             ylabel=None, kin_loc=None, no_hydro_label=False):
+                             ylabel=None, kin_loc=None, no_hydro_label=False, data_sets_bands=[]):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
+    energy_map = {7: '7.7', 11: '11.5', 19: '19.6', 27: '27', 39: '39', 62: '62.4'}
     energy_data = []
     for energy in energies:
         data = []
@@ -1277,9 +1278,10 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
                     c = next(color)
                 else:
                     c = data_sets_colors[data_set]
-                ax.text(0.95, 0.95, f'{energy} GeV', size='x-large', ha='right', va='top', transform=ax.transAxes)
+                ax.text(0.95, 0.95, f'{energy_map[energy]} GeV', size='x-large', ha='right', va='top',
+                        transform=ax.transAxes)
             if plot:
-                if 'sim_' in data_set:
+                if data_set in data_sets_bands:
                     ax.fill_between(df['total_protons'], df['val'] - df['err'], df['val'] + df['err'],
                                     label=lab, color=c, alpha=0.4)
                 else:
@@ -1718,6 +1720,7 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                         exclude_divs=[], verbose=False, plot_energy_panels=True, title=None, alpha=1, ylab=None,
                         plot=True, errbar_alpha=0.2, plot_indiv=True, plot_energies_fig=False, ylim=None, xlim=None,
                         leg_panel=0, kin_loc=(0.02, 0.02), star_prelim_loc=None, no_hydro_label=False):
+    energy_map = {7: '7.7', 11: '11.5', 19: '19.6', 27: '27', 39: '39', 62: '62.4'}
     energies = pd.unique(df['energy'])
     if plot:
         if plot_energies_fig:
@@ -1829,7 +1832,7 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                 title += f'{energies[0]}GeV'
 
         if ylab is None:
-            ylab = r'$\widebar{\Delta\sigma^2}_{single} - \widebar{\Delta\sigma^2}_{mix}$'
+            ylab = r'$\langle\Delta\sigma^2\rangle_{single} - \langle\Delta\sigma^2\rangle_{mix}$'
 
         if plot_energies_fig:
             if ylim is not None:
@@ -1871,7 +1874,7 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                 if xlim is not None:
                     ax_panels[energy].set_xlim(xlim)
                 ax_panels[energy].axhline(0, color='gray', alpha=0.8, zorder=0)
-                ax_panels[energy].text(0.5, 0.9, f'{energy} GeV', size='x-large', ha='center', va='top',
+                ax_panels[energy].text(0.5, 0.9, f'{energy_map[energy]} GeV', size='x-large', ha='center', va='top',
                                        transform=ax_panels[energy].transAxes)
                 if energy_i >= 3:
                     ax_panels[energy].set_xlabel('Azimuthal Partition Width')
@@ -1982,7 +1985,7 @@ def plot_dvar_avgs_vs_divs_cents(df, data_sets_plt, fit=False, data_sets_colors=
             title += f'{energies[0]}GeV'
 
     if ylab is None:
-        ylab = r'$\widebar{\Delta\sigma^2}_{single} - \widebar{\Delta\sigma^2}_{mix}$'
+        ylab = r'$\langle\Delta\sigma^2\rangle_{single} - \langle\Delta\sigma^2\rangle_{mix}$'
 
     for cent_i, cent in enumerate(cents):
         ax_panels[cent].axhline(0, color='gray', alpha=0.8, zorder=0)
@@ -2185,7 +2188,7 @@ def plot_dvar_avgs_divs_cents(df, data_sets_plt, plot=False, fit=False, data_set
     energies = pd.unique(df['energy'])
     if plot:
         fig, axs = plt.subplots(3, 3, sharex=True, sharey=True, figsize=(13.33, 6.16), dpi=144)
-        suptitle = r'$\widebar{\Delta\sigma^2}$ vs Partition Width 72 Samples per Event'
+        suptitle = r'$\langle\Delta\sigma^2\rangle$ vs Partition Width 72 Samples per Event'
         suptitle = f'{energies[0]}GeV {suptitle}' if len(energies) == 1 else suptitle
         fig.suptitle(suptitle)
         axs = axs.flatten()
@@ -2250,7 +2253,7 @@ def plot_dvar_avgs_divs_cents(df, data_sets_plt, plot=False, fit=False, data_set
 
     if plot:
         for i in [0, 3, 6]:
-            axs[i].set_ylabel(r'$\widebar{\Delta\sigma^2}$')
+            axs[i].set_ylabel(r'$\langle\Delta\sigma^2\rangle$')
         for i in [6, 7, 8]:
             axs[i].set_xlabel('Azimuthal Partition Width')
         ax.legend(loc='lower right')
@@ -2660,7 +2663,7 @@ def plot_protons_fits_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
 
 
 def plot_protons_avgs_vs_energy(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None, alpha=1,
-                                kin_info_loc=(0.12, 0.68), star_prelim_loc=None, marker_map=None):
+                                kin_info_loc=(0.12, 0.68), star_prelim_loc=None, marker_map=None, leg_loc=None):
     fig_avg, ax_avg = plt.subplots()
     ax_avg.axhline(0, color='gray')
     fig_avg.canvas.manager.set_window_title(f'Dsigma2 Averages vs Energy')
@@ -2687,7 +2690,7 @@ def plot_protons_avgs_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
             if 'sys' in df:
                 ax_avg.errorbar(df_set['energy'], df_set['avg'], yerr=df_set['sys'], ls='', marker='', elinewidth=4,
                                 color=data_sets_colors[data_set], alpha=0.3)
-    ax_avg.set_ylabel(r'$\widebar{\Delta\sigma^2}$')
+    ax_avg.set_ylabel(r'$\langle\Delta\sigma^2\rangle$')
     ax_avg.set_xlabel('Energy (GeV)')
     ax_avg.grid()
     if title:
@@ -2700,8 +2703,10 @@ def plot_protons_avgs_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
     if star_prelim_loc is not None:
         ax_avg.text(*star_prelim_loc, 'STAR Preliminary', fontsize=15, ha='left', va='top', transform=ax_avg.transAxes,
                     bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9))
-    legend_avg = ax_avg.legend()
-    # legend_avg.get_frame().set_alpha(0)
+    if leg_loc is None:
+        ax_avg.legend()
+    else:
+        ax_avg.legend(loc=leg_loc)
     fig_avg.tight_layout()
     fig_avg.subplots_adjust(top=0.947, right=0.993, bottom=0.088, left=0.148)
 
@@ -2793,6 +2798,7 @@ def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
                               data_sets_energies_colors=None, marker_map=None):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
+    energy_map = {7: '7.7', 11: '11.5', 19: '19.6', 27: '27', 39: '39', 62: '62.4'}
     fig_avg, ax_avg = plt.subplots(figsize=(6.66, 5), dpi=144)
     ax_avg.axhline(0, color='black')
     fig_avg.canvas.manager.set_window_title(f'Dsigma2 Avg vs Centrality')
@@ -2817,12 +2823,14 @@ def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
                 color = next(colors)
             df_energy = df_set[df_set['energy'] == energy]
             df_energy = df_energy.sort_values(by='cent')
-            if data_sets_labels is None:
+            if len(data_sets_plt) == 1 and len(energies) > 1:
+                lab = ''
+            elif data_sets_labels is None:
                 lab = data_set
             else:
                 lab = data_sets_labels[data_set]
             if len(energies) > 1:
-                lab += f' {energy}GeV'
+                lab += f' {energy_map[energy]} GeV'
 
             if cent_ref is None:
                 x = df_energy['cent']
@@ -2865,7 +2873,7 @@ def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
                                    color=color_fit, alpha=0.4)
                     print(f'{lab} Fit: {[Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]}')
 
-    ax_avg.set_ylabel(r'$\widebar{\Delta\sigma^2}$')
+    ax_avg.set_ylabel(r'$\langle\Delta\sigma^2\rangle$')
     if ref_type is None:
         ax_avg.set_xlabel('Centrality')
     elif ref_type == 'npart':
@@ -3074,8 +3082,8 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
 
     # ax_base.set_ylabel('Baseline of Slope vs Partition Width Fit')
     # ax_zeros.set_ylabel('Zeros of Slope vs Partition Width Fit')
-    ax_base.set_ylabel(r'Baseline of $\widebar{\Delta\sigma^2}$ vs Partition Width Fit')
-    ax_zeros.set_ylabel(r'Zeros of $\widebar{\Delta\sigma^2}$ vs Partition Width Fit')
+    ax_base.set_ylabel(r'Baseline of $\langle\Delta\sigma^2\rangle$ vs Partition Width Fit')
+    ax_zeros.set_ylabel(r'Zeros of $\langle\Delta\sigma^2\rangle$ vs Partition Width Fit')
     if ref_type is None:
         ax_base.set_xlabel('Centrality')
         ax_zeros.set_xlabel('Centrality')
@@ -3100,7 +3108,7 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
     fig_zeros.tight_layout()
 
     if fit:
-        ax_base_res.set_ylabel(r'Residual of Fit to Baseline of $\widebar{\Delta\sigma^2}$ vs Partition Width Fit')
+        ax_base_res.set_ylabel(r'Residual of Fit to Baseline of $\langle\Delta\sigma^2\rangle$ vs Partition Width Fit')
         ax_base_res.grid()
         legend_base_res = ax_base_res.legend()
         fig_base_res.tight_layout()
@@ -3220,8 +3228,8 @@ def plot_div_fits_vs_cent_62res(df, data_sets_plt, data_sets_colors=None, data_s
                                  ls=ls, color=color, label=lab, alpha=0.6)
 
     ax_base.set_ylim([-0.007, 0.001])
-    ax_dev.set_ylabel(r'Deviation of Baseline of $\widebar{\Delta\sigma^2}$ vs Partition Width from 62GeV Fit')
-    ax_base.set_ylabel(r'Baseline of $\widebar{\Delta\sigma^2}$ vs Partition Width Fit')
+    ax_dev.set_ylabel(r'Deviation of Baseline of $\langle\Delta\sigma^2\rangle$ vs Partition Width from 62GeV Fit')
+    ax_base.set_ylabel(r'Baseline of $\langle\Delta\sigma^2\rangle$ vs Partition Width Fit')
     if ref_type is None:
         ax_dev.set_xlabel('Centrality')
         ax_base.set_xlabel('Centrality')
@@ -3348,7 +3356,7 @@ def plot_dsig_fits_vs_amp(df, data_sets_plt, data_sets_colors=None, data_sets_la
                 ax_slope_fit.plot(x, line(x, *popt), ls='--', color=color)
                 # ax_slope_fit.plot(df_spread['amp'], line(df_spread['amp'], *popt), ls='--', color=color)
     ax_slope_fit.set_xlabel(r'Simulation Amplitude ($A$)')
-    ax_slope_fit.set_ylabel(r'$\widebar{\Delta\sigma^2}$')
+    ax_slope_fit.set_ylabel(r'$\langle\Delta\sigma^2\rangle$')
     if title is not None:
         ax_slope_fit.set_title(title)
     ax_slope_fit.legend()
@@ -3869,9 +3877,9 @@ def plot_closures(df_sig, df_combo, df_corrected, alpha=0.6, df_bkg=None, title=
     ax.legend()
     ax_diff.legend()
     ax_diff.set_xlim((0, 360))
-    ax.set_ylabel(r'$\widebar{\Delta\sigma^2}$')
+    ax.set_ylabel(r'$\langle\Delta\sigma^2\rangle$')
     # ax_diff.set_ylabel('Correction Deviation')
-    ax_diff.set_ylabel(r'$\widebar{\Delta\sigma^2}$')
+    ax_diff.set_ylabel(r'$\langle\Delta\sigma^2\rangle$')
     ax_diff.set_xlabel(r'Azimuthal Partition Width ($w$)')
     ax.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
     # ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1e'))
