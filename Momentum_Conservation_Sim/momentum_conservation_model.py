@@ -40,7 +40,7 @@ def full_test():
 
     n_tracks = [50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200, 240, 280, 320, 390, 500, 640, 800, 1000]
     n_protons_frac = 0.4
-    n_events = 150000
+    n_events = 300000
     energy = 2  # Currently just the range of momenta
     y_max, pt_max, p_max = 0.5, 2, 2
 
