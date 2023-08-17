@@ -191,7 +191,7 @@ def plot_paper_figs():
                         xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event',
                         exclude_divs=exclude_divs)
     plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,  # <---
-                        data_sets_labels=data_sets_labels, plot_energy_panels=True, ylab=r'\langle\Delta\sigma^2\rangle$',
+                        data_sets_labels=data_sets_labels, plot_energy_panels=True, ylab=r'$\langle\Delta\sigma^2\rangle$',
                         plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5, star_prelim_loc=(1, 0.3, 0.7),
                         xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event',
                         exclude_divs=exclude_divs)
@@ -232,12 +232,12 @@ def plot_paper_figs():
                               data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,  # <---
                               title=f'{div_plt}° Partitions, {samples} Samples per Event', alpha=0.8, errbar_alpha=0.3,
                               kin_info_loc=(0.2, 0.1), star_prelim_loc=(0.6, 0.5), marker_map=data_sets_markers,
-                              data_sets_energies_colors=data_sets_energies_colors)
+                              data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
     plot_protons_avgs_vs_cent(dsig_avgs_v2_sub_div120, vs_cent_sets, data_sets_colors=data_sets_colors, fit=False,
                               data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type='npart',  # <---
                               title=f'{div_plt}° Partitions, {samples} Samples per Event', alpha=0.8, errbar_alpha=0.3,
                               kin_info_loc=(0.2, 0.1), star_prelim_loc=(0.6, 0.5), marker_map=data_sets_markers,
-                              data_sets_energies_colors=data_sets_energies_colors)
+                              data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
 
 
 
