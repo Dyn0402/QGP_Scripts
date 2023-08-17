@@ -26,7 +26,7 @@ class PConsSim:
         self.dim = dimension
 
         # self.angle_frac = 0.8 / np.sqrt(self.n_particles)
-        self.angle_frac = 0.3 / np.sqrt(self.n_particles)
+        self.angle_frac = 0.6 / np.sqrt(self.n_particles)
         self.iterations = 4
 
         if rng is None:
