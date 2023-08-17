@@ -13,6 +13,10 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import time
 
+from multiprocessing import Pool
+import tqdm
+import istarmap  # Needed for tqdm
+
 import uproot
 import awkward as ak
 import vector
@@ -32,68 +36,75 @@ def main():
 
 
 def full_test():
-    vector.register_awkward()
     ss = np.random.SeedSequence(42)
 
-    n_tracks = [50, 60, 70, 80, 90, 100, 200]
+    n_tracks = [50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200, 240, 280, 320, 370, 420, 500, 590, 690, 800, 1000]
     n_protons_frac = 0.4
-    n_events = 12000
+    n_events = 200000
     energy = 2  # Currently just the range of momenta
     y_max, pt_max, p_max = 0.5, 2, 2
 
     bin_width = np.deg2rad(120)
     resamples = 72
 
-    child_seeds = ss.spawn(n_events * len(n_tracks))
-    rngs = [np.random.default_rng(s) for s in child_seeds]
-    # rng = np.random.default_rng(42)
+    threads = 12
 
-    start_time = time.time()
+    n_rndms = (n_events + int(max(n_tracks) * n_protons_frac)) * len(n_tracks)
+    rngs = iter([np.random.default_rng(s) for s in ss.spawn(n_rndms)])
+
     dsig_avgs, dsig_avg_errs = [], []
-    for n_track in n_tracks:
+    for n_i, n_track in enumerate(n_tracks):
+        print(f'\nStarting {n_track} track events {n_i + 1}/{len(n_tracks)}:')
         n_protons = int(n_track * n_protons_frac + 0.5)
+        jobs = [(n_track, next(rngs), energy, n_protons, y_max, pt_max, p_max) for i in range(n_events)]
         experiment_tracks = {}
-        for event_i, rng in zip(range(n_events), rngs):
-            if event_i % 100 == 0:
-                print(f'Event #{event_i} n_track={n_track} {time.time() - start_time:.2f}s')
-
-            event = PConsSim(energy, n_track, rng=rng)
-            event.rotate_tracks()
-
-            while event.init_net_momentum <= event.net_momentum:
-                angle_frac = event.angle_frac
-                print(f' Event #{event_i}: net_p {event.init_net_momentum:.1f}->{event.net_momentum:.1f}')
-                # print(f'Old init_momentum={event.init_net_momentum}, old final_momentum={event.net_momentum}')
-                event = PConsSim(energy, n_track, rng=rng)
-                event.angle_frac = angle_frac / 2
-                # print(f'Old angle_frac={angle_frac}, new angle_frac={event.angle_frac}')
-                event.rotate_tracks()
-
-            tracks = event.get_m_tracks(n_protons)
-
-            tracks = ak.Array({'px': tracks[:, 0], 'py': tracks[:, 1], 'pz': tracks[:, 2], 'M': tracks[:, 0] * 0},
-                              with_name='Momentum4D')
-            # print(tracks.p)
-            tracks = tracks[(abs(tracks.rapidity) < y_max) & (tracks.pt < pt_max) & (tracks.p < p_max)]
-            # print(len(tracks))
-            tracks = np.array(tracks.phi)
-            tracks[tracks < 0] += 2 * np.pi
-            # if len(tracks) == 27:
-            #     plot_momenta(event.get_m_tracks(n_track), event.net_momentum_vec)
-            #     plot_momenta(event.get_m_tracks(n_track), event.net_momentum_vec)
-            # tracks = np.array(np.random.uniform(0, 2 * np.pi, size=len(tracks)))
-            if len(tracks) not in experiment_tracks:
-                experiment_tracks.update({len(tracks): [tracks]})
-            else:
-                experiment_tracks[len(tracks)].append(tracks)
+        with Pool(threads) as pool:
+            for tracks in tqdm.tqdm(pool.istarmap(sim_event, jobs), total=len(jobs)):
+                if len(tracks) not in experiment_tracks:
+                    experiment_tracks.update({len(tracks): [tracks]})
+                else:
+                    experiment_tracks[len(tracks)].append(tracks)
+        # for event_i, rng in zip(range(n_events), rngs):
+            # if event_i % 100 == 0:
+            #     print(f'Event #{event_i} n_track={n_track} {time.time() - start_time:.2f}s')
+            #
+            # event = PConsSim(energy, n_track, rng=rng)
+            # event.rotate_tracks()
+            #
+            # while event.init_net_momentum <= event.net_momentum:
+            #     angle_frac = event.angle_frac
+            #     print(f' Event #{event_i}: net_p {event.init_net_momentum:.1f}->{event.net_momentum:.1f}')
+            #     # print(f'Old init_momentum={event.init_net_momentum}, old final_momentum={event.net_momentum}')
+            #     event = PConsSim(energy, n_track, rng=rng)
+            #     event.angle_frac = angle_frac / 2
+            #     # print(f'Old angle_frac={angle_frac}, new angle_frac={event.angle_frac}')
+            #     event.rotate_tracks()
+            #
+            # tracks = event.get_m_tracks(n_protons)
+            #
+            # tracks = ak.Array({'px': tracks[:, 0], 'py': tracks[:, 1], 'pz': tracks[:, 2], 'M': tracks[:, 0] * 0},
+            #                   with_name='Momentum4D')
+            # # print(tracks.p)
+            # tracks = tracks[(abs(tracks.rapidity) < y_max) & (tracks.pt < pt_max) & (tracks.p < p_max)]
+            # # print(len(tracks))
+            # tracks = np.array(tracks.phi)
+            # tracks[tracks < 0] += 2 * np.pi
+            # # if len(tracks) == 27:
+            # #     plot_momenta(event.get_m_tracks(n_track), event.net_momentum_vec)
+            # #     plot_momenta(event.get_m_tracks(n_track), event.net_momentum_vec)
+            # # tracks = np.array(np.random.uniform(0, 2 * np.pi, size=len(tracks)))
+            # if len(tracks) not in experiment_tracks:
+            #     experiment_tracks.update({len(tracks): [tracks]})
+            # else:
+            #     experiment_tracks[len(tracks)].append(tracks)
 
         n_protons_list = sorted([x for x in experiment_tracks.keys() if x > 1])
         dsig_2_list, dsig_2_err_list = [], []
         for n_proton in n_protons_list:
             p = bin_width / (2 * np.pi)
             binom_var = n_proton * p * (1 - p)
-            # print(f'{n_proton} {experiment_tracks[n_proton]}')
-            data = bin_experiment_no_bs(experiment_tracks[n_proton], n_proton, bin_width, resamples, rng, alg=3, sort=True)
+            data = bin_experiment_no_bs(experiment_tracks[n_proton], n_proton, bin_width, resamples, next(rngs),
+                                        alg=3, sort=True)
             stats = DistStats(data, unbinned=False)
             delta_sig_2 = (stats.get_k_stat(2) - binom_var) / (n_proton * (n_proton - 1))
             dsig_2_list.append(delta_sig_2.val)
@@ -106,17 +117,25 @@ def full_test():
         plt.grid()
         plt.title(f'Total Particles {n_track}')
         dsig_2_list, dsig_2_err_list = np.array(dsig_2_list), np.array(dsig_2_err_list)
-        dsig_avgs.append(np.sum(dsig_2_list / dsig_2_err_list**2) / np.sum(1 / dsig_2_err_list**2))
-        # print(n_protons_list)
-        # print(dsig_2_list)
-        # print(dsig_2_err_list)
-        # plt.scatter(n_protons_list, dsig_2_list)
-        # plt.show()
+        weight_avg = np.average(dsig_2_list, weights=1 / dsig_2_err_list ** 2)
+        weight_avg_err = np.sqrt(1 / np.sum(1 / dsig_2_err_list ** 2))
+        dsig_avgs.append(weight_avg)
+        dsig_avg_errs.append(weight_avg_err)
         plt.errorbar(n_protons_list, dsig_2_list, yerr=dsig_2_err_list, marker='o', ls='none')
+        plt.xlabel('Total Protons Within Acceptance')
+        plt.ylabel(r'$\Delta\sigma^2$')
         plt.axhline(dsig_avgs[-1])
+        plt.tight_layout()
     plt.figure()
     plt.grid()
-    plt.scatter(n_tracks, dsig_avgs)
+    plt.axhline(0, color='black')
+    print(n_tracks)
+    print(dsig_avgs)
+    print(dsig_avg_errs)
+    plt.errorbar(n_tracks, dsig_avgs, yerr=dsig_avg_errs, ls='none', marker='o', alpha=0.8)
+    plt.xlabel('Total Particles in Event')
+    plt.ylabel(r'$\langle\Delta\sigma^2\rangle$')
+    plt.tight_layout()
     plt.show()
 
 
@@ -242,6 +261,28 @@ def chat_gpt_test():
 
     # Show the plot
     plt.show()
+
+
+def sim_event(n_track, rng, energy, n_protons, y_max, pt_max, p_max):
+    vector.register_awkward()
+    event = PConsSim(energy, n_track, rng=rng)
+    event.rotate_tracks()
+
+    while event.init_net_momentum <= event.net_momentum:
+        angle_frac = event.angle_frac
+        event = PConsSim(energy, n_track, rng=rng)
+        event.angle_frac = angle_frac / 2
+        event.rotate_tracks()
+
+    tracks = event.get_m_tracks(n_protons)
+
+    tracks = ak.Array({'px': tracks[:, 0], 'py': tracks[:, 1], 'pz': tracks[:, 2], 'M': tracks[:, 0] * 0},
+                      with_name='Momentum4D')
+    tracks = tracks[(abs(tracks.rapidity) < y_max) & (tracks.pt < pt_max) & (tracks.p < p_max)]
+    tracks = np.array(tracks.phi)
+    tracks[tracks < 0] += 2 * np.pi
+
+    return tracks
 
 
 def plot_vectors(vectors):
