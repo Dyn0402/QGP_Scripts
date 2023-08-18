@@ -2847,7 +2847,7 @@ def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
             if colors is None and color is None:
                 if data_sets_bands is not None and data_set in data_sets_bands:
                     ax_avg.fill_between(x, df_energy['avg'] - df_energy['avg_err'],
-                                        df_energy['avg'] + df_energy['avg_err'], label=lab, alpha=0.4)
+                                        df_energy['avg'] + df_energy['avg_err'], label=lab, alpha=0.2)
                 else:
                     ax_avg.errorbar(x, df_energy['avg'], xerr=x_err, yerr=df_energy['avg_err'], marker=marker, ls=ls,
                                     label=lab, alpha=alpha)
@@ -2857,7 +2857,7 @@ def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
             else:
                 if data_sets_bands is not None and data_set in data_sets_bands:
                     ax_avg.fill_between(x, df_energy['avg'] - df_energy['avg_err'],
-                                        df_energy['avg'] + df_energy['avg_err'], label=lab, alpha=0.4, color=color)
+                                        df_energy['avg'] + df_energy['avg_err'], label=lab, alpha=0.2, color=color)
                 else:
                     ax_avg.errorbar(x, df_energy['avg'], xerr=x_err, yerr=df_energy['avg_err'], marker=marker, ls=ls,
                                     color=color, label=lab, alpha=alpha)

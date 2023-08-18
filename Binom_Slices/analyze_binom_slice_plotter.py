@@ -69,7 +69,6 @@ def plot_paper_figs():
     plt.rcParams["figure.dpi"] = 144
     base_path = 'F:/Research/Results/Azimuth_Analysis/'
     # base_path = 'C:/Users/Dyn04/Research/'
-    # df_name = 'Binomial_Slice_Moments/binom_slice_stats_var_epbins1.csv'
     df_name = 'Bes_with_Sys/binom_slice_vars_bes.csv'
     df_model_name = 'Bes_with_Sys/binom_slice_vars_model.csv'
     df_dsigma_name = 'Bes_with_Sys/binom_slice_vars_bes_dsigma.csv'
