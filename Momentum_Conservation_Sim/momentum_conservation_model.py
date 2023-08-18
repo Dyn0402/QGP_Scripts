@@ -28,10 +28,11 @@ from DistStats import DistStats
 
 def main():
     # chat_gpt_test()
-    # single_event_test()
+    single_event_test()
     # momentum_test()
-    full_test()
+    # full_test()
     # rotation_test()
+    # plot_full_test_from_file()
     print('donzo')
 
 
@@ -112,35 +113,54 @@ def full_test():
             # print(
             #     f'{n_proton} protons: mean: {stats.get_mean()}, variance: {stats.get_variance()}, delta_sig_2: {delta_sig_2}')
 
-        plt.figure()
-        plt.axhline(0, color='black')
-        plt.grid()
-        plt.title(f'Total Particles {n_track}')
         print(f'Total Particles {n_track}')
         print(n_protons_list)
         print(dsig_2_list)
         print(dsig_2_err_list)
-        dsig_2_list, dsig_2_err_list = np.array(dsig_2_list), np.array(dsig_2_err_list)
-        weight_avg = np.average(dsig_2_list, weights=1 / dsig_2_err_list ** 2)
-        weight_avg_err = np.sqrt(1 / np.sum(1 / dsig_2_err_list ** 2))
-        dsig_avgs.append(weight_avg)
-        dsig_avg_errs.append(weight_avg_err)
-        plt.errorbar(n_protons_list, dsig_2_list, yerr=dsig_2_err_list, marker='o', ls='none')
-        plt.xlabel('Total Protons Within Acceptance')
-        plt.ylabel(r'$\Delta\sigma^2$')
-        plt.axhline(dsig_avgs[-1])
-        plt.tight_layout()
-    plt.figure()
-    plt.grid()
-    plt.axhline(0, color='black')
+        wavg, wavg_err = plot_vs_total_protons(n_protons_list, dsig_2_list, dsig_2_err_list, n_track=n_track)
+        dsig_avgs.append(wavg)
+        dsig_avg_errs.append(wavg_err)
+
     print(r'$\langle \Delta \sigma^2 \rangle$')
     print(n_tracks)
     print(dsig_avgs)
     print(dsig_avg_errs)
-    plt.errorbar(n_tracks, dsig_avgs, yerr=dsig_avg_errs, ls='none', marker='o', alpha=0.8)
-    plt.xlabel('Total Particles in Event')
-    plt.ylabel(r'$\langle\Delta\sigma^2\rangle$')
-    plt.tight_layout()
+    plot_vs_total_particles(n_tracks, dsig_avgs, dsig_avg_errs)
+    plt.show()
+
+
+def plot_full_test_from_file():
+    path = 'N:/UCLA_Microsoft/OneDrive - personalmicrosoftsoftware.ucla.edu/Research/UCLA/Results/mom_cons_new_pc.txt'
+    total_tracks, total_protons, dsigs, dsig_errs = [], [], [], []
+    with open(path, 'r') as file:
+        lines = file.readlines()
+    rolling = False
+    for line in lines:
+        if rolling == 1:
+            total_protons.append([int(x) for x in line.strip('\n[]').split(', ')])
+            rolling += 1
+        elif rolling == 2:
+            dsigs.append([float(x) for x in line.strip('\n[]').split(', ')])
+            rolling += 1
+        elif rolling == 3:
+            dsig_errs.append([float(x) for x in line.strip('\n[]').split(', ')])
+            rolling = 0
+        if 'Total Particles ' in line:
+            total_tracks.append(int(line.strip().replace('Total Particles ', '')))
+            rolling = 1
+
+    print(total_tracks)
+    print(total_protons)
+    print(dsigs)
+    print(dsig_errs)
+
+    dsig_avgs, dsig_avg_errs = [], []
+    for tracks, protons, dsigs_i, dsig_errs_i in zip(total_tracks, total_protons, dsigs, dsig_errs):
+        print(tracks)
+        wavg, wavg_err = plot_vs_total_protons(protons, dsigs_i, dsig_errs_i, tracks)
+        dsig_avgs.append(wavg)
+        dsig_avg_errs.append(wavg_err)
+    plot_vs_total_particles(total_tracks, dsig_avgs, dsig_avg_errs)
     plt.show()
 
 
@@ -161,8 +181,9 @@ def single_event_test():
             bad_event = True
     angle_frac_init = event.angle_frac
     fig, ax = plt.subplots()
+    ax.grid()
     rng = np.random.default_rng(seed=seed)
-    for x in range(1, 10):
+    for x in range(1, 8):
         event = PConsSim(5, n_part, rng=rng)
         event.angle_frac = angle_frac_init / x
         # print(event.get_m_tracks(20))
@@ -172,8 +193,11 @@ def single_event_test():
         # print(event.get_m_tracks(20))
         # plot_momenta(event.get_m_tracks(n_part), event.net_momentum_vec)
         ax.plot(range(len(event.net_momentum_iterations)), event.net_momentum_iterations,
-                label=f'{event.angle_frac}')
+                label=f'{event.angle_frac:.4f}')
+    ax.set_xlabel('Iteration')
+    ax.set_ylabel('Event Net Momentum')
     plt.legend()
+    plt.tight_layout()
     plt.show()
 
 
@@ -288,6 +312,38 @@ def sim_event(n_track, rng, energy, n_protons, y_max, pt_max, p_max):
     tracks[tracks < 0] += 2 * np.pi
 
     return tracks
+
+
+def plot_vs_total_protons(n_protons, dsig2, dsig2_err, n_track='-'):
+    plt.figure()
+    plt.axhline(0, color='black')
+    plt.grid()
+    plt.title(f'Total Particles {n_track}')
+    dsig_2_list, dsig_2_err_list = np.array(dsig2), np.array(dsig2_err)
+    weight_avg = np.average(dsig_2_list, weights=1 / dsig_2_err_list ** 2)
+    weight_avg_err = np.sqrt(1 / np.sum(1 / dsig_2_err_list ** 2))
+    plt.errorbar(n_protons, dsig_2_list, yerr=dsig_2_err_list, marker='o', ls='none')
+    plt.xlabel('Total Protons Within Acceptance')
+    plt.ylabel(r'$\Delta\sigma^2$')
+    plt.axhline(weight_avg)
+    plt.tight_layout()
+
+    return weight_avg, weight_avg_err
+
+
+def plot_vs_total_particles(n_tracks, dsig_avgs, dsig_avg_errs):
+    plt.figure()
+    plt.grid()
+    plt.axhline(0, color='black')
+    print(r'$\langle \Delta \sigma^2 \rangle$')
+    print(n_tracks)
+    print(dsig_avgs)
+    print(dsig_avg_errs)
+    plt.errorbar(n_tracks, dsig_avgs, yerr=dsig_avg_errs, ls='none', marker='o', alpha=0.8)
+    plt.xlabel('Total Particles in Event')
+    plt.ylabel(r'$\langle\Delta\sigma^2\rangle$')
+    plt.tight_layout()
+    plt.show()
 
 
 def plot_vectors(vectors):
