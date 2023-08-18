@@ -24,7 +24,7 @@ from integrate_pdf_var import base_gaus_pdf_wrap, get_partition_variance
 
 
 def main():
-    plot_paper_figs()
+    # plot_paper_figs()
 
     # plot_star_model_var()
     # plot_vs_cent_var()
@@ -38,6 +38,7 @@ def main():
 
     # plot_vs_cent_var_fits()
     # plot_vs_cent_var_fit_tests()
+    plot_vs_cent_var_fit_tests2()
 
     # plot_sims()
     # get_sim_mapping()
@@ -185,18 +186,21 @@ def plot_paper_figs():
 
     dsig_avgs_v2_sub_cent8 = dsig_avgs_v2sub[dsig_avgs_v2sub['cent'] == 8]
     plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=False,  # <---
-                        data_sets_labels=data_sets_labels, plot_energy_panels=True, ylab=r'$\langle\Delta\sigma^2\rangle$',
+                        data_sets_labels=data_sets_labels, plot_energy_panels=True,
+                        ylab=r'$\langle\Delta\sigma^2\rangle$',
                         plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5, star_prelim_loc=(1, 0.3, 0.7),
                         xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event',
                         exclude_divs=exclude_divs)
     plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,  # <---
-                        data_sets_labels=data_sets_labels, plot_energy_panels=True, ylab=r'$\langle\Delta\sigma^2\rangle$',
+                        data_sets_labels=data_sets_labels, plot_energy_panels=True,
+                        ylab=r'$\langle\Delta\sigma^2\rangle$',
                         plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5, star_prelim_loc=(1, 0.3, 0.7),
                         xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event',
                         exclude_divs=exclude_divs)
 
     plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, ['bes_def'], data_sets_colors=data_sets_colors, fit=False,
-                        data_sets_labels=data_sets_labels, plot_energy_panels=True, ylab=r'$\langle\Delta\sigma^2\rangle$',
+                        data_sets_labels=data_sets_labels, plot_energy_panels=True,
+                        ylab=r'$\langle\Delta\sigma^2\rangle$',
                         plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5, star_prelim_loc=(1, 0.3, 0.7),
                         xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event',
                         exclude_divs=exclude_divs)
@@ -237,8 +241,6 @@ def plot_paper_figs():
                               title=f'{div_plt}° Partitions, {samples} Samples per Event', alpha=0.8, errbar_alpha=0.3,
                               kin_info_loc=(0.2, 0.1), star_prelim_loc=(0.6, 0.5), marker_map=data_sets_markers,
                               data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
-
-
 
     # plot_div_fits_vs_cent(dsig_avgs_v2_sub, ['bes_def'], data_sets_colors=data_sets_colors,
     #                       data_sets_labels=data_sets_labels, title=None, fit=False, cent_ref=cent_ref_df,
@@ -1233,7 +1235,8 @@ def plot_sims_var():
     print(pd.unique(dsig_avgs['amp']))
     print(pd.unique(dsig_avgs['spread']))
     plot_dvar_avgs_divs(dsig_avgs, all_sets_plt, data_sets_colors=data_sets_colors, fit=False,
-                        data_sets_labels=data_sets_labels, plot_energy_panels=False, ylab=r'$\langle\Delta\sigma^2\rangle$',
+                        data_sets_labels=data_sets_labels, plot_energy_panels=False,
+                        ylab=r'$\langle\Delta\sigma^2\rangle$',
                         title=f'Gaussian Correlation Model: 72 Samples per Event')
     df_fits = plot_dvar_avgs_divs(dsig_avgs, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
                                   data_sets_labels=data_sets_labels, plot_energy_panels=False,
@@ -2250,6 +2253,73 @@ def plot_vs_cent_var_fit_tests():
     ax4.text(0.55, 0.9, r'$\frac{a}{M^n}+c$', fontsize=20, ha='center', va='top', transform=ax4.transAxes)
     ax4.legend()
     fig4.tight_layout()
+
+    plt.show()
+
+
+def plot_vs_cent_var_fit_tests2():
+    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    df_def_avgs_v2sub_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_bes.csv'
+    df_def_avgs_v2sub_out_model_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_model.csv'
+
+    dsig_avgs_v2sub = pd.read_csv(f'{base_path}{df_def_avgs_v2sub_out_name}')
+    dsig_avgs_v2sub_model = pd.read_csv(f'{base_path}{df_def_avgs_v2sub_out_model_name}')
+    dsig_avgs_v2sub = pd.concat([dsig_avgs_v2sub, dsig_avgs_v2sub_model])
+
+    cent_ref_name = 'mean_cent_ref.csv'
+    cent_ref_df = pd.read_csv(f'{base_path}{cent_ref_name}')
+    ref_type = 'refn'  # 'refn'
+    cent_ref_df = cent_ref_df.replace('bes_resample_def', 'bes_def')
+    cent_ref_df = cent_ref_df.replace('ampt_new_coal_resample_def', 'ampt_new_coal_epbins1')
+
+    # dsig_avgs_v2sub['data_type'] = 'diff'
+    df = dsig_avgs_v2sub[dsig_avgs_v2sub['divs'] == 120]
+    data_sets = ['bes_def', 'ampt_new_coal_epbins1']
+
+    def n_fit(n, a, b):
+        return a / n + b
+
+    energies = [7, 11, 19, 27, 39, 62]
+    for energy in energies:
+        df_energy = df[df['energy'] == energy]
+        fig, ax = plt.subplots()
+        ax.grid()
+        ax.axhline(0, color='gray')
+        ax.set_title(f'{energy} GeV')
+        ax.set_xlabel('Refmult')
+        ax.set_ylabel(r'$\langle \Delta \sigma^2 \rangle$')
+
+        for data_set in data_sets:
+            df_set = df_energy[df_energy['name'] == data_set]
+            cent_energy = cent_ref_df[(cent_ref_df['data_set'] == data_set) & (cent_ref_df['energy'] == energy)]
+            x = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_val'].iloc[0] for cent in
+                 df_set['cent']]
+            x_err = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_sd'].iloc[0] for cent in
+                     df_set['cent']]
+
+            ax.errorbar(x, df_set['avg'], yerr=df_set['avg_err'], xerr=x_err, ls='none', marker='o',
+                        label=data_set)
+
+            popt, pcov = cf(n_fit, x, df_set['avg'], sigma=df_set['avg_err'], absolute_sigma=True)
+            xs = np.linspace(min(x), max(x), 1000)
+            ax.plot(xs, n_fit(xs, *popt), color='red')
+            if 'ampt' in data_set:
+                ampt_popt = popt
+            if 'bes_def' in data_set:
+                x_bes = x
+        ax.legend()
+        fig.tight_layout()
+
+        fig2, ax2 = plt.subplots()
+        ax2.grid()
+        ax2.axhline(0, color='gray')
+        ax2.set_title(f'{energy} GeV AMPT Subtracted')
+        ax2.set_xlabel('Refmult')
+        ax2.set_ylabel(r'$\langle \Delta \sigma^2 \rangle$ - AMPT')
+        df_bes = df_energy[df_energy['name'] == 'bes_def']
+        bes_sub_ampt = df_bes['avg'] - n_fit(x_bes, *ampt_popt)
+        ax2.errorbar(x_bes, bes_sub_ampt, yerr=df_bes['avg_err'], ls='none', marker='o')
+        fig2.tight_layout()
 
     plt.show()
 
