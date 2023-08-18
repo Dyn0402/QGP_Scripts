@@ -12,6 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import time
+from scipy.optimize import curve_fit as cf
 
 from multiprocessing import Pool
 import tqdm
@@ -24,15 +25,16 @@ import vector
 from Analysis_POCs.poc_functions import bin_experiment, bin_experiment_no_bs
 from PConsSim import PConsSim, rotate_vector
 from DistStats import DistStats
+from Measure import Measure
 
 
 def main():
     # chat_gpt_test()
-    single_event_test()
+    # single_event_test()
     # momentum_test()
     # full_test()
     # rotation_test()
-    # plot_full_test_from_file()
+    plot_full_test_from_file()
     print('donzo')
 
 
@@ -130,7 +132,8 @@ def full_test():
 
 
 def plot_full_test_from_file():
-    path = 'N:/UCLA_Microsoft/OneDrive - personalmicrosoftsoftware.ucla.edu/Research/UCLA/Results/mom_cons_new_pc.txt'
+    # path = 'N:/UCLA_Microsoft/OneDrive - personalmicrosoftsoftware.ucla.edu/Research/UCLA/Results/mom_cons_new_pc.txt'
+    path = 'C:/Users/Dylan/OneDrive - UCLA IT Services/Research/UCLA/Results/mom_cons_new_pc.txt'
     total_tracks, total_protons, dsigs, dsig_errs = [], [], [], []
     with open(path, 'r') as file:
         lines = file.readlines()
@@ -149,19 +152,46 @@ def plot_full_test_from_file():
             total_tracks.append(int(line.strip().replace('Total Particles ', '')))
             rolling = 1
 
-    print(total_tracks)
-    print(total_protons)
-    print(dsigs)
-    print(dsig_errs)
+    # print(total_tracks)
+    # print(total_protons)
+    # print(dsigs)
+    # print(dsig_errs)
 
     dsig_avgs, dsig_avg_errs = [], []
     for tracks, protons, dsigs_i, dsig_errs_i in zip(total_tracks, total_protons, dsigs, dsig_errs):
-        print(tracks)
-        wavg, wavg_err = plot_vs_total_protons(protons, dsigs_i, dsig_errs_i, tracks)
+        wavg, wavg_err = plot_vs_total_protons(protons, dsigs_i, dsig_errs_i, tracks, plot=False)
         dsig_avgs.append(wavg)
         dsig_avg_errs.append(wavg_err)
     plot_vs_total_particles(total_tracks, dsig_avgs, dsig_avg_errs)
+    plot_fits(total_tracks, dsig_avgs, dsig_avg_errs)
+
     plt.show()
+
+
+def plot_fits(total_tracks, dsig_avgs, dsig_avg_errs):
+    fits = {
+        # r'$\frac{a}{\sqrt{N}} + b$': sqrt_n_fit,
+        # r'$\frac{a}{N} + b$': n_fit,
+        r'$\frac{a}{N^c} + b$': n_exp_fit,
+    }
+    xs = np.linspace(min(total_tracks), max(total_tracks), 1000)
+    par_letters = ['a', 'b', 'c']
+    for fit_lab, fit in fits.items():
+        popt, pcov = cf(fit, total_tracks, dsig_avgs, sigma=dsig_avg_errs, absolute_sigma=True)
+        perr = np.sqrt(np.diag(pcov))
+        fit_values = {par: Measure(val, err) for par, val, err in zip(par_letters, popt, perr)}
+
+        plt.plot(xs, fit(xs, *popt), label=fit_lab)
+
+        # Create the textbox
+        x_pos, y_pos = 400, -0.001  # Set the position of the textbox
+        textbox_content = '\n'.join([f"{key} = {value}" for key, value in fit_values.items()])
+        textbox = plt.text(x_pos, y_pos, textbox_content, fontsize=12, va='center', ha='left',
+                           bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
+        print('\n', fit_lab)
+        print(', '.join([f'{par} = {meas}' for par, meas in fit_values.items()]))
+    plt.legend(loc='lower right', fontsize=20)
+    plt.tight_layout()
 
 
 def single_event_test():
@@ -314,19 +344,21 @@ def sim_event(n_track, rng, energy, n_protons, y_max, pt_max, p_max):
     return tracks
 
 
-def plot_vs_total_protons(n_protons, dsig2, dsig2_err, n_track='-'):
-    plt.figure()
-    plt.axhline(0, color='black')
-    plt.grid()
-    plt.title(f'Total Particles {n_track}')
+def plot_vs_total_protons(n_protons, dsig2, dsig2_err, n_track='-', plot=True):
     dsig_2_list, dsig_2_err_list = np.array(dsig2), np.array(dsig2_err)
     weight_avg = np.average(dsig_2_list, weights=1 / dsig_2_err_list ** 2)
     weight_avg_err = np.sqrt(1 / np.sum(1 / dsig_2_err_list ** 2))
-    plt.errorbar(n_protons, dsig_2_list, yerr=dsig_2_err_list, marker='o', ls='none')
-    plt.xlabel('Total Protons Within Acceptance')
-    plt.ylabel(r'$\Delta\sigma^2$')
-    plt.axhline(weight_avg)
-    plt.tight_layout()
+    if plot:
+        plt.figure()
+        plt.axhline(0, color='black')
+        plt.grid()
+        plt.title(f'Total Particles {n_track}')
+
+        plt.errorbar(n_protons, dsig_2_list, yerr=dsig_2_err_list, marker='o', ls='none')
+        plt.xlabel('Total Protons Within Acceptance')
+        plt.ylabel(r'$\Delta\sigma^2$')
+        plt.axhline(weight_avg)
+        plt.tight_layout()
 
     return weight_avg, weight_avg_err
 
@@ -335,15 +367,10 @@ def plot_vs_total_particles(n_tracks, dsig_avgs, dsig_avg_errs):
     plt.figure()
     plt.grid()
     plt.axhline(0, color='black')
-    print(r'$\langle \Delta \sigma^2 \rangle$')
-    print(n_tracks)
-    print(dsig_avgs)
-    print(dsig_avg_errs)
     plt.errorbar(n_tracks, dsig_avgs, yerr=dsig_avg_errs, ls='none', marker='o', alpha=0.8)
     plt.xlabel('Total Particles in Event')
     plt.ylabel(r'$\langle\Delta\sigma^2\rangle$')
     plt.tight_layout()
-    plt.show()
 
 
 def plot_vectors(vectors):
@@ -384,6 +411,18 @@ def plot_momenta(momenta, net_momentum_vec):
 def rapidity(px, py, pz, m):
     e = np.sqrt(m ** 2 + px ** 2 + py ** 2 + pz ** 2)
     return np.arctanh(pz / e)
+
+
+def sqrt_n_fit(n, a, b):
+    return a / np.sqrt(n) + b
+
+
+def n_fit(n, a, b):
+    return a / n + b
+
+
+def n_exp_fit(n, a, b, c):
+    return a / n**c + b
 
 
 if __name__ == '__main__':
