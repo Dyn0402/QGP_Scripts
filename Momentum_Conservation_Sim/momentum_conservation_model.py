@@ -42,12 +42,14 @@ def main():
 
 
 def full_test():
-    out_path = 'C:/Users/Dylan/Desktop/test/'
+    # out_path = 'C:/Users/Dylan/Desktop/test/'
+    out_path = '/home/dylan/mom_cons_model/'
     ss = np.random.SeedSequence(42)
 
-    n_tracks = [50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200, 240, 280, 320, 390, 500, 640, 800]
+    n_tracks = [30, 40, 50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200, 240, 280, 320, 390, 500, 640, 800]
+    n_tracks.reverse()
     n_protons_fracs = [0.4, 0.6]
-    n_events = 300
+    n_events = 250000
     convergence_momenta = [0.001, 1]
     energies = [2, 4]  # Currently just the range of momenta
     y_max, pt_max, p_max = 0.5, 2, 2
@@ -55,7 +57,7 @@ def full_test():
     bin_widths = np.deg2rad([60, 72, 90, 180, 288])
     resamples = 72
 
-    threads = 12
+    threads = 24
 
     variations = len(n_protons_fracs) * len(energies) * len(convergence_momenta)
     n_rndms = (n_events + int(max(n_tracks) * np.mean(n_protons_fracs) * len(bin_widths))) * len(n_tracks) * variations
@@ -66,12 +68,12 @@ def full_test():
         for convergence_momentum in convergence_momenta:
             for energy in energies:
                 var_dir = (f'{out_path}pfrac{int(n_protons_frac * 100 + 0.1)}_'
-                           f'convp{int(convergence_momentum * 1000 + 0.1)}_energy{energy}_nevent{n_events}/')
+                           f'convp{int(convergence_momentum * 1000 + 0.1)}_energy{energy}_nevent{n_events/1000}k/')
                 if os.path.exists(var_dir):
                     os.rmdir(var_dir)
                 os.mkdir(var_dir)
                 print(f'\n\nStarting variation {variation_num}/{variations} ({var_dir.split("/")[-2]}):\n')
-                for n_i, n_track in enumerate(n_tracks.reverse()):
+                for n_i, n_track in enumerate(n_tracks):
                     print(f'Starting {n_track} track events {n_i + 1}/{len(n_tracks)}:')
                     n_protons = int(n_track * n_protons_frac + 0.5)
                     jobs = [(n_track, next(rngs), energy, n_protons, y_max, pt_max, p_max, convergence_momentum)
