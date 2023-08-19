@@ -25,15 +25,31 @@ class PConsSim:
         self.n_particles = n_particles
         self.dim = dimension
 
-        # self.angle_frac = 0.8 / np.sqrt(self.n_particles)
-        self.angle_frac = 0.6 / np.sqrt(self.n_particles)
+        self.alpha = 0.6
+        self.alpha_upper_bound = 0.9
+        self.alpha_lower_bound = 0.01
+        self.alphas = []
+        self.ratios = []
         self.iterations = 4
+        self.max_iterations = 200
+        self.convergence_momentum = None
+        self.adaptive_alpha = False
 
         if rng is None:
             self.rng = np.random.default_rng()
         else:
             self.rng = rng
+        self.initial_rng_state = self.rng.bit_generator.state
 
+        self.momenta = None
+        self.net_momentum_vec = None
+        self.init_net_momentum = None
+        self.net_momentum = None
+        self.net_momentum_iterations = None
+
+        self.gen_tracks()
+
+    def gen_tracks(self):
         self.momenta = self.rng.uniform(-self.energy, self.energy, size=(self.n_particles, self.dim))
         self.net_momentum_vec = np.sum(self.momenta, axis=0)
         self.init_net_momentum = np.linalg.norm(self.net_momentum_vec)
@@ -41,15 +57,56 @@ class PConsSim:
         self.net_momentum_iterations = [self.net_momentum]
 
     def rotate_tracks(self):
-        for i in range(self.iterations):
-            angle_frac = self.angle_frac * self.net_momentum / self.init_net_momentum
+        iteration = 0
+        stop = False
+        while not stop:
+            angle_frac = self.alpha * self.net_momentum / self.init_net_momentum / np.sqrt(self.n_particles)
             for j in range(len(self.momenta)):
                 self.momenta[j] = rotate_vector(self.momenta[j], -self.net_momentum_vec, angle_frac)
 
             self.net_momentum_vec = np.sum(self.momenta, axis=0)
             self.net_momentum = np.linalg.norm(self.net_momentum_vec)
             self.net_momentum_iterations.append(self.net_momentum)
-            # print(self.net_momentum)
+            if self.adaptive_alpha:
+                success = self.update_alpha()
+                if not success:
+                    break
+            iteration += 1
+            if self.convergence_momentum is not None:
+                if self.net_momentum <= self.convergence_momentum:
+                    stop = True
+                elif iteration > self.max_iterations:
+                    stop = True
+                    print(f'Event Convergence Failed, net_p={self.net_momentum}')
+                    print(self.alphas)
+            else:
+                if iteration >= self.iterations:
+                    stop = True
+
+    def update_alpha(self):
+        ratio = self.net_momentum_iterations[-1] / self.net_momentum_iterations[-2]
+        if len(self.ratios) == 0:
+            if ratio >= 1:
+                new_alpha = self.alpha_lower_bound
+            else:
+                new_alpha = self.alpha - 0.1
+        else:
+            if self.alpha <= self.alpha_lower_bound:
+                new_alpha = self.alpha + 0.01
+            elif self.alpha >= self.alpha_upper_bound:
+                new_alpha = self.alpha - 0.05
+            else:
+                dalpha = self.alpha - self.alphas[-1]
+                dratio = ratio - self.ratios[-1]
+                new_alpha = self.alpha - 0.05 * np.sign(dratio) * np.sign(dalpha)
+            if new_alpha < self.alpha_lower_bound:
+                new_alpha = self.alpha_lower_bound
+            elif new_alpha > self.alpha_upper_bound:
+                new_alpha = self.alpha_upper_bound
+        self.ratios.append(ratio)
+        self.alphas.append(self.alpha)
+        self.alpha = new_alpha
+        return True
 
     def rotate_tracks_debug(self):
         for i in range(self.iterations):
