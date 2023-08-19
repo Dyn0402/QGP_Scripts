@@ -42,8 +42,8 @@ def main():
 
 
 def full_test():
-    # out_path = 'C:/Users/Dylan/Desktop/test/'
-    out_path = '/home/dylan/mom_cons_model/'
+    out_path = 'C:/Users/Dylan/Desktop/test/'
+    # out_path = '/home/dylan/mom_cons_model/'
     ss = np.random.SeedSequence(42)
 
     n_tracks = [30, 40, 50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200, 240, 280, 320, 390, 500, 640, 800]
@@ -60,8 +60,6 @@ def full_test():
     threads = 24
 
     variations = len(n_protons_fracs) * len(energies) * len(convergence_momenta)
-    n_rndms = (n_events + int(max(n_tracks) * np.mean(n_protons_fracs) * len(bin_widths))) * len(n_tracks) * variations
-    rngs = iter([np.random.default_rng(s) for s in ss.spawn(n_rndms)])
 
     variation_num = 1
     for n_protons_frac in n_protons_fracs:
@@ -76,6 +74,9 @@ def full_test():
                 for n_i, n_track in enumerate(n_tracks):
                     print(f'Starting {n_track} track events {n_i + 1}/{len(n_tracks)}:')
                     n_protons = int(n_track * n_protons_frac + 0.5)
+                    # n_rndms = n_events + int(n_track * n_protons_frac * len(bin_widths))
+                    # rngs = iter([np.random.default_rng(s) for s in ss.spawn(n_rndms)])
+                    rngs = iter([np.random.default_rng(s) for s in ss.spawn(n_events)])
                     jobs = [(n_track, next(rngs), energy, n_protons, y_max, pt_max, p_max, convergence_momentum)
                             for i in range(n_events)]
                     experiment_tracks = {}
@@ -87,6 +88,8 @@ def full_test():
                                 experiment_tracks[len(tracks)].append(tracks)
 
                     n_protons_list = sorted([x for x in experiment_tracks.keys() if x > 1])
+                    n_rndms = len(n_protons_list) * len(bin_widths)
+                    rngs = iter([np.random.default_rng(s) for s in ss.spawn(n_rndms)])
                     for bin_width in bin_widths:
                         dsig_2_list, dsig_2_err_list = [], []
                         for n_proton in n_protons_list:
