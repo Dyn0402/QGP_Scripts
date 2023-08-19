@@ -627,6 +627,16 @@ def subtract_funcs(widths, dsigma_dict, combo_name='Combination', name_to_subtra
     fig.tight_layout()
     fig.subplots_adjust(hspace=0.025)
 
+    # fig_norm, ax_norm = plt.subplots()
+    # p = widths / (2 * np.pi)
+    # q = 1 - p
+    # for func_name, y in dsigma_dict.items():
+    #     ax_norm.plot(widths, y / (p * q), label=func_name)
+    # ax_norm.plot(widths, combo_div_eff / (p * q), ls='--', label=diff_name, color='red')
+    # ax_norm.fill_between(widths, (combo_div_eff - combo_div_err) / (p * q), (combo_div_eff + combo_div_err) / (p * q),
+    #                      color='red', alpha=0.3)
+    # fig_norm.tight_layout()
+
 
 def eff_plotting():
     func1_pre = get_efficiency_pdf(62)

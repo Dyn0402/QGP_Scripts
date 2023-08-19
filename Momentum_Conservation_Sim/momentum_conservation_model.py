@@ -10,6 +10,7 @@ Created as QGP_Scripts/momentum_conservation_model
 
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 from mpl_toolkits.mplot3d import Axes3D
 import time
 from scipy.optimize import curve_fit as cf
@@ -31,109 +32,82 @@ from Measure import Measure
 def main():
     # chat_gpt_test()
     # single_event_test()
+    # check_convergence_vs_alpha()
+    # test_alpha_adaptive()
     # momentum_test()
-    # full_test()
+    full_test()
     # rotation_test()
-    plot_full_test_from_file()
+    # plot_full_test_from_file()
     print('donzo')
 
 
 def full_test():
+    out_path = 'C:/Users/Dylan/Desktop/test/'
     ss = np.random.SeedSequence(42)
 
-    n_tracks = [50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200, 240, 280, 320, 390, 500, 640, 800, 1000]
-    n_protons_frac = 0.4
-    n_events = 300000
-    energy = 2  # Currently just the range of momenta
+    n_tracks = [50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200, 240, 280, 320, 390, 500, 640, 800]
+    n_protons_fracs = [0.4, 0.6]
+    n_events = 300
+    convergence_momenta = [0.001, 1]
+    energies = [2, 4]  # Currently just the range of momenta
     y_max, pt_max, p_max = 0.5, 2, 2
 
-    bin_width = np.deg2rad(120)
+    bin_widths = np.deg2rad([60, 72, 90, 180, 288])
     resamples = 72
 
-    threads = 16
+    threads = 12
 
-    n_rndms = (n_events + int(max(n_tracks) * n_protons_frac)) * len(n_tracks)
+    variations = len(n_protons_fracs) * len(energies) * len(convergence_momenta)
+    n_rndms = (n_events + int(max(n_tracks) * np.mean(n_protons_fracs) * len(bin_widths))) * len(n_tracks) * variations
     rngs = iter([np.random.default_rng(s) for s in ss.spawn(n_rndms)])
 
-    dsig_avgs, dsig_avg_errs = [], []
-    for n_i, n_track in enumerate(n_tracks):
-        print(f'\nStarting {n_track} track events {n_i + 1}/{len(n_tracks)}:')
-        n_protons = int(n_track * n_protons_frac + 0.5)
-        jobs = [(n_track, next(rngs), energy, n_protons, y_max, pt_max, p_max) for i in range(n_events)]
-        experiment_tracks = {}
-        with Pool(threads) as pool:
-            for tracks in tqdm.tqdm(pool.istarmap(sim_event, jobs), total=len(jobs)):
-                if len(tracks) not in experiment_tracks:
-                    experiment_tracks.update({len(tracks): [tracks]})
-                else:
-                    experiment_tracks[len(tracks)].append(tracks)
-        # for event_i, rng in zip(range(n_events), rngs):
-            # if event_i % 100 == 0:
-            #     print(f'Event #{event_i} n_track={n_track} {time.time() - start_time:.2f}s')
-            #
-            # event = PConsSim(energy, n_track, rng=rng)
-            # event.rotate_tracks()
-            #
-            # while event.init_net_momentum <= event.net_momentum:
-            #     angle_frac = event.angle_frac
-            #     print(f' Event #{event_i}: net_p {event.init_net_momentum:.1f}->{event.net_momentum:.1f}')
-            #     # print(f'Old init_momentum={event.init_net_momentum}, old final_momentum={event.net_momentum}')
-            #     event = PConsSim(energy, n_track, rng=rng)
-            #     event.angle_frac = angle_frac / 2
-            #     # print(f'Old angle_frac={angle_frac}, new angle_frac={event.angle_frac}')
-            #     event.rotate_tracks()
-            #
-            # tracks = event.get_m_tracks(n_protons)
-            #
-            # tracks = ak.Array({'px': tracks[:, 0], 'py': tracks[:, 1], 'pz': tracks[:, 2], 'M': tracks[:, 0] * 0},
-            #                   with_name='Momentum4D')
-            # # print(tracks.p)
-            # tracks = tracks[(abs(tracks.rapidity) < y_max) & (tracks.pt < pt_max) & (tracks.p < p_max)]
-            # # print(len(tracks))
-            # tracks = np.array(tracks.phi)
-            # tracks[tracks < 0] += 2 * np.pi
-            # # if len(tracks) == 27:
-            # #     plot_momenta(event.get_m_tracks(n_track), event.net_momentum_vec)
-            # #     plot_momenta(event.get_m_tracks(n_track), event.net_momentum_vec)
-            # # tracks = np.array(np.random.uniform(0, 2 * np.pi, size=len(tracks)))
-            # if len(tracks) not in experiment_tracks:
-            #     experiment_tracks.update({len(tracks): [tracks]})
-            # else:
-            #     experiment_tracks[len(tracks)].append(tracks)
+    variation_num = 1
+    for n_protons_frac in n_protons_fracs:
+        for convergence_momentum in convergence_momenta:
+            for energy in energies:
+                var_dir = (f'{out_path}pfrac{int(n_protons_frac * 100 + 0.1)}_'
+                           f'convp{int(convergence_momentum * 1000 + 0.1)}_energy{energy}_nevent{n_events}/')
+                if os.path.exists(var_dir):
+                    os.rmdir(var_dir)
+                os.mkdir(var_dir)
+                print(f'\n\nStarting variation {variation_num}/{variations} ({var_dir.split("/")[-2]}):\n')
+                for n_i, n_track in enumerate(n_tracks.reverse()):
+                    print(f'Starting {n_track} track events {n_i + 1}/{len(n_tracks)}:')
+                    n_protons = int(n_track * n_protons_frac + 0.5)
+                    jobs = [(n_track, next(rngs), energy, n_protons, y_max, pt_max, p_max, convergence_momentum)
+                            for i in range(n_events)]
+                    experiment_tracks = {}
+                    with Pool(threads) as pool:
+                        for tracks in tqdm.tqdm(pool.istarmap(sim_event, jobs), total=len(jobs)):
+                            if len(tracks) not in experiment_tracks:
+                                experiment_tracks.update({len(tracks): [tracks]})
+                            else:
+                                experiment_tracks[len(tracks)].append(tracks)
 
-        n_protons_list = sorted([x for x in experiment_tracks.keys() if x > 1])
-        dsig_2_list, dsig_2_err_list = [], []
-        for n_proton in n_protons_list:
-            p = bin_width / (2 * np.pi)
-            binom_var = n_proton * p * (1 - p)
-            data = bin_experiment_no_bs(experiment_tracks[n_proton], n_proton, bin_width, resamples, next(rngs),
-                                        alg=3, sort=True)
-            stats = DistStats(data, unbinned=False)
-            delta_sig_2 = (stats.get_k_stat(2) - binom_var) / (n_proton * (n_proton - 1))
-            dsig_2_list.append(delta_sig_2.val)
-            dsig_2_err_list.append(delta_sig_2.err * np.sqrt(resamples))
-            # print(
-            #     f'{n_proton} protons: mean: {stats.get_mean()}, variance: {stats.get_variance()}, delta_sig_2: {delta_sig_2}')
+                    n_protons_list = sorted([x for x in experiment_tracks.keys() if x > 1])
+                    for bin_width in bin_widths:
+                        dsig_2_list, dsig_2_err_list = [], []
+                        for n_proton in n_protons_list:
+                            p = bin_width / (2 * np.pi)
+                            binom_var = n_proton * p * (1 - p)
+                            data = bin_experiment_no_bs(experiment_tracks[n_proton], n_proton, bin_width, resamples,
+                                                        next(rngs), alg=3, sort=True)
+                            stats = DistStats(data, unbinned=False)
+                            delta_sig_2 = (stats.get_k_stat(2) - binom_var) / (n_proton * (n_proton - 1))
+                            dsig_2_list.append(delta_sig_2.val)
+                            dsig_2_err_list.append(delta_sig_2.err * np.sqrt(resamples))
 
-        print(f'Total Particles {n_track}')
-        print(n_protons_list)
-        print(dsig_2_list)
-        print(dsig_2_err_list)
-        wavg, wavg_err = plot_vs_total_protons(n_protons_list, dsig_2_list, dsig_2_err_list, n_track=n_track)
-        dsig_avgs.append(wavg)
-        dsig_avg_errs.append(wavg_err)
-
-    print(r'$\langle \Delta \sigma^2 \rangle$')
-    print(n_tracks)
-    print(dsig_avgs)
-    print(dsig_avg_errs)
-    plot_vs_total_particles(n_tracks, dsig_avgs, dsig_avg_errs)
-    plt.show()
+                        with open(f'{var_dir}bin_width{int(np.rad2deg(bin_width) + 0.1)}.txt', 'a') as file:
+                            file.write(f'Total Particles {n_track}\n')
+                            file.write(', '.join([str(x) for x in n_protons_list]) + '\n')
+                            file.write(', '.join([str(x) for x in dsig_2_list]) + '\n')
+                            file.write(', '.join([str(x) for x in dsig_2_err_list]) + '\n')
+                            file.write('\n')
 
 
 def plot_full_test_from_file():
-    # path = 'N:/UCLA_Microsoft/OneDrive - personalmicrosoftsoftware.ucla.edu/Research/UCLA/Results/mom_cons_new_pc.txt'
-    path = 'C:/Users/Dylan/OneDrive - UCLA IT Services/Research/UCLA/Results/mom_cons_new_pc.txt'
+    path = 'N:/UCLA_Microsoft/OneDrive - personalmicrosoftsoftware.ucla.edu/Research/UCLA/Results/mom_cons_new_pc.txt'
+    # path = 'C:/Users/Dylan/OneDrive - UCLA IT Services/Research/UCLA/Results/mom_cons_new_pc.txt'
     total_tracks, total_protons, dsigs, dsig_errs = [], [], [], []
     with open(path, 'r') as file:
         lines = file.readlines()
@@ -209,13 +183,13 @@ def single_event_test():
         print(f'{event.net_momentum_iterations}')
         if event.net_momentum_iterations[-1] > event.init_net_momentum:
             bad_event = True
-    angle_frac_init = event.angle_frac
+    alpha_init = event.alpha
     fig, ax = plt.subplots()
     ax.grid()
-    rng = np.random.default_rng(seed=seed)
     for x in range(1, 8):
+        rng = np.random.default_rng(seed=seed)
         event = PConsSim(5, n_part, rng=rng)
-        event.angle_frac = angle_frac_init / x
+        event.alpha = alpha_init / x
         # print(event.get_m_tracks(20))
         # plot_momenta(event.get_m_tracks(n_part), event.net_momentum_vec)
         # event.rotate_tracks_debug()
@@ -223,12 +197,98 @@ def single_event_test():
         # print(event.get_m_tracks(20))
         # plot_momenta(event.get_m_tracks(n_part), event.net_momentum_vec)
         ax.plot(range(len(event.net_momentum_iterations)), event.net_momentum_iterations,
-                label=f'{event.angle_frac:.4f}')
+                label=f'{event.alpha:.2f}')
     ax.set_xlabel('Iteration')
     ax.set_ylabel('Event Net Momentum')
     plt.legend()
     plt.tight_layout()
     plt.show()
+
+
+def check_convergence_vs_alpha():
+    n_part = 20
+    seed = 588
+
+    rng = np.random.default_rng(seed=seed)
+    event = PConsSim(2, n_part, rng=rng)
+    plot_momenta(event.momenta, event.net_momentum_vec)
+    # plt.show()
+
+    while True:
+        fig, ax = plt.subplots()
+        fig2, ax2 = plt.subplots()
+        ax.grid()
+        ax2.grid()
+        fractions = {}
+        fraction_alphas = {}
+        alphas = np.arange(0.01, 1.0, 0.1)
+        for alpha in alphas:
+            rng = np.random.default_rng(seed=seed)
+            event = PConsSim(2, n_part, rng=rng)
+            event.adaptive_alpha = True
+            event.max_iterations = 50
+            event.convergence_momentum = 0.001
+            event.alpha = alpha
+            event.rotate_tracks()
+            net_ps = event.net_momentum_iterations
+            fracs = [net_ps[i] / net_ps[i - 1] if net_ps[i - 1] != 0 else float('inf') for i in range(1, len(net_ps))]
+            for iteration, frac in enumerate(fracs):
+                if iteration in fractions:
+                    fractions[iteration].append(frac)
+                    fraction_alphas[iteration].append(alpha)
+                else:
+                    fractions[iteration] = [frac]
+                    fraction_alphas[iteration] = [alpha]
+            # if len(fractions) == 0:
+            #     fractions = [[frac] for frac in fracs]
+            # else:
+            #     for i in range(len(fractions)):
+            #         fractions[i].append(fracs[i])
+            ax2.plot(range(1, len(event.net_momentum_iterations)), fracs, label=f'{alpha:.2f}')
+            ax.plot(range(len(event.net_momentum_iterations)), event.net_momentum_iterations,
+                    label=f'{alpha:.2f}')
+        ax.set_xlabel('Iteration')
+        ax2.set_xlabel('Iteration')
+        ax.set_ylabel('Event Net Momentum')
+        ax2.set_ylabel('Fractional Change in Net Momentum')
+        ax.legend()
+        ax2.legend()
+        fig.tight_layout()
+        fig2.tight_layout()
+
+        fig3, ax3 = plt.subplots()
+        ax3.grid()
+        for it, fracs in fractions.items():
+            ax3.plot(fraction_alphas[it], fracs, label=f'Iteration {it}')
+        ax3.set_xlabel('Alpha')
+        ax3.set_ylabel('Event Net Momentum Fractional Reduction')
+        ax3.legend()
+        fig3.tight_layout()
+
+        plt.show()
+        seed += 1
+
+
+def test_alpha_adaptive():
+    n_part = 20
+    seed = 47
+
+    while True:
+        if seed % 100 == 0:
+            print(seed)
+        rng = np.random.default_rng(seed=seed)
+        event = PConsSim(2, n_part, rng=rng)
+        event.adaptive_alpha = True
+        event.convergence_momentum = 0.001
+        event.rotate_tracks()
+        if len(event.alphas) >= event.max_iterations:
+            print('Bad one')
+            print(seed)
+            fig, ax = plt.subplots()
+            ax.grid()
+            ax.plot(range(len(event.net_momentum_iterations)), event.net_momentum_iterations)
+            plt.show()
+        seed += 1
 
 
 def momentum_test():
@@ -322,15 +382,17 @@ def chat_gpt_test():
     plt.show()
 
 
-def sim_event(n_track, rng, energy, n_protons, y_max, pt_max, p_max):
+def sim_event(n_track, rng, energy, n_protons, y_max, pt_max, p_max, convergence_momentum):
     vector.register_awkward()
     event = PConsSim(energy, n_track, rng=rng)
+    event.convergence_momentum = convergence_momentum
+    event.adaptive_alpha = True
     event.rotate_tracks()
 
     while event.init_net_momentum <= event.net_momentum:
-        angle_frac = event.angle_frac
+        alpha = event.alpha
         event = PConsSim(energy, n_track, rng=rng)
-        event.angle_frac = angle_frac / 2
+        event.alpha = alpha / 2
         event.rotate_tracks()
 
     tracks = event.get_m_tracks(n_protons)
