@@ -13,6 +13,7 @@ import pandas as pd
 import pickle
 
 import itertools
+import inspect
 
 from multiprocessing import Pool
 import tqdm
@@ -241,6 +242,14 @@ def plot_paper_figs():
                               title=f'{div_plt}° Partitions, {samples} Samples per Event', alpha=0.8, errbar_alpha=0.3,
                               kin_info_loc=(0.2, 0.1), star_prelim_loc=(0.6, 0.5), marker_map=data_sets_markers,
                               data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
+
+    data_sets_cent = ['ampt_new_coal_epbins1', 'bes_def']
+    plot_dsig_avg_vs_cent_2panel(dsig_avgs_v2_sub_div120, data_sets_cent, data_sets_colors=data_sets_colors, fit=False,
+                                 cent_ref=cent_ref_df, ref_type=ref_type,  # <---
+                                 title=f'{div_plt}° Partitions, {samples} Samples per Event', alpha=0.8,
+                                 errbar_alpha=0.3, xlim=(-20, 720),
+                                 kin_info_loc=(0.6, 0.5), star_prelim_loc=(0.4, 0.5), marker_map=data_sets_markers,
+                                 data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
 
     # plot_div_fits_vs_cent(dsig_avgs_v2_sub, ['bes_def'], data_sets_colors=data_sets_colors,
     #                       data_sets_labels=data_sets_labels, title=None, fit=False, cent_ref=cent_ref_df,
@@ -2279,7 +2288,27 @@ def plot_vs_cent_var_fit_tests2():
     def n_fit(n, a, b):
         return a / n + b
 
+    def n_pow_fit(n, a, b, c):
+        return a / n**c + b
+
+    def n_fit_lin(n, a, b, c):
+        return a / (n + c * np.sqrt(n)) + b
+
+    def n_fit_lin2(n, a, b, c, d):
+        return a / np.array(n) + c / np.power(n, d) + b
+
+    def n_n2_fit(n, a, b, c):
+        return a / n + c / np.power(n, 2) + b
+
+    fit_func = n_fit
+    p0 = (-0.2, 0)
+    min_x_fit = 0
+    cents_fit = 3
+    fit_resid = False
+    n_pars = len(inspect.signature(fit_func).parameters) - 1
+
     energies = [7, 11, 19, 27, 39, 62]
+    energy_fit_pars = {i: {'bes': {'vals': [], 'errs': []}, 'ampt': {'vals': [], 'errs': []}} for i in range(n_pars)}
     for energy in energies:
         df_energy = df[df['energy'] == energy]
         fig, ax = plt.subplots()
@@ -2300,14 +2329,33 @@ def plot_vs_cent_var_fit_tests2():
             ax.errorbar(x, df_set['avg'], yerr=df_set['avg_err'], xerr=x_err, ls='none', marker='o',
                         label=data_set)
 
-            popt, pcov = cf(n_fit, x, df_set['avg'], sigma=df_set['avg_err'], absolute_sigma=True)
+            filtered_lists = [(xi, y, ye) for xi, y, ye in zip(x, df_set['avg'], df_set['avg_err'])
+                              if xi > min_x_fit]
+            x_fit, y_fit, yerr_fit = zip(*sorted(filtered_lists))
+            if cents_fit is not None:
+                x_fit, y_fit, yerr_fit = x_fit[-cents_fit:], y_fit[-cents_fit:], yerr_fit[-cents_fit:]
+
+            try:
+                popt, pcov = cf(fit_func, x_fit, y_fit, sigma=yerr_fit, absolute_sigma=True, p0=p0)
+            except RuntimeError:
+                popt, pcov = p0, np.diag(np.ones(len(p0)))
+            perr = np.sqrt(np.diag(pcov))
             xs = np.linspace(min(x), max(x), 1000)
-            ax.plot(xs, n_fit(xs, *popt), color='red')
+            ax.plot(xs, fit_func(xs, *popt), color='red')
             if 'ampt' in data_set:
                 ampt_popt = popt
+                x_ampt = x
+                for i in range(n_pars):
+                    energy_fit_pars[i]['ampt']['vals'].append(popt[i])
+                    energy_fit_pars[i]['ampt']['errs'].append(perr[i])
             if 'bes_def' in data_set:
+                bes_popt = popt
                 x_bes = x
+                for i in range(n_pars):
+                    energy_fit_pars[i]['bes']['vals'].append(popt[i])
+                    energy_fit_pars[i]['bes']['errs'].append(perr[i])
         ax.legend()
+        fig.canvas.manager.set_window_title(f'{energy} GeV Fits')
         fig.tight_layout()
 
         fig2, ax2 = plt.subplots()
@@ -2315,11 +2363,50 @@ def plot_vs_cent_var_fit_tests2():
         ax2.axhline(0, color='gray')
         ax2.set_title(f'{energy} GeV AMPT Subtracted')
         ax2.set_xlabel('Refmult')
-        ax2.set_ylabel(r'$\langle \Delta \sigma^2 \rangle$ - AMPT')
+        ax2.set_ylabel(r'$\langle \Delta \sigma^2 \rangle$')
+
         df_bes = df_energy[df_energy['name'] == 'bes_def']
-        bes_sub_ampt = df_bes['avg'] - n_fit(x_bes, *ampt_popt)
-        ax2.errorbar(x_bes, bes_sub_ampt, yerr=df_bes['avg_err'], ls='none', marker='o')
+        bes_sub_ampt = df_bes['avg'] - fit_func(x_bes, *ampt_popt)
+        ax2.errorbar(x_bes, bes_sub_ampt, yerr=df_bes['avg_err'], ls='none', marker='o', label='bes - ampt')
+
+        df_ampt = df_energy[df_energy['name'] == 'ampt_new_coal_epbins1']
+        ampt_sub_ampt = df_ampt['avg'] - fit_func(x_ampt, *ampt_popt)
+        ax2.errorbar(x_ampt, ampt_sub_ampt, yerr=df_ampt['avg_err'], ls='none', marker='o', label='ampt - ampt')
+        if fit_resid:
+            popt_ampt_resid, pcov_ampt_resid = cf(n_pow_fit, x_ampt, ampt_sub_ampt, sigma=df_ampt['avg_err'],
+                                                  absolute_sigma=True)
+            xs = np.linspace(min(x_ampt), max(x_ampt), 1000)
+            print(f'AMPT {energy} GeV: {popt_ampt_resid}')
+            ax2.plot(xs, n_pow_fit(xs, *popt_ampt_resid))
+
+
+        bes_sub_bes = df_bes['avg'] - fit_func(x_bes, *bes_popt)
+        ax2.errorbar(x_bes, bes_sub_bes, yerr=df_bes['avg_err'], ls='none', marker='o', label='bes - bes')
+        if fit_resid:
+            popt_bes_resid, pcov_bes_resid = cf(n_pow_fit, x_bes, bes_sub_bes, sigma=df_bes['avg_err'],
+                                                absolute_sigma=True)
+            xs = np.linspace(min(x_bes), max(x_bes), 1000)
+            print(f'BES {energy} GeV: {popt_bes_resid}')
+            ax2.plot(xs, n_pow_fit(xs, *popt_bes_resid))
+
+        ax2.legend()
+        fig2.canvas.manager.set_window_title(f'{energy} GeV Residuals')
         fig2.tight_layout()
+
+    for par_i, par_letter in enumerate(['a', 'b', 'c', 'd', 'e'][:len(popt)]):
+        fit_pars = energy_fit_pars[par_i]
+        fig3, ax3 = plt.subplots()
+        ax3.grid()
+        ax3.axhline(0, color='gray')
+        ax3.errorbar(energies, fit_pars['bes']['vals'], yerr=fit_pars['bes']['errs'],
+                     marker='o', ls='none', label='bes')
+        ax3.errorbar(energies, fit_pars['ampt']['vals'], yerr=fit_pars['ampt']['errs'],
+                     marker='o', ls='none', label='ampt')
+        ax3.set_xlabel('Energy')
+        ax3.set_ylabel(par_letter)
+        ax3.legend()
+        fig3.canvas.manager.set_window_title(f'Parameter {par_letter} vs Energy')
+        fig3.tight_layout()
 
     plt.show()
 
