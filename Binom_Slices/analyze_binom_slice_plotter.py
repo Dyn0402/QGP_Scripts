@@ -39,7 +39,7 @@ def main():
 
     # plot_vs_cent_var_fits()
     # plot_vs_cent_var_fit_tests()
-    plot_vs_cent_var_fit_tests2()
+    # plot_vs_cent_var_fit_tests2()
 
     # plot_sims()
     # get_sim_mapping()
@@ -62,7 +62,7 @@ def main():
     # plot_anticl_flow_closure_test()
     # plot_anticl_flow_closure_test_simple()
     # plot_efficiency_closure_tests()
-    # plot_closure_tests()
+    plot_closure_tests()
     print('donzo')
 
 
@@ -188,13 +188,13 @@ def plot_paper_figs():
     dsig_avgs_v2_sub_cent8 = dsig_avgs_v2sub[dsig_avgs_v2sub['cent'] == 8]
     plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=False,  # <---
                         data_sets_labels=data_sets_labels, plot_energy_panels=True,
-                        ylab=r'$\langle\Delta\sigma^2\rangle$',
+                        ylab=r'$\langle\Delta\sigma^2\rangle$', data_sets_bands=data_sets_bands,
                         plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5, star_prelim_loc=(1, 0.3, 0.7),
                         xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event',
                         exclude_divs=exclude_divs)
     plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,  # <---
                         data_sets_labels=data_sets_labels, plot_energy_panels=True,
-                        ylab=r'$\langle\Delta\sigma^2\rangle$',
+                        ylab=r'$\langle\Delta\sigma^2\rangle$', data_sets_bands=data_sets_bands,
                         plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5, star_prelim_loc=(1, 0.3, 0.7),
                         xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event',
                         exclude_divs=exclude_divs)
@@ -210,6 +210,7 @@ def plot_paper_figs():
     plot_protons_avgs_vs_energy(dsig_avgs_v2_sub_cent8_div120, data_sets_plt, data_sets_colors=data_sets_colors,  # <---
                                 data_sets_labels=data_sets_labels, alpha=1, kin_info_loc=(0.73, 0.45),
                                 star_prelim_loc=(0.02, 0.75), marker_map=data_sets_markers,
+                                data_sets_bands=data_sets_bands,
                                 title=f'{cent_map[8]} Centrality, {div_plt}° Partitions, {samples} Samples per Event')
     plot_protons_avgs_vs_energy(dsig_avgs_v2_sub_cent8_div120, ['bes_def'], data_sets_colors=data_sets_colors,
                                 data_sets_labels=data_sets_labels, alpha=1, kin_info_loc=(0.123, 0.68),
@@ -3891,7 +3892,7 @@ def plot_efficiency_closure_tests():
 
 
 def plot_closure_tests():
-    plt.rcParams["figure.figsize"] = (6.66, 5)
+    plt.rcParams["figure.figsize"] = (8, 5)
     plt.rcParams["figure.dpi"] = 144
     base_path = 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
     df_name = 'binom_slice_vars_2source_tests.csv'
@@ -3922,8 +3923,10 @@ def plot_closure_tests():
     dsigma_avgs = pd.concat(dsigma_avgs, ignore_index=True)
 
     simple_clust_amps = ['3', '05']
+    amp_map = {'05': '0.165', }
     for amp in simple_clust_amps:
         amp_val = f'{float("0." + amp)}:.2f'
+        amp_true = '0.1'
         simple_clust = dsigma_avgs[(dsigma_avgs['name'] == f'simpleclust_s08_a{amp}')
                                    & (dsigma_avgs['data_type'] == 'raw')]
         simple_clust_eff = dsigma_avgs[(dsigma_avgs['name'] == f'simpleclust_s08_a{amp}_eff')

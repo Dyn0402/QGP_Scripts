@@ -908,7 +908,7 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
                 ax.set_ylabel(rf'$\Delta \sigma^2$')
         else:
             ax.set_ylabel(rf'$\Delta \sigma^2$')
-        ax.axhline(0, ls='-', color='gray')
+        ax.axhline(0, ls='-', color='gray', zorder=0)
         if y_ranges:
             ax.set_ylim(y_ranges)
         color = iter(plt.cm.rainbow(np.linspace(0, 1, len(data))))
@@ -1271,7 +1271,7 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
         for ax in ax_energies[-3:]:
             ax.set_xlabel('Total Protons in Event')
         for i, ax in enumerate(ax_energies):
-            ax.axhline(0, ls='-', color='gray')
+            ax.axhline(0, ls='-', color='gray', zorder=0)
             if i in [0, 3]:
                 if ylabel is not None:
                     ax.set_ylabel(ylabel)
@@ -1744,7 +1744,8 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
 def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, data_sets_labels=None,
                         exclude_divs=[], verbose=False, plot_energy_panels=True, title=None, alpha=1, ylab=None,
                         plot=True, errbar_alpha=0.2, plot_indiv=True, plot_energies_fig=False, ylim=None, xlim=None,
-                        leg_panel=0, kin_loc=(0.02, 0.02), star_prelim_loc=None, no_hydro_label=False):
+                        leg_panel=0, kin_loc=(0.02, 0.02), star_prelim_loc=None, no_hydro_label=False,
+                        data_sets_bands=None):
     energy_map = {7: '7.7', 11: '11.5', 19: '19.6', 27: '27', 39: '39', 62: '62.4'}
     energies = pd.unique(df['energy'])
     if plot:
@@ -1793,25 +1794,39 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                         lab += f'_cent{cent}'
                     if plot_indiv:
                         energy_fig, energy_ax = energy_fig_axs[energy]
-                        energy_ax.errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['avg_err'], ls='none',
-                                           marker='o', label=lab_energy, color=color, alpha=alpha)
-                        if 'sys' in df_cent.columns:
-                            energy_ax.errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['sys'], ls='',
-                                               elinewidth=4,
-                                               marker='', color=color, alpha=errbar_alpha)
+                        if data_sets_bands is not None and data_set in data_sets_bands:
+                            energy_ax.fill_between(df_cent['divs'], df_cent['avg'] - df_cent['avg_err'],
+                                                   df_cent['avg'] + df_cent['avg_err'], label=lab_energy,
+                                                   color=color, alpha=alpha)
+                        else:
+                            energy_ax.errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['avg_err'], ls='none',
+                                               marker='o', label=lab_energy, color=color, alpha=alpha)
+                            if 'sys' in df_cent.columns:
+                                energy_ax.errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['sys'], ls='',
+                                                   elinewidth=4,
+                                                   marker='', color=color, alpha=errbar_alpha)
                     if plot_energies_fig:
-                        ax.errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['avg_err'], ls='none',
-                                    marker=markers[energy_marker], label=lab, color=color, alpha=alpha)
-                        if 'sys' in df_cent.columns:
-                            ax.errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['sys'], ls='', elinewidth=4,
-                                        marker='', color=color, alpha=errbar_alpha)
+                        if data_sets_bands is not None and data_set in data_sets_bands:
+                            ax.fill_between(df_cent['divs'], df_cent['avg'] - df_cent['avg_err'],
+                                            df_cent['avg'] + df_cent['avg_err'], label=lab, color=color, alpha=alpha)
+                        else:
+                            ax.errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['avg_err'], ls='none',
+                                        marker=markers[energy_marker], label=lab, color=color, alpha=alpha)
+                            if 'sys' in df_cent.columns:
+                                ax.errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['sys'], ls='', elinewidth=4,
+                                            marker='', color=color, alpha=errbar_alpha)
                     if plot_energy_panels:
-                        ax_panels[energy].errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['avg_err'],
-                                                   ls='none',
-                                                   marker='o', label=lab_energy, color=color, alpha=alpha)
-                        if 'sys' in df_cent.columns:
-                            ax_panels[energy].errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['sys'],
-                                                       ls='', marker='', color=color, alpha=errbar_alpha, elinewidth=4)
+                        if data_sets_bands is not None and data_set in data_sets_bands:
+                            ax_panels[energy].fill_between(df_cent['divs'], df_cent['avg'] - df_cent['avg_err'],
+                                                           df_cent['avg'] + df_cent['avg_err'], label=lab_energy,
+                                                           color=color, alpha=alpha)
+                        else:
+                            ax_panels[energy].errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['avg_err'],
+                                                       ls='none',
+                                                       marker='o', label=lab_energy, color=color, alpha=alpha)
+                            if 'sys' in df_cent.columns:
+                                ax_panels[energy].errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['sys'],
+                                                           ls='', marker='', color=color, alpha=errbar_alpha, elinewidth=4)
                 if fit and df_cent.size > 1:
                     try:
                         df_cent = df_cent[~df_cent.divs.isin(exclude_divs)]
@@ -2689,9 +2704,10 @@ def plot_protons_fits_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
 
 
 def plot_protons_avgs_vs_energy(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None, alpha=1,
-                                kin_info_loc=(0.12, 0.68), star_prelim_loc=None, marker_map=None, leg_loc=None):
+                                kin_info_loc=(0.12, 0.68), star_prelim_loc=None, marker_map=None, leg_loc=None,
+                                data_sets_bands=None):
     fig_avg, ax_avg = plt.subplots()
-    ax_avg.axhline(0, color='gray')
+    ax_avg.axhline(0, color='black', zorder=0)
     fig_avg.canvas.manager.set_window_title(f'Dsigma2 Averages vs Energy')
     for data_set in data_sets_plt:
         df_set = df[df['name'] == data_set]
@@ -2705,19 +2721,29 @@ def plot_protons_avgs_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
         else:
             marker = marker_map[data_set]['diff']
         if data_sets_colors is None:
-            ax_avg.errorbar(df_set['energy'], df_set['avg'], yerr=df_set['avg_err'], ls='none', marker=marker,
-                            label=lab, alpha=alpha)
-            if 'sys' in df:
-                ax_avg.errorbar(df_set['energy'], df_set['avg'], yerr=df_set['sys'], ls='', marker='', elinewidth=4,
-                                alpha=0.3)
+            if data_sets_bands is not None and data_set in data_sets_bands:
+                ax_avg.fill_between(df_set['energy'], df_set['avg'] - df_set['avg_err'],
+                                    df_set['avg'] + df_set['avg_err'], label=lab, alpha=alpha)
+            else:
+                ax_avg.errorbar(df_set['energy'], df_set['avg'], yerr=df_set['avg_err'], ls='none', marker=marker,
+                                label=lab, alpha=alpha)
+                if 'sys' in df:
+                    ax_avg.errorbar(df_set['energy'], df_set['avg'], yerr=df_set['sys'], ls='', marker='', elinewidth=4,
+                                    alpha=0.3)
         else:
-            ax_avg.errorbar(df_set['energy'], df_set['avg'], yerr=df_set['avg_err'], ls='none', marker=marker,
-                            color=data_sets_colors[data_set], label=lab, alpha=alpha)
-            if 'sys' in df:
-                ax_avg.errorbar(df_set['energy'], df_set['avg'], yerr=df_set['sys'], ls='', marker='', elinewidth=4,
-                                color=data_sets_colors[data_set], alpha=0.3)
+            if data_sets_bands is not None and data_set in data_sets_bands:
+                ax_avg.fill_between(df_set['energy'], df_set['avg'] - df_set['avg_err'],
+                                    df_set['avg'] + df_set['avg_err'], color=data_sets_colors[data_set],
+                                    label=lab, alpha=alpha)
+            else:
+                ax_avg.errorbar(df_set['energy'], df_set['avg'], yerr=df_set['avg_err'], ls='none', marker=marker,
+                                color=data_sets_colors[data_set], label=lab, alpha=alpha)
+                if 'sys' in df:
+                    ax_avg.errorbar(df_set['energy'], df_set['avg'], yerr=df_set['sys'], ls='', marker='', elinewidth=4,
+                                    color=data_sets_colors[data_set], alpha=0.3)
     ax_avg.set_ylabel(r'$\langle\Delta\sigma^2\rangle$')
     ax_avg.set_xlabel('Energy (GeV)')
+    ax_avg.set_axisbelow(True)
     ax_avg.grid()
     if title:
         ax_avg.set_title(title)
