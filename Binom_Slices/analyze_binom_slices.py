@@ -91,6 +91,10 @@ def inv_x_var(x, a, b, c):
     return a / (x * (np.exp(-c * x) + 1)) + b
 
 
+def inv_x_plus_sqrt(x, a, b, c):
+    return a / (x + c * np.sqrt(x)) + b
+
+
 def inv_sqrtx(x, a, c):
     return a / np.sqrt(x) + c
 
@@ -1745,7 +1749,7 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                         exclude_divs=[], verbose=False, plot_energy_panels=True, title=None, alpha=1, ylab=None,
                         plot=True, errbar_alpha=0.2, plot_indiv=True, plot_energies_fig=False, ylim=None, xlim=None,
                         leg_panel=0, kin_loc=(0.02, 0.02), star_prelim_loc=None, no_hydro_label=False,
-                        data_sets_bands=None):
+                        data_sets_bands=None, legend_order=None):
     energy_map = {7: '7.7', 11: '11.5', 19: '19.6', 27: '27', 39: '39', 62: '62.4'}
     energies = pd.unique(df['energy'])
     if plot:
@@ -1884,7 +1888,13 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                 ax.set_title(title)
             ax.set_ylabel(ylab)
             ax.set_xlabel('Azimuthal Partition Width')
-            ax.legend()
+            if legend_order is not None:
+                handles, labels = ax.get_legend_handles_labels()
+                handles_dict = dict(zip(labels, handles))
+                ordered_handles = [handles_dict[label] for label in legend_order]
+                ax.legend(handles=ordered_handles, labels=legend_order)
+            else:
+                ax.legend()
 
         if plot_indiv:
             for energy_i, (energy, (energy_fig, energy_ax)) in enumerate(energy_fig_axs.items()):
@@ -1899,7 +1909,13 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                 energy_ax.set_xlabel('Azimuthal Partition Width (w)')
                 energy_ax.set_ylabel(ylab)
                 energy_ax.axhline(0, color='black', zorder=0)
-                energy_ax.legend()
+                if legend_order is not None:
+                    handles, labels = energy_ax.get_legend_handles_labels()
+                    handles_dict = dict(zip(labels, handles))
+                    ordered_handles = [handles_dict[label] for label in legend_order]
+                    energy_ax.legend(handles=ordered_handles, labels=legend_order)
+                else:
+                    energy_ax.legend()
                 energy_fig.tight_layout()
                 if title is None:
                     energy_fig.canvas.manager.set_window_title(f'dsigma^2 vs Width {energy}GeV')
@@ -1923,7 +1939,13 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                     ax_panels[energy].set_ylabel(ylab)
                 if energy_i == leg_panel:
                     # ax_panels[energy].legend(loc='lower left', bbox_to_anchor=(0.5, 0.85), framealpha=1.0)
-                    leg = ax_panels[energy].legend()
+                    if legend_order is not None:
+                        handles, labels = ax_panels[energy].get_legend_handles_labels()
+                        handles_dict = dict(zip(labels, handles))
+                        ordered_handles = [handles_dict[label] for label in legend_order]
+                        leg = ax_panels[energy].legend(handles=ordered_handles, labels=legend_order, loc='lower left')
+                    else:
+                        leg = ax_panels[energy].legend(loc='lower left')
                     leg.zorder = 0
 
                 if kin_loc is not None and energy_i == 1:
@@ -2705,7 +2727,7 @@ def plot_protons_fits_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
 
 def plot_protons_avgs_vs_energy(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None, alpha=1,
                                 kin_info_loc=(0.12, 0.68), star_prelim_loc=None, marker_map=None, leg_loc=None,
-                                data_sets_bands=None):
+                                data_sets_bands=None, legend_order=None):
     fig_avg, ax_avg = plt.subplots()
     ax_avg.axhline(0, color='black', zorder=0)
     fig_avg.canvas.manager.set_window_title(f'Dsigma2 Averages vs Energy')
@@ -2755,10 +2777,19 @@ def plot_protons_avgs_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
     if star_prelim_loc is not None:
         ax_avg.text(*star_prelim_loc, 'STAR Preliminary', fontsize=15, ha='left', va='top', transform=ax_avg.transAxes,
                     bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9))
-    if leg_loc is None:
-        ax_avg.legend()
+    if legend_order is not None:
+        handles, labels = ax_avg.get_legend_handles_labels()
+        handles_dict = dict(zip(labels, handles))
+        ordered_handles = [handles_dict[label] for label in legend_order]
+        if leg_loc is None:
+            ax_avg.legend(handles=ordered_handles, labels=legend_order)
+        else:
+            ax_avg.legend(loc=leg_loc, handles=ordered_handles, labels=legend_order)
     else:
-        ax_avg.legend(loc=leg_loc)
+        if leg_loc is None:
+            ax_avg.legend()
+        else:
+            ax_avg.legend(loc=leg_loc)
     fig_avg.tight_layout()
     fig_avg.subplots_adjust(top=0.947, right=0.993, bottom=0.088, left=0.148)
 
@@ -2964,7 +2995,7 @@ def plot_dsig_avg_vs_cent_2panel(df, data_sets_plt, data_sets_colors=None, data_
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     energy_map = {7: '7.7', 11: '11.5', 19: '19.6', 27: '27', 39: '39', 62: '62.4'}
-    fig_avg, ax_avgs = plt.subplots(figsize=(9, 5), dpi=144, ncols=len(data_sets_plt), sharey='all')
+    fig_avg, ax_avgs = plt.subplots(figsize=(13.33, 5.1), dpi=144, ncols=len(data_sets_plt), sharey='all')
     for ax_avg in ax_avgs:
         ax_avg.axhline(0, color='black')
     ax_avgs = dict(zip(data_sets_plt, ax_avgs))
@@ -3017,7 +3048,7 @@ def plot_dsig_avg_vs_cent_2panel(df, data_sets_plt, data_sets_colors=None, data_
             if colors is None and color is None:
                 if data_sets_bands is not None and data_set in data_sets_bands:
                     ax_avg.fill_between(x, df_energy['avg'] - df_energy['avg_err'],
-                                        df_energy['avg'] + df_energy['avg_err'], label=lab, alpha=0.2)
+                                        df_energy['avg'] + df_energy['avg_err'], label=lab, alpha=0.4)
                 else:
                     ax_avg.errorbar(x, df_energy['avg'], xerr=x_err, yerr=df_energy['avg_err'], marker=marker, ls=ls,
                                     label=lab, alpha=alpha)
@@ -3027,7 +3058,7 @@ def plot_dsig_avg_vs_cent_2panel(df, data_sets_plt, data_sets_colors=None, data_
             else:
                 if data_sets_bands is not None and data_set in data_sets_bands:
                     ax_avg.fill_between(x, df_energy['avg'] - df_energy['avg_err'],
-                                        df_energy['avg'] + df_energy['avg_err'], label=lab, alpha=0.2, color=color)
+                                        df_energy['avg'] + df_energy['avg_err'], label=lab, alpha=0.4, color=color)
                 else:
                     ax_avg.errorbar(x, df_energy['avg'], xerr=x_err, yerr=df_energy['avg_err'], marker=marker, ls=ls,
                                     color=color, label=lab, alpha=alpha)
@@ -3052,9 +3083,10 @@ def plot_dsig_avg_vs_cent_2panel(df, data_sets_plt, data_sets_colors=None, data_
                                    color=color_fit, alpha=0.4)
                     print(f'{lab} Fit: {[Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]}')
 
-    fit_func = inv_x_var
+    fit_func = inv_x_plus_sqrt
     p0 = (-0.15, 0, 0)
-    popt, pcov = cf(fit_func, ampt_xs, ampt_ys, sigma=ampt_yerrs, absolute_sigma=True)
+    # popt, pcov = cf(fit_func, ampt_xs, ampt_ys, sigma=ampt_yerrs, absolute_sigma=True)
+    popt, pcov = cf(fit_func, ampt_xs, ampt_ys)
     perr = np.sqrt(np.diag(pcov))
     letters = ['a', 'b', 'c', 'd', 'e', 'f'][:len(popt)]
     print(', '.join([f'{par} = {meas}' for par, meas in zip(letters, [Measure(v, e) for v, e in zip(popt, perr)])]))
@@ -3065,9 +3097,14 @@ def plot_dsig_avg_vs_cent_2panel(df, data_sets_plt, data_sets_colors=None, data_
         # ax_avg.fill_between(xs_plot, fit_func(xs_plot, *(popt - perr)), fit_func(xs_plot, *(popt + perr)),
         #                     color='black')
         ax_avg.plot(xs_plot, fit_func(xs_plot, *popt), color='black', ls='--')
-        ax_avg.plot(xs_plot, fit_func(xs_plot, *p0), color='black', ls=':')
+        # ax_avg.plot(xs_plot, fit_func(xs_plot, *p0), color='black', ls=':')
+        # if 'ampt' in data_set:
+        #     ax_avg.text(0.3, 0.2, f'AMPT', ha='left', va='bottom', transform=ax_avg.transAxes, fontsize=15,
+        #                 bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9))
         if set_i == 0:
             ax_avg.set_ylabel(r'$\langle\Delta\sigma^2\rangle$')
+        if set_i == 1:
+            ax_avg.tick_params(axis='y', which='both', left=False, right=False)
         if ref_type is None:
             ax_avg.set_xlabel('Centrality')
         elif ref_type == 'npart':
@@ -3087,6 +3124,8 @@ def plot_dsig_avg_vs_cent_2panel(df, data_sets_plt, data_sets_colors=None, data_
             ax_avg.text(*star_prelim_loc, 'STAR Preliminary', fontsize=15, ha='left', va='top', transform=ax_avg.transAxes,
                         bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9))
         legend_avg = ax_avg.legend()
+        legend_title = 'STAR' if 'bes' in data_set else 'AMPT'
+        legend_avg.set_title(legend_title, prop={'size': 12, 'weight': 'bold'})
         # legend_avg.get_frame().set_alpha(0)
     if title:
         fig_avg.suptitle(title)

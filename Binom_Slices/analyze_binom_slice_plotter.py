@@ -25,7 +25,7 @@ from integrate_pdf_var import base_gaus_pdf_wrap, get_partition_variance
 
 
 def main():
-    # plot_paper_figs()
+    plot_paper_figs()
 
     # plot_star_model_var()
     # plot_vs_cent_var()
@@ -39,7 +39,7 @@ def main():
 
     # plot_vs_cent_var_fits()
     # plot_vs_cent_var_fit_tests()
-    # plot_vs_cent_var_fit_tests2()
+    plot_vs_cent_var_fit_tests2()
 
     # plot_sims()
     # get_sim_mapping()
@@ -186,14 +186,15 @@ def plot_paper_figs():
     #                                                                      f'Partitions, {samples} Samples per Event')
 
     dsig_avgs_v2_sub_cent8 = dsig_avgs_v2sub[dsig_avgs_v2sub['cent'] == 8]
+    legend_order = ['STAR', 'MUSIC+FIST', 'MUSIC+FIST EV $1fm^3$', 'AMPT']
     plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=False,  # <---
-                        data_sets_labels=data_sets_labels, plot_energy_panels=True,
+                        data_sets_labels=data_sets_labels, plot_energy_panels=True, legend_order=legend_order,
                         ylab=r'$\langle\Delta\sigma^2\rangle$', data_sets_bands=data_sets_bands,
                         plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5, star_prelim_loc=(1, 0.3, 0.7),
                         xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event',
                         exclude_divs=exclude_divs)
     plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,  # <---
-                        data_sets_labels=data_sets_labels, plot_energy_panels=True,
+                        data_sets_labels=data_sets_labels, plot_energy_panels=True, legend_order=legend_order,
                         ylab=r'$\langle\Delta\sigma^2\rangle$', data_sets_bands=data_sets_bands,
                         plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5, star_prelim_loc=(1, 0.3, 0.7),
                         xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event',
@@ -210,7 +211,7 @@ def plot_paper_figs():
     plot_protons_avgs_vs_energy(dsig_avgs_v2_sub_cent8_div120, data_sets_plt, data_sets_colors=data_sets_colors,  # <---
                                 data_sets_labels=data_sets_labels, alpha=1, kin_info_loc=(0.73, 0.45),
                                 star_prelim_loc=(0.02, 0.75), marker_map=data_sets_markers,
-                                data_sets_bands=data_sets_bands,
+                                data_sets_bands=data_sets_bands, legend_order=legend_order,
                                 title=f'{cent_map[8]} Centrality, {div_plt}° Partitions, {samples} Samples per Event')
     plot_protons_avgs_vs_energy(dsig_avgs_v2_sub_cent8_div120, ['bes_def'], data_sets_colors=data_sets_colors,
                                 data_sets_labels=data_sets_labels, alpha=1, kin_info_loc=(0.123, 0.68),
@@ -249,7 +250,7 @@ def plot_paper_figs():
                                  cent_ref=cent_ref_df, ref_type=ref_type,  # <---
                                  title=f'{div_plt}° Partitions, {samples} Samples per Event', alpha=0.8,
                                  errbar_alpha=0.3, xlim=(-20, 720),
-                                 kin_info_loc=(0.6, 0.5), star_prelim_loc=(0.4, 0.5), marker_map=data_sets_markers,
+                                 kin_info_loc=(0.45, 0.1), star_prelim_loc=(0.4, 0.5), marker_map=data_sets_markers,
                                  data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
 
     # plot_div_fits_vs_cent(dsig_avgs_v2_sub, ['bes_def'], data_sets_colors=data_sets_colors,
@@ -2301,8 +2302,8 @@ def plot_vs_cent_var_fit_tests2():
     def n_n2_fit(n, a, b, c):
         return a / n + c / np.power(n, 2) + b
 
-    fit_func = n_fit
-    p0 = (-0.2, 0)
+    fit_func = n_fit_lin
+    p0 = (-0.2, 0, 0)
     min_x_fit = 0
     cents_fit = 3
     fit_resid = False
