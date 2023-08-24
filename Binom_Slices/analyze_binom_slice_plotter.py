@@ -69,6 +69,14 @@ def main():
 def plot_paper_figs():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
+
+    presentation_mode = True
+    if presentation_mode:
+        # plt.rcParams['axes.labelsize'] = 14  # Adjust the value as needed
+        # plt.rcParams['axes.titlesize'] = 16  # Adjust the value as needed
+        # plt.rcParams['legend.fontsize'] = 14  # Adjust the value as needed
+        plt.rcParams['font.size'] = plt.rcParams['font.size'] * 1.2
+
     base_path = 'F:/Research/Results/Azimuth_Analysis/'
     # base_path = 'C:/Users/Dyn04/Research/'
     df_name = 'Bes_with_Sys/binom_slice_vars_bes.csv'
@@ -195,14 +203,14 @@ def plot_paper_figs():
                         ylab=r'$\langle\Delta\sigma^2\rangle$', data_sets_bands=data_sets_bands,
                         plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5, star_prelim_loc=(1, 0.3, 0.7),
                         # xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event',
-                        xlim=(-10, 370), title=f'0-5% Centrality',
+                        xlim=(-10, 370), title=f'',
                         exclude_divs=exclude_divs)
     plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,  # <---
                         data_sets_labels=data_sets_labels, plot_energy_panels=True, legend_order=legend_order,
                         ylab=r'$\langle\Delta\sigma^2\rangle$', data_sets_bands=data_sets_bands,
                         plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5, star_prelim_loc=(1, 0.3, 0.7),
                         # xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event',
-                        xlim=(-10, 370), title=f'0-5% Centrality',
+                        xlim=(-10, 370), title=f'',
                         exclude_divs=exclude_divs)
 
     plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, ['bes_def'], data_sets_colors=data_sets_colors, fit=False,
@@ -254,9 +262,9 @@ def plot_paper_figs():
     data_sets_cent = ['ampt_new_coal_epbins1', 'bes_def']
     plot_dsig_avg_vs_cent_2panel(dsig_avgs_v2_sub_div120, data_sets_cent, data_sets_colors=data_sets_colors, fit=False,
                                  cent_ref=cent_ref_df, ref_type=ref_type,  # <---
-                                 # title=f'{div_plt}° Partitions, {samples} Samples per Event', alpha=0.8,
-                                 title=f'{div_plt}° Partitions', alpha=0.8,
-                                 errbar_alpha=0.3, xlim=(-20, 720),
+                                 # title=f'{div_plt}° Partitions, {samples} Samples per Event',
+                                 title='',
+                                 errbar_alpha=0.3, xlim=(-20, 720), alpha=0.8,
                                  kin_info_loc=(0.45, 0.1), star_prelim_loc=(0.4, 0.5), marker_map=data_sets_markers,
                                  data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
 

@@ -258,7 +258,7 @@ def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_
 
     if plot:
         if star_prelim:
-            ax.text(10, 0.955, 'STAR Preliminary', fontsize=15)
+            ax.text(10, 0.955, 'STAR Preliminary', fontsize='large')
             eta_line = r'|$\eta$| < 1'
             pt_line = r'0.4 < $p_T$ < 2.0 GeV'
             ax.text(10, 0.962, f'Au+Au\n{eta_line}\n{pt_line}')
@@ -980,7 +980,7 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
             ax.text(*kin_info_loc, f'Au+Au\n{eta_line}\n{pt_line}', ha='left', va='top',
                     transform=ax.transAxes)
         if star_prelim_loc is not None:
-            ax.text(*star_prelim_loc, 'STAR Preliminary', fontsize=15, ha='left', va='top',
+            ax.text(*star_prelim_loc, 'STAR Preliminary', fontsize='large', ha='left', va='top',
                     transform=ax.transAxes)
             # ax.legend(loc=legend_pos, framealpha=1.0).set_zorder(10)
         # else:
@@ -1227,7 +1227,7 @@ def stat_vs_protons_energies(df, stat, divs, cent, energies, data_types, data_se
         #             ax.errorbar([], [], [], marker='', ls='', elinewidth=3, color=c, alpha=0.4)
         ax_energies[-3].legend(loc='lower right', framealpha=1.0).set_zorder(10)
         if star_prelim:
-            ax_energies[4].text(46, 0.93, 'STAR \nPreliminary', fontsize=15)
+            ax_energies[4].text(46, 0.93, 'STAR \nPreliminary', fontsize='large')
             eta_line = r'|$\eta$| < 1'
             pt_line = r'0.4 < $p_T$ < 2.0 GeV'
             ax_energies[4].text(46, 0.95, f'Au+Au\n{eta_line}\n{pt_line}')
@@ -1387,10 +1387,10 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
         ax_energies[4].text(*kin_loc, f'Au+Au\n{eta_line}\n{pt_line}', ha='left', va='top',
                             transform=ax_energies[4].transAxes)
         if star_prelim_loc is not None:
-            ax_energies[star_prelim_loc[0]].text(*star_prelim_loc[1:], 'STAR Preliminary', fontsize=15, ha='left',
+            ax_energies[star_prelim_loc[0]].text(*star_prelim_loc[1:], 'STAR Preliminary', fontsize='large', ha='left',
                                                  va='top', transform=ax_energies[star_prelim_loc[0]].transAxes)
         if no_hydro_label:
-            ax_energies[1].text(0.76, 0.11, f'No hydro data\nat 11 GeV', ha='center', va='center', fontsize=13,
+            ax_energies[1].text(0.76, 0.11, f'No hydro data\nat 11 GeV', ha='center', va='center', fontsize='medium',
                                 transform=ax_energies[1].transAxes)
         fig.tight_layout()
         fig.subplots_adjust(wspace=0.0, hspace=0.0, left=0.07, top=0.949, right=0.995, bottom=0.07)
@@ -1747,7 +1747,7 @@ def plot_protons_fits_divs(df, data_sets_plt, fit=False, data_sets_colors=None, 
 
         if plt_energies:
             ax_panels[energy].axhline(0, color='black', zorder=0)
-            ax_panels[energy].text(180, 0.00025, f'{energy} GeV', ha='center', fontsize=14)
+            ax_panels[energy].text(180, 0.00025, f'{energy} GeV', ha='center', fontsize='large')
             if energy_i >= 3:
                 ax_panels[energy].set_xlabel('Azimuthal Partition Width')
             if energy_i in [0, 3]:
@@ -1969,14 +1969,14 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                 if kin_loc is not None and energy_i == 1:
                     eta_line = r'|y| < 0.5'
                     pt_line = r'0.4 < $p_T$ < 2.0 GeV'
-                    ax_panels[energy].text(*kin_loc, f'Au+Au\n{eta_line}\n{pt_line}', ha='left', va='bottom',
-                                           transform=ax_panels[energy].transAxes)
+                    ax_panels[energy].text(*kin_loc, f'Au+Au\n{eta_line}\n{pt_line}\n0-5% Centrality', ha='left',
+                                           va='bottom', transform=ax_panels[energy].transAxes)
                 if star_prelim_loc is not None and energy_i == star_prelim_loc[0]:
-                    ax_panels[energy].text(*star_prelim_loc[1:], 'STAR Preliminary', fontsize=15, ha='left', va='top',
-                                           transform=ax_panels[energy].transAxes)
+                    ax_panels[energy].text(*star_prelim_loc[1:], 'STAR Preliminary', fontsize='large', ha='left',
+                                           va='top', transform=ax_panels[energy].transAxes)
                 if no_hydro_label and energy_i == 1:
                     ax_panels[energy].text(0.8, 0.11, f'No hydro data\nat 11 GeV', ha='center', va='center',
-                                           fontsize=12, transform=ax_panels[energy].transAxes)
+                                           fontsize='medium', transform=ax_panels[energy].transAxes)
 
         if plot_energies_fig:
             fig.tight_layout()
@@ -2793,8 +2793,8 @@ def plot_protons_avgs_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
         ax_avg.text(*kin_info_loc, f'Au+Au\n{eta_line}\n{pt_line}', ha='left', va='bottom', transform=ax_avg.transAxes,
                     bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9))
     if star_prelim_loc is not None:
-        ax_avg.text(*star_prelim_loc, 'STAR Preliminary', fontsize=15, ha='left', va='top', transform=ax_avg.transAxes,
-                    bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9))
+        ax_avg.text(*star_prelim_loc, 'STAR Preliminary', fontsize='large', ha='left', transform=ax_avg.transAxes,
+                    bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9), va='top')
     if legend_order is not None:
         handles, labels = ax_avg.get_legend_handles_labels()
         handles_dict = dict(zip(labels, handles))
@@ -2998,8 +2998,8 @@ def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
         ax_avg.text(*kin_info_loc, f'Au+Au\n{eta_line}\n{pt_line}', ha='left', va='bottom', transform=ax_avg.transAxes,
                     bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9))
     if star_prelim_loc is not None:
-        ax_avg.text(*star_prelim_loc, 'STAR Preliminary', fontsize=15, ha='left', va='top', transform=ax_avg.transAxes,
-                    bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9))
+        ax_avg.text(*star_prelim_loc, 'STAR Preliminary', fontsize='large', ha='left', transform=ax_avg.transAxes,
+                    bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9), va='top')
     legend_avg = ax_avg.legend()
     # legend_avg.get_frame().set_alpha(0)
     fig_avg.tight_layout()
@@ -3136,16 +3136,17 @@ def plot_dsig_avg_vs_cent_2panel(df, data_sets_plt, data_sets_colors=None, data_
         if kin_info_loc is not None and set_i == 0:
             eta_line = r'|y| < 0.5'
             pt_line = r'0.4 < $p_T$ < 2.0 GeV'
-            ax_avg.text(*kin_info_loc, f'Au+Au\n{eta_line}\n{pt_line}', ha='left', va='bottom', transform=ax_avg.transAxes,
+            ax_avg.text(*kin_info_loc, f'Au+Au\n{eta_line}\n{pt_line}\n120° Partitions', ha='left', va='bottom',
+                        transform=ax_avg.transAxes,
                         bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9))
         if star_prelim_loc is not None and data_set == 'bes_def':
-            ax_avg.text(*star_prelim_loc, 'STAR Preliminary', fontsize=15, ha='left', va='top', transform=ax_avg.transAxes,
-                        bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9))
+            ax_avg.text(*star_prelim_loc, 'STAR Preliminary', fontsize='large', ha='left', transform=ax_avg.transAxes,
+                        bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9), va='top')
         legend_avg = ax_avg.legend()
         legend_title = 'STAR' if 'bes' in data_set else 'AMPT'
-        legend_avg.set_title(legend_title, prop={'size': 12, 'weight': 'bold'})
+        legend_avg.set_title(legend_title, prop={'size': 'large', 'weight': 'bold'})
         # legend_avg.get_frame().set_alpha(0)
-    if title:
+    if title and title != '':
         fig_avg.suptitle(title)
     fig_avg.tight_layout()
     fig_avg.subplots_adjust(top=0.94, right=0.993, bottom=0.088, left=0.095, wspace=0)
@@ -4139,7 +4140,7 @@ def plot_closures(df_sig, df_combo, df_corrected, alpha=0.6, df_bkg=None, title=
     # ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1e'))
     ax_diff.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1e'))
     if title is not None:
-        ax.set_title(title, fontsize=16)
+        ax.set_title(title)
 
     fig.tight_layout()
     fig.subplots_adjust(hspace=0.0)
