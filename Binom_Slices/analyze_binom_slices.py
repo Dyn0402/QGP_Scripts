@@ -850,7 +850,7 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
 def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False, avg=False,
                     hist=False, data_sets_colors=None, data_sets_labels=None, star_prelim_loc=None, alpha=0.6,
                     marker_map=None, errbar_alpha=0.2, legend_pos='lower center', ylabel=None,
-                    kin_info_loc=(0.26, 0.91), title=None, data_sets_bands=None):
+                    kin_info_loc=(0.26, 0.91), title=None, data_sets_bands=None, legend_order=None):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     data = []
@@ -982,7 +982,14 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
         if star_prelim_loc is not None:
             ax.text(*star_prelim_loc, 'STAR Preliminary', fontsize=15, ha='left', va='top',
                     transform=ax.transAxes)
-            ax.legend(loc=legend_pos, framealpha=1.0).set_zorder(10)
+            # ax.legend(loc=legend_pos, framealpha=1.0).set_zorder(10)
+        # else:
+        #     ax.legend(loc=legend_pos).set_zorder(10)
+        if legend_order is not None:
+            handles, labels = ax.get_legend_handles_labels()
+            handles_dict = dict(zip(labels, handles))
+            ordered_handles = [handles_dict[label] for label in legend_order]
+            ax.legend(loc=legend_pos, handles=ordered_handles, labels=legend_order).set_zorder(10)
         else:
             ax.legend(loc=legend_pos).set_zorder(10)
         fig.tight_layout()
@@ -1235,7 +1242,8 @@ def stat_vs_protons_energies(df, stat, divs, cent, energies, data_types, data_se
 def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False,
                              avg=False, plot_avg=False, hist=False, data_sets_colors=None, data_sets_labels=None,
                              star_prelim_loc=None, marker_map=None, alpha=1.0, errbar_alpha=0.2, avgs_df=None,
-                             ylabel=None, kin_loc=None, no_hydro_label=False, data_sets_bands=None):
+                             ylabel=None, kin_loc=None, no_hydro_label=False, data_sets_bands=None,
+                             legend_order=None):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     energy_map = {7: '7.7', 11: '11.5', 19: '19.6', 27: '27', 39: '39', 62: '62.4'}
@@ -1361,7 +1369,14 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
 
     if plot or plot_avg:
         if len(data_sets_plt) * len(data_types) > 1:
-            ax_energies[-1].legend(loc='lower right', framealpha=1.0).set_zorder(10)
+            if legend_order is not None:
+                handles, labels = ax.get_legend_handles_labels()
+                handles_dict = dict(zip(labels, handles))
+                ordered_handles = [handles_dict[label] for label in legend_order]
+                ax_energies[-1].legend(loc='lower right', framealpha=1.0, handles=ordered_handles,
+                                       labels=legend_order).set_zorder(10)
+            else:
+                ax_energies[-1].legend(loc='lower right', framealpha=1.0).set_zorder(10)
         eta_line = r'|y| < 0.5'
         pt_line = r'0.4 < $p_T$ < 2.0 GeV'
         if kin_loc is None:
