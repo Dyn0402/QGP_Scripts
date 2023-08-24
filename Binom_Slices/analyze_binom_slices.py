@@ -1243,7 +1243,7 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
                              avg=False, plot_avg=False, hist=False, data_sets_colors=None, data_sets_labels=None,
                              star_prelim_loc=None, marker_map=None, alpha=1.0, errbar_alpha=0.2, avgs_df=None,
                              ylabel=None, kin_loc=None, no_hydro_label=False, data_sets_bands=None,
-                             legend_order=None):
+                             legend_order=None, title=None):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     energy_map = {7: '7.7', 11: '11.5', 19: '19.6', 27: '27', 39: '39', 62: '62.4'}
@@ -1279,7 +1279,10 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
     if plot or plot_avg:
         fig, ax_energies = plt.subplots(2, 3, sharex=True, sharey=True, figsize=(13.33, 6.16), dpi=144)
         ax_energies = ax_energies.flat
-        fig.suptitle(f'{cent_map[cent]} Centrality, {div}° Partitions, 72 Samples per Event')
+        if title is None:
+            fig.suptitle(f'{cent_map[cent]} Centrality, {div}° Partitions, 72 Samples per Event')
+        else:
+            fig.suptitle(title)
         for ax in ax_energies[-3:]:
             ax.set_xlabel('Total Protons in Event')
         for i, ax in enumerate(ax_energies):

@@ -175,13 +175,15 @@ def plot_paper_figs():
                              plot=True, avg=False, plot_avg=False, data_sets_colors=data_sets_colors, no_hydro_label=1,
                              data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.0005], avgs_df=dsig_avgs_v2sub,
                              ylabel=r'$\Delta\sigma^2$', kin_loc=(0.65, 0.2), star_prelim_loc=(1, 0.54, 0.78),
-                             marker_map=data_sets_markers, data_sets_bands=data_sets_bands)  # <---
+                             marker_map=data_sets_markers, data_sets_bands=data_sets_bands, legend_order=legend_order,
+                             title=f'{cent_map[cent_plt]} Centrality, 120° Partitions')  # <---
 
     dvar_vs_protons_energies(df_dsigma_v2sub, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], data_sets_plt,
                              plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors, no_hydro_label=1,
                              data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.0005], avgs_df=dsig_avgs_v2sub,
                              ylabel=r'$\Delta\sigma^2$', kin_loc=(0.65, 0.2), star_prelim_loc=(1, 0.54, 0.78),
-                             marker_map=data_sets_markers, data_sets_bands=data_sets_bands)  # <---
+                             marker_map=data_sets_markers, data_sets_bands=data_sets_bands, legend_order=legend_order,
+                             title=f'{cent_map[cent_plt]} Centrality, 120° Partitions')  # <---
 
     # plot_protons_avgs_vs_energy(dsig_avg, ['bes_def'], data_sets_colors=data_sets_colors,
     #                             data_sets_labels=data_sets_labels, title=f'{cent_map[cent_plt]} Centrality, {div_plt}° '
@@ -192,13 +194,15 @@ def plot_paper_figs():
                         data_sets_labels=data_sets_labels, plot_energy_panels=True, legend_order=legend_order,
                         ylab=r'$\langle\Delta\sigma^2\rangle$', data_sets_bands=data_sets_bands,
                         plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5, star_prelim_loc=(1, 0.3, 0.7),
-                        xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event',
+                        # xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event',
+                        xlim=(-10, 370), title=f'0-5% Centrality',
                         exclude_divs=exclude_divs)
     plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,  # <---
                         data_sets_labels=data_sets_labels, plot_energy_panels=True, legend_order=legend_order,
                         ylab=r'$\langle\Delta\sigma^2\rangle$', data_sets_bands=data_sets_bands,
                         plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5, star_prelim_loc=(1, 0.3, 0.7),
-                        xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event',
+                        # xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event',
+                        xlim=(-10, 370), title=f'0-5% Centrality',
                         exclude_divs=exclude_divs)
 
     plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, ['bes_def'], data_sets_colors=data_sets_colors, fit=False,
@@ -213,7 +217,8 @@ def plot_paper_figs():
                                 data_sets_labels=data_sets_labels, alpha=1, kin_info_loc=(0.73, 0.45),
                                 star_prelim_loc=(0.02, 0.75), marker_map=data_sets_markers,
                                 data_sets_bands=data_sets_bands, legend_order=legend_order,
-                                title=f'{cent_map[8]} Centrality, {div_plt}° Partitions, {samples} Samples per Event')
+                                # title=f'{cent_map[8]} Centrality, {div_plt}° Partitions, {samples} Samples per Event')
+                                title=f'{cent_map[8]} Centrality, {div_plt}° Partitions')
     plot_protons_avgs_vs_energy(dsig_avgs_v2_sub_cent8_div120, ['bes_def'], data_sets_colors=data_sets_colors,
                                 data_sets_labels=data_sets_labels, alpha=1, kin_info_loc=(0.123, 0.68),
                                 star_prelim_loc=(0.65, 0.9), leg_loc='lower right',
@@ -249,7 +254,8 @@ def plot_paper_figs():
     data_sets_cent = ['ampt_new_coal_epbins1', 'bes_def']
     plot_dsig_avg_vs_cent_2panel(dsig_avgs_v2_sub_div120, data_sets_cent, data_sets_colors=data_sets_colors, fit=False,
                                  cent_ref=cent_ref_df, ref_type=ref_type,  # <---
-                                 title=f'{div_plt}° Partitions, {samples} Samples per Event', alpha=0.8,
+                                 # title=f'{div_plt}° Partitions, {samples} Samples per Event', alpha=0.8,
+                                 title=f'{div_plt}° Partitions', alpha=0.8,
                                  errbar_alpha=0.3, xlim=(-20, 720),
                                  kin_info_loc=(0.45, 0.1), star_prelim_loc=(0.4, 0.5), marker_map=data_sets_markers,
                                  data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)

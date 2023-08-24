@@ -612,7 +612,7 @@ def plot_event(angles, bin_low, bin_high, bin_width, counts):
     ax.set_ylim((0, 1))
     leg_angle = np.deg2rad(290)
     ax.legend(loc="upper left", bbox_to_anchor=(.5 + np.cos(leg_angle) / 2, .5 + np.sin(leg_angle) / 2))
-    ax.text(-0.05, -0.05, f'Tracks in \nbin:  {counts}', horizontalalignment='left', transform=ax.transAxes,
+    ax.text(-0.05, -0.05, f'Tracks in \npartition: {counts}', horizontalalignment='left', transform=ax.transAxes,
             size='large')
     ax.text(-0.05, 0.97, f'Tracks in \nevent: {len(angles)}',
             horizontalalignment='left', transform=ax.transAxes, size='large')
