@@ -23,10 +23,10 @@ def main():
     energy = 39
     samples = 72  # Just for title
     data_name = 'AMPT'  # Just for title
-    # set_group = 'default_single'
-    # set_name = 'Ampt_rapid05_single_'
-    set_group = 'default_resample_epbins1'
-    set_name = 'Ampt_rapid05_resample_norotate_epbins1_'
+    set_group = 'default_single'
+    set_name = 'Ampt_rapid05_single_'
+    # set_group = 'default_resample_epbins1'
+    # set_name = 'Ampt_rapid05_resample_norotate_epbins1_'
     set_num = 0
     data_set = '_Ampt_New_Coal'
     # base_path = '/home/dylan/Research/Data'
@@ -38,10 +38,11 @@ def main():
     raw = AzimuthBinData(path=path, div=divs)
     mix = AzimuthBinData(path=path_mix, div=divs)
 
-    title_sufx = f'\n{energy}GeV, 0-5% Centrality, {divs}° Partitions, {samples} Sample per Event'
+    # title_sufx = f'\n{energy}GeV, 0-5% Centrality, {divs}° Partitions, {samples} Sample per Event'
+    title_sufx = f'\n{energy}GeV, 0-5% Centrality, {divs}° Partitions'
 
     # plot_2d(raw.get_dist(), raw.max_particle, raw.get_max_bin(), divs, data_name, title_sufx)
-    plot_binomial(raw.get_dist(), 38, divs, data_name, title_sufx=title_sufx)
+    plot_binomial(raw.get_dist(), 6, divs, data_name, title_sufx=title_sufx)
     # plot_ratio(raw.get_dist(), raw.max_particle, divs, x_bins=20, title_sufx=title_sufx)
     # plot_pull(raw.get_dist(), raw.max_particle, divs, x_bins=40, title_sufx=title_sufx)
 
