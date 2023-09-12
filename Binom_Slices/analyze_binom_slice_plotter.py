@@ -25,7 +25,7 @@ from integrate_pdf_var import base_gaus_pdf_wrap, get_partition_variance
 
 
 def main():
-    plot_paper_figs()
+    # plot_paper_figs()
 
     # plot_star_model_var()
     # plot_vs_cent_var()
@@ -39,7 +39,7 @@ def main():
 
     # plot_vs_cent_var_fits()
     # plot_vs_cent_var_fit_tests()
-    plot_vs_cent_var_fit_tests2()
+    # plot_vs_cent_var_fit_tests2()
 
     # plot_sims()
     # get_sim_mapping()
@@ -3958,10 +3958,10 @@ def plot_closure_tests():
     dsigma_avgs = pd.concat(dsigma_avgs, ignore_index=True)
 
     simple_clust_amps = ['3', '05']
-    amp_map = {'05': '0.165', }
+    amp_map = {'05': '0.165', '3': '1.34'}
     for amp in simple_clust_amps:
-        amp_val = f'{float("0." + amp)}:.2f'
-        amp_true = '0.1'
+        amp_val = f'{float("0." + amp):.2f}'
+        amp_val = amp_map[amp]
         simple_clust = dsigma_avgs[(dsigma_avgs['name'] == f'simpleclust_s08_a{amp}')
                                    & (dsigma_avgs['data_type'] == 'raw')]
         simple_clust_eff = dsigma_avgs[(dsigma_avgs['name'] == f'simpleclust_s08_a{amp}_eff')
@@ -3971,8 +3971,8 @@ def plot_closure_tests():
         simple_clust_eff_cor = dsigma_avgs[(dsigma_avgs['name'] == f'simpleclust_s08_a{amp}_eff') &
                                            (dsigma_avgs['data_type'] == 'diff')]
         print(simple_clust_eff_mix)
-        plot_closures(simple_clust, simple_clust_eff, simple_clust_eff_cor, alpha=0.4, df_bkg=simple_clust_eff_mix,
-                      title=f'Simple Clustering (A={amp_val}) Efficiency Correction')
+        plot_closures(simple_clust, simple_clust_eff, simple_clust_eff_cor, alpha=0.7, df_bkg=simple_clust_eff_mix,
+                      title=rf'Simple Clustering (A={amp_val}, $\sigma$=0.8) Efficiency Correction')
 
         # flow = dsigma_avgs[(dsigma_avgs['name'] == 'flow_res15_v207') & (dsigma_avgs['data_type'] == 'raw')]
         # flow_eff = dsigma_avgs[(dsigma_avgs['name'] == 'flow_eff_res15_v207') & (dsigma_avgs['data_type'] == 'raw')]
@@ -3992,8 +3992,8 @@ def plot_closure_tests():
             flow_clust_cor['avg_meas'] = flow_clust['avg_meas'] - v2_divs(np.deg2rad(flow_clust['divs']), v2_val)
             flow_clust_cor['avg'] = flow_clust_cor['avg_meas'].apply(lambda x: x.val)
             flow_clust_cor['avg_err'] = flow_clust_cor['avg_meas'].apply(lambda x: x.err)
-            plot_closures(simple_clust, flow_clust, flow_clust_cor, alpha=0.4, df_bkg=flow_clust_v2,
-                          title=f'Simple Clustering (A={amp_val}) Flow (v2={v2_val:.2f}) Correction')
+            plot_closures(simple_clust, flow_clust, flow_clust_cor, alpha=0.7, df_bkg=flow_clust_v2,
+                          title=rf'Simple Clustering (A={amp_val}, $\sigma$=0.8) Flow (v2={v2_val:.2f}) Correction')
 
         flow_eff_clust_raw = dsigma_avgs[(dsigma_avgs['name'] == f'simpleclust_s08_a{amp}_flow_v207_eff')
                                          & (dsigma_avgs['data_type'] == 'raw')]
