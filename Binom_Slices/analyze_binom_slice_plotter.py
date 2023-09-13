@@ -4012,8 +4012,11 @@ def plot_closure_tests():
                                       v2_divs(np.deg2rad(simple_clust_flow_eff_cor['divs']), v2_val))
         flow_clust_cor['avg'] = flow_clust_cor['avg_meas'].apply(lambda x: x.val)
         flow_clust_cor['avg_err'] = flow_clust_cor['avg_meas'].apply(lambda x: x.err)
-        plot_closures(simple_clust, flow_eff_clust_raw, flow_clust_cor)
-
+        print(simple_clust)
+        print(flow_eff_clust_raw)
+        print(flow_clust_cor)
+        plot_closures(simple_clust, flow_eff_clust_raw, flow_clust_cor, 
+                      df_bkg=[simple_clust_flow_eff_mix, flow_clust_v2])
 
     plt.show()
 

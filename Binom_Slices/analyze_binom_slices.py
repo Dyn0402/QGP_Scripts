@@ -4123,16 +4123,29 @@ def plot_closures(df_sig, df_combo, df_corrected, alpha=0.6, df_bkg=None, title=
     ax.errorbar(df_sig['divs'], df_sig['avg'], yerr=df_sig['avg_err'], ls='none', marker='o', color='blue',
                 alpha=alpha, label='Signal')
     if df_bkg is not None:
-        ax.errorbar(df_bkg['divs'], df_bkg['avg'], yerr=df_bkg['avg_err'], ls='none', marker='o', color='green',
-                    alpha=alpha, label='Background')
+        if type(df_bkg) is list:
+            for bkg in df_bkg:
+                ax.errorbar(bkg['divs'], bkg['avg'], yerr=bkg['avg_err'], ls='none', marker='o', color='green',
+                            alpha=alpha, label='Background')
+        else:
+            ax.errorbar(df_bkg['divs'], df_bkg['avg'], yerr=df_bkg['avg_err'], ls='none', marker='o', color='green',
+                        alpha=alpha, label='Background')
 
     ax.errorbar(df_combo['divs'], df_combo['avg'], yerr=df_combo['avg_err'], ls='none', marker='o', color='orange',
                 alpha=alpha, label='Combination')
 
     # df_diff_err = np.array(df_combo['avg']) * \
     #               np.sqrt(np.mean(np.array(df_combo['avg']) - np.array(df_corrected['avg']))) / 2
-    df_bkg = np.array(df_combo['avg']) - np.array(df_corrected['avg']) if df_bkg is None else df_bkg
-    df_diff_err = (np.array(df_sig['avg']) * np.mean(df_bkg['avg'])) ** 0.75
+    if type(df_bkg) is list:
+        errs = []
+        for bkg in df_bkg:
+            errs.append((np.array(df_sig['avg']) * np.mean(bkg['avg'])) ** 0.75)
+            print(errs[-1])
+        df_diff_err = np.sqrt(np.sum(np.array(errs), axis=0)**2)
+        print(df_diff_err)
+    else:
+        df_bkg = np.array(df_combo['avg']) - np.array(df_corrected['avg']) if df_bkg is None else df_bkg
+        df_diff_err = (np.array(df_sig['avg']) * np.mean(df_bkg['avg'])) ** 0.75
     ax.errorbar(df_corrected['divs'], df_corrected['avg'], yerr=df_corrected['avg_err'], ls='none', marker='x',
                 color='red', alpha=0.9, label='Corrected')
     ax.errorbar(df_corrected['divs'], df_corrected['avg'], yerr=df_diff_err, ls='none', marker=None, elinewidth=4,
