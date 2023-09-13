@@ -2325,7 +2325,7 @@ def plot_vs_cent_var_fit_tests2():
         return a / n + b
 
     def n_pow_fit(n, a, b, c):
-        return a / n**c + b
+        return a / n ** c + b
 
     def n_fit_lin(n, a, b, c):
         return a / (n + c * np.sqrt(n)) + b
@@ -2414,7 +2414,6 @@ def plot_vs_cent_var_fit_tests2():
             xs = np.linspace(min(x_ampt), max(x_ampt), 1000)
             print(f'AMPT {energy} GeV: {popt_ampt_resid}')
             ax2.plot(xs, n_pow_fit(xs, *popt_ampt_resid))
-
 
         bes_sub_bes = df_bes['avg'] - fit_func(x_bes, *bes_popt)
         ax2.errorbar(x_bes, bes_sub_bes, yerr=df_bes['avg_err'], ls='none', marker='o', label='bes - bes')
@@ -3995,8 +3994,26 @@ def plot_closure_tests():
             plot_closures(simple_clust, flow_clust, flow_clust_cor, alpha=0.7, df_bkg=flow_clust_v2,
                           title=rf'Simple Clustering (A={amp_val}, $\sigma$=0.8) Flow (v2={v2_val:.2f}) Correction')
 
-        flow_eff_clust_raw = dsigma_avgs[(dsigma_avgs['name'] == f'simpleclust_s08_a{amp}_flow_v207_eff')
+        v2_val = float(f'0.07')
+        simple_clust = dsigma_avgs[(dsigma_avgs['name'] == 'simpleclust_s08_a05') & (dsigma_avgs['data_type'] == 'raw')]
+        flow_eff_clust_raw = dsigma_avgs[(dsigma_avgs['name'] == 'simpleclust_s08_a05_flow_v207_eff')
                                          & (dsigma_avgs['data_type'] == 'raw')]
+        simple_clust_flow_eff_mix = dsigma_avgs[(dsigma_avgs['name'] == 'simpleclust_s08_a05_eff')
+                                                & (dsigma_avgs['data_type'] == 'mix')]
+        simple_clust_flow_eff_cor = dsigma_avgs[(dsigma_avgs['name'] == 'simpleclust_s08_a05_flow_v207_eff') &
+                                           (dsigma_avgs['data_type'] == 'diff')]
+        flow_clust_cor, flow_clust_v2 = simple_clust_flow_eff_cor.copy(), simple_clust_flow_eff_cor.copy()
+        flow_clust_v2['avg_meas'] = (simple_clust_flow_eff_cor['avg_meas'] * 0 +
+                                     v2_divs(np.deg2rad(simple_clust_flow_eff_cor['divs']), v2_val))
+        flow_clust_v2['avg'] = (simple_clust_flow_eff_cor['avg'] * 0 +
+                                v2_divs(np.deg2rad(simple_clust_flow_eff_cor['divs']), v2_val))
+        flow_clust_v2['avg_err'] = simple_clust_flow_eff_cor['avg_err'] * 0
+        flow_clust_cor['avg_meas'] = (simple_clust_flow_eff_cor['avg_meas'] -
+                                      v2_divs(np.deg2rad(simple_clust_flow_eff_cor['divs']), v2_val))
+        flow_clust_cor['avg'] = flow_clust_cor['avg_meas'].apply(lambda x: x.val)
+        flow_clust_cor['avg_err'] = flow_clust_cor['avg_meas'].apply(lambda x: x.err)
+        plot_closures(simple_clust, flow_eff_clust_raw, flow_clust_cor)
+
 
     plt.show()
 
