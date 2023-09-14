@@ -4122,11 +4122,12 @@ def plot_closures(df_sig, df_combo, df_corrected, alpha=0.6, df_bkg=None, title=
     ax_diff.axhline(0, color='black')
     ax.errorbar(df_sig['divs'], df_sig['avg'], yerr=df_sig['avg_err'], ls='none', marker='o', color='blue',
                 alpha=alpha, label='Signal')
+    bkg_markers = ['o', 's', '^']
     if df_bkg is not None:
         if type(df_bkg) is list:
-            for bkg in df_bkg:
-                ax.errorbar(bkg['divs'], bkg['avg'], yerr=bkg['avg_err'], ls='none', marker='o', color='green',
-                            alpha=alpha, label='Background')
+            for bkg_i, bkg in enumerate(df_bkg):
+                ax.errorbar(bkg['divs'], bkg['avg'], yerr=bkg['avg_err'], ls='none', marker=bkg_markers[bkg_i],
+                            color='green', alpha=alpha, label=f'Background #{bkg_i + 1}')
         else:
             ax.errorbar(df_bkg['divs'], df_bkg['avg'], yerr=df_bkg['avg_err'], ls='none', marker='o', color='green',
                         alpha=alpha, label='Background')
@@ -4139,13 +4140,11 @@ def plot_closures(df_sig, df_combo, df_corrected, alpha=0.6, df_bkg=None, title=
     if type(df_bkg) is list:
         errs = []
         for bkg in df_bkg:
-            errs.append((np.array(df_sig['avg']) * np.mean(bkg['avg'])) ** 0.75)
-            print(errs[-1])
+            errs.append((np.abs(np.array(df_sig['avg']) * np.mean(bkg['avg']))) ** 0.75)
         df_diff_err = np.sqrt(np.sum(np.array(errs), axis=0)**2)
-        print(df_diff_err)
     else:
         df_bkg = np.array(df_combo['avg']) - np.array(df_corrected['avg']) if df_bkg is None else df_bkg
-        df_diff_err = (np.array(df_sig['avg']) * np.mean(df_bkg['avg'])) ** 0.75
+        df_diff_err = (np.abs(np.array(df_sig['avg']) * np.mean(df_bkg['avg']))) ** 0.75
     ax.errorbar(df_corrected['divs'], df_corrected['avg'], yerr=df_corrected['avg_err'], ls='none', marker='x',
                 color='red', alpha=0.9, label='Corrected')
     ax.errorbar(df_corrected['divs'], df_corrected['avg'], yerr=df_diff_err, ls='none', marker=None, elinewidth=4,
@@ -4156,7 +4155,7 @@ def plot_closures(df_sig, df_combo, df_corrected, alpha=0.6, df_bkg=None, title=
     ax_diff.errorbar(df_sig['divs'], [x.val for x in df_diff], yerr=df_diff_err, ls='none', elinewidth=4,
                      marker=None, alpha=0.2, color='red')
 
-    ax.legend()
+    ax.legend(loc='upper right')
     ax_diff.legend()
     ax_diff.set_xlim((0, 360))
     ax.set_ylabel(r'$\langle\Delta\sigma^2\rangle$')
