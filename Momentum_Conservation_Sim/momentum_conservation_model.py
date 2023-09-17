@@ -10,6 +10,7 @@ Created as QGP_Scripts/momentum_conservation_model
 
 import numpy as np
 import matplotlib.pyplot as plt
+import math
 import os
 from mpl_toolkits.mplot3d import Axes3D
 import time
@@ -35,9 +36,10 @@ def main():
     # check_convergence_vs_alpha()
     # test_alpha_adaptive()
     # momentum_test()
-    full_test()
+    # full_test()
     # rotation_test()
     # plot_full_test_from_file()
+    plot_from_files()
     print('donzo')
 
 
@@ -147,6 +149,52 @@ def plot_full_test_from_file():
     plt.show()
 
 
+def plot_from_files():
+    # path = ('N:/UCLA_Microsoft/OneDrive - personalmicrosoftsoftware.ucla.edu/Research/UCLA/Results/'
+    #         'momentum_conservation_model/')
+    path = 'C:/Users/Dylan/OneDrive - UCLA IT Services/Research/UCLA/Results/momentum_conservation_model/'
+    for dir_name in os.listdir(path):
+        dir_path = os.path.join(path, dir_name)
+        if os.path.isdir(dir_path):
+            for file_name in os.listdir(dir_path):
+                file_path = os.path.join(dir_path, file_name)
+                if 'bin_width90' not in file_path or 'energy4' in file_path:
+                    continue
+                print(dir_name, file_name)
+                with open(file_path, 'r') as file:
+                    lines = file.readlines()
+                total_tracks, total_protons, dsigs, dsig_errs = [], [], [], []
+                rolling = False
+                for line in lines:
+                    if rolling == 1:
+                        total_protons.append([int(x) for x in line.strip('\n[]').split(', ')])
+                        rolling += 1
+                    elif rolling == 2:
+                        dsigs.append([float(x) for x in line.strip('\n[]').split(', ')])
+                        rolling += 1
+                    elif rolling == 3:
+                        dsig_errs.append([float(x) for x in line.strip('\n[]').split(', ')])
+                        rolling = 0
+                    if 'Total Particles ' in line:
+                        total_tracks.append(int(line.strip().replace('Total Particles ', '')))
+                        rolling = 1
+
+                dsig_avgs, dsig_avg_errs = [], []
+                for tracks, protons, dsigs_i, dsig_errs_i in zip(total_tracks, total_protons, dsigs, dsig_errs):
+                    protons, dsigs_i, dsig_errs_i = remove_inf_nan_indices(protons, dsigs_i, dsig_errs_i)
+
+                    wavg, wavg_err = plot_vs_total_protons(protons, dsigs_i, dsig_errs_i, tracks, plot=False)
+                    dsig_avgs.append(wavg)
+                    dsig_avg_errs.append(wavg_err)
+                total_tracks, dsig_avgs, dsig_avg_errs = remove_inf_nan_indices(total_tracks, dsig_avgs, dsig_avg_errs)
+                plot_vs_total_particles(total_tracks, dsig_avgs, dsig_avg_errs)
+                plot_fits(total_tracks, dsig_avgs, dsig_avg_errs)
+                plt.title(f'{dir_name} {file_name}')
+                plt.tight_layout()
+
+    plt.show()
+
+
 def plot_fits(total_tracks, dsig_avgs, dsig_avg_errs):
     fits = {
         # r'$\frac{a}{\sqrt{N}} + b$': sqrt_n_fit,
@@ -156,17 +204,21 @@ def plot_fits(total_tracks, dsig_avgs, dsig_avg_errs):
     xs = np.linspace(min(total_tracks), max(total_tracks), 1000)
     par_letters = ['a', 'b', 'c']
     for fit_lab, fit in fits.items():
-        popt, pcov = cf(fit, total_tracks, dsig_avgs, sigma=dsig_avg_errs, absolute_sigma=True)
+        try:
+            popt, pcov = cf(fit, total_tracks, dsig_avgs, sigma=dsig_avg_errs, absolute_sigma=True)
+        except ValueError:
+            print(total_tracks, dsig_avgs, dsig_avg_errs)
         perr = np.sqrt(np.diag(pcov))
         fit_values = {par: Measure(val, err) for par, val, err in zip(par_letters, popt, perr)}
 
         plt.plot(xs, fit(xs, *popt), label=fit_lab)
 
         # Create the textbox
-        x_pos, y_pos = 400, -0.001  # Set the position of the textbox
+        x_pos, y_pos = 0.4, 0.3  # Set the position of the textbox
         textbox_content = '\n'.join([f"{key} = {value}" for key, value in fit_values.items()])
         textbox = plt.text(x_pos, y_pos, textbox_content, fontsize=12, va='center', ha='left',
-                           bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
+                           bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'),
+                           transform=plt.gca().transAxes)
         print('\n', fit_lab)
         print(', '.join([f'{par} = {meas}' for par, meas in fit_values.items()]))
     plt.legend(loc='lower right', fontsize=20)
@@ -430,13 +482,14 @@ def plot_vs_total_protons(n_protons, dsig2, dsig2_err, n_track='-', plot=True):
     return weight_avg, weight_avg_err
 
 
-def plot_vs_total_particles(n_tracks, dsig_avgs, dsig_avg_errs):
-    plt.figure()
-    plt.grid()
-    plt.axhline(0, color='black')
+def plot_vs_total_particles(n_tracks, dsig_avgs, dsig_avg_errs, fig=None):
+    if fig is None:
+        plt.figure()
+        plt.grid()
+        plt.axhline(0, color='black')
+        plt.xlabel('Total Particles in Event')
+        plt.ylabel(r'$\langle\Delta\sigma^2\rangle$')
     plt.errorbar(n_tracks, dsig_avgs, yerr=dsig_avg_errs, ls='none', marker='o', alpha=0.8)
-    plt.xlabel('Total Particles in Event')
-    plt.ylabel(r'$\langle\Delta\sigma^2\rangle$')
     plt.tight_layout()
 
 
@@ -473,6 +526,30 @@ def plot_momenta(momenta, net_momentum_vec):
     plt.quiver(0, 0, 0, *(-net_momentum_vec / net_momentum), length=net_momentum, color='orange', label='-Net Momentum')
     plt.legend()
     plt.tight_layout()
+
+
+def remove_inf_nan_indices(*lists):
+    # Check if all input lists have the same length
+    list_lengths = [len(lst) for lst in lists]
+    if len(set(list_lengths)) != 1:
+        raise ValueError("Input lists must have equal lengths")
+
+    # Create a list to store the indices to remove
+    indices_to_remove = set()
+
+    # Iterate through the lists and find indices with inf or nan values
+    for i in range(list_lengths[0]):
+        values_at_index = [lst[i] for lst in lists]
+        if any(math.isnan(value) or math.isinf(value) for value in values_at_index):
+            indices_to_remove.add(i)
+
+    # Remove the corresponding indices from each list
+    cleaned_lists = []
+    for lst in lists:
+        cleaned_list = [value for index, value in enumerate(lst) if index not in indices_to_remove]
+        cleaned_lists.append(cleaned_list)
+
+    return cleaned_lists
 
 
 def rapidity(px, py, pz, m):
