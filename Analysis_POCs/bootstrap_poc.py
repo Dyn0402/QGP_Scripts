@@ -32,7 +32,7 @@ def bootstrap_validation():
     :return:
     """
     seed = 13434
-    threads = 15
+    threads = 11
     n_tracks = 15
     n_sample = 1
     n_events = 10000
@@ -41,8 +41,10 @@ def bootstrap_validation():
     experiments = 100
     alg = 4
     # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
-    plot_out_base = 'E:/Transfer/Research/Resample_POC/Bootstrap_Validation/'
-    plot_out_name = 'nsample1_nevent10k_bw120_ntrack15_nexp100_nbs2k/'
+    # plot_out_base = 'E:/Transfer/Research/Resample_POC/Bootstrap_Validation/'
+    plot_out_base = 'F:/Research/Resample_POC/Bootstrap_Validation/'
+    plot_out_name = (f'nsample{n_sample}_nevent{int(n_events / 1000)}k_bw{int(np.rad2deg(bin_width))}_'
+                     f'ntrack{n_tracks}_nexp{experiments}_nbs{int(bootstraps / 1000)}k/')
     plot_out_dir = plot_out_base + plot_out_name
     plot_exps_out_dir = f'{plot_out_dir}Experiments/'
     try:

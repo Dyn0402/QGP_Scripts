@@ -113,7 +113,7 @@ def full_test():
 
 
 def plot_full_test_from_file():
-    path = 'N:/UCLA_Microsoft/OneDrive - personalmicrosoftsoftware.ucla.edu/Research/UCLA/Results/mom_cons_new_pc.txt'
+    path = 'N:/UCLA_Microsoft/OneDrive - personalmicrosoftsoftware.ucla.edu/Research/UCLA/Results/momentum_conservation_model/mom_cons_new_pc.txt'
     # path = 'C:/Users/Dylan/OneDrive - UCLA IT Services/Research/UCLA/Results/mom_cons_new_pc.txt'
     total_tracks, total_protons, dsigs, dsig_errs = [], [], [], []
     with open(path, 'r') as file:
