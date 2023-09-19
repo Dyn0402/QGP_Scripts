@@ -130,6 +130,7 @@ def define_stats(n_tracks, bin_width):
     q = 1 - p
     stats = {'mean': {'meth': get_mean_meas, 'true': n * p},
              'standard deviation': {'meth': get_sd_meas, 'true': np.sqrt(n * p * q)},
+             'variance': {'meth': get_c2_meas, 'true': n * p * q},
              'skewness': {'meth': get_skewness_meas, 'true': (q - p) / np.sqrt(n * p * q)},
              'kurtosis': {'meth': get_kurtosis_meas, 'true': (1 - 6 * p * q) / (n * p * q)},
              'non-excess kurtosis': {'meth': get_nekurtosis_meas, 'true': (1 - 6 * p * q) / (n * p * q) + 3},
@@ -181,6 +182,7 @@ def plot_dist(data, n_tracks, bin_width, n_exp, out_dir=None):
     plt.legend()
     if out_dir is not None:
         plt.savefig(f'{out_dir}Experiment_{n_exp}_dist.png', bbox_inches='tight')
+        plt.savefig(f'{out_dir}Experiment_{n_exp}_dist.pdf', bbox_inches='tight')
         plt.close()
 
 
@@ -197,4 +199,5 @@ def plot_bootstraps(bs_list, stat, exp_val, exp_err, binom_val, n_exp, n_events,
     plt.xlabel(stat)
     plt.legend(loc='upper right')
     plt.savefig(f'{out_dir}Experiment_{n_exp}_{stat}.png', bbox_inches='tight')
+    plt.savefig(f'{out_dir}Experiment_{n_exp}_{stat}.pdf', bbox_inches='tight')
     plt.close()
