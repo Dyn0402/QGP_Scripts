@@ -76,15 +76,15 @@ def inv_x_const(x, a, b):
 
 
 def inv_pow_x_const(x, a, b, c):
-    return a / x**c + b
+    return a / x ** c + b
 
 
 def inv_pow_x_lin(x, a, b, c, d):
-    return a / x**c + b + d * x
+    return a / x ** c + b + d * x
 
 
 def inv_pow_x_quad(x, a, b, c, d, e):
-    return a / x**c + b + d * x + e * x**2
+    return a / x ** c + b + d * x + e * x ** 2
 
 
 def inv_x_var(x, a, b, c):
@@ -211,7 +211,7 @@ def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_
     if plot:
         fig, ax = plt.subplots(figsize=(6.66, 5), dpi=144)
         fig.canvas.manager.set_window_title(f'Raw Div Mix {stat.title()} vs Total Protons {energy}GeV {div}°')
-        ax.set_title(f'{energy} GeV, 0-5% Centrality, {div}° Partitions, 72 Samples per Event')
+        ax.set_title(f'{energy} GeV, 0-5% Centrality, {div}° Partitions, 72 Samples/Event')
         ax.set_xlabel('Total Protons in Event')
         ax.set_ylabel(f'Raw / Mix {stat.title()}')
         ax.axhline(1, ls='--', color='black')
@@ -371,7 +371,7 @@ def stat_binom_vs_protons(df, stat, div, cent, energy, data_types, data_set_plt,
         name = data_sets_labels[data_set_plt] + ' '
     else:
         name = data_set_plt + '\n'
-    ax.set_title(f'{name}{energy} GeV, {cent_map[cent]} Centrality, {div}° Partitions, 72 Samples per Event')
+    ax.set_title(f'{name}{energy} GeV, {cent_map[cent]} Centrality, {div}° Partitions, 72 Samples/Event')
     ax.set_xlabel('Total Protons in Event')
     ax.set_ylabel(f'{stat.title()}')
     if y_ranges:
@@ -895,7 +895,7 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
         fig, ax = plt.subplots()
         fig.canvas.manager.set_window_title(f'dvar vs Total Protons {energy}GeV {div}°')
         if title is None:
-            ax.set_title(f'{energy} GeV, {cent_map[cent]} Centrality, {div}° Partitions, 72 Samples per Event')
+            ax.set_title(f'{energy} GeV, {cent_map[cent]} Centrality, {div}° Partitions, 72 Samples/Event')
         else:
             ax.set_title(title)
         ax.set_xlabel('Total Protons in Event')
@@ -1147,7 +1147,7 @@ def stat_vs_protons_energies(df, stat, divs, cent, energies, data_types, data_se
     if plot or plot_fit:
         fig, ax_energies = plt.subplots(2, 3, sharex=True, sharey=True, figsize=(13.33, 6.16), dpi=144)
         ax_energies = ax_energies.flat
-        fig.suptitle(f'0-5% Centrality, {div}° Partitions, 72 Samples per Event')
+        fig.suptitle(f'0-5% Centrality, {div}° Partitions, 72 Samples/Event')
         # ax.set_title(f'{stat} {div}° Divisions')
         for ax in ax_energies[-3:]:
             ax.set_xlabel('Total Protons in Event')
@@ -1243,7 +1243,7 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
                              avg=False, plot_avg=False, hist=False, data_sets_colors=None, data_sets_labels=None,
                              star_prelim_loc=None, marker_map=None, alpha=1.0, errbar_alpha=0.2, avgs_df=None,
                              ylabel=None, kin_loc=None, no_hydro_label=False, data_sets_bands=None,
-                             legend_order=None, title=None):
+                             legend_order=None, title=None, legend_panel=-1):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     energy_map = {7: '7.7', 11: '11.5', 19: '19.6', 27: '27', 39: '39', 62: '62.4'}
@@ -1278,10 +1278,10 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
 
     if plot or plot_avg:
         # fig, ax_energies = plt.subplots(2, 3, sharex=True, sharey=True, figsize=(13.33, 6.16), dpi=144)
-        fig, ax_energies = plt.subplots(2, 3, sharex='all', sharey='all', figsize=(13.33, 5.1), dpi=144)
+        fig, ax_energies = plt.subplots(2, 3, sharex='all', figsize=(13.33, 5.1), dpi=144)
         ax_energies = ax_energies.flat
         if title is None:
-            fig.suptitle(f'{cent_map[cent]} Centrality, {div}° Partitions, 72 Samples per Event')
+            fig.suptitle(f'{cent_map[cent]} Centrality, {div}° Partitions, 72 Samples/Event')
         else:
             fig.suptitle(title)
         for ax in ax_energies[-3:]:
@@ -1302,6 +1302,8 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
                         ax.set_ylabel(rf'$\Delta \sigma^2$')
                 else:
                     ax.set_ylabel(rf'$\Delta \sigma^2$')
+            if i not in [0, 3]:
+                ax.set_yticks([])
             if y_ranges:
                 ax.set_ylim(y_ranges)
             ax.set_xlim(0, 69.9)
@@ -1377,16 +1379,17 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
                 handles, labels = ax.get_legend_handles_labels()
                 handles_dict = dict(zip(labels, handles))
                 ordered_handles = [handles_dict[label] for label in legend_order]
-                ax_energies[-1].legend(loc='lower right', framealpha=1.0, handles=ordered_handles,
-                                       labels=legend_order).set_zorder(10)
+                ax_energies[legend_panel].legend(loc='lower right', framealpha=1.0, handles=ordered_handles,
+                                                 labels=legend_order).set_zorder(10)
             else:
-                ax_energies[-1].legend(loc='lower right', framealpha=1.0).set_zorder(10)
+                ax_energies[legend_panel].legend(loc='lower right', framealpha=1.0).set_zorder(10)
         eta_line = r'|y| < 0.5'
         pt_line = r'0.4 < $p_T$ < 2.0 GeV'
         pt_line = f'{pt_line}\n0-5% Centrality\n120° Partitions'
+        samples_line = '72 Samples/Event'
         if kin_loc is None:
             kin_loc = (0.5, 0.65)
-        ax_energies[4].text(*kin_loc, f'Au+Au\n{eta_line}\n{pt_line}', ha='left', va='top',
+        ax_energies[4].text(*kin_loc, f'Au+Au\n{eta_line}\n{pt_line}\n{samples_line}', ha='left', va='top',
                             transform=ax_energies[4].transAxes)
         if star_prelim_loc is not None:
             ax_energies[star_prelim_loc[0]].text(*star_prelim_loc[1:], 'STAR Preliminary', fontsize='large', ha='left',
@@ -1395,7 +1398,7 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
             ax_energies[1].text(0.76, 0.1, f'No MUSIC data\nat 11.5 GeV', ha='center', va='center', fontsize='small',
                                 transform=ax_energies[1].transAxes)
         fig.tight_layout()
-        fig.subplots_adjust(wspace=0.0, hspace=0.0, left=0.07, top=0.949, right=0.995, bottom=0.07)
+        fig.subplots_adjust(wspace=0.0, hspace=0.0, left=0.07, top=0.995, right=0.995, bottom=0.08)
         fig.canvas.manager.set_window_title(f'binom_slices_{divs[0]}')
 
     return pd.DataFrame(avgs)
@@ -1436,7 +1439,7 @@ def stat_vs_protons_cents(df, stat, divs, cents, energy, data_types, data_sets_p
     if plot or plot_fit:
         fig, ax_cents = plt.subplots(3, 3, sharex=True, sharey=True, figsize=(13.33, 6.16), dpi=144)
         ax_cents = ax_cents.flat
-        fig.suptitle(f'{energy}GeV, {div}° Partitions, 72 Samples per Event')
+        fig.suptitle(f'{energy}GeV, {div}° Partitions, 72 Samples/Event')
         # ax.set_title(f'{stat} {div}° Divisions')
         for ax in ax_cents[-3:]:
             ax.set_xlabel('Total Protons in Event')
@@ -1558,7 +1561,7 @@ def dvar_vs_protons_cents(df, divs, cents, energy, data_types, data_sets_plt, y_
     if plot or plot_avg:
         fig, ax_cents = plt.subplots(3, 3, sharex=True, sharey=True, figsize=(13.33, 6.16), dpi=144)
         ax_cents = ax_cents.flat
-        fig.suptitle(f'{energy}GeV, {div}° Partitions, 72 Samples per Event')
+        fig.suptitle(f'{energy}GeV, {div}° Partitions, 72 Samples/Event')
         # ax.set_title(f'{stat} {div}° Divisions')
         for ax in ax_cents[-3:]:
             ax.set_xlabel('Total Protons in Event')
@@ -1769,7 +1772,7 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                         exclude_divs=[], verbose=False, plot_energy_panels=True, title=None, alpha=1, ylab=None,
                         plot=True, errbar_alpha=0.2, plot_indiv=True, plot_energies_fig=False, ylim=None, xlim=None,
                         leg_panel=0, kin_loc=(0.02, 0.02), star_prelim_loc=None, no_hydro_label=False,
-                        data_sets_bands=None, legend_order=None):
+                        data_sets_bands=None, legend_order=None, leg_frameon=False):
     energy_map = {7: '7.7', 11: '11.5', 19: '19.6', 27: '27', 39: '39', 62: '62.4'}
     energies = pd.unique(df['energy'])
     if plot:
@@ -1779,7 +1782,7 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
             ax.axhline(0, ls='-', color='black')
         if plot_energy_panels:
             # fig_panels, ax_panels = plt.subplots(2, 3, sharex='all', sharey='all', dpi=144, figsize=(13.33, 6.16))
-            fig_panels, ax_panels = plt.subplots(2, 3, sharex='all', sharey='all', dpi=144, figsize=(13.33, 5))
+            fig_panels, ax_panels = plt.subplots(2, 3, sharex='all', dpi=144, figsize=(13.33, 5))
             fig_panels.canvas.manager.set_window_title(f'dsigma^2 vs Width Energy Panels')
             ax_panels = dict(zip(energies, ax_panels.flat))
         if plot_indiv:
@@ -1851,7 +1854,8 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                                                        marker='o', label=lab_energy, color=color, alpha=alpha)
                             if 'sys' in df_cent.columns:
                                 ax_panels[energy].errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['sys'],
-                                                           ls='', marker='', color=color, alpha=errbar_alpha, elinewidth=4)
+                                                           ls='', marker='', color=color, alpha=errbar_alpha,
+                                                           elinewidth=4)
                 if fit and df_cent.size > 1:
                     try:
                         df_cent = df_cent[~df_cent.divs.isin(exclude_divs)]
@@ -1960,6 +1964,8 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                     ax_panels[energy].set_xlabel('Azimuthal Partition Width (°)')
                 if energy_i in [0, 3]:
                     ax_panels[energy].set_ylabel(ylab)
+                if energy_i not in [0, 3]:
+                    ax_panels[energy].set_yticks([])
                 if energy_i == leg_panel:
                     # ax_panels[energy].legend(loc='lower left', bbox_to_anchor=(0.5, 0.85), framealpha=1.0)
                     if legend_order is not None:
@@ -1967,28 +1973,30 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                         handles_dict = dict(zip(labels, handles))
                         ordered_handles = [handles_dict[label] for label in legend_order]
                         leg = ax_panels[energy].legend(handles=ordered_handles, labels=legend_order, loc='lower left',
-                                                       frameon=False)
+                                                       frameon=leg_frameon)
                     else:
-                        leg = ax_panels[energy].legend(loc='lower left', frameon=False)
+                        leg = ax_panels[energy].legend(loc='lower left', frameon=leg_frameon)
                     leg.zorder = 0
 
                 if kin_loc is not None and energy_i == 1:
                     eta_line = r'|y| < 0.5'
                     pt_line = r'0.4 < $p_T$ < 2.0 GeV'
-                    ax_panels[energy].text(*kin_loc, f'Au+Au\n{eta_line}\n{pt_line}\n0-5% Centrality', ha='left',
+                    pt_line = f'{pt_line}\n0-5% Centrality'
+                    samples_line = '72 Samples/Event'
+                    ax_panels[energy].text(*kin_loc, f'Au+Au\n{eta_line}\n{pt_line}\n{samples_line}', ha='left',
                                            va='bottom', transform=ax_panels[energy].transAxes)
                 if star_prelim_loc is not None and energy_i == star_prelim_loc[0]:
                     ax_panels[energy].text(*star_prelim_loc[1:], 'STAR Preliminary', fontsize='large', ha='center',
                                            va='top', transform=ax_panels[energy].transAxes)
                 if no_hydro_label and energy_i == 1:
-                    ax_panels[energy].text(0.8, 0.11, f'No hydro data\nat 11 GeV', ha='center', va='center',
+                    ax_panels[energy].text(0.85, 0.2, f'No hydro data\nat 11 GeV', ha='center', va='bottom',
                                            fontsize='medium', transform=ax_panels[energy].transAxes)
 
         if plot_energies_fig:
             fig.tight_layout()
         if plot_energy_panels:
             fig_panels.tight_layout()
-            fig_panels.subplots_adjust(wspace=0.0, hspace=0.0, left=0.075, top=0.949, right=0.995, bottom=0.075)
+            fig_panels.subplots_adjust(wspace=0.0, hspace=0.0, left=0.07, top=0.995, right=0.995, bottom=0.085)
 
     return pd.DataFrame(fit_pars)
 
@@ -2197,7 +2205,7 @@ def plot_protons_fits_divs_cents(df, data_sets_plt, plot=False, fit=False, data_
                                  exclude_divs=[]):
     if plot:
         fig, axs = plt.subplots(3, 3, sharex=True, sharey=True, figsize=(13.33, 6.16), dpi=144)
-        fig.suptitle(f'Slope vs Partition Width 72 Samples per Event')
+        fig.suptitle(f'Slope vs Partition Width 72 Samples/Event')
         axs = axs.flatten()
         fig.canvas.manager.set_window_title(f'Slope vs Width All Energies')
         markers = ['o', 's', 'P', 'D', '*', '^', 'p']
@@ -2275,7 +2283,7 @@ def plot_dvar_avgs_divs_cents(df, data_sets_plt, plot=False, fit=False, data_set
     energies = pd.unique(df['energy'])
     if plot:
         fig, axs = plt.subplots(3, 3, sharex=True, sharey=True, figsize=(13.33, 6.16), dpi=144)
-        suptitle = r'$\langle\Delta\sigma^2\rangle$ vs Partition Width 72 Samples per Event'
+        suptitle = r'$\langle\Delta\sigma^2\rangle$ vs Partition Width 72 Samples/Event'
         suptitle = f'{energies[0]}GeV {suptitle}' if len(energies) == 1 else suptitle
         fig.suptitle(suptitle)
         axs = axs.flatten()
@@ -2772,7 +2780,7 @@ def plot_protons_avgs_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
                                     df_set['avg'] + df_set['avg_err'], label=lab, alpha=alpha)
             else:
                 ax_avg.errorbar(df_set['energy'], df_set['avg'], yerr=df_set['avg_err'], ls='none', marker=marker,
-                                label=lab, alpha=alpha)
+                                label=lab, alpha=alpha, markersize=9)
                 if 'sys' in df:
                     ax_avg.errorbar(df_set['energy'], df_set['avg'], yerr=df_set['sys'], ls='', marker='', elinewidth=4,
                                     alpha=0.3)
@@ -2783,7 +2791,7 @@ def plot_protons_avgs_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
                                     label=lab, alpha=alpha)
             else:
                 ax_avg.errorbar(df_set['energy'], df_set['avg'], yerr=df_set['avg_err'], ls='none', marker=marker,
-                                color=data_sets_colors[data_set], label=lab, alpha=alpha)
+                                color=data_sets_colors[data_set], label=lab, alpha=alpha, markersize=9)
                 if 'sys' in df:
                     ax_avg.errorbar(df_set['energy'], df_set['avg'], yerr=df_set['sys'], ls='', marker='', elinewidth=4,
                                     color=data_sets_colors[data_set], alpha=0.3)
@@ -2796,7 +2804,9 @@ def plot_protons_avgs_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
     if kin_info_loc is not None:
         eta_line = r'|y| < 0.5'
         pt_line = r'0.4 < $p_T$ < 2.0 GeV'
-        ax_avg.text(*kin_info_loc, f'Au+Au\n{eta_line}\n{pt_line}', ha='left', va='bottom', transform=ax_avg.transAxes,
+        pt_line = f'{pt_line}\n0-5% Centrality\n120° Partitions'
+        samples_line = '72 Samples/Event'
+        ax_avg.text(*kin_info_loc, f'Au+Au\n{eta_line}\n{pt_line}\n{samples_line}', ha='left', va='bottom', transform=ax_avg.transAxes,
                     bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9))
     if star_prelim_loc is not None:
         ax_avg.text(*star_prelim_loc, 'STAR Preliminary', fontsize='large', ha='left', transform=ax_avg.transAxes,
@@ -2815,7 +2825,7 @@ def plot_protons_avgs_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
         else:
             ax_avg.legend(loc=leg_loc)
     fig_avg.tight_layout()
-    fig_avg.subplots_adjust(top=0.947, right=0.993, bottom=0.088, left=0.148)
+    fig_avg.subplots_adjust(top=0.995, right=0.995, bottom=0.085, left=0.14)
 
 
 def plot_protons_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None,
@@ -2897,12 +2907,14 @@ def plot_protons_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
     legend_slope = ax_slope.legend()
     # legend_slope.get_frame().set_alpha(0)
     fig_slope.tight_layout()
+    fig_slope.subplots_adjust(top=0.995, right=0.995, bottom=0.085, left=0.14)
 
 
 def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None,
                               fit=False, cent_ref=None, ref_type=None, data_sets_energies_cmaps=None, ls='-',
-                              alpha=0.6, errbar_alpha=0.2, kin_info_loc=(0.18, 0.1), star_prelim_loc=None,
-                              data_sets_energies_colors=None, marker_map=None, data_sets_bands=None):
+                              alpha=0.6, errbar_alpha=0.2, band_alpha=0.2, kin_info_loc=(0.18, 0.1),
+                              star_prelim_loc=None, data_sets_energies_colors=None, marker_map=None,
+                              data_sets_bands=None, xerr=True):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     energy_map = {7: '7.7', 11: '11.5', 19: '19.6', 27: '27', 39: '39', 62: '62.4'}
@@ -2947,13 +2959,16 @@ def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
                 cent_energy = cent_ref[(cent_ref['data_set'] == data_set) & (cent_ref['energy'] == energy)]
                 x = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_val'].iloc[0] for cent in
                      df_energy['cent']]
-                x_err = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_sd'].iloc[0] for cent in
-                         df_energy['cent']]
+                if xerr is False:
+                    x_err = None
+                else:
+                    x_err = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_sd'].iloc[0] for cent in
+                             df_energy['cent']]
             ls = 'none' if fit else ls
             if colors is None and color is None:
                 if data_sets_bands is not None and data_set in data_sets_bands:
                     ax_avg.fill_between(x, df_energy['avg'] - df_energy['avg_err'],
-                                        df_energy['avg'] + df_energy['avg_err'], label=lab, alpha=0.2)
+                                        df_energy['avg'] + df_energy['avg_err'], label=lab, alpha=band_alpha)
                 else:
                     ax_avg.errorbar(x, df_energy['avg'], xerr=x_err, yerr=df_energy['avg_err'], marker=marker, ls=ls,
                                     label=lab, alpha=alpha)
@@ -2963,7 +2978,8 @@ def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
             else:
                 if data_sets_bands is not None and data_set in data_sets_bands:
                     ax_avg.fill_between(x, df_energy['avg'] - df_energy['avg_err'],
-                                        df_energy['avg'] + df_energy['avg_err'], label=lab, alpha=0.2, color=color)
+                                        df_energy['avg'] + df_energy['avg_err'], label=lab, alpha=band_alpha,
+                                        color=color)
                 else:
                     ax_avg.errorbar(x, df_energy['avg'], xerr=x_err, yerr=df_energy['avg_err'], marker=marker, ls=ls,
                                     color=color, label=lab, alpha=alpha)
@@ -3001,7 +3017,10 @@ def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
     if kin_info_loc is not None:
         eta_line = r'|y| < 0.5'
         pt_line = r'0.4 < $p_T$ < 2.0 GeV'
-        ax_avg.text(*kin_info_loc, f'Au+Au\n{eta_line}\n{pt_line}', ha='left', va='bottom', transform=ax_avg.transAxes,
+        pt_line = f'{pt_line}\n120° Partitions'
+        samples_line = '72 Samples/Event'
+        ax_avg.text(*kin_info_loc, f'Au+Au\n{eta_line}\n{pt_line}\n{samples_line}', ha='left', va='bottom',
+                    transform=ax_avg.transAxes,
                     bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9))
     if star_prelim_loc is not None:
         ax_avg.text(*star_prelim_loc, 'STAR Preliminary', fontsize='large', ha='left', transform=ax_avg.transAxes,
@@ -3009,7 +3028,7 @@ def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
     legend_avg = ax_avg.legend()
     # legend_avg.get_frame().set_alpha(0)
     fig_avg.tight_layout()
-    fig_avg.subplots_adjust(top=0.947, right=0.993, bottom=0.088, left=0.148)
+    fig_avg.subplots_adjust(top=0.995, right=0.995, bottom=0.085, left=0.14)
 
 
 def plot_dsig_avg_vs_cent_2panel(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None,
@@ -4141,7 +4160,7 @@ def plot_closures(df_sig, df_combo, df_corrected, alpha=0.6, df_bkg=None, title=
         errs = []
         for bkg in df_bkg:
             errs.append((np.abs(np.array(df_sig['avg']) * np.mean(bkg['avg']))) ** 0.75)
-        df_diff_err = np.sqrt(np.sum(np.array(errs), axis=0)**2)
+        df_diff_err = np.sqrt(np.sum(np.array(errs), axis=0) ** 2)
     else:
         df_bkg = np.array(df_combo['avg']) - np.array(df_corrected['avg']) if df_bkg is None else df_bkg
         df_diff_err = (np.abs(np.array(df_sig['avg']) * np.mean(df_bkg['avg']))) ** 0.75

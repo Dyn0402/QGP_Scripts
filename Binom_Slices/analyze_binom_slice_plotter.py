@@ -26,6 +26,7 @@ from integrate_pdf_var import base_gaus_pdf_wrap, get_partition_variance
 
 def main():
     # plot_paper_figs()
+    plot_method_paper_figs()
 
     # plot_star_model_var()
     # plot_vs_cent_var()
@@ -62,7 +63,7 @@ def main():
     # plot_anticl_flow_closure_test()
     # plot_anticl_flow_closure_test_simple()
     # plot_efficiency_closure_tests()
-    plot_closure_tests()
+    # plot_closure_tests()
     print('donzo')
 
 
@@ -302,6 +303,133 @@ def plot_paper_figs():
     plt.show()
 
 
+def plot_method_paper_figs():
+    plt.rcParams["figure.figsize"] = (6.66, 5)
+    plt.rcParams["figure.dpi"] = 144
+
+    presentation_mode = False
+    if presentation_mode:
+        # plt.rcParams['axes.labelsize'] = 14  # Adjust the value as needed
+        # plt.rcParams['axes.titlesize'] = 16  # Adjust the value as needed
+        # plt.rcParams['legend.fontsize'] = 14  # Adjust the value as needed
+        plt.rcParams['font.size'] = plt.rcParams['font.size'] * 1.2
+
+    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    # base_path = 'C:/Users/Dyn04/Research/'
+    df_model_name = 'Bes_with_Sys/binom_slice_vars_model.csv'
+    df_dsigma_model_name = 'Bes_with_Sys/binom_slice_vars_model_dsigma.csv'
+    df_dsigma_v2sub_model_name = 'Bes_with_Sys/binom_slice_vars_model_dsigma_v2sub.csv'
+    df_def_avgs_out_model_name = 'Bes_with_Sys/dsig_tprotons_avgs_model.csv'
+    df_def_avgs_v2sub_out_model_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_model.csv'
+    fits_out_base = 'Base_Zero_Fits'
+    # df_tproton_avgs_name = 'dsig_tprotons_avgs_cent8.csv'
+    # df_partitions_fits_name = 'partitions_fits_cent8.csv'
+
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
+                0: '70-80%', -1: '80-90%'}
+
+    stat_plot = 'k2'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
+    div_plt = 120
+    exclude_divs = [89, 356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
+    cent_plt = 8
+    energies_fit = [7, 11, 19, 27, 39, 62]
+    samples = 72  # For title purposes only
+
+    data_sets_plt = ['ampt_new_coal_epbins1', 'cf_resample_epbins1', 'cfev_resample_epbins1']
+    data_sets_colors = dict(zip(data_sets_plt, ['red', 'blue', 'purple']))
+    data_sets_labels = dict(zip(data_sets_plt, ['AMPT', 'MUSIC+FIST', 'MUSIC+FIST EV $1fm^3$']))
+    data_sets_markers = dict(zip(data_sets_plt, [dict(zip(['raw', 'mix', 'diff'], [x, x, x]))
+                                                 for x in ['o', 's', '^', '*']]))
+    data_sets_bands = []
+    legend_order = ['MUSIC+FIST', 'MUSIC+FIST EV $1fm^3$', 'AMPT']
+
+    cent_ref_name = 'mean_cent_ref.csv'
+    cent_ref_df = pd.read_csv(f'{base_path}{cent_ref_name}')
+    ref_type = 'refn'  # 'refn'
+    cent_ref_df = cent_ref_df.replace('bes_resample_def', 'bes_def')
+    cent_ref_df = cent_ref_df.replace('ampt_new_coal_resample_def', 'ampt_new_coal_epbins1')
+
+    df = pd.read_csv(f'{base_path}{df_model_name}')
+    df = df[df['stat'] == stat_plot]
+
+    df_dsigma = pd.read_csv(f'{base_path}{df_dsigma_model_name}')
+
+    stat_binom_vs_protons(df, stat_plot, div_plt, cent_plt, 39, ['raw', 'mix'], 'ampt_new_coal_epbins1',
+                          data_sets_labels=data_sets_labels)
+
+    dvar_vs_protons(df_dsigma, div_plt, cent_plt, [39], ['raw', 'mix'], ['ampt_new_coal_epbins1'],
+                    data_sets_colors=None, data_sets_labels=data_sets_labels,
+                    plot=True, avg=False, alpha=1.0, y_ranges=[-0.00124, 0.0009], ylabel=r'$\Delta\sigma^2$')
+
+    dvar_vs_protons(df_dsigma, div_plt, cent_plt, [39], ['diff'], data_sets_plt, data_sets_colors=data_sets_colors,
+                    plot=True, avg=False, alpha=1.0, y_ranges=[-0.00124, 0.0009], ylabel=r'$\Delta\sigma^2$',
+                    data_sets_labels=data_sets_labels, marker_map=data_sets_markers, legend_pos='lower right',
+                    data_sets_bands=data_sets_bands)
+
+    df_dsigma_v2sub = pd.read_csv(f'{base_path}{df_dsigma_v2sub_model_name}')
+
+    dvar_vs_protons(df_dsigma_v2sub, div_plt, cent_plt, [39], ['diff'], data_sets_plt, ylabel=r'$\Delta\sigma^2$',
+                    data_sets_colors=data_sets_colors, plot=True, avg=False, alpha=1.0, y_ranges=[-0.00124, 0.0009],
+                    data_sets_labels=data_sets_labels, marker_map=data_sets_markers, legend_pos='lower right',
+                    kin_info_loc=(0.22, 0.13), star_prelim_loc=(0.65, 0.96), data_sets_bands=data_sets_bands,
+                    legend_order=legend_order)  # <---
+
+    df_dsigma_v2sub_diffs = df_dsigma_v2sub[df_dsigma_v2sub['data_type'] == 'diff'].assign(data_type='v2_sub')
+
+    dsig_avgs_v2sub = pd.read_csv(f'{base_path}{df_def_avgs_v2sub_out_model_name}')
+
+    dsig_avgs_v2sub['data_type'] = 'diff'
+    dvar_vs_protons_energies(df_dsigma_v2sub, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], data_sets_plt,
+                             plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors, no_hydro_label=1,
+                             data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.00053], avgs_df=dsig_avgs_v2sub,
+                             ylabel=r'$\Delta\sigma^2$', kin_loc=(0.65, 0.43), legend_panel=3,
+                             marker_map=data_sets_markers, data_sets_bands=data_sets_bands, legend_order=legend_order,
+                             title=f'', alpha=0.8)  # <---
+
+    dsig_avgs_v2_sub_cent8 = dsig_avgs_v2sub[dsig_avgs_v2sub['cent'] == 8]
+    plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,  # <---
+                        data_sets_labels=data_sets_labels, plot_energy_panels=True, legend_order=legend_order,
+                        ylab=r'$\langle\Delta\sigma^2\rangle$', data_sets_bands=data_sets_bands,
+                        plot_indiv=False, ylim=(-0.00059, 0.00009), leg_panel=5, no_hydro_label=True,
+                        xlim=(-10, 370), title=f'', leg_frameon=True, exclude_divs=exclude_divs, alpha=0.8)
+
+    dsig_avgs_v2_sub_cent8_div120 = dsig_avgs_v2sub[(dsig_avgs_v2sub['cent'] == 8) & (dsig_avgs_v2sub['divs'] == 120)]
+    plot_protons_avgs_vs_energy(dsig_avgs_v2_sub_cent8_div120, data_sets_plt, data_sets_colors=data_sets_colors,  # <---
+                                data_sets_labels=data_sets_labels, alpha=0.6, kin_info_loc=(0.02, 0.45),
+                                marker_map=data_sets_markers,
+                                data_sets_bands=data_sets_bands, legend_order=legend_order, title=f'')
+
+    dsig_avgs_v2_sub_div120 = dsig_avgs_v2sub[dsig_avgs_v2sub['divs'] == 120]
+    data_sets_energies_colors = \
+        {'ampt_new_coal_epbins1': {7: 'red', 11: 'blue', 19: 'green', 27: 'orange', 39: 'purple', 62: 'black'}}
+    vs_cent_sets = list(data_sets_energies_colors.keys())
+
+    plot_protons_avgs_vs_cent(dsig_avgs_v2_sub_div120, vs_cent_sets, data_sets_colors=data_sets_colors, fit=False,
+                              data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,  # <---
+                              title=f'', alpha=0.8, errbar_alpha=0.3, xerr=False,
+                              kin_info_loc=(0.2, 0.1), marker_map=data_sets_markers,
+                              data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
+    plot_protons_avgs_vs_cent(dsig_avgs_v2_sub_div120, vs_cent_sets, data_sets_colors=data_sets_colors, fit=False,
+                              data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type='npart',  # <---
+                              title=f'', alpha=0.8, errbar_alpha=0.3, xerr=False,
+                              kin_info_loc=(0.2, 0.1), marker_map=data_sets_markers,
+                              data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
+
+    # plot_div_fits_vs_cent(dsig_avgs_v2_sub, ['bes_def'], data_sets_colors=data_sets_colors,
+    #                       data_sets_labels=data_sets_labels, title=None, fit=False, cent_ref=cent_ref_df,
+    #                       ref_type=ref_type)
+    #
+    # df_fits = plot_dvar_avgs_divs(dsig_avgs, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
+    #                               data_sets_labels=data_sets_labels, plt_energies=False)
+    # if df_partitions_fits_name is not None:
+    #     df_fits.to_csv(f'{base_path}{fits_out_base}/{df_partitions_fits_name}', index=False)
+
+    # plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
+    # plot_slope_div_fits_simpars(df_fits)
+
+    plt.show()
+
+
 def plot_star_model():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
@@ -434,7 +562,7 @@ def plot_star_model_var():
 
     raw_to_mix_stat_err(pd.concat([df_raw, df_mix], ignore_index=True), div_plt, 4, 11, 'bes_def')
 
-    plt.show()
+    # plt.show()
 
     dvar_vs_protons(pd.concat([df_raw, df_mix]), div_plt, cent_plt, [62], ['raw', 'mix'], ['ampt_new_coal_epbins1'],
                     plot=True, avg=False)
