@@ -18,15 +18,15 @@ from analyze_binom_slices import read_flow_values
 
 
 def main():
-    # plot_star_models()
-    plot_star_sys()
+    plot_star_models()
+    # plot_star_sys()
 
     print('donzo')
 
 
 def plot_star_models():
-    data_sets = {'BES1': 'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/'
-                         'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/',
+    data_sets = {'BES1': 'F:/Research/Data/default/'
+                         'rapid05_resample_norotate_seed_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_0/',
                  'AMPT': 'F:/Research/Data_Ampt_New_Coal/default_resample_epbins1/'
                          'Ampt_rapid05_resample_norotate_epbins1_0/',
                  'CF': 'F:/Research/Data_CF/default_resample_epbins1/CF_rapid05_resample_norotate_epbins1_0/',
