@@ -20,56 +20,110 @@ from poc_functions import *
 
 
 def main():
-    resample_validation()
+    # resample_validation()
+    run_sets()
     print('donzo')
 
 
-def resample_validation():
+def run_sets():
+    # par_dict = {'n_tracks': [15], 'n_samples': np.array([1]), 'n_events': np.arange(200, 2000, 10),
+    #             'bin_widths': np.deg2rad([120]), 'experiments': 100,
+    #             'plot_out_name': 'vs_neventsto2k_nsamples1_ntrack15_bw120_alg4/'}
+    # resample_validation(par_dict)
+
+    # par_dict = {'n_tracks': [15], 'n_samples': np.array([1]), 'n_events': np.arange(200, 2000, 10),
+    #             'bin_widths': np.deg2rad([120]), 'experiments': 300,
+    #             'plot_out_name': 'vs_neventsto2k_nsamples1_ntrack15_bw120_alg4/'}
+    # resample_validation(par_dict)
+    #
+    # par_dict = {'n_tracks': [15], 'n_samples': np.array([1, 2, 3]), 'n_events': np.arange(100, 2002, 2),
+    #             'bin_widths': np.deg2rad([120]), 'experiments': 1000, 'plot_sds': True,
+    #             'plot_out_name': 'vs_neventsto2k_nsamples123_ntrack15_bw120_alg4/'}
+    # resample_validation(par_dict)
+    #
+    # par_dict = {'n_tracks': [15], 'n_samples': np.arange(1, 31, 1), 'n_events': np.array([250]),
+    #             'bin_widths': np.deg2rad([120]), 'experiments': 1000, 'plot_sds': False,
+    #             'plot_out_name': 'vs_nevents250_nsamples1to30_ntrack15_bw120_alg4/'}
+    # resample_validation(par_dict)
+    #
+    # par_dict = {'n_tracks': [15, 30], 'n_samples': np.arange(1, 31, 1), 'n_events': np.array([250]),
+    #             'bin_widths': np.deg2rad([60, 120]), 'experiments': 1000, 'plot_sds': False,
+    #             'plot_out_name': 'vs_nevents250_nsamples1to30_ntrack15and30_bw60and120_alg4/'}
+    # resample_validation(par_dict)
+    #
+    # par_dict = {'n_tracks': [15, 30], 'n_samples': np.arange(1, 31, 1), 'n_events': np.array([2000]),
+    #             'bin_widths': np.deg2rad([60, 120]), 'experiments': 1000, 'plot_sds': False,
+    #             'plot_out_name': 'vs_nevents2k_nsamples1to30_ntrack15and30_bw60and120_alg4/'}
+    # resample_validation(par_dict)
+
+    par_dict = {'n_tracks': [15, 30], 'n_samples': np.array([1, 1440]), 'n_events': np.arange(100, 2005, 5),
+                'bin_widths': np.deg2rad([60, 120]), 'experiments': 1000, 'plot_sds': False,
+                'plot_out_name': 'vs_nevents100to2k_nsamples1and1440_ntrack15and30_bw60and120_alg4/'}
+    resample_validation(par_dict)
+
+
+def resample_validation(par_dict=None):
     """
     Simulate binomials and test resampling values against known answer
     :return:
     """
+    if par_dict is not None:
+        n_tracks = par_dict['n_tracks']
+        n_samples = par_dict['n_samples']
+        n_events = par_dict['n_events']
+        bin_widths = par_dict['bin_widths']
+        experiments = par_dict['experiments']
+        plot_out_name = par_dict['plot_out_name']
+        plot_sds = par_dict['plot_sds']
+    else:
+        n_tracks = [15]
+        # n_samples = [1, 1440]
+        # n_samples = [1, 1440]
+        # n_samples = np.array([1, 2, 3, 4, 5, 6, 7] + list(np.arange(10, 5000, 50)))
+        # n_samples = np.arange(1, 31, 1)
+        # n_samples = np.array([72])
+        n_samples = np.array([1])
+        # n_samples = np.array([1, 2, 3])
+        # n_samples = np.arange(10, 81, 1)
+        # n_events = np.arange(100, 2000, 5)
+        n_events = np.arange(200, 2000, 10)
+        # n_events = [250]
+        # bin_widths = np.deg2rad([60, 120, 240, 300])
+        # bin_widths = np.deg2rad([179, 180, 181])
+        # bin_widths = np.deg2rad([180])
+        bin_widths = np.deg2rad([120])
+        experiments = 1000
+        # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
+        # plot_out_base = 'D:/Transfer/Research/Resample_POC/Resample_Validation/'
+        # plot_out_base = 'C:/Users/Dyn04/Desktop/Resample_POC/Resample_Validation/'
+        # plot_out_name = 'vs_nsamplesto5k_bws_ntrack15_nevent250/'
+        # plot_out_name = 'vs_neventsto2k_nsamples72_ntrack15_alg4/'
+        plot_out_name = 'vs_neventsto2k_nsamples1_ntrack15_bw120_alg4/'
+        # plot_out_name = 'vs_nsamplesto20_bw60and120_ntrack15and30_nevent2000/'
+        # plot_out_name = 'vs_neventsto2k_bw60and120_ntrack15and30_nsamples1440/'
+        # plot_out_name = 'vs_neventsto2k_bw120_ntrack15_nsamples1and1440_algs1and4/'
+        # plot_out_name = 'vs_nsamples10to80_bw60_ntrack15_nevent100k_alg4/'
+        # plot_out_name = 'kstats_vs_nevento30_nsamples1and1440_bw120_ntrack15/'
+        plot_sds = True
     seed = 1432
     threads = 15
-    n_tracks = [15]
-    # n_samples = [1, 1440]
-    # n_samples = [1, 1440]
-    # n_samples = np.array([1, 2, 3, 4, 5, 6, 7] + list(np.arange(10, 5000, 50)))
-    # n_samples = np.arange(1, 31, 1)
-    n_samples = np.array([72])
-    # n_samples = np.arange(10, 81, 1)
-    # n_events = np.arange(100, 2000, 5)
-    n_events = np.arange(10, 2000, 50)
-    # n_events = [250]
-    # bin_widths = np.deg2rad([60, 120, 240, 300])
-    # bin_widths = np.deg2rad([179, 180, 181])
-    bin_widths = np.deg2rad([180])
-    algs = [4]
-    experiments = 1000
-    # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
     plot_out_base = 'F:/Research/Resample_POC/Resample_Validation/'
-    # plot_out_base = 'D:/Transfer/Research/Resample_POC/Resample_Validation/'
-    # plot_out_base = 'C:/Users/Dyn04/Desktop/Resample_POC/Resample_Validation/'
-    # plot_out_name = 'vs_nsamplesto5k_bws_ntrack15_nevent250/'
-    plot_out_name = 'vs_neventsto2k_nsamples72_ntrack15_alg4/'
-    # plot_out_name = 'vs_nsamplesto20_bw60and120_ntrack15and30_nevent2000/'
-    # plot_out_name = 'vs_neventsto2k_bw60and120_ntrack15and30_nsamples1440/'
-    # plot_out_name = 'vs_neventsto2k_bw120_ntrack15_nsamples1and1440_algs1and4/'
-    # plot_out_name = 'vs_nsamples10to80_bw60_ntrack15_nevent100k_alg4/'
-    # plot_out_name = 'kstats_vs_nevento30_nsamples1and1440_bw120_ntrack15/'
+    algs = [4]
+
     plot_out_dir = plot_out_base + plot_out_name
-    plot_sds = False
+    plt.rcParams['figure.figsize'] = (8, 4)
+    plt.rcParams['figure.dpi'] = 144
     try:
         os.mkdir(plot_out_dir)
     except FileExistsError:
         pass
-    show_plot = True
+    show_plot = False
 
     stats = {bin_width: {n_track: define_stats(n_track, bin_width) for n_track in n_tracks}
              for bin_width in bin_widths}
 
     # stats_plt = ['c4', 'k4', 'c4/c2', 'k4/k2']
-    stats_plt = ['standard deviation', 'skewness', 'non-excess kurtosis']
+    stats_plt = ['variance', 'skewness', 'non-excess kurtosis']
     # stats_plt = ['skewness', 'non-excess kurtosis']
     # stats_plt = ['standard deviation']
 
@@ -106,6 +160,7 @@ def resample_validation():
 
     if show_plot:
         plt.show()
+    plt.close('all')
 
 
 def plot_vs_indep_var(plot_data, stats_plt, stats, indep_var, plot_out_dir, plot_sd=True):
@@ -119,9 +174,9 @@ def plot_vs_indep_var(plot_data, stats_plt, stats, indep_var, plot_out_dir, plot
     set_vars = list(var_string_consts.keys())
     set_vars.remove(indep_var)
 
-    stat_combo_fig, stat_combo_ax = plt.subplots(len(stats_plt), 1, sharex=True, figsize=(8, 8))
-    stat_combo_fig_del, stat_combo_ax_del = plt.subplots(len(stats_plt), 1, sharex=True, figsize=(8, 8))
-    stat_combo_fig_del_norm, stat_combo_ax_del_norm = plt.subplots(len(stats_plt), 1, sharex=True, figsize=(8, 8))
+    stat_combo_fig, stat_combo_ax = plt.subplots(len(stats_plt), 1, sharex=True, figsize=(8, 6))
+    stat_combo_fig_del, stat_combo_ax_del = plt.subplots(len(stats_plt), 1, sharex=True, figsize=(8, 6))
+    stat_combo_fig_del_norm, stat_combo_ax_del_norm = plt.subplots(len(stats_plt), 1, sharex=True, figsize=(8, 6))
     for stat_index, stat in enumerate(stats_plt):
         color = iter(get_cmap('Set1').colors)
         stat_df = plot_data[plot_data['stat'] == stat]
@@ -235,15 +290,15 @@ def plot_vs_indep_var(plot_data, stats_plt, stats, indep_var, plot_out_dir, plot
 
             for ax_ in [ax, stat_combo_ax[stat_index]]:
                 ax_.plot(indep_vals, means, label=label, color=c)
-                ax_.fill_between(indep_vals, means - sems, means + sems, color=c, alpha=0.6)
+                ax_.fill_between(indep_vals, means - sems, means + sems, color=c, alpha=0.5)
                 if plot_sd:
-                    ax_.fill_between(indep_vals, means - sds, means + sds, color=c, alpha=0.2)
+                    ax_.fill_between(indep_vals, means - sds, means + sds, color=c, alpha=0.1)
 
             for ax_del_ in [ax_del, stat_combo_ax_del[stat_index]]:
                 ax_del_.plot(indep_vals, deltas, label=label, color=c)
                 ax_del_.fill_between(indep_vals, deltas - delta_sems, deltas + delta_sems, color=c, alpha=0.5)
                 if plot_sd:
-                    ax_del.fill_between(indep_vals, deltas - delta_sds, deltas + delta_sds, color=c, alpha=0.2)
+                    ax_del_.fill_between(indep_vals, deltas - delta_sds, deltas + delta_sds, color=c, alpha=0.1)
 
             # del_max = max(deltas)
             for ax_del_norm_ in [ax_del_norm, stat_combo_ax_del_norm[stat_index]]:
@@ -251,8 +306,8 @@ def plot_vs_indep_var(plot_data, stats_plt, stats, indep_var, plot_out_dir, plot
                 ax_del_norm_.fill_between(indep_vals, delta_norms - delta_norm_sems, delta_norms + delta_norm_sems,
                                           color=c, alpha=0.5)
                 if plot_sd:
-                    ax_del_norm.fill_between(indep_vals, delta_norms - delta_norm_sds, delta_norms + delta_norm_sds,
-                                             color=c, alpha=0.2)
+                    ax_del_norm_.fill_between(indep_vals, delta_norms - delta_norm_sds, delta_norms + delta_norm_sds,
+                                             color=c, alpha=0.1)
 
         ax.set_xlabel(var_string_consts[indep_var]['x-label'])
         ax_del.set_xlabel(var_string_consts[indep_var]['x-label'])
@@ -292,6 +347,7 @@ def plot_vs_indep_var(plot_data, stats_plt, stats, indep_var, plot_out_dir, plot
             fig_obj.tight_layout()
             fig_obj.canvas.manager.set_window_title(fig_name)
             fig_obj.savefig(f'{plot_out_dir}{fig_name}.png', bbox_inches='tight')
+            fig_obj.savefig(f'{plot_out_dir}{fig_name}.pdf', bbox_inches='tight')
 
     stat_combo_ax[-1].set_xlabel(var_string_consts[indep_var]['x-label'])
     stat_combo_ax_del[-1].set_xlabel(var_string_consts[indep_var]['x-label'])
@@ -328,6 +384,7 @@ def plot_vs_indep_var(plot_data, stats_plt, stats, indep_var, plot_out_dir, plot
         # fig_obj.subplots_adjust(hspace=0)
         fig_obj.canvas.manager.set_window_title(fig_name)
         fig_obj.savefig(f'{plot_out_dir}{fig_name}.png', bbox_inches='tight')
+        fig_obj.savefig(f'{plot_out_dir}{fig_name}.pdf', bbox_inches='tight')
 
 
 if __name__ == '__main__':
