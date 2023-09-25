@@ -42,7 +42,7 @@ def main():
     title_sufx = f'\n{energy}GeV, 0-5% Centrality, {divs}° Partitions'
 
     # plot_2d(raw.get_dist(), raw.max_particle, raw.get_max_bin(), divs, data_name, title_sufx)
-    plot_binomial(raw.get_dist(), 6, divs, data_name, title_sufx=title_sufx)
+    plot_binomial(raw.get_dist(), 20, divs, data_name, title_sufx=title_sufx)
     # plot_ratio(raw.get_dist(), raw.max_particle, divs, x_bins=20, title_sufx=title_sufx)
     # plot_pull(raw.get_dist(), raw.max_particle, divs, x_bins=40, title_sufx=title_sufx)
 

@@ -22,11 +22,15 @@ from poc_functions import *
 
 
 def main():
-    bootstrap_validation()
+    # bootstrap_validation()
+    # bootstrap_validation(bootstraps=25)
+    # bootstrap_validation(bootstraps=2500)
+    bootstrap_validation(n_sample=72, dt_sample_scale=True)
+    bootstrap_validation(n_sample=1440, dt_sample_scale=True)
     print('donzo')
 
 
-def bootstrap_validation():
+def bootstrap_validation(n_sample=1, bootstraps=250, dt_sample_scale=False):
     """
     Simulate binomials and test resampling bootstrap uncertainties against known answer
     :return:
@@ -34,15 +38,16 @@ def bootstrap_validation():
     seed = 13434
     threads = 15
     n_tracks = 15
-    n_sample = 1
     n_events = 10000
     bin_width = np.deg2rad(120)
-    bootstraps = 2000
     experiments = 100
     alg = 4
     # plot_out_dir = '/home/dylan/Research/Results/Resample_POC/nsample1440_nevent10000/'
-    plot_out_base = 'E:/Transfer/Research/Resample_POC/Bootstrap_Validation/'
-    plot_out_name = 'nsample1_nevent10k_bw120_ntrack15_nexp100_nbs2k/'
+    # plot_out_base = 'E:/Transfer/Research/Resample_POC/Bootstrap_Validation/'
+    plot_out_base = 'F:/Research/Resample_POC/Bootstrap_Validation/'
+    dt_sample_scale_flag = '_dtsamplescale' if dt_sample_scale is True else ''
+    plot_out_name = (f'nsample{n_sample}_nevent{int(n_events / 1000)}k_bw{int(np.rad2deg(bin_width) + 0.5)}_'
+                     f'ntrack{n_tracks}_nexp{experiments}_nbs{bootstraps}{dt_sample_scale_flag}/')
     plot_out_dir = plot_out_base + plot_out_name
     plot_exps_out_dir = f'{plot_out_dir}Experiments/'
     try:
@@ -57,7 +62,7 @@ def bootstrap_validation():
 
     stats = define_stats(n_tracks, bin_width)
 
-    stats_plt = ['standard deviation', 'skewness', 'non-excess kurtosis']
+    stats_plt = ['variance', 'skewness', 'non-excess kurtosis']
 
     write_info_file(plot_out_dir, threads, n_tracks, n_sample, n_events, bin_width, bootstraps, experiments, stats_plt)
 
@@ -81,7 +86,8 @@ def bootstrap_validation():
         for stat in stats_plt:
             stats_list[stat].append(stat_vals[stat])
             stats_err_list[stat].append(stat_errs[stat])
-            stats_err_delta_list[stat].append(stat_errs_delta[stat])
+            dt_scale = np.sqrt(n_sample) if dt_sample_scale is True else 1
+            stats_err_delta_list[stat].append(stat_errs_delta[stat] * dt_scale)
 
     for stat in stats_plt:
         plot_exp_scatter(n_exps, stats_list[stat], stats[stat]['true'], stat, plot_out_dir, stats_err_list[stat])
@@ -201,6 +207,7 @@ def plot_exp_scatter(n_exps, stat_vals, binom_val, stat, out_dir=None, stat_errs
         ax.set_title(stat.capitalize())
         ax.legend()
         fig.savefig(f'{out_dir}{title}.png', bbox_inches='tight')
+        fig.savefig(f'{out_dir}{title}.pdf', bbox_inches='tight')
 
 
 def plot_err_vs_val_diff(stat_vals, binom_val, stat, bs_errs=None, delta_errs=None, out_dir=None):
@@ -224,6 +231,7 @@ def plot_err_vs_val_diff(stat_vals, binom_val, stat, bs_errs=None, delta_errs=No
         ax.set_ylabel('Error Value')
         ax.legend()
         fig.savefig(f'{out_dir}Err_vs_Val_Scatter_{stat}.png', bbox_inches='tight')
+        fig.savefig(f'{out_dir}Err_vs_Val_Scatter_{stat}.pdf', bbox_inches='tight')
 
 
 def plot_bs_vs_delta(n_exps, bs_errs, delta_errs, stat, out_dir):
@@ -235,6 +243,7 @@ def plot_bs_vs_delta(n_exps, bs_errs, delta_errs, stat, out_dir):
     ax.set_ylabel('Bootstrap Error - Delta Error')
     ax.set_xlabel('Experiment #')
     fig.savefig(f'{out_dir}Bs_minus_Delta_Scatter_{stat}.png', bbox_inches='tight')
+    fig.savefig(f'{out_dir}Bs_minus_Delta_Scatter_{stat}.pdf', bbox_inches='tight')
 
 
 def plot_bs_vs_delta_hist(bs_errs, delta_errs, stat, out_dir):
@@ -244,6 +253,7 @@ def plot_bs_vs_delta_hist(bs_errs, delta_errs, stat, out_dir):
     plt.axvline(0, color='black')
     plt.xlabel('Bootstrap Error - Delta Error')
     plt.savefig(f'{out_dir}Bs_minus_Delta_Hist_{stat}.png', bbox_inches='tight')
+    plt.savefig(f'{out_dir}Bs_minus_Delta_Hist_{stat}.pdf', bbox_inches='tight')
 
 
 def plot_exp_deviation(stat_vals, binom_val, stat, out_dir):
@@ -262,6 +272,7 @@ def plot_exp_deviation(stat_vals, binom_val, stat, out_dir):
     ax.set_title(stat)
     ax.legend()
     fig.savefig(f'{out_dir}Deviation_{stat}.png', bbox_inches='tight')
+    fig.savefig(f'{out_dir}Deviation_{stat}.pdf', bbox_inches='tight')
 
 
 def plot_exp_sigmas(stat_vals, stat_errs, binom_val, stat, out_dir=None):
@@ -290,6 +301,7 @@ def plot_exp_sigmas(stat_vals, stat_errs, binom_val, stat, out_dir=None):
         hist.set_title(stat.capitalize())
         hist.legend()
         fig.savefig(f'{out_dir}Sigmas_{stat}.png', bbox_inches='tight')
+        fig.savefig(f'{out_dir}Sigmas_{stat}.pdf', bbox_inches='tight')
 
 
 def plot_exp_scatter_stats(stats_plt, n_exps, stats_list, stats, plot_out_dir, stats_err_bs_list, stats_err_dt_list):
@@ -302,6 +314,7 @@ def plot_exp_scatter_stats(stats_plt, n_exps, stats_list, stats, plot_out_dir, s
     axs_dt[-1].set_xlabel('Experiment #')
     fig_dt.tight_layout()
     fig_dt.savefig(f'{plot_out_dir}Scatter_Stats_dterr.png', bbox_inches='tight')
+    fig_dt.savefig(f'{plot_out_dir}Scatter_Stats_dterr.pdf', bbox_inches='tight')
 
     fig_bs, axs_bs = plt.subplots(len(stats_plt), 1, sharex=True, figsize=(10, 8))
     for stat_index, stat in enumerate(stats_plt):
@@ -312,6 +325,7 @@ def plot_exp_scatter_stats(stats_plt, n_exps, stats_list, stats, plot_out_dir, s
     axs_bs[-1].set_xlabel('Experiment #')
     fig_bs.tight_layout()
     fig_bs.savefig(f'{plot_out_dir}Scatter_Stats_bserr.png', bbox_inches='tight')
+    fig_bs.savefig(f'{plot_out_dir}Scatter_Stats_bserr.pdf', bbox_inches='tight')
 
     fig_bsdt, axs_bsdt = plt.subplots(len(stats_plt), 1, sharex=True, figsize=(10, 8))
     for stat_index, stat in enumerate(stats_plt):
@@ -323,6 +337,7 @@ def plot_exp_scatter_stats(stats_plt, n_exps, stats_list, stats, plot_out_dir, s
     axs_bsdt[-1].set_xlabel('Experiment #')
     fig_bsdt.tight_layout()
     fig_bsdt.savefig(f'{plot_out_dir}Scatter_Stats_bsdterr.png', bbox_inches='tight')
+    fig_bsdt.savefig(f'{plot_out_dir}Scatter_Stats_bsdterr.pdf', bbox_inches='tight')
 
 
 def plot_exp_sigmas_stats(stats_plt, stats_list, stats, plot_out_dir, stats_err_list, stats_err_delta_list):
@@ -337,6 +352,7 @@ def plot_exp_sigmas_stats(stats_plt, stats_list, stats, plot_out_dir, stats_err_
     axs_dt[-1].set_xlabel('Sigmas from True')
     fig_dt.tight_layout()
     fig_dt.savefig(f'{plot_out_dir}Sigmas_Stats_dterr.png', bbox_inches='tight')
+    fig_dt.savefig(f'{plot_out_dir}Sigmas_Stats_dterr.pdf', bbox_inches='tight')
 
     fig_bs, axs_bs = plt.subplots(len(stats_plt), 1, sharex=True, figsize=(8, 8))
     for stat_index, stat in enumerate(stats_plt):
@@ -348,6 +364,7 @@ def plot_exp_sigmas_stats(stats_plt, stats_list, stats, plot_out_dir, stats_err_
     axs_bs[-1].set_xlabel('Sigmas from True')
     fig_bs.tight_layout()
     fig_bs.savefig(f'{plot_out_dir}Sigmas_Stats_bserr.png', bbox_inches='tight')
+    fig_bs.savefig(f'{plot_out_dir}Sigmas_Stats_bserr.pdf', bbox_inches='tight')
 
 
 def plot_err_vs_val_diff_stats(stats_plt, stats_list, stats, plot_out_dir, stats_err_list, stats_err_delta_list):
@@ -362,6 +379,7 @@ def plot_err_vs_val_diff_stats(stats_plt, stats_list, stats, plot_out_dir, stats
     axs_bsdt[0].set_ylabel('Error Value')
     fig_bsdt.tight_layout()
     fig_bsdt.savefig(f'{plot_out_dir}Err_vs_Val_Scatter_Stats_dtbs.png', bbox_inches='tight')
+    fig_bsdt.savefig(f'{plot_out_dir}Err_vs_Val_Scatter_Stats_dtbs.pdf', bbox_inches='tight')
 
     fig_bs, axs_bs = plt.subplots(len(stats_plt), 1, sharex=True, figsize=(8, 8))
     for stat_index, stat in enumerate(stats_plt):
@@ -372,6 +390,7 @@ def plot_err_vs_val_diff_stats(stats_plt, stats_list, stats, plot_out_dir, stats
     axs_bs[0].set_ylabel('Error Value')
     fig_bs.tight_layout()
     fig_bs.savefig(f'{plot_out_dir}Err_vs_Val_Scatter_Stats_bs.png', bbox_inches='tight')
+    fig_bs.savefig(f'{plot_out_dir}Err_vs_Val_Scatter_Stats_bs.pdf', bbox_inches='tight')
 
 
 if __name__ == '__main__':

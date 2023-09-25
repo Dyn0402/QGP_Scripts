@@ -42,7 +42,8 @@ def estimator_bias():
     # bin_widths = np.deg2rad([60, 120, 240, 300])
     bin_widths = np.deg2rad([120])
     experiments = 1000
-    plot_out_base = 'D:/Transfer/Research/Resample_POC/Estimator_Bias/'
+    # plot_out_base = 'D:/Transfer/Research/Resample_POC/Estimator_Bias/'
+    plot_out_base = 'F:/Research/Resample_POC/Estimator_Bias/'
     plot_out_name = 'kstats_vs_nevento30_nsamples1_bw120_ntrack15/'
     plot_out_dir = plot_out_base + plot_out_name
     plot_sds = False
@@ -71,7 +72,7 @@ def estimator_bias():
 
     with Pool(threads) as pool:
         for exp_stat in tqdm.tqdm(pool.istarmap(run_experiment_no_bs, jobs), total=len(jobs)):
-            n_exp, n_samples_exp, n_events_exp, bin_width, n_track, stat_vals, stat_errs_delta = exp_stat
+            n_exp, n_samples_exp, n_events_exp, bin_width, n_track, stat_vals, stat_errs_delta, alg = exp_stat
             for stat, val in stat_vals.items():
                 plot_data.append({'stat': stat, 'n_exp': n_exp, 'n_samples': n_samples_exp, 'n_events': n_events_exp,
                                   'n_tracks': n_track, 'bin_width': bin_width, 'val': val,
@@ -281,6 +282,8 @@ def plot_vs_indep_var(plot_data, stat_plt_combos, stats, indep_var, plot_out_dir
     stat_combo_ax_del[-1].set_xlabel(var_string_consts[indep_var]['x-label'])
     stat_combo_ax_del_norm[-1].set_xlabel(var_string_consts[indep_var]['x-label'])
     stat_combo_ax[0].legend()
+    stat_combo_ax[1].legend()
+    stat_combo_ax[2].legend()
     if num_set_combos > 1:
         stat_combo_ax_del[0].legend()
         stat_combo_ax_del_norm[0].legend()
@@ -312,6 +315,7 @@ def plot_vs_indep_var(plot_data, stat_plt_combos, stats, indep_var, plot_out_dir
         # fig_obj.subplots_adjust(hspace=0)
         fig_obj.canvas.manager.set_window_title(fig_name)
         fig_obj.savefig(f'{plot_out_dir}{fig_name}.png', bbox_inches='tight')
+        fig_obj.savefig(f'{plot_out_dir}{fig_name}.pdf', bbox_inches='tight')
 
 
 if __name__ == '__main__':
