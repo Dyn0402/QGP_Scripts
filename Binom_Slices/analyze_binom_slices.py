@@ -1283,8 +1283,7 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
 
     if plot or plot_avg:
         # fig, ax_energies = plt.subplots(2, 3, sharex=True, sharey=True, figsize=(13.33, 6.16), dpi=144)
-        dpi = 144 * 3 / 4
-        fig, ax_energies = plt.subplots(2, 3, sharex='all', figsize=(13.33, 5.1), dpi=dpi)
+        fig, ax_energies = plt.subplots(2, 3, sharex='all', figsize=(13.33, 5.1), dpi=144)
         ax_energies = ax_energies.flat
         if title is None:
             fig.suptitle(f'{cent_map[cent]} Centrality, {div}° Partitions, 72 Samples/Event')
@@ -1401,12 +1400,12 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
             ax_energies[star_prelim_loc[0]].text(*star_prelim_loc[1:], 'STAR Preliminary', fontsize='large', ha='left',
                                                  va='top', transform=ax_energies[star_prelim_loc[0]].transAxes)
         if no_hydro_label:
-            ax_energies[1].text(0.76, 0.3, f'No MUSIC data\nat 11.5 GeV', ha='center', va='center', fontsize='small',
+            ax_energies[1].text(0.76, 0.2, f'No MUSIC data\nat 11.5 GeV', ha='center', va='center', fontsize='small',
                                 transform=ax_energies[1].transAxes)
         if ylim is not None:
             ax_energies[0].set_ylim(*ylim)
         fig.tight_layout()
-        fig.subplots_adjust(wspace=0.0, hspace=0.0, left=0.07, top=0.995, right=0.995, bottom=0.08)
+        fig.subplots_adjust(wspace=0.0, hspace=0.0, left=0.083, top=0.995, right=0.995, bottom=0.085)
         fig.canvas.manager.set_window_title(f'binom_slices_{divs[0]}')
 
     return pd.DataFrame(avgs)
@@ -2004,7 +2003,7 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
             fig.tight_layout()
         if plot_energy_panels:
             fig_panels.tight_layout()
-            fig_panels.subplots_adjust(wspace=0.0, hspace=0.0, left=0.07, top=0.995, right=0.995, bottom=0.085)
+            fig_panels.subplots_adjust(wspace=0.0, hspace=0.0, left=0.077, top=0.995, right=0.995, bottom=0.088)
 
     return pd.DataFrame(fit_pars)
 
@@ -2837,7 +2836,7 @@ def plot_protons_avgs_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
     if ylim is not None:
         ax_avg.set_ylim(*ylim)
     fig_avg.tight_layout()
-    fig_avg.subplots_adjust(top=0.995, right=0.995, bottom=0.085, left=0.14)
+    fig_avg.subplots_adjust(top=0.995, right=0.995, bottom=0.087, left=0.153)
 
 
 def plot_protons_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None,
@@ -3543,8 +3542,8 @@ def plot_dsig_avg_vs_cent_2panel2(df, data_sets_plt, data_sets_colors=None, data
         if kin_info_loc is not None and set_i == 0:
             eta_line = r'|y| < 0.5'
             pt_line = r'0.4 < $p_T$ < 2.0 GeV'
-            ax_avg.text(*kin_info_loc, f'Au+Au\n{eta_line}\n{pt_line}\n120° Partitions', ha='left', va='bottom',
-                        transform=ax_avg.transAxes,
+            ax_avg.text(*kin_info_loc, f'Au+Au\n{eta_line}\n{pt_line}\n120° Partitions\n72 Samples/Event', ha='left',
+                        va='bottom', transform=ax_avg.transAxes,
                         bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9))
         if star_prelim_loc is not None and data_set == 'bes_def':
             ax_avg.text(*star_prelim_loc, 'STAR Preliminary', fontsize='large', ha='left', transform=ax_avg.transAxes,
@@ -3573,7 +3572,7 @@ def plot_dsig_avg_vs_cent_2panel2(df, data_sets_plt, data_sets_colors=None, data
         fig_star.suptitle(title)
     fig_avg.tight_layout()
     fig_star.tight_layout()
-    fig_avg.subplots_adjust(top=0.94, right=0.993, bottom=0.088, left=0.095, wspace=0)
+    fig_avg.subplots_adjust(top=0.995, right=0.995, bottom=0.088, left=0.063, wspace=0)
     fig_star.subplots_adjust(top=0.94, right=0.993, bottom=0.088, left=0.095)
 
 
