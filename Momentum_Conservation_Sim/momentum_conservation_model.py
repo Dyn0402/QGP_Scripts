@@ -552,11 +552,6 @@ def remove_inf_nan_indices(*lists):
     return cleaned_lists
 
 
-def rapidity(px, py, pz, m):
-    e = np.sqrt(m ** 2 + px ** 2 + py ** 2 + pz ** 2)
-    return np.arctanh(pz / e)
-
-
 def sqrt_n_fit(n, a, b):
     return a / np.sqrt(n) + b
 
