@@ -29,7 +29,7 @@ def main():
     # plot_qm_figs()
     # plot_method_paper_figs()
 
-    # plot_star_model_var()
+    # plot_star_model_var()  # This doesn't do bkg subtraction error correction
     # plot_vs_cent_var()
     # plot_sims_var()
     # get_sim_mapping_var()

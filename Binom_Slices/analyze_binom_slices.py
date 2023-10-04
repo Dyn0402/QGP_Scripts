@@ -427,7 +427,7 @@ def calc_sys(def_val, def_err, sys_vals, sys_errs, return_vals='both'):
     :param return_vals: String specifying what to return. If 'both' return individual systematic uncertainties along
     with their combination. If 'combo' just return the combination of systematic uncertainties. If 'indiv' return
     individual systematic uncertainties only.
-    :return: Depending on retrun_vals return individual systematic uncertainties and/or their combination.
+    :return: Depending on return_vals return individual systematic uncertainties and/or their combination.
     """
     try:
         barlow_i = np.sqrt(
@@ -4862,23 +4862,9 @@ def ampt_v2_closure_sub_dsigma(avg_df, data_set_name, new_name, v2, div, cent):
 
 def subtract_dsigma_flow(avg_df, data_set_name, new_name, vs, div=None, cent=None, new_only=False,
                          val_col='avg', err_col='avg_err', meas_col='avg_meas'):
-    # print(data_set_name, avg_df)
     df_new = avg_df[avg_df['name'] == data_set_name]
-    # print(data_set_name, df_new)
     if len(df_new) > 0:
         df_new = df_new.assign(name=new_name)
-        # if div is None and cent is not None:
-        #     new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent)
-        #                for energy, div, avg in zip(df_new['energy'], df_new['divs'], df_new[meas_col])]
-        # elif cent is None and div is not None:
-        #     new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent)
-        #                for energy, cent, avg in zip(df_new['energy'], df_new['cent'], df_new[meas_col])]
-        # elif cent is None and div is None:
-        #     new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent) for energy, cent, div, avg in
-        #                zip(df_new['energy'], df_new['cent'], df_new['divs'], df_new[meas_col])]
-        # else:
-        #     new_avg = [avg - flow_correction(np.deg2rad(div), vs, energy, cent)
-        #                for energy, avg in zip(df_new['energy'], df_new[meas_col])]
         if div is not None:
             df_new['div'] = div
         if cent is not None:
