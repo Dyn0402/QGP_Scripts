@@ -460,6 +460,16 @@ def plot_paper_figs():
                                   errbar_alpha=0.3, xlim=(-20, 720), alpha=0.8,
                                   kin_info_loc=(0.45, 0.1), star_prelim_loc=(0.4, 0.5), marker_map=data_sets_markers,
                                   data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
+    plot_dsig_avg_vs_cent_2panel62ref(dsig_avgs_v2_sub_div120, data_sets_cent, data_sets_colors=data_sets_colors,
+                                      fit=False, cent_ref=cent_ref_df, ref_type=ref_type, legend_order=None,
+                                      title='', errbar_alpha=0.3, xlim=(-20, 720), alpha=0.8, kin_info_loc=(0.45, 0.1),
+                                      star_prelim_loc=None, marker_map=data_sets_markers,
+                                      data_sets_energies_colors=data_sets_energies_colors,
+                                      data_sets_bands=data_sets_bands)
+
+    dsig_avgs_62ref = dsig_avgs_v2_sub_div120.rename(columns={'name': 'data_set'})
+    plot_div_fits_vs_cent_62res(dsig_avgs_62ref, data_sets_cent, data_sets_colors, data_sets_labels, ref_type=ref_type,
+                                cent_ref=cent_ref_df, val_col='avg', err_col='avg_err')
 
     df_fits = pd.read_csv(f'{base_path}{df_partitions_fits_name}')
     df_fits_model = pd.read_csv(f'{base_path}{df_partitions_fits_model_name}')

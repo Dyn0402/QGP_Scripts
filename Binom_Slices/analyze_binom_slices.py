@@ -107,6 +107,10 @@ def inv_sqrtx_odr(pars, x):
     return pars[0] / np.sqrt(x) + pars[1]
 
 
+def inv_powx_odr(pars, x):
+    return pars[0] / x ** pars[1] + pars[2]
+
+
 def inv_sqrtx_poly2_odr(pars, x):
     return pars[0] / np.sqrt(x) + pars[1] + pars[2] * x + pars[3] * x ** 2
 
@@ -3197,10 +3201,10 @@ def plot_dsig_avg_vs_cent_2panel(df, data_sets_plt, data_sets_colors=None, data_
 
 
 def plot_dsig_avg_vs_cent_2panel3(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None,
-                                 fit=False, cent_ref=None, ref_type=None, data_sets_energies_cmaps=None, ls='-',
-                                 alpha=0.6, errbar_alpha=0.2, kin_info_loc=(0.18, 0.1), star_prelim_loc=None,
-                                 data_sets_energies_colors=None, marker_map=None, data_sets_bands=None, xlim=None,
-                                 legend_order=None):
+                                  fit=False, cent_ref=None, ref_type=None, data_sets_energies_cmaps=None, ls='-',
+                                  alpha=0.6, errbar_alpha=0.2, kin_info_loc=(0.18, 0.1), star_prelim_loc=None,
+                                  data_sets_energies_colors=None, marker_map=None, data_sets_bands=None, xlim=None,
+                                  legend_order=None):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     energy_map = {7: '7.7', 11: '11.5', 19: '19.6', 27: '27', 39: '39', 62: '62.4'}
@@ -3264,23 +3268,23 @@ def plot_dsig_avg_vs_cent_2panel3(df, data_sets_plt, data_sets_colors=None, data
                 if colors is None and color is None:
                     if data_sets_bands is not None and data_set in data_sets_bands:
                         ax.fill_between(x, (df_energy['avg'] - df_energy['avg_err']),
-                                            (df_energy['avg'] + df_energy['avg_err']), label=lab, alpha=0.4)
+                                        (df_energy['avg'] + df_energy['avg_err']), label=lab, alpha=0.4)
                     else:
                         ax.errorbar(x, df_energy['avg'], xerr=x_err, yerr=df_energy['avg_err'], marker=marker, ls=ls,
-                                        label=lab, alpha=alpha, size=9)
+                                    label=lab, alpha=alpha, size=9)
                     if 'sys' in df_energy.columns:
                         ax.errorbar(x, df_energy['avg'], xerr=0, yerr=df_energy['sys'], marker='', ls='',
-                                        elinewidth=4, alpha=errbar_alpha)
+                                    elinewidth=4, alpha=errbar_alpha)
                 else:
                     if data_sets_bands is not None and data_set in data_sets_bands:
                         ax.fill_between(x, df_energy['avg'] - df_energy['avg_err'],
-                                            df_energy['avg'] + df_energy['avg_err'], label=lab, alpha=0.4, color=color)
+                                        df_energy['avg'] + df_energy['avg_err'], label=lab, alpha=0.4, color=color)
                     else:
                         ax.errorbar(x, df_energy['avg'], xerr=x_err, yerr=df_energy['avg_err'], marker=marker, ls=ls,
-                                        color=color, label=lab, alpha=alpha, markersize=9)
+                                    color=color, label=lab, alpha=alpha, markersize=9)
                     if 'sys' in df_energy.columns:
                         ax.errorbar(x, df_energy['avg'], xerr=0, yerr=df_energy['sys'], marker='', ls='',
-                                        color=color, elinewidth=4, alpha=errbar_alpha)
+                                    color=color, elinewidth=4, alpha=errbar_alpha)
                 if fit:
                     p0 = [-0.02, 0.0001]
                     x_fit = np.linspace(min(x), max(x), 1000)
@@ -3296,7 +3300,7 @@ def plot_dsig_avg_vs_cent_2panel3(df, data_sets_plt, data_sets_colors=None, data
                         ax.plot(x_fit, inv_sqrtx(x_fit, *odr_out.beta), alpha=0.6, color=color_fit)
                         ax.axhline(odr_out.beta[1], color=color_fit, ls='--')
                         ax.axhspan(odr_out.beta[1] - odr_out.sd_beta[1], odr_out.beta[1] + odr_out.sd_beta[1],
-                                       color=color_fit, alpha=0.4)
+                                   color=color_fit, alpha=0.4)
                         print(f'{lab} Fit: {[Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]}')
 
     fit_func = inv_x_plus_sqrt
@@ -3370,8 +3374,8 @@ def plot_dsig_avg_vs_cent_2panel3(df, data_sets_plt, data_sets_colors=None, data
         eta_line = r'|y| < 0.5'
         pt_line = r'0.4 < $p_T$ < 2.0 GeV'
         ax_star.text(*kin_info_loc, f'Au+Au\n{eta_line}\n{pt_line}\n120° Partitions', ha='left', va='bottom',
-                    transform=ax_avg.transAxes,
-                    bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9))
+                     transform=ax_avg.transAxes,
+                     bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9))
     if star_prelim_loc is not None:
         ax_star.text(*star_prelim_loc, 'STAR Preliminary', fontsize='large', ha='left', transform=ax_star.transAxes,
                      bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9), va='top')
@@ -3396,10 +3400,10 @@ def plot_dsig_avg_vs_cent_2panel3(df, data_sets_plt, data_sets_colors=None, data
 
 
 def plot_dsig_avg_vs_cent_2panel2(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None,
-                                 fit=False, cent_ref=None, ref_type=None, data_sets_energies_cmaps=None, ls='-',
-                                 alpha=0.6, errbar_alpha=0.2, kin_info_loc=(0.18, 0.1), star_prelim_loc=None,
-                                 data_sets_energies_colors=None, marker_map=None, data_sets_bands=None, xlim=None,
-                                 legend_order=None):
+                                  fit=False, cent_ref=None, ref_type=None, data_sets_energies_cmaps=None, ls='-',
+                                  alpha=0.6, errbar_alpha=0.2, kin_info_loc=(0.18, 0.1), star_prelim_loc=None,
+                                  data_sets_energies_colors=None, marker_map=None, data_sets_bands=None, xlim=None,
+                                  legend_order=None):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     energy_map = {7: '7.7', 11: '11.5', 19: '19.6', 27: '27', 39: '39', 62: '62.4'}
@@ -3462,23 +3466,26 @@ def plot_dsig_avg_vs_cent_2panel2(df, data_sets_plt, data_sets_colors=None, data
                 if colors is None and color is None:
                     if data_sets_bands is not None and data_set in data_sets_bands:
                         ax.fill_between(x, x * (df_energy['avg'] - df_energy['avg_err']),
-                                            x * (df_energy['avg'] + df_energy['avg_err']), label=lab, alpha=0.4)
+                                        x * (df_energy['avg'] + df_energy['avg_err']), label=lab, alpha=0.4)
                     else:
-                        ax.errorbar(x, x * df_energy['avg'], xerr=x_err, yerr=x * df_energy['avg_err'], marker=marker, ls=ls,
-                                        label=lab, alpha=alpha)
+                        ax.errorbar(x, x * df_energy['avg'], xerr=x_err, yerr=x * df_energy['avg_err'], marker=marker,
+                                    ls=ls,
+                                    label=lab, alpha=alpha)
                     if 'sys' in df_energy.columns:
                         ax.errorbar(x, x * df_energy['avg'], xerr=0, yerr=x * df_energy['sys'], marker='', ls='',
-                                        elinewidth=4, alpha=errbar_alpha)
+                                    elinewidth=4, alpha=errbar_alpha)
                 else:
                     if data_sets_bands is not None and data_set in data_sets_bands:
                         ax.fill_between(x, x * (df_energy['avg'] - df_energy['avg_err']),
-                                            x * (df_energy['avg'] + df_energy['avg_err']), label=lab, alpha=0.4, color=color)
+                                        x * (df_energy['avg'] + df_energy['avg_err']), label=lab, alpha=0.4,
+                                        color=color)
                     else:
-                        ax.errorbar(x, x * df_energy['avg'], xerr=x_err, yerr=x * df_energy['avg_err'], marker=marker, ls=ls,
-                                        color=color, label=lab, alpha=alpha)
+                        ax.errorbar(x, x * df_energy['avg'], xerr=x_err, yerr=x * df_energy['avg_err'], marker=marker,
+                                    ls=ls,
+                                    color=color, label=lab, alpha=alpha)
                     if 'sys' in df_energy.columns:
                         ax.errorbar(x, x * df_energy['avg'], xerr=0, yerr=x * df_energy['sys'], marker='', ls='',
-                                        color=color, elinewidth=4, alpha=errbar_alpha)
+                                    color=color, elinewidth=4, alpha=errbar_alpha)
                 if fit:
                     p0 = [-0.02, 0.0001]
                     x_fit = np.linspace(min(x), max(x), 1000)
@@ -3494,7 +3501,7 @@ def plot_dsig_avg_vs_cent_2panel2(df, data_sets_plt, data_sets_colors=None, data
                         ax.plot(x_fit, inv_sqrtx(x_fit, *odr_out.beta), alpha=0.6, color=color_fit)
                         ax.axhline(odr_out.beta[1], color=color_fit, ls='--')
                         ax.axhspan(odr_out.beta[1] - odr_out.sd_beta[1], odr_out.beta[1] + odr_out.sd_beta[1],
-                                       color=color_fit, alpha=0.4)
+                                   color=color_fit, alpha=0.4)
                         print(f'{lab} Fit: {[Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]}')
 
     fit_func = inv_x_plus_sqrt
@@ -3549,7 +3556,7 @@ def plot_dsig_avg_vs_cent_2panel2(df, data_sets_plt, data_sets_colors=None, data
             ax_avg.text(*star_prelim_loc, 'STAR Preliminary', fontsize='large', ha='left', transform=ax_avg.transAxes,
                         bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9), va='top')
             ax_star.text(*star_prelim_loc, 'STAR Preliminary', fontsize='large', ha='left', transform=ax_avg.transAxes,
-                        bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9), va='top')
+                         bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9), va='top')
         if legend_order is not None:
             handles, labels = ax_avg.get_legend_handles_labels()
             handles_dict = dict(zip(labels, handles))
@@ -3574,6 +3581,185 @@ def plot_dsig_avg_vs_cent_2panel2(df, data_sets_plt, data_sets_colors=None, data
     fig_star.tight_layout()
     fig_avg.subplots_adjust(top=0.995, right=0.995, bottom=0.088, left=0.063, wspace=0)
     fig_star.subplots_adjust(top=0.94, right=0.993, bottom=0.088, left=0.095)
+
+
+def plot_dsig_avg_vs_cent_2panel62ref(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None,
+                                      fit=False, cent_ref=None, ref_type=None, data_sets_energies_cmaps=None, ls='-',
+                                      alpha=0.6, errbar_alpha=0.2, kin_info_loc=(0.18, 0.1), star_prelim_loc=None,
+                                      data_sets_energies_colors=None, marker_map=None, data_sets_bands=None, xlim=None,
+                                      legend_order=None):
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
+                0: '70-80%', -1: '80-90%'}
+    energy_map = {7: '7.7', 11: '11.5', 19: '19.6', 27: '27', 39: '39', 62: '62.4'}
+    fig_avg, ax_avgs = plt.subplots(figsize=(13.33, 5.1), dpi=144, ncols=len(data_sets_plt), sharey='all')
+    fig_62_fits, ax_62_fits = plt.subplots(figsize=(7, 5.1), dpi=144)
+    for ax_avg in ax_avgs:
+        ax_avg.axhline(0, color='black')
+    ax_62_fits.axhline(0, color='black')
+    ax_avgs = dict(zip(data_sets_plt, ax_avgs))
+    fig_avg.canvas.manager.set_window_title(f'Dsigma2 Avg vs Centrality')
+    energies = pd.unique(df['energy'])
+    for data_set in data_sets_plt:
+        ax_avg = ax_avgs[data_set]
+        df_set = df[df['name'] == data_set]
+        if data_sets_energies_cmaps is not None:
+            colors = iter([plt.cm.get_cmap(data_sets_energies_cmaps[data_set])(i)
+                           for i in np.linspace(0.1, 0.9, len(energies))])
+        elif data_sets_energies_colors is not None:
+            colors = iter([data_sets_energies_colors[data_set][energy] for energy in pd.unique(df_set['energy'])])
+        elif data_sets_colors is not None:
+            color, colors = data_sets_colors[data_set], None
+        else:
+            colors, color = None
+        if marker_map is None:
+            marker = 'o'
+        else:
+            marker = marker_map[data_set]['diff']
+
+        # Get 62 GeV fit
+        df_62 = df_set[df_set['energy'] == 62]
+
+        if cent_ref is None:
+            x = df_62['cent']
+            # x = [cent_map[xi] for xi in df_energy['cent']]
+            x_err = None
+        else:
+            cent_energy = cent_ref[(cent_ref['data_set'] == data_set) & (cent_ref['energy'] == 62)]
+            x = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_val'].iloc[0] for cent in
+                 df_62['cent']]
+            x_err = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_sd'].iloc[0] for cent in
+                     df_62['cent']]
+
+        func = inv_pow_x_const
+        popt, pcov = cf(func, x, df_62['avg'], sigma=df_62['avg_err'], absolute_sigma=True)
+        fit_meases = [Measure(var, err) for var, err in zip(popt, np.sqrt(np.diag(pcov)))]
+        print(f'{data_set} 62GeV Fit: {fit_meases}')
+
+        x_fit_plt = np.linspace(10, 800, 2000)
+        if 'bes' in data_set:
+            lab = 'STAR 62 GeV'
+            color = 'black'
+        elif 'ampt' in data_set:
+            lab = 'AMPT 62 GeV'
+            color = 'red'
+        ax_62_fits.errorbar(x, df_62['avg'], xerr=x_err, yerr=df_62['avg_err'], marker='o', ls=ls, color=color,
+                            label=lab, alpha=alpha)
+        if 'sys' in df_62.columns:
+            ax_62_fits.errorbar(x, df_62['avg'], xerr=0, yerr=df_62['sys'], marker='', ls='', color=color,
+                                elinewidth=4, alpha=errbar_alpha)
+        ax_62_fits.plot(x_fit_plt, func(x_fit_plt, *popt), alpha=0.6, color='black')
+
+        # Plot energies minus 62
+        for energy in pd.unique(df_set['energy']):
+            if colors is not None:
+                color = next(colors)
+            df_energy = df_set[df_set['energy'] == energy]
+            df_energy = df_energy.sort_values(by='cent')
+            if data_sets_labels is not None:
+                lab = data_sets_labels[data_set]
+            else:
+                lab = ''
+            if len(energies) > 1:
+                lab += f'{energy_map[energy]} GeV'
+
+            if cent_ref is None:
+                x = df_energy['cent']
+                # x = [cent_map[xi] for xi in df_energy['cent']]
+                x_err = None
+            else:
+                cent_energy = cent_ref[(cent_ref['data_set'] == data_set) & (cent_ref['energy'] == energy)]
+                x = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_val'].iloc[0] for cent in
+                     df_energy['cent']]
+                x_err = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_sd'].iloc[0] for cent in
+                         df_energy['cent']]
+            ls = 'none' if fit else ls
+            x = np.array(x)
+
+            # Calculate difference from 62
+            y_og = [Measure(avg, avg_err) for avg, avg_err in zip(df_energy['avg'], df_energy['avg_err'])]
+            # y_62 = [func(xi, *fit_meases) for xi in x]
+            y_62 = [func(xi, *popt) for xi in x]
+            y = np.array(y_og) - np.array(y_62)
+
+            ax = ax_avg
+            if colors is None and color is None:
+                if data_sets_bands is not None and data_set in data_sets_bands:
+                    ax.fill_between(x, [z.val for z in y], [z.err for z in y], label=lab, alpha=0.4)
+                else:
+                    ax.errorbar(x, [z.val for z in y], xerr=x_err, yerr=[z.err for z in y], marker=marker, ls=ls,
+                                label=lab, alpha=alpha)
+                if 'sys' in df_energy.columns:
+                    ax.errorbar(x, [z.val for z in y], xerr=0, yerr=df_energy['sys'], marker='', ls='',
+                                elinewidth=4, alpha=errbar_alpha)
+            else:
+                if data_sets_bands is not None and data_set in data_sets_bands:
+                    ax.fill_between(x, [z.val for z in y], [z.err for z in y], label=lab, alpha=0.4, color=color)
+                else:
+                    ax.errorbar(x, [z.val for z in y], xerr=x_err, yerr=[z.err for z in y], marker=marker, ls=ls,
+                                color=color, label=lab, alpha=alpha)
+                if 'sys' in df_energy.columns:
+                    ax.errorbar(x, [z.val for z in y], xerr=0, yerr=df_energy['sys'], marker='', ls='',
+                                color=color, elinewidth=4, alpha=errbar_alpha)
+
+    for set_i, data_set in enumerate(data_sets_plt):
+        ax_avg = ax_avgs[data_set]
+        # ax_avg.set_ylim(-0.315, 0.095)
+        # ax_62_fits.set_ylim(-0.315, 0.095)
+        # ax_avg.fill_between(xs_plot, fit_func(xs_plot, *(popt - perr)), fit_func(xs_plot, *(popt + perr)),
+        #                     color='black')
+        # ax_avg.plot(xs_plot, fit_func(xs_plot, *p0), color='black', ls=':')
+        # if 'ampt' in data_set:
+        #     ax_avg.text(0.3, 0.2, f'AMPT', ha='left', va='bottom', transform=ax_avg.transAxes, fontsize=15,
+        #                 bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9))
+        ax_62_fits.set_ylabel(r'$\langle\Delta\sigma^2\rangle$')
+        if set_i == 0:
+            ax_avg.set_ylabel(r'$\langle\Delta\sigma^2\rangle$')
+        if set_i == 1:
+            ax_avg.tick_params(axis='y', which='both', left=False, right=False)
+        if ref_type is None:
+            ax_avg.set_xlabel('Centrality')
+            ax_62_fits.set_xlabel('Centrality')
+        elif ref_type == 'npart':
+            ax_avg.set_xlabel('Number of Participant Nucleons')
+            ax_62_fits.set_xlabel('Number of Participant Nucleons')
+        else:
+            ax_avg.set_xlabel('Reference Multiplicity')
+            ax_62_fits.set_xlabel('Reference Multiplicity')
+        if xlim is not None:
+            ax_avg.set_xlim(xlim)
+            ax_62_fits.set_xlim(xlim)
+        ax_avg.set_axisbelow(True)
+        ax_62_fits.set_axisbelow(True)
+        ax_avg.grid()
+        ax_62_fits.grid()
+        if kin_info_loc is not None and set_i == 0:
+            eta_line = r'|y| < 0.5'
+            pt_line = r'0.4 < $p_T$ < 2.0 GeV'
+            ax_avg.text(*kin_info_loc, f'Au+Au\n{eta_line}\n{pt_line}\n120° Partitions\n72 Samples/Event', ha='left',
+                        va='bottom', transform=ax_avg.transAxes,
+                        bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9))
+        if star_prelim_loc is not None and data_set == 'bes_def':
+            ax_avg.text(*star_prelim_loc, 'STAR Preliminary', fontsize='large', ha='left', transform=ax_avg.transAxes,
+                        bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9), va='top')
+        if legend_order is not None:
+            handles, labels = ax_avg.get_legend_handles_labels()
+            handles_dict = dict(zip(labels, handles))
+            ordered_handles = [handles_dict[label] for label in legend_order]
+            legend_avg = ax_avg.legend(handles=ordered_handles, labels=legend_order, loc='upper right')
+        else:
+            legend_avg = ax_avg.legend()
+        ax_62_fits.legend()
+        # legend_avg = ax_avg.legend()
+        legend_title = 'STAR' if 'bes' in data_set else 'AMPT'
+        legend_avg.set_title(legend_title, prop={'size': 'large', 'weight': 'bold'})
+        # legend_avg.get_frame().set_alpha(0)
+    if title and title != '':
+        fig_avg.suptitle(title)
+        fig_62_fits.suptitle(title)
+    fig_avg.tight_layout()
+    fig_62_fits.tight_layout()
+    fig_avg.subplots_adjust(top=0.995, right=0.995, bottom=0.088, left=0.063, wspace=0)
+    fig_62_fits.subplots_adjust(top=0.94, right=0.993, bottom=0.088, left=0.095)
 
 
 def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None,
@@ -3876,7 +4062,8 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
 
 
 def plot_div_fits_vs_cent_62res(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None,
-                                fit=False, cent_ref=None, ref_type=None, data_sets_energies_cmaps=None):
+                                fit=False, cent_ref=None, ref_type=None, data_sets_energies_cmaps=None,
+                                name_col='data_set', val_col='baseline', err_col='base_err'):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     fig_base, ax_base = plt.subplots(figsize=(6.66, 5), dpi=144)
@@ -3888,29 +4075,36 @@ def plot_div_fits_vs_cent_62res(df, data_sets_plt, data_sets_colors=None, data_s
 
     energies = pd.unique(df['energy'])
     for data_set in data_sets_plt:
-        df_set = df[df['data_set'] == data_set]
+        df_set = df[df[name_col] == data_set]
 
         df_62 = df_set[df_set['energy'] == 62]
         if cent_ref is None:
             x = [cent_map[cent_i] for cent_i in df_62['cent']]
             x_err = None
         else:
-            cent_energy = cent_ref[(cent_ref['data_set'] == data_set) & (cent_ref['energy'] == 62)]
+            cent_energy = cent_ref[(cent_ref[name_col] == data_set) & (cent_ref['energy'] == 62)]
             x = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_val'].iloc[0] for cent in
                  df_62['cent']]
             x_err = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_sd'].iloc[0] for cent in
                      df_62['cent']]
 
-        p0 = [-0.02, 0.01]
-        func = inv_sqrtx_odr
-        odr_model = odr.Model(func)
-        odr_data = odr.RealData(x, df_62['baseline'], sx=x_err, sy=df_62['base_err'])
-        inv_sqrt_odr = odr.ODR(odr_data, odr_model, beta0=p0, maxit=500)
-        odr_out = inv_sqrt_odr.run()
-        fit_meases = [Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]
+        # p0 = [-0.02, 0.01]
+        # # func = inv_sqrtx_odr
+        # odr_model = odr.Model(func)
+        # odr_data = odr.RealData(x, df_62[val_col], sx=x_err, sy=df_62[err_col])
+        # fit_odr = odr.ODR(odr_data, odr_model, beta0=p0, maxit=500)
+        # odr_out = fit_odr.run()
+        # fit_meases = [Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]
+        # print(f'{data_set} 62GeV Fit: {fit_meases}')
+
+        func = inv_pow_x_const
+        popt, pcov = cf(func, x, df_62[val_col], sigma=df_62[err_col], absolute_sigma=True)
+        fit_meases = [Measure(var, err) for var, err in zip(popt, np.sqrt(np.diag(pcov)))]
         print(f'{data_set} 62GeV Fit: {fit_meases}')
+
         x_fit_plt = np.linspace(1, 800, 2000)
-        ax_base.plot(x_fit_plt, inv_sqrtx(x_fit_plt, *odr_out.beta), alpha=0.6, color='black')
+        # ax_base.plot(x_fit_plt, inv_sqrtx(x_fit_plt, *odr_out.beta), alpha=0.6, color='black')
+        ax_base.plot(x_fit_plt, func(x_fit_plt, *popt), alpha=0.6, color='black')
 
         if data_sets_energies_cmaps is not None:
             colors = iter([plt.cm.get_cmap(data_sets_energies_cmaps[data_set])(i)
@@ -3936,14 +4130,15 @@ def plot_div_fits_vs_cent_62res(df, data_sets_plt, data_sets_colors=None, data_s
                 x = [cent_map[cent_i] for cent_i in df_energy['cent']]
                 x_err = None
             else:
-                cent_energy = cent_ref[(cent_ref['data_set'] == data_set) & (cent_ref['energy'] == energy)]
+                cent_energy = cent_ref[(cent_ref[name_col] == data_set) & (cent_ref['energy'] == energy)]
                 x = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_val'].iloc[0] for cent in
                      df_energy['cent']]
                 x_err = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_sd'].iloc[0] for cent in
                          df_energy['cent']]
 
-            y = [Measure(base, base_err) for base, base_err in zip(df_energy['baseline'], df_energy['base_err'])]
-            y_fit = [func(fit_meases, xi) for xi in x]
+            y = [Measure(base, base_err) for base, base_err in zip(df_energy[val_col], df_energy[err_col])]
+            # y_fit = [func(fit_meases, xi) for xi in x]
+            y_fit = [func(xi, *popt) for xi in x]
             # y_res = (np.array(y_fit) - odr_out.beta[-1]) / (np.array(y) - odr_out.beta[-1])
             # y_res = np.array(y_fit) / np.array(y)
             y_res = np.array(y) - np.array(y_fit)
@@ -3952,12 +4147,12 @@ def plot_div_fits_vs_cent_62res(df, data_sets_plt, data_sets_colors=None, data_s
             if colors is None and color is None:
                 ax_dev.errorbar(x, [z.val for z in y_res], xerr=x_err, yerr=[z.err for z in y_res], marker='o',
                                 ls=ls, label=lab, alpha=0.6)
-                ax_base.errorbar(x, df_energy['baseline'], xerr=x_err, yerr=df_energy['base_err'], marker='o',
+                ax_base.errorbar(x, df_energy[val_col], xerr=x_err, yerr=df_energy[err_col], marker='o',
                                  ls=ls, label=lab, alpha=0.6)
             else:
                 ax_dev.errorbar(x, [z.val for z in y_res], xerr=x_err, yerr=[z.err for z in y_res], marker='o',
                                 ls=ls, color=color, label=lab, alpha=0.6)
-                ax_base.errorbar(x, df_energy['baseline'], xerr=x_err, yerr=df_energy['base_err'], marker='o',
+                ax_base.errorbar(x, df_energy[val_col], xerr=x_err, yerr=df_energy[err_col], marker='o',
                                  ls=ls, color=color, label=lab, alpha=0.6)
 
     ax_base.set_ylim([-0.007, 0.001])
@@ -4049,20 +4244,25 @@ def plot_div_fits_vs_cent_2panel(df, data_sets_plt, data_sets_colors=None, data_
                         ax_avg.fill_between(x, df_energy[fit_par['val']] - df_energy[fit_par['err']],
                                             df_energy[fit_par['val']] + df_energy[fit_par['err']], label=lab, alpha=0.4)
                     else:
-                        ax_avg.errorbar(x, df_energy[fit_par['val']], xerr=x_err, yerr=df_energy[fit_par['err']], marker=marker, ls=ls,
+                        ax_avg.errorbar(x, df_energy[fit_par['val']], xerr=x_err, yerr=df_energy[fit_par['err']],
+                                        marker=marker, ls=ls,
                                         label=lab, alpha=alpha)
                     if fit_par['sys'] in df_energy.columns:
-                        ax_avg.errorbar(x, df_energy[fit_par['val']], xerr=0, yerr=df_energy[fit_par['sys']], marker='', ls='',
+                        ax_avg.errorbar(x, df_energy[fit_par['val']], xerr=0, yerr=df_energy[fit_par['sys']], marker='',
+                                        ls='',
                                         elinewidth=4, alpha=errbar_alpha)
                 else:
                     if data_sets_bands is not None and data_set in data_sets_bands:
                         ax_avg.fill_between(x, df_energy[fit_par['val']] - df_energy[fit_par['err']],
-                                            df_energy[fit_par['val']] + df_energy[fit_par['err']], label=lab, alpha=0.4, color=color)
+                                            df_energy[fit_par['val']] + df_energy[fit_par['err']], label=lab, alpha=0.4,
+                                            color=color)
                     else:
-                        ax_avg.errorbar(x, df_energy[fit_par['val']], xerr=x_err, yerr=df_energy[fit_par['err']], marker=marker, ls=ls,
+                        ax_avg.errorbar(x, df_energy[fit_par['val']], xerr=x_err, yerr=df_energy[fit_par['err']],
+                                        marker=marker, ls=ls,
                                         color=color, label=lab, alpha=alpha)
                     if fit_par['sys'] in df_energy.columns:
-                        ax_avg.errorbar(x, df_energy[fit_par['val']], xerr=0, yerr=df_energy[fit_par['sys']], marker='', ls='',
+                        ax_avg.errorbar(x, df_energy[fit_par['val']], xerr=0, yerr=df_energy[fit_par['sys']], marker='',
+                                        ls='',
                                         color=color, elinewidth=4, alpha=errbar_alpha)
 
         for set_i, data_set in enumerate(data_sets_plt):
@@ -4088,8 +4288,10 @@ def plot_div_fits_vs_cent_2panel(df, data_sets_plt, data_sets_colors=None, data_
                             transform=ax_avg.transAxes,
                             bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9))
             if star_prelim_loc is not None and data_set == 'bes_def':
-                ax_avg.text(*star_prelim_loc, 'STAR Preliminary', fontsize='large', ha='left', transform=ax_avg.transAxes,
-                            bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9), va='top')
+                ax_avg.text(*star_prelim_loc, 'STAR Preliminary', fontsize='large', ha='left',
+                            transform=ax_avg.transAxes,
+                            bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9),
+                            va='top')
             if legend_order is not None:
                 handles, labels = ax_avg.get_legend_handles_labels()
                 handles_dict = dict(zip(labels, handles))
