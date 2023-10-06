@@ -417,7 +417,7 @@ def plot_paper_figs():
     #                             title=f'{cent_map[8]} Centrality, {div_plt}° Partitions, {samples} Samples per Event')
 
     # dsig_avgs_v2_sub_div120 = dsig_avgs_v2sub[dsig_avgs_v2sub['divs'] == 120]
-    dsig_avgs_v2_sub_div120 = dsig_avgs_v2sub[(dsig_avgs_v2sub['divs'] == 120) & (dsig_avgs_v2sub['cent'] > 1)]
+    dsig_avgs_v2_sub_div120 = dsig_avgs_v2sub[(dsig_avgs_v2sub['divs'] == 120) & (dsig_avgs_v2sub['cent'] > -1)]
     data_sets_energies_colors = \
         {'bes_def': {7: 'red', 11: 'blue', 19: 'green', 27: 'orange', 39: 'purple', 62: 'black'},
          'ampt_new_coal_epbins1': {7: 'red', 11: 'blue', 19: 'green', 27: 'orange', 39: 'purple', 62: 'black'}}
@@ -462,7 +462,7 @@ def plot_paper_figs():
                                   data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
     plot_dsig_avg_vs_cent_2panel62ref(dsig_avgs_v2_sub_div120, data_sets_cent, data_sets_colors=data_sets_colors,
                                       fit=False, cent_ref=cent_ref_df, ref_type=ref_type, legend_order=None,
-                                      title='', errbar_alpha=0.3, xlim=(-20, 720), alpha=0.8, kin_info_loc=(0.45, 0.1),
+                                      title='', errbar_alpha=0.3, xlim=(-20, 720), alpha=0.8, kin_info_loc=(0.2, 0.75),
                                       star_prelim_loc=None, marker_map=data_sets_markers,
                                       data_sets_energies_colors=data_sets_energies_colors,
                                       data_sets_bands=data_sets_bands)
@@ -497,7 +497,7 @@ def plot_paper_figs():
     # Plot avg dsig2 vs refmult for mixed events. Wierd stuff at most peripheral bin or two
 
     dvar_vs_protons(df_dsigma_with_v2sub, div_plt, 0, [7], ['raw', 'mix', 'diff', 'v2_sub'], ['bes_def'],
-                    plot=True, avg=False, alpha=1.0, ylabel=r'$\Delta\sigma^2$',
+                    plot=True, avg=True, alpha=1.0, ylabel=r'$\Delta\sigma^2$',
                     data_sets_labels={'bes_def': {'raw': 'Uncorrected', 'diff': 'Mixed Corrected', 'mix': 'Mixed',
                                                   'v2_sub': 'Mixed and Flow Corrected'}},
                     data_sets_colors={'bes_def': {'raw': 'blue', 'diff': 'red', 'v2_sub': 'black', 'mix': 'purple'}},
@@ -506,7 +506,7 @@ def plot_paper_figs():
                     y_ranges=[-0.017, 0.007], kin_info_loc=(0.26, 0.94))  # v2 sub demo
 
     dvar_vs_protons(df_dsigma_with_v2sub, div_plt, 2, [7], ['raw', 'mix', 'diff', 'v2_sub'], ['bes_def'],
-                    plot=True, avg=False, alpha=1.0, ylabel=r'$\Delta\sigma^2$',
+                    plot=True, avg=True, alpha=1.0, ylabel=r'$\Delta\sigma^2$',
                     data_sets_labels={'bes_def': {'raw': 'Uncorrected', 'diff': 'Mixed Corrected', 'mix': 'Mixed',
                                                   'v2_sub': 'Mixed and Flow Corrected'}},
                     data_sets_colors={'bes_def': {'raw': 'blue', 'diff': 'red', 'v2_sub': 'black', 'mix': 'purple'}},
@@ -515,7 +515,7 @@ def plot_paper_figs():
                     y_ranges=[-0.017, 0.007], kin_info_loc=(0.26, 0.94))  # v2 sub demo
 
     df_mix = []
-    for cent in range(2, 9):
+    for cent in range(0, 9):
         df_mix_cent = dvar_vs_protons(df_dsigma, div_plt, cent, [7, 11, 19, 27, 39, 62],
                                       ['mix'], data_sets_plt, plot=False, avg=True)
         print(df_mix_cent)
