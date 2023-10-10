@@ -3605,6 +3605,7 @@ def plot_dsig_avg_vs_cent_2panel62ref(df, data_sets_plt, data_sets_colors=None, 
     fig_avg.canvas.manager.set_window_title(f'Dsigma2 Avg - 62 GeV vs Centrality')
     fig_62_fits.canvas.manager.set_window_title(f'62 GeV Fits')
     energies = pd.unique(df['energy'])
+    energy_avgs = {data_set: {energy: {} for energy in energies} for data_set in data_sets_plt}
     for data_set in data_sets_plt:
         ax_avg = ax_avgs[data_set]
         df_set = df[df['name'] == data_set]
@@ -3715,6 +3716,12 @@ def plot_dsig_avg_vs_cent_2panel62ref(df, data_sets_plt, data_sets_colors=None, 
                     ax.errorbar(x, [z.val for z in y], xerr=0, yerr=df_energy['sys'], marker='', ls='',
                                 color=color, elinewidth=4, alpha=errbar_alpha)
 
+            vals, errs = [z.val for z in y], np.array([np.sqrt(z.err**2 + sys**2) for z, sys in zip(y, df_energy['sys'])])
+            # print(f'{data_set}, {energy}: {", ".join([str(Measure(v, e)) for v, e in zip(vals, errs)])}')
+            energy_avgs[data_set][energy].update({'avg': np.average(vals, weights=1 / errs**2),
+                                                  'avg_err': 1 / np.sqrt(np.sum(1 / errs**2))})
+            # ax.axhline(np.average(vals, weights=1 / errs**2), color=color)
+
     ax_62_fits.plot([], [], alpha=0.6, color='orange', label=r'$\frac{a}{M^c}+b$')
     for set_i, data_set in enumerate(data_sets_plt):
         ax_avg = ax_avgs[data_set]
@@ -3776,6 +3783,23 @@ def plot_dsig_avg_vs_cent_2panel62ref(df, data_sets_plt, data_sets_colors=None, 
     fig_avg.subplots_adjust(top=0.995, right=0.995, bottom=0.088, left=0.077, wspace=0)
     fig_62_fits.subplots_adjust(top=0.995, right=0.995, bottom=0.11, left=0.115)
 
+    fig, ax = plt.subplots(figsize=(8, 4), dpi=144)
+    fig.canvas.manager.set_window_title('Centrality Averaged 62 GeV Difference')
+    ax.axhline(0, color='black')
+    ax.set_xlabel('Energy (GeV)')
+    ax.set_ylabel(r'$\langle \langle\Delta\sigma^2\rangle - \langle\Delta\sigma^2\rangle_{62 \mathrm{\ GeV Fit}} \rangle$')
+    for data_set in data_sets_plt:
+        if 'bes' in data_set:
+            lab, color, marker = 'STAR', 'black', 'o'
+        else:
+            lab, color, marker = 'AMPT', 'red', 's'
+        ax.errorbar(energies, [energy_avgs[data_set][energy]['avg'] for energy in energies],
+                    [energy_avgs[data_set][energy]['avg_err'] for energy in energies],
+                    marker=marker, color=color, label=lab, ls='')
+    ax.legend()
+    fig.tight_layout()
+    fig.subplots_adjust(top=0.995, right=0.995, bottom=0.09, left=0.135)
+
 
 def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None,
                           fit=False, cent_ref=None, ref_type=None, ls='none', data_sets_energies_cmaps=None,
@@ -3820,7 +3844,7 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
             colors, color = None, None
         ax_base.errorbar([], [], linestyle='None', marker='None', markersize=0, label=data_sets_labels[data_set])
         ax_zeros.errorbar([], [], linestyle='None', marker='None', markersize=0, label=data_sets_labels[data_set])
-        print(pd.unique(df_set['energy']))
+        # print(pd.unique(df_set['energy']))
         fit_pars.update({data_set: {'energy': [], 'const_val': [], 'const_err': [], 'isqrt_val': [], 'isqrt_err': []}})
         for energy in pd.unique(df_set['energy']):
             if colors is not None:
@@ -3900,7 +3924,7 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
                 ax_base.plot(x_fit_plt, poly2_odr(odr_out.beta[1:], x_fit_plt), color=color)
                 ax_base.plot(x_fit_plt, func(odr_out.beta, x_fit_plt), alpha=0.6, color=color)
                 fit_meases = [Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]
-                print(f'{lab} ODR Fit: {fit_meases}')
+                # print(f'{lab} ODR Fit: {fit_meases}')
                 cs.append(odr_out.beta[1])
                 fit_pars[data_set]['energy'].append(energy)
                 fit_pars[data_set]['const_val'].append(odr_out.beta[1])
@@ -4115,7 +4139,7 @@ def plot_div_fits_vs_cent_62res(df, data_sets_plt, data_sets_colors=None, data_s
         func = inv_pow_x_const
         popt, pcov = cf(func, x, df_62[val_col], sigma=df_62[err_col], absolute_sigma=True)
         fit_meases = [Measure(var, err) for var, err in zip(popt, np.sqrt(np.diag(pcov)))]
-        print(f'{data_set} 62GeV Fit: {fit_meases}')
+        # print(f'{data_set} 62GeV Fit: {fit_meases}')
 
         x_fit_plt = np.linspace(1, 800, 2000)
         # ax_base.plot(x_fit_plt, inv_sqrtx(x_fit_plt, *odr_out.beta), alpha=0.6, color='black')
@@ -4128,7 +4152,7 @@ def plot_div_fits_vs_cent_62res(df, data_sets_plt, data_sets_colors=None, data_s
             color, colors = data_sets_colors[data_set], None
         else:
             colors, color = None
-        print(pd.unique(df_set['energy']))
+        # print(pd.unique(df_set['energy']))
         for energy in pd.unique(df_set['energy']):
             if colors is not None:
                 color = next(colors)
