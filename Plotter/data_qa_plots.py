@@ -85,8 +85,10 @@ def read_trees():
 def read_qas_uproot():
     data_set = 'BES'
     # data_set = 'AMPT_New_Coal'
-    base_paths = {'BES': 'F:/Research/Data/default/rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_0/',
-                  'AMPT_New_Coal': 'F:/Research/Data_Ampt_New_Coal/default_resample/Ampt_rapid05_resample_norotate_0/'}
+    base_paths = {'BES': 'F:/Research/Data/default/'
+                         'rapid05_resample_norotate_seed_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_0/',
+                  'AMPT_New_Coal': 'F:/Research/Data_Ampt_New_Coal/default_resample_epbins1/'
+                                   'Ampt_rapid05_resample_norotate_epbins1_0/'}
     save_paths = {'BES': 'F:/Research/Results/BES_QA_Plots/',
                   'AMPT_New_Coal': 'F:/Research/Results/AMPT_New_Coal_QA_Plots/'}
     base_path = base_paths[data_set]
@@ -124,6 +126,14 @@ def read_qas_uproot():
         figs.update({f'{name}_pre_cut': fig})
         axs.update({f'{name}_pre_cut': ax})
 
+        fig, ax = plt.subplots(dpi=144, figsize=(6, 5))
+        ax.set_xlabel(title)
+        fig.suptitle(f'{data_set} {title} post cuts')
+        fig.canvas.manager.set_window_title(title)
+        # fig.subplots_adjust(hspace=0)
+        figs.update({f'{name}_post_cut': fig})
+        axs.update({f'{name}_post_cut': ax})
+
     for energy_index, energy in enumerate(energies):
         qa_path = f'{base_path}{energy}GeV/QA_{energy}GeV.root'
         with uproot.open(qa_path) as file:
@@ -142,12 +152,19 @@ def read_qas_uproot():
                     if pre_post == 'pre':
                         density = vals / (np.sum(vals) * (bin_centers[-1] - bin_centers[0]))
                         axs[f'{name}_pre_cut'].step(bin_centers, density, alpha=0.7, label=f'{energy}GeV')
+                    elif pre_post == 'post':
+                        density = vals / (np.sum(vals) * (bin_centers[-1] - bin_centers[0]))
+                        axs[f'{name}_post_cut'].step(bin_centers, density, alpha=0.7, label=f'{energy}GeV')
                 if energy_index == 1:
                     axs[name][energy_index].legend()
 
     for name in th1_names:
-        axs[f'{name}_pre_cut'].axhline(0, color='black')
-        axs[f'{name}_pre_cut'].legend()
+        for pre_post in ['pre', 'post']:
+            axs[f'{name}_{pre_post}_cut'].axhline(0, color='black')
+            axs[f'{name}_{pre_post}_cut'].legend()
+            figs[f'{name}_{pre_post}_cut'].tight_layout()
+            figs[f'{name}_{pre_post}_cut'].savefig(f'{save_path}{figs[name]._suptitle.get_text()}_{pre_post}_cut.png')
+            figs[f'{name}_{pre_post}_cut'].savefig(f'{save_path}{figs[name]._suptitle.get_text()}_{pre_post}_cut.pdf')
         for energy_index, energy in enumerate(energies):
             axs[name][energy_index].axhline(0, color='black')
             axs[name][energy_index].text(0.5, 0.5, f'{energy} GeV', alpha=0.05, horizontalalignment='center',
@@ -156,9 +173,6 @@ def read_qas_uproot():
             figs[name].tight_layout()
             figs[name].savefig(f'{save_path}{figs[name]._suptitle.get_text()}.png')
             figs[name].savefig(f'{save_path}{figs[name]._suptitle.get_text()}.pdf')
-        figs[f'{name}_pre_cut'].tight_layout()
-        figs[f'{name}_pre_cut'].savefig(f'{save_path}{figs[name]._suptitle.get_text()}_pre_cut.png')
-        figs[f'{name}_pre_cut'].savefig(f'{save_path}{figs[name]._suptitle.get_text()}_pre_cut.pdf')
 
     # plt.show()
 
