@@ -882,9 +882,8 @@ def plot_sys_table(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=
     df_filtered[['sys_type', 'sys_val']] = df_filtered[name_col].apply(lambda x: pd.Series(split_sys_type_val(x)))
 
     sys_types = [sys_type for sys_type in df_filtered['sys_type'].unique() if sys_type != df_def_name]
-    sys_types = [df_def_name] + sys_types
-    sys_type_i_map = {sys_type: i for i, sys_type in enumerate(sys_types)}
-    sys_names = [sys_info_dict[sys_type][name_col] if sys_type!=df_def_name else def_title for sys_type in sys_types]
+    sys_type_i_map = {sys_type: i for i, sys_type in enumerate([df_def_name] + sys_types)}
+    sys_names = [def_title] + [sys_info_dict[sys_type][name_col] for sys_type in sys_types]
 
     for div in divs:
         fig, axes = plt.subplots(1, len(cents), figsize=(14, 5), dpi=144, sharey='all')
@@ -899,10 +898,10 @@ def plot_sys_table(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=
         # Iterate through centralities and create a heatmap for each
         for i, cent in enumerate(sorted(cents, reverse=True)):
             ax = axes[i]
-            ax.set_title(f'Centrality {title_maps["cent"](cent)}')
+            ax.set_title(f'{title_maps["cent"](cent)} Centrality')
             df_cent = df_div[df_div['cent'] == cent]
 
-            hm_array = np.full((len(sys_types), len(energies)), float('nan'))
+            hm_array = np.full((len(sys_names), len(energies)), float('nan'))
             for energy_i, energy in enumerate(energies):
                 df_e = df_cent[df_cent['energy'] == energy]
                 df_def = df_e[df_e[name_col] == df_def_name]
@@ -941,8 +940,9 @@ def plot_sys_table(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=
                     df_sys = sort_on_sys_info_dict(df_sys, sys_info_dict)
                     df_sys = df_sys.sort_values(by=['sys_type_index', 'sys_val_index'])
                     hm_array[0, energy_i] = abs(barlow / def_val)
-                    for index, row in df_sys.iterrows():
-                        hm_array[sys_type_i_map[row['sys_type']], energy_i] = (row['barlow_sum'] / barlow)**2
+                    for sys_type in sys_types:  # Only one value per sys_type is summed in the barlow systematics
+                        barlow_i = df_sys[df_sys['sys_type'] == sys_type]['barlow_sum'].max()
+                        hm_array[sys_type_i_map[sys_type], energy_i] = (barlow_i / barlow) ** 2
             sns.heatmap(hm_array * 100, cmap='YlOrRd', annot=True, fmt='.0f',
                         xticklabels=[energy_map[e] for e in energies],
                         yticklabels=sys_names, ax=ax, vmin=vmin, vmax=vmax, cbar=False, mask=~np.isfinite(hm_array))
@@ -954,9 +954,8 @@ def plot_sys_table(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=
         fig.tight_layout()
 
         if indiv_pdf_path is not None:
-            div_name = f'_div{div}' if div is not None else ''
-            fig_name = f'{indiv_pdf_path}sys_table{div_name}'
-            fig.savefig(fig_name + '.pdf', format='pdf')
+            pdf_name = f'{indiv_pdf_path.replace(".pdf", "")}_div{div}.pdf' if div is not None else indiv_pdf_path
+            fig.savefig(pdf_name, format='pdf')
             plt.close(fig)
 
 
@@ -1982,6 +1981,8 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                 if fit and df_cent.size > 1:
                     try:
                         df_cent = df_cent[~df_cent.divs.isin(exclude_divs)]
+                        print(f"\n{energy}GeV, {cent} cent, data_set: {data_set}\n{df_cent['divs']}\n{df_cent['avg']}"
+                              f"\n{df_cent['avg_err']}\n")
                         popt, pcov = cf(quad_180, df_cent['divs'], df_cent['avg'], sigma=df_cent['avg_err'],
                                         absolute_sigma=True)
                         perr = np.sqrt(np.diag(pcov))
@@ -5168,22 +5169,30 @@ def read_flow_values(in_dir, v_type='v2'):
     vs = {}
     dir_names = os.listdir(in_dir)
     for dir_name in dir_names:
-        energy = int(dir_name.strip('GeV'))
-        vs.update({energy: {}})
-        file_path = f'{in_dir}{dir_name}/{v_type}.txt'
-        if not os.path.isfile(file_path):
-            print(f'{file_path} not found')
-            continue
-        with open(file_path, 'r') as file:
-            lines = file.readlines()[1:]  # Skip column headers
-            for line in lines:
-                line = line.split('\t')
-                if len(line) > 2:
-                    cent = int(line[0])
-                    line = line[1].split(' ')
-                    v_val = float(line[0])
-                    v_err = float(line[1])
-                    vs[energy].update({cent: Measure(v_val, v_err)})
+        if os.path.isdir(os.path.join(in_dir, dir_name)):
+            energy = int(dir_name.strip('GeV'))
+            vs.update({energy: {}})
+            file_path = f'{in_dir}{dir_name}/{v_type}.txt'
+            if not os.path.isfile(file_path):
+                print(f'{file_path} not found')
+                continue
+            with open(file_path, 'r') as file:
+                lines = file.readlines()[1:]  # Skip column headers
+                for line in lines:
+                    line = line.split('\t')
+                    if len(line) > 2:
+                        cent = int(line[0])
+                        line_v = line[1].split(' ')
+                        v_val = float(line_v[0])
+                        v_err = float(line_v[1])
+                        vs[energy].update({cent: Measure(v_val, v_err)})
+    # for energy in vs:  # One of the resolutions at 70-80% centrality was negative so v2 values nan
+    #     for cent in vs[energy]:  # This is a quick fix to just set the v2 value to the next more central v2
+    #         if np.isnan(vs[energy][cent].val):  # Not ideal, hopefully fix the resolution issue later
+    #             next_cent = cent + 1
+    #             while np.isnan(vs[energy][next_cent]):
+    #                 next_cent += 1
+    #             vs[energy][cent] = vs[energy][]
     return vs
 
 
