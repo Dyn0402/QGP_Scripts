@@ -25,7 +25,7 @@ from integrate_pdf_var import base_gaus_pdf_wrap, get_partition_variance
 
 
 def main():
-    plot_paper_figs()
+    # plot_paper_figs()
     # plot_qm_figs()
     # plot_method_paper_figs()
 
@@ -35,7 +35,7 @@ def main():
     # get_sim_mapping_var()
     # plot_all_zero_base()
 
-    # plot_star_var_sys()
+    plot_star_var_sys()
     # make_models_csv()
     # plot_star_var_rand_sys()
 
@@ -898,8 +898,9 @@ def plot_star_var_sys():
     plot = False
     calc_finals = False
     # calc_finals = True
-    threads = 15
+    threads = 11
     sys_pdf_out_path = f'{base_path}systematic_plots.pdf'
+    indiv_pdf_out_path = f'F:/Research/Results/BES_QA_Plots/Systematics/'
     df_def_out_name = 'Bes_with_Sys/binom_slice_vars_bes.csv'
     # df_def_out_name = None
     df_def_dsigma_out_name = 'Bes_with_Sys/binom_slice_vars_bes_dsigma.csv'
@@ -920,7 +921,7 @@ def plot_star_var_sys():
     # divs_all = [60, 120, 180]
     exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
     cent_plt = 7
-    cents = [1, 2, 3, 4, 5, 6, 7, 8]
+    cents = [-1, 0, 1, 2, 3, 4, 5, 6, 7, 8]
     energies_fit = [7, 11, 19, 27, 39, 62]
     # energies_fit = [7, 11]
     samples = 72  # For title purposes only
@@ -955,35 +956,6 @@ def plot_star_var_sys():
 
     sys_include_sets = sys_info_dict_to_var_names(sys_info_dict)
     sys_include_names = [y for x in sys_include_sets.values() for y in x]
-
-    # data_sets_plt = ['dca05', 'dca08', 'default', 'dca12', 'dca15']
-    # data_sets_colors = dict(zip(data_sets_plt, ['blue', 'green', 'black', 'red', 'purple']))
-    # data_sys_sets_vals = [0.5, 0.8, 1.0, 1.2, 1.5]
-    # def_val = 1.0
-    # data_sets_labels = {name: f'dca = {val} cm' for name, val in zip(data_sets_plt, data_sys_sets_vals)}
-    # data_sets_name_vals = dict(zip(data_sets_plt, data_sys_sets_vals))
-
-    # data_sets_plt = ['nsprx075', 'nsprx09', 'default', 'nsprx11', 'nsprx125']
-    # data_sets_colors = dict(zip(data_sets_plt, ['blue', 'green', 'black', 'red', 'purple']))
-    # data_sys_sets_vals = [1.8, 1.9, 2.0, 2.1, 2.2]
-    # def_val = 2.0
-    # data_sets_labels = {name: f'nsigmaproton = {val}' for name, val in zip(data_sets_plt, data_sys_sets_vals)}
-    # data_sets_name_vals = dict(zip(data_sets_plt, data_sys_sets_vals))
-
-    # data_sets_plt = ['m2r2', 'm2r4', 'default', 'm2r6', 'm2r10']
-    # data_sets_colors = dict(zip(data_sets_plt, ['blue', 'green', 'black', 'red', 'purple']))
-    # data_sys_sets_vals = [0.2, .04, 0.6, 0.8, 1.0]
-    # def_val = 0.6
-    # data_sets_labels = {name: f'm2_range = {val}' for name, val in zip(data_sets_plt, data_sys_sets_vals)}
-    # data_sets_name_vals = dict(zip(data_sets_plt, data_sys_sets_vals))
-
-    # data_sets_plt = ['nhfit15', 'default', 'nhfit25']
-    # data_sets_colors = dict(zip(data_sets_plt, ['green', 'black', 'red']))
-    # data_sys_sets_vals = [15, 20, 25]
-    # def_val = 20
-    # data_sets_labels = {name: f'nhits_fit = {val}' for name, val in zip(data_sets_plt, data_sys_sets_vals)}
-    # data_sets_name_vals = dict(zip(data_sets_plt, data_sys_sets_vals))
-    # # data_sets_labels = dict(zip(data_sets_plt, ['nhit_fit = 15', 'nhit_fit = 20', 'nhit_fit = 25']))
 
     data_sets_plt = ['bes_def', 'dca08', 'nsprx09', 'm2r4', 'nhfit25']
     data_sets_colors = dict(zip(data_sets_plt, ['black', 'green', 'black', 'red', 'purple']))
@@ -1022,16 +994,6 @@ def plot_star_var_sys():
     df_dsigma_types = add_diff_nlo_err(df_dsigma_types, group_cols=['energy', 'cent', 'name', 'total_protons'],
                                        exclude_divs=[356, 89])
 
-    # dvar_vs_protons_energies(df_diff, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'],
-    #                          data_sets_plt, star_prelim=True,
-    #                          plot=False, avg=True, plot_avg=False, data_sets_colors=data_sets_colors,
-    #                          data_sets_labels=data_sets_labels, y_ranges=[-0.00088, 0.00016])
-
-    # plot_df = df_diff_def_all[(df_diff_def_all['div'] == 120) & (df_diff_def_all['cent'] == 8) &
-    #                           (df_diff_def_all['data_type'] == 'raw') & (df_diff_def_all['energy'] == 'raw')]
-    # plot_sys(df_diff_def_all, 'bes_def', sys_sets_count, sys_info_dict,
-    #          group_cols=['divs', 'energy', 'cent', 'data_type', 'total_protons'])
-
     if df_def_dsigma_out_name is not None and calc_finals:
         df_def_dsigma = get_sys(df_dsigma_types, 'bes_def', sys_include_sets,
                                 group_cols=['divs', 'energy', 'cent', 'data_type', 'total_protons'])
@@ -1052,79 +1014,6 @@ def plot_star_var_sys():
                                       group_cols=['divs', 'energy', 'cent', 'data_type', 'total_protons'])
         df_def_dsigma_v2sub.to_csv(f'{base_path}{df_def_dsigma_v2sub_out_name}', index=False)
 
-    # print(df_diff_def['sys'])
-    # print(df_diff_def)
-    # dvar_vs_protons(df_diff_def, div_plt, cent_plt, [11], ['diff'], data_sets_plt, plot=True, avg=False,
-    #                 data_sets_labels=data_sets_labels, data_sets_colors=data_sets_colors)
-
-    # dvar_vs_protons(df_diff, div_plt, cent_plt, [62], ['diff'], data_sets_plt, plot=True, avg=False,
-    #                 data_sets_labels=data_sets_labels, data_sets_colors=data_sets_colors)
-
-    # dvar_vs_protons(pd.concat([df_raw, df_mix, df_diff], ignore_index=True), div_plt, cent_plt, [39],
-    #                 ['raw', 'mix', 'diff'], data_sets_plt, plot=True, avg=True,
-    #                 data_sets_labels=data_sets_labels)
-
-    # dsig_avg = dvar_vs_protons_energies(df_diff, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], data_sets_plt,
-    #                                     plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
-    #                                     data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.00054])
-
-    # plot_protons_avgs_vs_energy(dsig_avg, data_sets_plt, data_sets_colors=data_sets_colors, alpha=0.6,
-    #                             data_sets_labels=data_sets_labels, title=f'{cent_map[cent_plt]} Centrality, {div_plt}° '
-    #                                                                      f'Partitions, {samples} Samples per Event')
-
-    # dsig_avg_raw = dvar_vs_protons_energies(df_raw, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['raw'], data_sets_plt,
-    #                                         plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
-    #                                         data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.00054])
-    #
-    # plot_protons_avgs_vs_energy(dsig_avg_raw, data_sets_plt, data_sets_colors=data_sets_colors, alpha=0.6,
-    #                             data_sets_labels=data_sets_labels, title=f'{cent_map[cent_plt]} Centrality, {div_plt}° '
-    #                                                                      f'Partitions, {samples} Samples per Event')
-    #
-    # dsig_avg_mix = dvar_vs_protons_energies(df_mix, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['mix'], data_sets_plt,
-    #                                         plot=False, avg=True, plot_avg=False, data_sets_colors=data_sets_colors,
-    #                                         data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.00054])
-    #
-    # dsig_avg_diff = dvar_vs_protons_energies(df_diff, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], data_sets_plt,
-    #                                          plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
-    #                                          data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.00054])
-    #
-    # dsig_avg_diff_all = dvar_vs_protons_energies(df_diff, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], all_sets,
-    #                                              plot=False, avg=True, plot_avg=False, y_ranges=[-0.00099, 0.00054])
-    # dsig_avg_diff_def = get_sys(dsig_avg_diff, 'default', data_sets_plt, val_col='avg', err_col='avg_err',
-    #                             group_cols=['divs', 'energy'])
-    # print(dsig_avg_diff_def)
-    # plot_sys(dsig_avg_diff_all, 'bes_def', all_sets, sys_info_dict,
-    #          val_col='avg', err_col='avg_err', group_cols=['divs', 'energy', 'cent'])
-    # plot_sys(dsig_avg_diff_all, 'bes_def', rand_sets, sys_info_dict,
-    #          val_col='avg', err_col='avg_err', group_cols=['divs', 'energy', 'cent'])
-    # plot_sys(dsig_avg_diff_all, 'bes_def', non_rand_sets, sys_info_dict,
-    #          val_col='avg', err_col='avg_err', group_cols=['divs', 'energy', 'cent'])
-    # plt.show()
-    # plot_sys(dsig_avg_diff_all, 'default', data_sets_plt, sys_info_dict,
-    #          val_col='avg', err_col='avg_err', group_cols=['divs', 'energy'])
-    # plot_protons_avgs_vs_energy(dsig_avg_diff_def, data_sets_plt, data_sets_colors=data_sets_colors, alpha=0.6,
-    #                             data_sets_labels=data_sets_labels, title=f'{cent_map[cent_plt]} Centrality, {div_plt}° '
-    #                                                                      f'Partitions, {samples} Samples per Event')
-    #
-    # plot_protons_avgs_vs_energy(dsig_avg_diff, data_sets_plt, data_sets_colors=data_sets_colors, alpha=0.6,
-    #                             data_sets_labels=data_sets_labels, title=f'{cent_map[cent_plt]} Centrality, {div_plt}° '
-    #                                                                      f'Partitions, {samples} Samples per Event')
-    #
-    # dsig_avg_raw_diff = pd.concat([dsig_avg_raw, dsig_avg_diff])
-    # plot_protons_avgs_vs_energy(dsig_avg_raw_diff, data_sets_plt, data_sets_colors=data_sets_colors, alpha=0.6,
-    #                             data_sets_labels=data_sets_labels, title=f'{cent_map[cent_plt]} Centrality, {div_plt}° '
-    #                                                                      f'Partitions, {samples} Samples per Event')
-
-    # print(dsig_avg_raw.columns)
-    # dsig_avg_raw['data_type'] = 'raw'
-    # dsig_avg_mix['data_type'] = 'mix'
-    # dsig_avg_diff['data_type'] = 'diff'
-    # dsig_avg_dtypes = pd.concat([dsig_avg_raw, dsig_avg_mix, dsig_avg_diff])
-    # plot_vs_sys(dsig_avg_dtypes, 'default', def_val, data_sets_plt, sys_info_dict,
-    #             val_col='avg', err_col='avg_err', group_cols=['divs'])
-
-    # plt.show()
-
     sets_run = all_sets if plot else sys_include_names + ['bes_def']
     dsig_avgs_all, dsig_avgs_diff_v2sub = [], []
     print(sets_run)
@@ -1136,25 +1025,19 @@ def plot_star_var_sys():
         with Pool(threads) as pool:
             for job_i in tqdm.tqdm(pool.istarmap(dvar_vs_protons_cents, jobs), total=len(jobs)):
                 dsig_avgs_div_all.append(job_i)
-        # dsig_avgs_div_all = dvar_vs_protons_cents(df_dsigma_types, divs_all, cents, energy, ['raw', 'mix', 'diff'],
-        #                                           sets_run, plot=False, avg=True)
         dsig_avgs_div_all = pd.concat(dsig_avgs_div_all, ignore_index=True)
-        # print(pd.unique(dsig_avgs_div_all['name']))
         dsig_avgs_all.append(dsig_avgs_div_all)
         dsig_avgs_div_diff = dsig_avgs_div_all[dsig_avgs_div_all['data_type'] == 'diff']
         dsig_avgs_div_diff = dsig_avgs_div_diff.drop('data_type', axis=1)
         for data_set in sets_run:
             dsig_avgs_div_diff_set = subtract_dsigma_flow(dsig_avgs_div_diff, data_set,
                                                           data_set, v2_sys_vals[data_set], new_only=True)
-            # print(data_set, dsig_avgs_div_diff_set)
             dsig_avgs_diff_v2sub.append(dsig_avgs_div_diff_set)
 
     if df_def_avgs_out_name is not None and calc_finals:
         dsig_avg_all = pd.concat(dsig_avgs_all, ignore_index=True)
-        print(dsig_avg_all)
         dsig_avgs_def_sys = get_sys(dsig_avg_all, 'bes_def', sys_include_sets, val_col='avg', err_col='avg_err',
                                     group_cols=['divs', 'energy', 'cent', 'data_type'])
-        print(dsig_avgs_def_sys)
         dsig_avgs_def_sys.to_csv(f'{base_path}{df_def_avgs_out_name}', index=False)
 
     dsig_avgs_diff_v2sub = pd.concat(dsig_avgs_diff_v2sub, ignore_index=True)
@@ -1172,72 +1055,16 @@ def plot_star_var_sys():
         # plt.show()
 
     if df_def_avgs_v2sub_out_name is not None and calc_finals:
-        print(dsig_avgs_diff_v2sub)
         dsig_avg_diff_v2sub_out = get_sys(dsig_avgs_diff_v2sub, 'bes_def', sys_include_sets, val_col='avg',
                                       err_col='avg_err', group_cols=['divs', 'energy', 'cent'])
-        print(dsig_avg_diff_v2sub_out)
         dsig_avg_diff_v2sub_out.to_csv(f'{base_path}{df_def_avgs_v2sub_out_name}', index=False)
 
-    # plt.show()
-    # return
-
-    # dsig_avgs = []
-    # for div in np.setdiff1d(np.unique(df['divs']), exclude_divs):  # All divs except excluded
-    #     print(f'Div {div}')
-    #     dsig_avgs_div_raw = dvar_vs_protons(df_raw, div, cent_plt, energies_fit, ['raw'], data_sets_plt, plot=False,
-    #                                         avg=True)
-    #     dsig_avgs_div_raw.loc[:, 'name'] = dsig_avgs_div_raw['name'] + '_raw'
-    #     dsig_avgs.append(dsig_avgs_div_raw)
-    #
-    #     dsig_avgs_div_mix = dvar_vs_protons(df_mix, div, cent_plt, energies_fit, ['mix'], data_sets_plt, plot=False,
-    #                                         avg=True)
-    #     dsig_avgs_div_mix.loc[:, 'name'] = dsig_avgs_div_mix['name'] + '_mix'
-    #     dsig_avgs.append(dsig_avgs_div_mix)
-    #
-    #     dsig_avgs_div_diff = dvar_vs_protons(df_diff, div, cent_plt, energies_fit, ['diff'], data_sets_plt, plot=False,
-    #                                          avg=True)
-    #     dsig_avgs_div_diff.loc[:, 'name'] = dsig_avgs_div_diff['name'] + '_sub'
-    #
-    #     # dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, 'default_sub', 'default', v2_star_vals, div,
-    #     #                                           cent_plt)
-    #     # dsig_avgs.append(dsig_avgs_div_diff)
-    #     for name in data_sets_plt:
-    #         dsig_avgs_div_diff = subtract_dsigma_flow(dsig_avgs_div_diff, f'{name}_sub', name, v2_sys_vals[name], div,
-    #                                                   cent_plt)
-    #         dsig_avgs.append(dsig_avgs_div_diff)
-    #
-    # dsig_avgs = pd.concat(dsig_avgs, ignore_index=True)
-    #
-    # if df_tproton_avgs_name is not None:
-    #     dsig_avgs.to_csv(f'{base_path}{fits_out_base}/{df_tproton_avgs_name}', index=False)
-
-    # for data_set in data_sets_plt:
-    #     data_sets = [data_set + x for x in ['_raw', '_mix', '_sub']]
-    #     colors = dict(zip(data_sets, ['blue', 'green', 'red']))
-    #     labels = dict(zip(data_sets, [data_sets_labels[data_set] + x for x in [' Raw', ' Mix', ' Sub']]))
-    #     plot_dvar_avgs_divs(dsig_avgs, data_sets, data_sets_colors=colors, fit=False, data_sets_labels=labels,
-    #                         ylab=r'$\langle\Delta\sigma^2\rangle$')
-    # for data_set in data_sets_plt:
-    #     data_sets = [data_set + x for x in ['_sub', '']]
-    #     colors = dict(zip(data_sets, ['blue', 'red']))
-    #     labels = dict(zip(data_sets, [data_sets_labels[data_set] + x for x in [' Original', ' v2 Corrected']]))
-    #     plot_dvar_avgs_divs(dsig_avgs, data_sets, data_sets_colors=colors, fit=False, data_sets_labels=labels)
-    # plot_dvar_avgs_divs(dsig_avgs, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,
-    #                     data_sets_labels=data_sets_labels)
-
-    print(dsig_avgs_diff_v2sub)
-    df_fits = plot_dvar_avgs_divs(dsig_avgs_diff_v2sub, all_sets, fit=True,
-                                  plot_energy_panels=False, plot=True)
+    df_fits = plot_dvar_avgs_divs(dsig_avgs_diff_v2sub, all_sets, fit=True, plot_energy_panels=False, plot=True)
     if df_partitions_fits_name is not None:
-        print(df_fits)
         df_baselines = get_sys(df_fits, 'bes_def', sys_include_sets, val_col='baseline', err_col='base_err',
                                name_col='data_set', sys_col='base_sys', group_cols=['energy', 'cent'])
-        print(df_baselines)
         df_zeros = get_sys(df_fits, 'bes_def', sys_include_sets, val_col='zero_mag', err_col='zero_mag_err',
                            name_col='data_set', sys_col='zero_sys', group_cols=['energy', 'cent'])
-        print(df_zeros)
-        print(f'df_baselines columns: {df_baselines.columns}')
-        print(f'df_zeros columns: {df_zeros.columns}')
         df_baselines = df_baselines.drop(columns=['zero_mag', 'zero_mag_err'])
         df_fits_out = pd.concat([df_baselines, df_zeros[['zero_mag', 'zero_mag_err', 'zero_sys']]], axis=1)
         df_fits_out.to_csv(f'{base_path}{df_partitions_fits_name}', index=False)
@@ -1246,8 +1073,15 @@ def plot_star_var_sys():
         plot_slope_div_fits(df_fits_out, data_sets_colors, data_sets_labels)
         plot_slope_div_fits_simpars(df_fits_out)
     df_fits = df_fits.rename(columns={'data_set': 'name'})
-    plot_sys(df_fits, 'default', data_sets_plt, sys_info_dict, val_col='baseline', err_col='base_err',
-             group_cols=['cent', 'energy'], name_col='name')
+    print(df_fits)
+    plot_sys(df_fits, 'bes_def', non_rand_sets, sys_info_dict, val_col='baseline', err_col='base_err',
+             group_cols=['cent', 'energy'], name_col='name', indiv_pdf_path=indiv_pdf_out_path)
+    df_fits_4_up = df_fits[df_fits['cent'] >= 4]
+    plot_sys_table(df_fits_4_up, 'bes_def', non_rand_sets, sys_info_dict, val_col='baseline',
+                   err_col='base_err', name_col='name', indiv_pdf_path=f'{indiv_pdf_out_path}sys_table_high_cent.pdf')
+    df_fits_4_down = df_fits[df_fits['cent'] < 4]
+    plot_sys_table(df_fits_4_down, 'bes_def', non_rand_sets, sys_info_dict, val_col='baseline',
+                   err_col='base_err', name_col='name', indiv_pdf_path=f'{indiv_pdf_out_path}sys_table_low_cent.pdf')
 
     plt.show()
 
@@ -1406,7 +1240,8 @@ def plot_star_var_rand_sys():
     df_raw = calc_dsigma(df, 'raw')
     print(df_raw)
 
-    dsig_avg = dvar_vs_protons(df_raw, div_plt, cent_plt, [7], ['raw'], all_sets, plot=True, avg=True)
+    dsig_avg = dvar_vs_protons(df_raw, div_plt, cent_plt, [7], ['raw'], all_sets, plot=True, avg=True,
+                               leg=False)
 
     # print(dsig_avg)
     dsig_avg['set_num'] = dsig_avg['name'].apply(lambda x: int(x.split('_')[-1]))

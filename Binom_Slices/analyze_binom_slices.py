@@ -702,7 +702,8 @@ def plot_vs_sys(df, df_def_name, def_val, df_sys_set_names, sys_info_dict, group
 
 
 def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, val_col='val', err_col='err',
-             name_col='name', plot_barlow_decomp=False, plot_bars=True, y_label=None, pdf_out_path=None):
+             name_col='name', plot_barlow_decomp=False, plot_bars=True, y_label=None, pdf_out_path=None,
+             indiv_pdf_path=None):
     if group_cols is None:
         group_cols = ['divs', 'energy', 'cent', 'data_type', 'total_protons']
 
@@ -719,7 +720,6 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
 
     default_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
     sys_types = [sys_type for sys_type in df_filtered['sys_type'].unique() if sys_type != df_def_name]
-    print(sys_types)
     color_dict = {sys_type: color for sys_type, color in zip(sys_types, default_colors)}
     df_filtered.loc[:, 'color'] = df_filtered['sys_type'].map(color_dict)
 
@@ -729,7 +729,6 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
     df_set = df_filtered.groupby(group_cols)
 
     for group_name, group_df in df_set:
-        print(group_name)
         if df_def_name not in group_df[name_col].values:
             continue  # No default value so no systematic
         fig = plt.figure(figsize=(13.33, 6.16), dpi=144)
@@ -843,8 +842,13 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
             if plot_barlow_decomp:
                 fig_barlow_decomp.tight_layout()
 
-            if pdf_out_path is not None:
-                pdf_pages.savefig(fig)
+            if pdf_out_path is not None or indiv_pdf_path is not None:
+                if pdf_out_path is not None:
+                    pdf_pages.savefig(fig)
+                if indiv_pdf_path is not None:
+                    print('saving pdf')
+                    fig_name = indiv_pdf_path + '_'.join([f'{col}{val}' for col, val in zip(group_cols, group_name)])
+                    fig.savefig(fig_name + '.pdf', format='pdf')
                 plt.close(fig)
                 if plot_barlow_decomp:
                     pdf_pages.savefig(fig_barlow_decomp)
@@ -854,10 +858,112 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
         pdf_pages.close()
 
 
+def plot_sys_table(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, val_col='val', err_col='err',
+                   name_col='name', indiv_pdf_path=None):
+    if group_cols is None:
+        group_cols = ['divs', 'energy', 'cent', 'data_type', 'total_protons']
+
+    cents = pd.unique(df['cent'])
+    energies = pd.unique(df['energy'])
+    if 'divs' in df:
+        divs = pd.unique(df['divs'])
+    else:
+        divs = [None]
+
+    def_title = 'default'
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
+                0: '70-80%', -1: '80-90%'}
+    energy_map = {7: 7.7, 11: 11.5, 19: 19.6, 27: 27, 39: 39, 62: 62.4}
+    title_maps = {'divs': lambda div: f'{div}°',
+                  'energy': lambda energy: f'{energy}GeV',
+                  'cent': lambda cent: f'{cent_map[cent]}'}
+
+    df_filtered = df[df[name_col].isin(list(df_sys_set_names) + [df_def_name])]
+    df_filtered[['sys_type', 'sys_val']] = df_filtered[name_col].apply(lambda x: pd.Series(split_sys_type_val(x)))
+
+    sys_types = [sys_type for sys_type in df_filtered['sys_type'].unique() if sys_type != df_def_name]
+    sys_types = [df_def_name] + sys_types
+    sys_type_i_map = {sys_type: i for i, sys_type in enumerate(sys_types)}
+    sys_names = [sys_info_dict[sys_type][name_col] if sys_type!=df_def_name else def_title for sys_type in sys_types]
+
+    for div in divs:
+        fig, axes = plt.subplots(1, len(cents), figsize=(14, 5), dpi=144, sharey='all')
+        vmin = 0
+        vmax = 100
+        if div is not None:
+            fig.suptitle(f"{title_maps['divs'](div)} Partitions")
+            df_div = df_filtered[df_filtered['divs'] == div]
+        else:
+            df_div = df_filtered
+
+        # Iterate through centralities and create a heatmap for each
+        for i, cent in enumerate(sorted(cents, reverse=True)):
+            ax = axes[i]
+            ax.set_title(f'Centrality {title_maps["cent"](cent)}')
+            df_cent = df_div[df_div['cent'] == cent]
+
+            hm_array = np.full((len(sys_types), len(energies)), float('nan'))
+            for energy_i, energy in enumerate(energies):
+                df_e = df_cent[df_cent['energy'] == energy]
+                df_def = df_e[df_e[name_col] == df_def_name]
+                if len(df_def) != 1:
+                    print('Bad df_def: \n', df_def)
+                assert len(df_def) == 1
+                def_val, def_err = df_def[val_col].values[0], df_def[err_col].values[0]
+
+                if len(df_e) <= 1:
+                    pass  # No systematic values so sys = 0
+                else:
+                    df_sys = df_e[df_e[name_col] != df_def_name].copy()
+                    df_sys = add_sys_info(df_sys, sys_info_dict, name_col)
+
+                    sys_val = df_sys[val_col].values
+                    sys_err = df_sys[err_col].values
+
+                    barlow_i = calc_sys(def_val, def_err, sys_val, sys_err, 'indiv')
+                    df_sys['barlow'] = barlow_i
+                    df_sys['barlow_sum'] = barlow_i
+
+                    df_sys['include_sys'] = df_sys.apply(
+                        lambda row: False if sys_info_dict[row['sys_type']]['sys_vars'] is None else
+                        row['sys_val'] in sys_info_dict[row['sys_type']]['sys_vars'], axis=1)
+
+                    max_indices = []  # For each systematic find index of variation to count in systematic total
+                    for sys_type in df_sys['sys_type'].unique():
+                        sys_mask = (df_sys['sys_type'] == sys_type) & (df_sys['include_sys'])  # Only 'sys_vars'
+                        sys_barlows = df_sys.loc[sys_mask, 'barlow_sum']
+                        if len(sys_barlows) > 0:
+                            max_indices.append(df_sys.loc[sys_mask, 'barlow_sum'].idxmax())
+                    df_sys.loc[~df_sys.index.isin(max_indices), 'barlow_sum'] = 0
+
+                    barlow = np.sqrt(np.sum(df_sys['barlow_sum'].values ** 2))
+
+                    df_sys = sort_on_sys_info_dict(df_sys, sys_info_dict)
+                    df_sys = df_sys.sort_values(by=['sys_type_index', 'sys_val_index'])
+                    hm_array[0, energy_i] = abs(barlow / def_val)
+                    for index, row in df_sys.iterrows():
+                        hm_array[sys_type_i_map[row['sys_type']], energy_i] = (row['barlow_sum'] / barlow)**2
+            sns.heatmap(hm_array * 100, cmap='YlOrRd', annot=True, fmt='.0f',
+                        xticklabels=[energy_map[e] for e in energies],
+                        yticklabels=sys_names, ax=ax, vmin=vmin, vmax=vmax, cbar=False, mask=~np.isfinite(hm_array))
+            for t in ax.texts:
+                t.set_text(t.get_text() + "%")
+            ax.tick_params(left=False, right=False, top=False, bottom=False)
+            ax.axhline(y=1, color='white', linewidth=10)
+        axes[0].set_yticklabels(axes[0].get_yticklabels(), rotation=0)
+        fig.tight_layout()
+
+        if indiv_pdf_path is not None:
+            div_name = f'_div{div}' if div is not None else ''
+            fig_name = f'{indiv_pdf_path}sys_table{div_name}'
+            fig.savefig(fig_name + '.pdf', format='pdf')
+            plt.close(fig)
+
+
 def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False, avg=False,
                     hist=False, data_sets_colors=None, data_sets_labels=None, star_prelim_loc=None, alpha=0.6,
                     marker_map=None, errbar_alpha=0.2, legend_pos='lower center', ylabel=None, xlim=None,
-                    kin_info_loc=(0.26, 0.91), title=None, data_sets_bands=None, legend_order=None):
+                    kin_info_loc=(0.26, 0.91), title=None, data_sets_bands=None, legend_order=None, leg=True):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     data = []
@@ -999,13 +1105,14 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
             # ax.legend(loc=legend_pos, framealpha=1.0).set_zorder(10)
         # else:
         #     ax.legend(loc=legend_pos).set_zorder(10)
-        if legend_order is not None:
-            handles, labels = ax.get_legend_handles_labels()
-            handles_dict = dict(zip(labels, handles))
-            ordered_handles = [handles_dict[label] for label in legend_order]
-            ax.legend(loc=legend_pos, handles=ordered_handles, labels=legend_order).set_zorder(10)
-        else:
-            ax.legend(loc=legend_pos).set_zorder(10)
+        if leg:
+            if legend_order is not None:
+                handles, labels = ax.get_legend_handles_labels()
+                handles_dict = dict(zip(labels, handles))
+                ordered_handles = [handles_dict[label] for label in legend_order]
+                ax.legend(loc=legend_pos, handles=ordered_handles, labels=legend_order).set_zorder(10)
+            else:
+                ax.legend(loc=legend_pos).set_zorder(10)
         fig.tight_layout()
         fig.subplots_adjust(top=0.95, right=0.995, bottom=0.083, left=0.154)
 
@@ -3638,7 +3745,7 @@ def plot_dsig_avg_vs_cent_2panel62ref(df, data_sets_plt, data_sets_colors=None, 
                      df_62['cent']]
 
         func = inv_pow_x_const
-        err = np.sqrt(df_62['avg_err']**2 + df_62['sys']**2)
+        err = np.sqrt(df_62['avg_err'] ** 2 + df_62['sys'] ** 2)
         popt, pcov = cf(func, x, df_62['avg'], sigma=err, absolute_sigma=True)
         fit_meases = [Measure(var, err) for var, err in zip(popt, np.sqrt(np.diag(pcov)))]
 
@@ -3716,10 +3823,11 @@ def plot_dsig_avg_vs_cent_2panel62ref(df, data_sets_plt, data_sets_colors=None, 
                     ax.errorbar(x, [z.val for z in y], xerr=0, yerr=df_energy['sys'], marker='', ls='',
                                 color=color, elinewidth=4, alpha=errbar_alpha)
 
-            vals, errs = [z.val for z in y], np.array([np.sqrt(z.err**2 + sys**2) for z, sys in zip(y, df_energy['sys'])])
+            vals, errs = [z.val for z in y], np.array(
+                [np.sqrt(z.err ** 2 + sys ** 2) for z, sys in zip(y, df_energy['sys'])])
             # print(f'{data_set}, {energy}: {", ".join([str(Measure(v, e)) for v, e in zip(vals, errs)])}')
-            energy_avgs[data_set][energy].update({'avg': np.average(vals, weights=1 / errs**2),
-                                                  'avg_err': 1 / np.sqrt(np.sum(1 / errs**2))})
+            energy_avgs[data_set][energy].update({'avg': np.average(vals, weights=1 / errs ** 2),
+                                                  'avg_err': 1 / np.sqrt(np.sum(1 / errs ** 2))})
             # ax.axhline(np.average(vals, weights=1 / errs**2), color=color)
 
     ax_62_fits.plot([], [], alpha=0.6, color='orange', label=r'$\frac{a}{M^c}+b$')
@@ -3787,7 +3895,8 @@ def plot_dsig_avg_vs_cent_2panel62ref(df, data_sets_plt, data_sets_colors=None, 
     fig.canvas.manager.set_window_title('Centrality Averaged 62 GeV Difference')
     ax.axhline(0, color='black')
     ax.set_xlabel('Energy (GeV)')
-    ax.set_ylabel(r'$\langle \langle\Delta\sigma^2\rangle - \langle\Delta\sigma^2\rangle_{62 \mathrm{\ GeV Fit}} \rangle$')
+    ax.set_ylabel(
+        r'$\langle \langle\Delta\sigma^2\rangle - \langle\Delta\sigma^2\rangle_{62 \mathrm{\ GeV Fit}} \rangle$')
     for data_set in data_sets_plt:
         if 'bes' in data_set:
             lab, color, marker = 'STAR', 'black', 'o'
