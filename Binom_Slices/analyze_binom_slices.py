@@ -881,8 +881,10 @@ def plot_sys_table(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=
     df_filtered = df[df[name_col].isin(list(df_sys_set_names) + [df_def_name])]
     df_filtered[['sys_type', 'sys_val']] = df_filtered[name_col].apply(lambda x: pd.Series(split_sys_type_val(x)))
 
-    sys_types = [sys_type for sys_type in df_filtered['sys_type'].unique() if sys_type != df_def_name]
+    sys_types = [sys_type for sys_type in pd.unique(df_filtered['sys_type']) if sys_type != df_def_name]
+    sys_types = [sys_type for sys_type in sys_info_dict.keys() if sys_type in sys_types]  # Sort correctly
     sys_type_i_map = {sys_type: i for i, sys_type in enumerate([df_def_name] + sys_types)}
+    print(sys_type_i_map)
     sys_names = [def_title] + [sys_info_dict[sys_type][name_col] for sys_type in sys_types]
 
     for div in divs:
@@ -1981,8 +1983,6 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                 if fit and df_cent.size > 1:
                     try:
                         df_cent = df_cent[~df_cent.divs.isin(exclude_divs)]
-                        print(f"\n{energy}GeV, {cent} cent, data_set: {data_set}\n{df_cent['divs']}\n{df_cent['avg']}"
-                              f"\n{df_cent['avg_err']}\n")
                         popt, pcov = cf(quad_180, df_cent['divs'], df_cent['avg'], sigma=df_cent['avg_err'],
                                         absolute_sigma=True)
                         perr = np.sqrt(np.diag(pcov))

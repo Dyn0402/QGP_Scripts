@@ -206,20 +206,20 @@ def plot_qm_figs():
                                  kin_info_loc=(0.45, 0.1), star_prelim_loc=(0.4, 0.5), marker_map=data_sets_markers,
                                  data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
     plot_dsig_avg_vs_cent_2panel2(dsig_avgs_v2_sub_div120, data_sets_cent, data_sets_colors=data_sets_colors, fit=False,
-                                 cent_ref=cent_ref_df, ref_type=ref_type, legend_order=legend_order,  # <---
-                                 # title=f'{div_plt}° Partitions, {samples} Samples per Event',
-                                 title='',
-                                 errbar_alpha=0.3, xlim=(-20, 720), alpha=0.8,
-                                 kin_info_loc=(0.2, 0.1), star_prelim_loc=(0.62, 0.4), marker_map=data_sets_markers,
-                                 data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
+                                  cent_ref=cent_ref_df, ref_type=ref_type, legend_order=legend_order,  # <---
+                                  # title=f'{div_plt}° Partitions, {samples} Samples per Event',
+                                  title='',
+                                  errbar_alpha=0.3, xlim=(-20, 720), alpha=0.8,
+                                  kin_info_loc=(0.2, 0.1), star_prelim_loc=(0.62, 0.4), marker_map=data_sets_markers,
+                                  data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
     plt.rcParams['font.size'] = plt.rcParams['font.size'] * 1.3
     plot_dsig_avg_vs_cent_2panel3(dsig_avgs_v2_sub_div120, data_sets_cent, data_sets_colors=data_sets_colors, fit=False,
-                                 cent_ref=cent_ref_df, ref_type=ref_type, legend_order=legend_order,  # <---
-                                 # title=f'{div_plt}° Partitions, {samples} Samples per Event',
-                                 title='',
-                                 errbar_alpha=0.3, xlim=(-20, 720), alpha=0.8,
-                                 kin_info_loc=(0.3, 0.1), star_prelim_loc=(0.25, 0.3), marker_map=data_sets_markers,
-                                 data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
+                                  cent_ref=cent_ref_df, ref_type=ref_type, legend_order=legend_order,  # <---
+                                  # title=f'{div_plt}° Partitions, {samples} Samples per Event',
+                                  title='',
+                                  errbar_alpha=0.3, xlim=(-20, 720), alpha=0.8,
+                                  kin_info_loc=(0.3, 0.1), star_prelim_loc=(0.25, 0.3), marker_map=data_sets_markers,
+                                  data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
     # plt.savefig('C:/Users/Dyn04/Desktop/test.pdf', format='pdf')
     plt.show()
 
@@ -322,7 +322,6 @@ def plot_paper_figs():
                     marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^', 'v2_sub': '*'}},
                     # y_ranges=[-0.00124, 0.0009])  # v2 sub demo
                     y_ranges=[-0.0039, 0.0009], kin_info_loc=(0.26, 0.94))  # v2 sub demo
-
 
     dsig_avgs_all = pd.read_csv(f'{base_path}{df_def_avgs_out_name}')
     dsig_avgs_all_model = pd.read_csv(f'{base_path}{df_def_avgs_out_model_name}')
@@ -477,9 +476,10 @@ def plot_paper_figs():
 
     data_sets_energies_cmaps = dict(zip(data_sets_cent, ['winter', 'copper']))
     data_sets_markers2 = dict(zip(data_sets_cent, ['s', 'o']))
-    plot_div_fits_vs_cent(df_fits, data_sets_cent,   # data_sets_energies_cmaps=data_sets_energies_cmaps,
+    plot_div_fits_vs_cent(df_fits, data_sets_cent,  # data_sets_energies_cmaps=data_sets_energies_cmaps,
                           data_sets_labels=data_sets_labels, title=None, fit=False, cent_ref=cent_ref_df,
-                          ref_type=ref_type, data_sets_colors=data_sets_energies_colors, data_sets_markers=data_sets_markers2)
+                          ref_type=ref_type, data_sets_colors=data_sets_energies_colors,
+                          data_sets_markers=data_sets_markers2)
 
     plot_div_fits_vs_cent_2panel(df_fits, data_sets_cent, data_sets_colors=data_sets_colors, fit=False,
                                  cent_ref=cent_ref_df, ref_type=ref_type,  # <---
@@ -898,7 +898,7 @@ def plot_star_var_sys():
     plot = False
     calc_finals = False
     # calc_finals = True
-    threads = 15
+    threads = 11
     sys_pdf_out_path = f'{base_path}systematic_plots.pdf'
     indiv_pdf_out_path = f'F:/Research/Results/BES_QA_Plots/Systematics/'
     df_def_out_name = 'Bes_with_Sys/binom_slice_vars_bes.csv'
@@ -917,12 +917,12 @@ def plot_star_var_sys():
 
     stat_plot = 'k2'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
     div_plt = 180
-    divs_all = [120]  # [60, 72, 89, 90, 120, 180, 240, 270, 288, 300]
+    divs_all = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300]
     # divs_all = [60, 120, 180]
     exclude_divs = [356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
     cent_plt = 7
-    cents = [0]  # [0, 1, 2, 3, 4, 5, 6, 7, 8]
-    energies_fit = [7]  # [7, 11, 19, 27, 39, 62]
+    cents = [1, 2, 3, 4, 5, 6, 7, 8]
+    energies_fit = [7, 11, 19, 27, 39, 62]
     # energies_fit = [7, 11]
     samples = 72  # For title purposes only
 
@@ -930,28 +930,28 @@ def plot_star_var_sys():
         'vz': {'name': 'vz range', 'title': 'vz', 'decimal': None, 'default': None,
                'sys_vars': ['low7', 'high-7', 'low-5_vzhigh5'], 'val_unit': ' cm',
                'sys_var_order': ['low7', 'low-5_vzhigh5', 'high-7']},
-        # 'Efficiency': {'name': 'efficiency', 'title': 'efficiency', 'decimal': 2, 'default': 0,
-        #                'sys_vars': [95.0, 90.0], 'val_unit': '%', 'sys_var_order': [95.0, 90.0, 85.0, 80.0]},
-        # 'dca': {'name': 'dca', 'title': 'dca', 'decimal': 1, 'default': 1, 'sys_vars': [0.8, 1.2], 'val_unit': ' cm',
-        #         'sys_var_order': [0.5, 0.8, 1.2, 1.5]},
-        # 'nsprx': {'name': r'n$\sigma$ proton', 'title': r'n$\sigma$ proton', 'decimal': 1, 'default': 1,
-        #           'sys_vars': [0.9, 1.1], 'val_unit': '', 'sys_var_order': [0.75, 0.9, 1.1, 1.25]},
-        # 'm2r': {'name': r'$m^2$ range', 'title': 'm2 range', 'decimal': 0, 'default': 0.6, 'sys_vars': [0.4, 0.8],
-        #         'val_unit': ' GeV', 'sys_var_order': [0.2, 0.4, 0.8, 1.0]},
-        # 'nhfit': {'name': 'nHits fit', 'title': 'nhits fit', 'decimal': 2, 'default': 20, 'sys_vars': [15, 25],
-        #           'val_unit': '', 'sys_var_order': [15, 25]},
-        # 'sysrefshift': {'name': 'refmult3 shift', 'title': 'ref3 shift', 'decimal': None, 'default': 0,
-        #                 'sys_vars': ['-1', '1'], 'val_unit': '', 'sys_var_order': ['-1', '1']},
-        # 'dcxyqa': {'name': 'dcaxy qa', 'title': 'dcaxy qa', 'decimal': None, 'default': None,
-        #            'sys_vars': ['tight', 'loose'], 'val_unit': '',
-        #            'sys_var_order': ['2tight', 'tight', 'loose', '2loose']},
-        # 'pileupqa': {'name': 'pile-up qa', 'title': 'pile-up qa', 'decimal': None, 'default': None,
-        #              'sys_vars': ['tight', 'loose'], 'val_unit': '',
-        #              'sys_var_order': ['2tight', 'tight', 'loose', '2loose']},
-        # 'mix_rand_': {'name': 'mix rand', 'title': 'mix rand', 'decimal': 1, 'default': 0, 'sys_vars': None,
-        #               'val_unit': '', 'sys_var_order': None},
-        # 'all_rand_': {'name': 'all rand', 'title': 'all rand', 'decimal': 1, 'default': 0, 'sys_vars': None,
-        #               'val_unit': '', 'sys_var_order': None},
+        'Efficiency': {'name': 'efficiency', 'title': 'efficiency', 'decimal': 2, 'default': 0,
+                       'sys_vars': [95.0, 90.0], 'val_unit': '%', 'sys_var_order': [95.0, 90.0, 85.0, 80.0]},
+        'dca': {'name': 'dca', 'title': 'dca', 'decimal': 1, 'default': 1, 'sys_vars': [0.8, 1.2], 'val_unit': ' cm',
+                'sys_var_order': [0.5, 0.8, 1.2, 1.5]},
+        'nsprx': {'name': r'n$\sigma$ proton', 'title': r'n$\sigma$ proton', 'decimal': 1, 'default': 1,
+                  'sys_vars': [0.9, 1.1], 'val_unit': '', 'sys_var_order': [0.75, 0.9, 1.1, 1.25]},
+        'm2r': {'name': r'$m^2$ range', 'title': 'm2 range', 'decimal': 0, 'default': 0.6, 'sys_vars': [0.4, 0.8],
+                'val_unit': ' GeV', 'sys_var_order': [0.2, 0.4, 0.8, 1.0]},
+        'nhfit': {'name': 'nHits fit', 'title': 'nhits fit', 'decimal': 2, 'default': 20, 'sys_vars': [15, 25],
+                  'val_unit': '', 'sys_var_order': [15, 25]},
+        'sysrefshift': {'name': 'refmult3 shift', 'title': 'ref3 shift', 'decimal': None, 'default': 0,
+                        'sys_vars': ['-1', '1'], 'val_unit': '', 'sys_var_order': ['-1', '1']},
+        'dcxyqa': {'name': 'dcaxy qa', 'title': 'dcaxy qa', 'decimal': None, 'default': None,
+                   'sys_vars': ['tight', 'loose'], 'val_unit': '',
+                   'sys_var_order': ['2tight', 'tight', 'loose', '2loose']},
+        'pileupqa': {'name': 'pile-up qa', 'title': 'pile-up qa', 'decimal': None, 'default': None,
+                     'sys_vars': ['tight', 'loose'], 'val_unit': '',
+                     'sys_var_order': ['2tight', 'tight', 'loose', '2loose']},
+        'mix_rand_': {'name': 'mix rand', 'title': 'mix rand', 'decimal': 1, 'default': 0, 'sys_vars': None,
+                      'val_unit': '', 'sys_var_order': None},
+        'all_rand_': {'name': 'all rand', 'title': 'all rand', 'decimal': 1, 'default': 0, 'sys_vars': None,
+                      'val_unit': '', 'sys_var_order': None},
     }
 
     sys_include_sets = sys_info_dict_to_var_names(sys_info_dict)
@@ -976,10 +976,6 @@ def plot_star_var_sys():
                    if name != 'bes_def'}
     v2_sys_vals.update({'bes_def': v2_star_vals})
 
-    print(v2_sys_vals['vzlow-5_vzhigh5'])
-    print(flow_correction(np.deg2rad(120), v2_sys_vals['vzlow-5_vzhigh5'], 7, 0))
-    return()
-
     df = df[df['stat'] == stat_plot]
 
     # Get k2 raw, mix, diff systematics
@@ -997,14 +993,6 @@ def plot_star_var_sys():
     print('Calc diff nlo error')
     df_dsigma_types = add_diff_nlo_err(df_dsigma_types, group_cols=['energy', 'cent', 'name', 'total_protons'],
                                        exclude_divs=[356, 89])
-
-    df_7_vz = df_dsigma_types[(df_dsigma_types['energy'] == 7) & (df_dsigma_types['cent'] == 0) &
-                              (df_dsigma_types['name'] == 'vzlow-5_vzhigh5')]
-    pd.set_option('display.max_columns', None)
-    pd.set_option('display.max_rows', None)
-    print(f'Problem Set:\n{df_7_vz}')
-    dvar_vs_protons(df_dsigma_types, 120, 0, [7], ['raw', 'mix', 'diff'], ['vzlow-5_vzhigh5'],
-                    plot=True, avg=True)
 
     if df_def_dsigma_out_name is not None and calc_finals:
         df_def_dsigma = get_sys(df_dsigma_types, 'bes_def', sys_include_sets,
@@ -1041,16 +1029,10 @@ def plot_star_var_sys():
         dsig_avgs_all.append(dsig_avgs_div_all)
         dsig_avgs_div_diff = dsig_avgs_div_all[dsig_avgs_div_all['data_type'] == 'diff']
         dsig_avgs_div_diff = dsig_avgs_div_diff.drop('data_type', axis=1)
-        print('Bad one:')
-        print(dsig_avgs_div_diff[(dsig_avgs_div_diff['energy'] == 7) & (dsig_avgs_div_diff['cent'] == 0) &
-                                 (dsig_avgs_div_diff['name'] == 'vzlow-5_vzhigh5')])
         for data_set in sets_run:
             dsig_avgs_div_diff_set = subtract_dsigma_flow(dsig_avgs_div_diff, data_set,
                                                           data_set, v2_sys_vals[data_set], new_only=True)
-            if data_set == 'vzlow-5_vzhigh5':
-                print(dsig_avgs_div_diff_set[(dsig_avgs_div_diff['energy'] == 7) & (dsig_avgs_div_diff['cent'] == 0)])
             dsig_avgs_diff_v2sub.append(dsig_avgs_div_diff_set)
-    return()
 
     if df_def_avgs_out_name is not None and calc_finals:
         dsig_avg_all = pd.concat(dsig_avgs_all, ignore_index=True)
@@ -1059,29 +1041,35 @@ def plot_star_var_sys():
         dsig_avgs_def_sys.to_csv(f'{base_path}{df_def_avgs_out_name}', index=False)
 
     dsig_avgs_diff_v2sub = pd.concat(dsig_avgs_diff_v2sub, ignore_index=True)
-    dsig_7_0 = dsig_avgs_diff_v2sub[(dsig_avgs_diff_v2sub['energy'] == 7) & (dsig_avgs_diff_v2sub['cent'] == 0) &
-                              (dsig_avgs_diff_v2sub['name'] == 'vzlow-5_vzhigh5')]
-    print(f'Problem Set:\n{dsig_7_0}')
-    if plot:
-        # dsig_avgs_diff_v2sub = dsig_avgs_diff_v2sub[(dsig_avgs_diff_v2sub['divs'] == 120) &
-        #                                             (dsig_avgs_diff_v2sub['cent'] == 8)]
-        plot_sys(dsig_avgs_diff_v2sub, 'bes_def', non_rand_sets, sys_info_dict, val_col='avg', err_col='avg_err',
-                 group_cols=['divs', 'energy', 'cent'], y_label=r'$\Delta \sigma^2$',
-                 # pdf_out_path=None)
-                 pdf_out_path=sys_pdf_out_path)
-        # plot_sys(dsig_avgs_diff_v2sub, 'bes_def', rand_sets, sys_info_dict, val_col='avg', err_col='avg_err',
-        #          group_cols=['divs', 'energy', 'cent'], plot_bars=False, y_label=r'$\Delta \sigma^2$',
-        #          pdf_out_path=None)
-        #          # pdf_out_path=sys_pdf_out_path.replace('.pdf', '_rands.pdf'))
-        # plt.show()
+    # if plot:
+    #     # dsig_avgs_diff_v2sub = dsig_avgs_diff_v2sub[(dsig_avgs_diff_v2sub['divs'] == 120) &
+    #     #                                             (dsig_avgs_diff_v2sub['cent'] == 8)]
+    #     plot_sys(dsig_avgs_diff_v2sub, 'bes_def', non_rand_sets, sys_info_dict, val_col='avg', err_col='avg_err',
+    #              group_cols=['divs', 'energy', 'cent'], y_label=r'$\langle \Delta \sigma^2 \rangle$',
+    #              # pdf_out_path=None)
+    #              pdf_out_path=sys_pdf_out_path)
+    #     # plot_sys(dsig_avgs_diff_v2sub, 'bes_def', rand_sets, sys_info_dict, val_col='avg', err_col='avg_err',
+    #     #          group_cols=['divs', 'energy', 'cent'], plot_bars=False, y_label=r'$\Delta \sigma^2$',
+    #     #          pdf_out_path=None)
+    #     #          # pdf_out_path=sys_pdf_out_path.replace('.pdf', '_rands.pdf'))
+    #     # plt.show()
 
     if df_def_avgs_v2sub_out_name is not None and calc_finals:
         dsig_avg_diff_v2sub_out = get_sys(dsig_avgs_diff_v2sub, 'bes_def', sys_include_sets, val_col='avg',
-                                      err_col='avg_err', group_cols=['divs', 'energy', 'cent'])
+                                          err_col='avg_err', group_cols=['divs', 'energy', 'cent'])
         dsig_avg_diff_v2sub_out.to_csv(f'{base_path}{df_def_avgs_v2sub_out_name}', index=False)
 
+    plot_sys(dsig_avgs_diff_v2sub, 'bes_def', non_rand_sets, sys_info_dict, val_col='avg', err_col='avg_err',
+             group_cols=['divs', 'energy', 'cent'], y_label=r'$\langle \Delta \sigma^2 \rangle$',
+             pdf_out_path=sys_pdf_out_path, indiv_pdf_path=indiv_pdf_out_path)
+    df_120_4_up = dsig_avgs_diff_v2sub[(dsig_avgs_diff_v2sub['cent'] > 4) & (dsig_avgs_diff_v2sub['divs'] == 120)]
+    plot_sys_table(df_120_4_up, 'bes_def', non_rand_sets, sys_info_dict, val_col='avg',
+                   err_col='avg_err', name_col='name', indiv_pdf_path=f'{indiv_pdf_out_path}sys_table_high_cent.pdf')
+    df_120_4_down = dsig_avgs_diff_v2sub[(dsig_avgs_diff_v2sub['cent'] <= 4) & (dsig_avgs_diff_v2sub['divs'] == 120)]
+    plot_sys_table(df_120_4_down, 'bes_def', non_rand_sets, sys_info_dict, val_col='avg',
+                   err_col='avg_err', name_col='name', indiv_pdf_path=f'{indiv_pdf_out_path}sys_table_low_cent.pdf')
 
-    df_fits = plot_dvar_avgs_divs(dsig_avgs_diff_v2sub, all_sets, fit=True, plot_energy_panels=False, plot=True)
+    df_fits = plot_dvar_avgs_divs(dsig_avgs_diff_v2sub, all_sets, fit=True, plot_energy_panels=False, plot=False)
     if df_partitions_fits_name is not None:
         df_baselines = get_sys(df_fits, 'bes_def', sys_include_sets, val_col='baseline', err_col='base_err',
                                name_col='data_set', sys_col='base_sys', group_cols=['energy', 'cent'])
@@ -1092,16 +1080,17 @@ def plot_star_var_sys():
         df_fits_out.to_csv(f'{base_path}{df_partitions_fits_name}', index=False)
 
         print(df_fits_out)
-        plot_slope_div_fits(df_fits_out, data_sets_colors, data_sets_labels)
-        plot_slope_div_fits_simpars(df_fits_out)
+        if plot:
+            plot_slope_div_fits(df_fits_out, data_sets_colors, data_sets_labels)
+            plot_slope_div_fits_simpars(df_fits_out)
     df_fits = df_fits.rename(columns={'data_set': 'name'})
-    print(df_fits)
     plot_sys(df_fits, 'bes_def', non_rand_sets, sys_info_dict, val_col='baseline', err_col='base_err',
-             group_cols=['cent', 'energy'], name_col='name', indiv_pdf_path=indiv_pdf_out_path)
-    df_fits_4_up = df_fits[df_fits['cent'] >= 4]
+             group_cols=['cent', 'energy'], name_col='name', indiv_pdf_path=indiv_pdf_out_path,
+             y_label=r'$\langle \Delta \sigma^2 \rangle$')
+    df_fits_4_up = df_fits[df_fits['cent'] > 4]
     plot_sys_table(df_fits_4_up, 'bes_def', non_rand_sets, sys_info_dict, val_col='baseline',
                    err_col='base_err', name_col='name', indiv_pdf_path=f'{indiv_pdf_out_path}sys_table_high_cent.pdf')
-    df_fits_4_down = df_fits[df_fits['cent'] < 4]
+    df_fits_4_down = df_fits[df_fits['cent'] <= 4]
     plot_sys_table(df_fits_4_down, 'bes_def', non_rand_sets, sys_info_dict, val_col='baseline',
                    err_col='base_err', name_col='name', indiv_pdf_path=f'{indiv_pdf_out_path}sys_table_low_cent.pdf')
 
@@ -4229,7 +4218,7 @@ def plot_closure_tests():
         simple_clust_flow_eff_mix = dsigma_avgs[(dsigma_avgs['name'] == 'simpleclust_s08_a05_eff')
                                                 & (dsigma_avgs['data_type'] == 'mix')]
         simple_clust_flow_eff_cor = dsigma_avgs[(dsigma_avgs['name'] == 'simpleclust_s08_a05_flow_v207_eff') &
-                                           (dsigma_avgs['data_type'] == 'diff')]
+                                                (dsigma_avgs['data_type'] == 'diff')]
         flow_clust_cor, flow_clust_v2 = simple_clust_flow_eff_cor.copy(), simple_clust_flow_eff_cor.copy()
         flow_clust_v2['avg_meas'] = (simple_clust_flow_eff_cor['avg_meas'] * 0 +
                                      v2_divs(np.deg2rad(simple_clust_flow_eff_cor['divs']), v2_val))
@@ -4255,18 +4244,18 @@ def plot_closure_tests():
         amp_val = amp_map[amp]
         sigma_val = sigma_map[sigma]
         anti_clust = dsigma_avgs[(dsigma_avgs['name'] == f'anticlmulti_s{sigma}_a{amp}')
-                                   & (dsigma_avgs['data_type'] == 'raw')]
+                                 & (dsigma_avgs['data_type'] == 'raw')]
         anti_clust_eff = dsigma_avgs[(dsigma_avgs['name'] == f'anticlflow_eff_s{sigma}_a{amp}')
-                                       & (dsigma_avgs['data_type'] == 'raw')]
+                                     & (dsigma_avgs['data_type'] == 'raw')]
         anti_clust_eff_mix = dsigma_avgs[(dsigma_avgs['name'] == f'anticlflow_eff_s{sigma}_a{amp}')
-                                           & (dsigma_avgs['data_type'] == 'mix')]
+                                         & (dsigma_avgs['data_type'] == 'mix')]
         anti_clust_eff_cor = dsigma_avgs[(dsigma_avgs['name'] == f'anticlflow_eff_s{sigma}_a{amp}') &
-                                           (dsigma_avgs['data_type'] == 'diff')]
+                                         (dsigma_avgs['data_type'] == 'diff')]
         plot_closures(anti_clust, anti_clust_eff, anti_clust_eff_cor, alpha=0.7, df_bkg=anti_clust_eff_mix,
                       title=rf'Anti-Clustering (A={amp_val}, $\sigma$={sigma_val}) Efficiency Correction')
 
         flow_anti_clust = dsigma_avgs[(dsigma_avgs['name'] == f'anticlflow_s{sigma}_a{amp}_v2{v2}') &
-                                 (dsigma_avgs['data_type'] == 'raw')]
+                                      (dsigma_avgs['data_type'] == 'raw')]
         flow_anti_clust_cor, flow_anti_clust_v2 = flow_anti_clust.copy(), flow_anti_clust.copy()
         flow_anti_clust_v2['avg_meas'] = (flow_anti_clust['avg_meas'] * 0 +
                                           v2_divs(np.deg2rad(flow_anti_clust['divs']), v2_val))
