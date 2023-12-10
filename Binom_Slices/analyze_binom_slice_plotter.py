@@ -25,9 +25,9 @@ from integrate_pdf_var import base_gaus_pdf_wrap, get_partition_variance
 
 
 def main():
-    plot_paper_figs()
+    # plot_paper_figs()
     # plot_qm_figs()
-    # plot_method_paper_figs()
+    plot_method_paper_figs()
 
     # plot_star_model_var()  # This doesn't do bkg subtraction error correction
     # plot_vs_cent_var()
@@ -563,7 +563,7 @@ def plot_method_paper_figs():
     df_def_avgs_v2sub_out_model_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_model.csv'
     fits_out_base = 'Base_Zero_Fits'
     # df_tproton_avgs_name = 'dsig_tprotons_avgs_cent8.csv'
-    # df_partitions_fits_name = 'partitions_fits_cent8.csv'
+    df_partitions_fits_model_name = 'Bes_with_Sys/partition_width_fits_model.csv'
 
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
@@ -615,6 +615,7 @@ def plot_method_paper_figs():
                     legend_order=legend_order)  # <---
 
     df_dsigma_v2sub_diffs = df_dsigma_v2sub[df_dsigma_v2sub['data_type'] == 'diff'].assign(data_type='v2_sub')
+    df_dsigma_with_v2sub = pd.concat([df_dsigma, df_dsigma_v2sub_diffs])
 
     dsig_avgs_v2sub = pd.read_csv(f'{base_path}{df_def_avgs_v2sub_out_model_name}')
 
@@ -666,6 +667,15 @@ def plot_method_paper_figs():
 
     # plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
     # plot_slope_div_fits_simpars(df_fits)
+
+    df_fits = pd.read_csv(f'{base_path}{df_partitions_fits_model_name}')
+    data_sets_cent = ['ampt_new_coal_epbins1']
+
+    data_sets_markers2 = dict(zip(data_sets_cent, ['s', 'o']))
+    plot_div_fits_vs_cent(df_fits, data_sets_cent,  # data_sets_energies_cmaps=data_sets_energies_cmaps,
+                          data_sets_labels=data_sets_labels, title=None, fit=False, cent_ref=cent_ref_df, ls='-',
+                          ref_type=ref_type, data_sets_colors=data_sets_energies_colors,
+                          data_sets_markers=data_sets_markers2)
 
     plt.show()
 
