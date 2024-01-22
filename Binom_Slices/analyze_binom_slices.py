@@ -343,7 +343,8 @@ def raw_to_mix_stat_err(df, div_plt, cent_plt, energy_plt, data_set_plt):
     fig.tight_layout()
 
 
-def stat_binom_vs_protons(df, stat, div, cent, energy, data_types, data_set_plt, data_sets_labels=None, y_ranges=None):
+def stat_binom_vs_protons(df, stat, div, cent, energy, data_types, data_set_plt, data_sets_labels=None, y_ranges=None,
+                          ax_in=None):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     data = []
@@ -369,8 +370,11 @@ def stat_binom_vs_protons(df, stat, div, cent, energy, data_types, data_set_plt,
         tp_min = tp_min if set_tp_min > tp_min else set_tp_min
         tp_max = tp_max if set_tp_max < tp_max else set_tp_max
 
-    fig, ax = plt.subplots(figsize=(6.66, 5), dpi=144)
-    fig.canvas.manager.set_window_title(f'Binomial Comparison {stat.title()} vs Total Protons {energy}GeV {div}°')
+    if ax_in is None:
+        fig, ax = plt.subplots(figsize=(6.66, 5), dpi=144)
+        fig.canvas.manager.set_window_title(f'Binomial Comparison {stat.title()} vs Total Protons {energy}GeV {div}°')
+    else:
+        ax = ax_in
     if data_sets_labels is not None:
         name = data_sets_labels[data_set_plt] + ' '
     else:
@@ -400,7 +404,8 @@ def stat_binom_vs_protons(df, stat, div, cent, energy, data_types, data_set_plt,
         ax.errorbar(df['total_protons'], df['val'], df['err'], label=lab, marker='o', ls='', color=c, alpha=0.7)
 
     ax.legend()
-    fig.tight_layout()
+    if ax_in is None:
+        fig.tight_layout()
 
 
 def calc_nlo(df, exclude_divs):
@@ -964,7 +969,8 @@ def plot_sys_table(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=
 def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False, avg=False,
                     hist=False, data_sets_colors=None, data_sets_labels=None, star_prelim_loc=None, alpha=0.6,
                     marker_map=None, errbar_alpha=0.2, legend_pos='lower center', ylabel=None, xlim=None,
-                    kin_info_loc=(0.26, 0.91), title=None, data_sets_bands=None, legend_order=None, leg=True):
+                    kin_info_loc=(0.26, 0.91), title=None, data_sets_bands=None, legend_order=None, leg=True,
+                    ax_in=None):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     data = []
@@ -1006,8 +1012,11 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
                 data.append((df_set, lab, data_set, data_type, amp, spread, energy))
 
     if plot:
-        fig, ax = plt.subplots()
-        fig.canvas.manager.set_window_title(f'dvar vs Total Protons {energy}GeV {div}°')
+        if ax_in is None:
+            fig, ax = plt.subplots()
+            fig.canvas.manager.set_window_title(f'dvar vs Total Protons {energy}GeV {div}°')
+        else:
+            ax = ax_in
         if title is None:
             ax.set_title(f'{energy} GeV, {cent_map[cent]} Centrality, {div}° Partitions, 72 Samples/Event')
         else:
@@ -1114,8 +1123,9 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
                 ax.legend(loc=legend_pos, handles=ordered_handles, labels=legend_order).set_zorder(10)
             else:
                 ax.legend(loc=legend_pos).set_zorder(10)
-        fig.tight_layout()
-        fig.subplots_adjust(top=0.95, right=0.995, bottom=0.083, left=0.154)
+        if ax_in is None:
+            fig.tight_layout()
+            fig.subplots_adjust(top=0.95, right=0.995, bottom=0.083, left=0.154)
 
     return pd.DataFrame(avgs)
 

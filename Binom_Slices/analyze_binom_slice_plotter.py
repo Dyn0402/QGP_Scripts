@@ -594,12 +594,15 @@ def plot_method_paper_figs():
 
     df_dsigma = pd.read_csv(f'{base_path}{df_dsigma_model_name}')
 
+    fig, (ax1, ax2) = plt.subplots(2, 1, sharex='all', figsize=(8, 4), dpi=144)
     stat_binom_vs_protons(df, stat_plot, div_plt, cent_plt, 39, ['raw', 'mix'], 'ampt_new_coal_epbins1',
-                          data_sets_labels=data_sets_labels)
+                          data_sets_labels=data_sets_labels, ax_in=ax1)
 
     dvar_vs_protons(df_dsigma, div_plt, cent_plt, [39], ['raw', 'mix'], ['ampt_new_coal_epbins1'],
-                    data_sets_colors=None, data_sets_labels=data_sets_labels,
+                    data_sets_colors=None, data_sets_labels=data_sets_labels, ax_in=ax2, title='',
                     plot=True, avg=False, alpha=1.0, y_ranges=[-0.00124, 0.0009], ylabel=r'$\Delta\sigma^2$')
+    fig.tight_layout()
+    fig.subplots_adjust(hspace=0.0, left=0.12, right=0.995, top=0.94, bottom=0.11)
 
     dvar_vs_protons(df_dsigma, div_plt, cent_plt, [39], ['diff'], data_sets_plt, data_sets_colors=data_sets_colors,
                     plot=True, avg=False, alpha=1.0, y_ranges=[-0.00124, 0.0009], ylabel=r'$\Delta\sigma^2$',
