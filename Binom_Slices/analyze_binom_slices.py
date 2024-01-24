@@ -396,12 +396,13 @@ def stat_binom_vs_protons(df, stat, div, cent, energy, data_types, data_set_plt,
 
     for df, lab, data_type in data:
         c = 'black'
+        m = 'o'
         if data_type == 'raw':
-            c = 'blue'
+            c, m = 'blue', 'o'
         elif data_type == 'mix':
-            c = 'green'
+            c, m = 'green', 's'
 
-        ax.errorbar(df['total_protons'], df['val'], df['err'], label=lab, marker='o', ls='', color=c, alpha=0.7)
+        ax.errorbar(df['total_protons'], df['val'], df['err'], label=lab, marker=m, ls='', color=c, alpha=0.7)
 
     ax.legend()
     if ax_in is None:
@@ -1906,7 +1907,7 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                         exclude_divs=[], verbose=False, plot_energy_panels=True, title=None, alpha=1, ylab=None,
                         plot=True, errbar_alpha=0.2, plot_indiv=True, plot_energies_fig=False, ylim=None, xlim=None,
                         leg_panel=0, kin_loc=(0.02, 0.02), star_prelim_loc=None, no_hydro_label=False,
-                        data_sets_bands=None, legend_order=None, leg_frameon=False):
+                        data_sets_bands=None, legend_order=None, leg_frameon=False, data_sets_markers=None):
     energy_map = {7: '7.7', 11: '11.5', 19: '19.6', 27: '27', 39: '39', 62: '62.4'}
     energies = pd.unique(df['energy'])
     if plot:
@@ -1954,6 +1955,12 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                         lab = lab_energy
                     if len(cents) > 1:
                         lab += f'_cent{cent}'
+
+                    if data_sets_markers is not None and data_set in data_sets_markers:
+                        marker = data_sets_markers[data_set]['diff']
+                    else:
+                        marker = 'o'
+
                     if plot_indiv:
                         energy_fig, energy_ax = energy_fig_axs[energy]
                         if data_sets_bands is not None and data_set in data_sets_bands:
@@ -1962,7 +1969,7 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                                                    color=color, alpha=alpha)
                         else:
                             energy_ax.errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['avg_err'], ls='none',
-                                               marker='o', label=lab_energy, color=color, alpha=alpha)
+                                               marker=marker, label=lab_energy, color=color, alpha=alpha)
                             if 'sys' in df_cent.columns:
                                 energy_ax.errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['sys'], ls='',
                                                    elinewidth=4,
@@ -1985,7 +1992,7 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                         else:
                             ax_panels[energy].errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['avg_err'],
                                                        ls='none',
-                                                       marker='o', label=lab_energy, color=color, alpha=alpha)
+                                                       marker=marker, label=lab_energy, color=color, alpha=alpha)
                             if 'sys' in df_cent.columns:
                                 ax_panels[energy].errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['sys'],
                                                            ls='', marker='', color=color, alpha=errbar_alpha,
@@ -2933,7 +2940,7 @@ def plot_protons_avgs_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
     ax_avg.set_ylabel(r'$\langle\Delta\sigma^2\rangle$')
     ax_avg.set_xlabel('Energy (GeV)')
     ax_avg.set_axisbelow(True)
-    ax_avg.grid()
+    # ax_avg.grid()
     if title:
         ax_avg.set_title(title)
     if kin_info_loc is not None:
@@ -3071,11 +3078,14 @@ def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
             color, colors = data_sets_colors[data_set], None
         else:
             colors, color = None
-        if marker_map is None:
-            marker = 'o'
-        else:
-            marker = marker_map[data_set]['diff']
+
         for energy in pd.unique(df_set['energy']):
+            if marker_map is None:
+                marker = 'o'
+            elif data_set in marker_map and 'diff' in marker_map[data_set]:
+                marker = marker_map[data_set]['diff']
+            elif data_set in marker_map and energy in marker_map[data_set]:
+                marker = marker_map[data_set][energy]
             if colors is not None:
                 color = next(colors)
             df_energy = df_set[df_set['energy'] == energy]
@@ -3149,7 +3159,7 @@ def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
         ax_avg.set_xlabel('Number of Participant Nucleons')
     else:
         ax_avg.set_xlabel('Reference Multiplicity')
-    ax_avg.grid()
+    # ax_avg.grid()
     if title:
         ax_avg.set_title(title)
     if kin_info_loc is not None:
@@ -3296,7 +3306,7 @@ def plot_dsig_avg_vs_cent_2panel(df, data_sets_plt, data_sets_colors=None, data_
         if xlim is not None:
             ax_avg.set_xlim(xlim)
         ax_avg.set_axisbelow(True)
-        ax_avg.grid()
+        # ax_avg.grid()
         if kin_info_loc is not None and set_i == 0:
             eta_line = r'|y| < 0.5'
             pt_line = r'0.4 < $p_T$ < 2.0 GeV'
@@ -3458,7 +3468,7 @@ def plot_dsig_avg_vs_cent_2panel3(df, data_sets_plt, data_sets_colors=None, data
         if xlim is not None:
             ax_avg.set_xlim(xlim)
         ax_avg.set_axisbelow(True)
-        ax_avg.grid()
+        # ax_avg.grid()
         if kin_info_loc is not None and set_i == 0:
             eta_line = r'|y| < 0.5'
             pt_line = r'0.4 < $p_T$ < 2.0 GeV'
@@ -3980,10 +3990,16 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
                 lab = data_sets_labels[data_set]
             if len(energies) > 1:
                 lab += f' {energy}GeV'
+            # if data_sets_markers is None:
+            #     marker = 'o'
+            # else:
+            #     marker = data_sets_markers[data_set]
             if data_sets_markers is None:
                 marker = 'o'
-            else:
-                marker = data_sets_markers[data_set]
+            elif data_set in data_sets_markers and 'diff' in data_sets_markers[data_set]:
+                marker = data_sets_markers[data_set]['diff']
+            elif data_set in data_sets_markers and energy in data_sets_markers[data_set]:
+                marker = data_sets_markers[data_set][energy]
 
             if cent_ref is None:
                 x = [cent_map[cent_i] for cent_i in df_energy['cent']]
@@ -4151,8 +4167,8 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
         ax_zeros.set_xlabel('Reference Multiplicity')
         if fit:
             ax_base_res.set_xlabel('Reference Multiplicity')
-    ax_base.grid()
-    ax_zeros.grid()
+    # ax_base.grid()
+    # ax_zeros.grid()
     if title:
         ax_base.set_title(title)
         ax_zeros.set_title(title)
