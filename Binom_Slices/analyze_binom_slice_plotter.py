@@ -27,11 +27,11 @@ from integrate_pdf_var import base_gaus_pdf_wrap, get_partition_variance
 def main():
     # plot_paper_figs()
     # plot_qm_figs()
-    plot_method_paper_figs()
+    # plot_method_paper_figs()
 
     # plot_star_model_var()  # This doesn't do bkg subtraction error correction
     # plot_vs_cent_var()
-    # plot_sims_var()
+    plot_sims_var()
     # get_sim_mapping_var()
     # plot_all_zero_base()
 
@@ -1468,10 +1468,14 @@ def plot_sims_var():
 
     # amps = ['002', '004', '006', '008', '01']  # ['002', '006', '01']
     amps = ['002', '004', '006', '008', '01']  # ['002', '006', '01']
+    spreads = ['04', '05', '06', '07', '08', '09', '1', '11', '12']
+
     # amps = ['006', '01']  # ['002', '006', '01']
+
+    # amps = ['002', '008']
+    # spreads = ['04', '08']
+
     # spreads = ['03', '04', '05', '06', '07', '08', '09', '1', '11', '12']
-    spreads = ['08', '1', '12']
-    # spreads = ['04', '12']
     # spreads = ['1']
     # amps = ['0', '002', '004', '005', '006', '008', '01', '0125', '015', '0175', '02', '0225', '025', '03', '035', '04',
     #         '045', '05', '06', '07', '08', '09', '1', '125', '15', '175', '2', '225', '25', '3', '35', '4', '45', '5',
@@ -1518,7 +1522,7 @@ def plot_sims_var():
     df_raw, df_mix, df_diff = calc_dsigma(df, data_types=['raw', 'mix', 'diff'])
 
     dvar_vs_protons(df_raw, div_plt, cent_plt, ['sim'], ['raw'], all_sets_plt, plot=True, avg=True,
-                    data_sets_labels=data_sets_labels, ylabel=r'$\Delta\sigma^2$',
+                    data_sets_labels=data_sets_labels, ylabel=r'$\Delta\sigma^2$', data_sets_bands=all_sets_plt,
                     title=f'Gaussian Correlation Model: {div_plt}° Partitions, 72 Samples per Event')
 
     dsig_avgs = []

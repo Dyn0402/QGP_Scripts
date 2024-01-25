@@ -4572,7 +4572,8 @@ def plot_dsig_fits_vs_amp(df, data_sets_plt, data_sets_colors=None, data_sets_la
     fig_slope_fit, ax_slope_fit = plt.subplots()
     fig_slope_fit.canvas.manager.set_window_title(f'Dsigma Avgs vs Simulation Amplitude')
     ax_slope_fit.axhline(0, color='black')
-    colors = iter(['black', 'blue', 'green', 'red', 'purple', 'salmon'])
+    colors = iter(['black', 'blue', 'green', 'red', 'purple', 'salmon', 'cyan', 'magenta', 'yellow', 'orange', 'pink',
+                   'brown', 'gray', 'olive', 'teal', 'lavender', 'violet', 'lime', 'turquoise', 'maroon'])
     cl_type_name = {'_clmul_': 'Attractive', '_aclmul_': 'Repulsive'}
     spreads = pd.unique(df['spread'])
 
