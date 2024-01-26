@@ -1907,7 +1907,8 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                         exclude_divs=[], verbose=False, plot_energy_panels=True, title=None, alpha=1, ylab=None,
                         plot=True, errbar_alpha=0.2, plot_indiv=True, plot_energies_fig=False, ylim=None, xlim=None,
                         leg_panel=0, kin_loc=(0.02, 0.02), star_prelim_loc=None, no_hydro_label=False,
-                        data_sets_bands=None, legend_order=None, leg_frameon=False, data_sets_markers=None):
+                        data_sets_bands=None, legend_order=None, leg_frameon=False, data_sets_markers=None,
+                        data_sets_fills=None):
     energy_map = {7: '7.7', 11: '11.5', 19: '19.6', 27: '27', 39: '39', 62: '62.4'}
     energies = pd.unique(df['energy'])
     if plot:
@@ -1957,9 +1958,20 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                         lab += f'_cent{cent}'
 
                     if data_sets_markers is not None and data_set in data_sets_markers:
-                        marker = data_sets_markers[data_set]['diff']
+                        if type(data_sets_markers[data_set]) is dict and 'diff' in data_sets_markers[data_set]:
+                            marker = data_sets_markers[data_set]['diff']
+                        else:
+                            marker = data_sets_markers[data_set]
                     else:
                         marker = 'o'
+
+                    if data_sets_fills is not None and data_set in data_sets_fills:
+                        if type(data_sets_fills[data_set]) is dict and 'diff' in data_sets_fills[data_set]:
+                            fill = data_sets_fills[data_set]['diff']
+                        else:
+                            fill = data_sets_fills[data_set]
+                    else:
+                        fill = 'full'
 
                     if plot_indiv:
                         energy_fig, energy_ax = energy_fig_axs[energy]
@@ -1969,18 +1981,19 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                                                    color=color, alpha=alpha)
                         else:
                             energy_ax.errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['avg_err'], ls='none',
-                                               marker=marker, label=lab_energy, color=color, alpha=alpha)
+                                               marker=marker, label=lab_energy, color=color, alpha=alpha,
+                                               fillstyle=fill)
                             if 'sys' in df_cent.columns:
                                 energy_ax.errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['sys'], ls='',
-                                                   elinewidth=4,
-                                                   marker='', color=color, alpha=errbar_alpha)
+                                                   elinewidth=4, marker='', color=color, alpha=errbar_alpha)
                     if plot_energies_fig:
                         if data_sets_bands is not None and data_set in data_sets_bands:
                             ax.fill_between(df_cent['divs'], df_cent['avg'] - df_cent['avg_err'],
                                             df_cent['avg'] + df_cent['avg_err'], label=lab, color=color, alpha=alpha)
                         else:
                             ax.errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['avg_err'], ls='none',
-                                        marker=markers[energy_marker], label=lab, color=color, alpha=alpha)
+                                        marker=markers[energy_marker], label=lab, color=color, alpha=alpha,
+                                        fillstyle=fill)
                             if 'sys' in df_cent.columns:
                                 ax.errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['sys'], ls='', elinewidth=4,
                                             marker='', color=color, alpha=errbar_alpha)
@@ -1991,8 +2004,8 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                                                            color=color, alpha=alpha)
                         else:
                             ax_panels[energy].errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['avg_err'],
-                                                       ls='none',
-                                                       marker=marker, label=lab_energy, color=color, alpha=alpha)
+                                                       ls='none', marker=marker, label=lab_energy, color=color,
+                                                       alpha=alpha, fillstyle=fill)
                             if 'sys' in df_cent.columns:
                                 ax_panels[energy].errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['sys'],
                                                            ls='', marker='', color=color, alpha=errbar_alpha,
