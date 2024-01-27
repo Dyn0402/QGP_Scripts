@@ -31,7 +31,7 @@ def main():
 
     # plot_star_model_var()  # This doesn't do bkg subtraction error correction
     # plot_vs_cent_var()
-    plot_sims_var()
+    # plot_sims_var()
     # get_sim_mapping_var()
     # plot_all_zero_base()
 
@@ -600,45 +600,40 @@ def plot_method_paper_figs():
     markers = {'ampt_new_coal_epbins1': {'raw': 'o', 'mix': 's', 'diff': '^'}}
     dvar_vs_protons(df_dsigma, div_plt, cent_plt, [39], ['raw', 'mix'], ['ampt_new_coal_epbins1'],
                     data_sets_colors=None, data_sets_labels=data_sets_labels, ax_in=ax2, title='', marker_map=markers,
-                    plot=True, avg=False, alpha=1.0, y_ranges=[-0.00124, 0.0009], ylabel=r'$\Delta\sigma^2$')
-    fig.tight_layout()
-    fig.subplots_adjust(hspace=0.0, left=0.12, right=0.995, top=0.94, bottom=0.11)
-
-    dvar_vs_protons(df_dsigma, div_plt, cent_plt, [39], [data_type_plt], data_sets_plt, data_sets_colors=data_sets_colors,
                     plot=True, avg=False, alpha=1.0, y_ranges=[-0.00124, 0.0009], ylabel=r'$\Delta\sigma^2$',
-                    data_sets_labels=data_sets_labels, marker_map=data_sets_markers, legend_pos='lower right',
-                    data_sets_bands=data_sets_bands)
+                    kin_info_loc=(0.6, 0.94))
+    ax1.set_ylabel(r'$\sigma^2$')
+    fig.tight_layout()
+    fig.subplots_adjust(hspace=0.0, left=0.115, right=0.995, top=0.94, bottom=0.11)
 
     df_dsigma_v2sub = pd.read_csv(f'{base_path}{df_dsigma_v2sub_model_name}')
-
-    dvar_vs_protons(df_dsigma_v2sub, div_plt, cent_plt, [39], [data_type_plt], data_sets_plt, ylabel=r'$\Delta\sigma^2$',
-                    data_sets_colors=data_sets_colors, plot=True, avg=False, alpha=1.0, y_ranges=[-0.00124, 0.0009],
-                    data_sets_labels=data_sets_labels, marker_map=data_sets_markers, legend_pos='lower right',
-                    kin_info_loc=(0.22, 0.13), star_prelim_loc=(0.65, 0.96), data_sets_bands=data_sets_bands,
-                    legend_order=legend_order)  # <---
 
     dsig_avgs_v2sub = pd.read_csv(f'{base_path}{df_def_avgs_v2sub_out_model_name}')
 
     dsig_avgs_v2sub['data_type'] = data_type_plt
+    subplot_adjust = {'wspace': 0.0, 'hspace': 0.0, 'left': 0.07, 'right': 0.995, 'top': 0.995, 'bottom': 0.09}
     dvar_vs_protons_energies(df_dsigma_v2sub, [120], cent_plt, [7, 11, 19, 27, 39, 62], [data_type_plt], data_sets_plt,
                              plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors, no_hydro_label=1,
                              data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.00053], avgs_df=dsig_avgs_v2sub,
                              ylabel=r'$\Delta\sigma^2$', kin_loc=(0.65, 0.43), legend_panel=3,
                              marker_map=data_sets_markers, data_sets_bands=data_sets_bands, legend_order=legend_order,
-                             title=f'', alpha=0.8)  # <---
+                             title=f'', alpha=0.8, fig_splt_adjust=subplot_adjust)
 
     dsig_avgs_v2_sub_cent8 = dsig_avgs_v2sub[dsig_avgs_v2sub['cent'] == 8]
-    plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,  # <---
+    subplot_adjust = {'wspace': 0.0, 'hspace': 0.0, 'left': 0.07, 'right': 0.995, 'top': 0.995, 'bottom': 0.09}
+    plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,
                         data_sets_labels=data_sets_labels, plot_energy_panels=True, legend_order=legend_order,
                         ylab=r'$\langle\Delta\sigma^2\rangle$', data_sets_bands=data_sets_bands,
-                        plot_indiv=False, ylim=(-0.00059, 0.00009), leg_panel=5, no_hydro_label=True,
+                        plot_indiv=False, ylim=(-0.00054, 0.00009), leg_panel=5, no_hydro_label=True,
                         xlim=(-10, 370), title=f'', leg_frameon=True, exclude_divs=exclude_divs, alpha=0.8,
-                        data_sets_markers=data_sets_markers)
+                        data_sets_markers=data_sets_markers, fig_splt_adj=subplot_adjust)
 
+    plt.rcParams["figure.figsize"] = (7, 3.5)
+    subplot_adjust = {'left': 0.135, 'right': 0.995, 'top': 0.995, 'bottom': 0.125}
     dsig_avgs_v2_sub_cent8_div120 = dsig_avgs_v2sub[(dsig_avgs_v2sub['cent'] == 8) & (dsig_avgs_v2sub['divs'] == 120)]
-    plot_protons_avgs_vs_energy(dsig_avgs_v2_sub_cent8_div120, data_sets_plt, data_sets_colors=data_sets_colors,  # <---
+    plot_protons_avgs_vs_energy(dsig_avgs_v2_sub_cent8_div120, data_sets_plt, data_sets_colors=data_sets_colors,
                                 data_sets_labels=data_sets_labels, alpha=0.6, kin_info_loc=(0.02, 0.45),
-                                marker_map=data_sets_markers,
+                                marker_map=data_sets_markers, fig_splt_adj=subplot_adjust,
                                 data_sets_bands=data_sets_bands, legend_order=legend_order, title=f'')
 
     dsig_avgs_v2_sub_div120 = dsig_avgs_v2sub[dsig_avgs_v2sub['divs'] == 120]
@@ -647,36 +642,24 @@ def plot_method_paper_figs():
     data_sets_energies_markers = {'ampt_new_coal_epbins1': {7: 'o', 11: 's', 19: '^', 27: 'p', 39: 'D', 62: '*'}}
     vs_cent_sets = list(data_sets_energies_colors.keys())
 
+    splt_adjust = {'left': 0.135, 'right': 0.995, 'top': 0.995, 'bottom': 0.095}
     plot_protons_avgs_vs_cent(dsig_avgs_v2_sub_div120, vs_cent_sets, data_sets_colors=data_sets_colors, fit=False,
-                              data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,  # <---
-                              title=f'', alpha=0.8, errbar_alpha=0.3, xerr=False,
-                              kin_info_loc=(0.2, 0.1), marker_map=data_sets_energies_markers,
+                              data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,
+                              title=f'', alpha=0.8, errbar_alpha=0.3, xerr=False, xlim=(-10, 699), figsize=(7, 4.5),
+                              kin_info_loc=(0.2, 0.1), marker_map=data_sets_energies_markers, fig_splt_adj=splt_adjust,
                               data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
-    plot_protons_avgs_vs_cent(dsig_avgs_v2_sub_div120, vs_cent_sets, data_sets_colors=data_sets_colors, fit=False,
-                              data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type='npart',  # <---
-                              title=f'', alpha=0.8, errbar_alpha=0.3, xerr=False,
-                              kin_info_loc=(0.2, 0.1), marker_map=data_sets_energies_markers,
-                              data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
-
-    # plot_div_fits_vs_cent(dsig_avgs_v2_sub, ['bes_def'], data_sets_colors=data_sets_colors,
-    #                       data_sets_labels=data_sets_labels, title=None, fit=False, cent_ref=cent_ref_df,
-    #                       ref_type=ref_type)
-    #
-    # df_fits = plot_dvar_avgs_divs(dsig_avgs, all_sets_plt, data_sets_colors=data_sets_colors, fit=True,
-    #                               data_sets_labels=data_sets_labels, plt_energies=False)
-    # if df_partitions_fits_name is not None:
-    #     df_fits.to_csv(f'{base_path}{fits_out_base}/{df_partitions_fits_name}', index=False)
-
-    # plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels)
-    # plot_slope_div_fits_simpars(df_fits)
 
     df_fits = pd.read_csv(f'{base_path}{df_partitions_fits_model_name}')
     data_sets_cent = ['ampt_new_coal_epbins1']
 
-    plot_div_fits_vs_cent(df_fits, data_sets_cent,  # data_sets_energies_cmaps=data_sets_energies_cmaps,
-                          data_sets_labels=data_sets_labels, title=None, fit=False, cent_ref=cent_ref_df, ls='-',
-                          ref_type=ref_type, data_sets_colors=data_sets_energies_colors,
-                          data_sets_markers=data_sets_energies_markers)
+    # plot_div_fits_vs_cent(df_fits, data_sets_cent,  # data_sets_energies_cmaps=data_sets_energies_cmaps,
+    #                       data_sets_labels=data_sets_labels, title=None, fit=False, cent_ref=cent_ref_df, ls='-',
+    #                       ref_type=ref_type, data_sets_colors=data_sets_energies_colors,
+    #                       data_sets_markers=data_sets_energies_markers)
+
+    plot_div_fits_vs_cent_single_set(df_fits, data_sets_cent, data_sets_labels=data_sets_labels, title=None, ls='-',
+                                     data_sets_colors=data_sets_energies_colors, cent_ref=cent_ref_df,
+                                     data_sets_markers=data_sets_energies_markers, ref_type=ref_type)
 
     # Gaussian correlation model simulations
     sim_base_path = f'{base_path}Binomial_Slice_Moments/'
@@ -684,9 +667,13 @@ def plot_method_paper_figs():
     df_sim_dsig_avgs = pd.read_csv(f'{sim_base_path}binom_slice_stats_sim_demos_dsigma_avg.csv')
     df_sim_width_fits = pd.read_csv(f'{sim_base_path}binom_slice_stats_sim_demos_width_fits.csv')
 
-    amps = ['002', '004', '006', '008', '01']  # ['002', '006', '01']
+    amps = ['002', '006', '008', '01']
     spreads = ['04', '05', '06', '07', '08', '09', '1', '11', '12']
     amp_spreads_all = [amps, spreads]
+
+    amps = ['002', '006', '01']
+    spreads = ['04', '05', '06', '07', '08', '09', '1', '11', '12']
+    amp_spreads_z_w = [amps, spreads]
 
     amps = ['002', '006', '01']
     spreads = ['1']
@@ -696,7 +683,7 @@ def plot_method_paper_figs():
     spreads = ['04', '08']
     amp_spreads_avg_w = [amps, spreads]
 
-    sim_set_defs = [amp_spreads_all, amp_spreads_dsig_n, amp_spreads_avg_w]
+    sim_set_defs = [amp_spreads_all, amp_spreads_dsig_n, amp_spreads_avg_w, amp_spreads_z_w]
     sim_sets_out = []
     for (amps, spreads) in sim_set_defs:
         sim_sets = []
@@ -707,37 +694,65 @@ def plot_method_paper_figs():
         sim_sets = sorted(sim_sets, reverse=True)
         sim_sets = sim_sets[:int(len(sim_sets) / 2)] + sorted(sim_sets[int(len(sim_sets) / 2):])
         sim_sets_out.append(sim_sets)
-    sim_sets_all, sim_sets_dsig_n, sim_sets_avg_w = sim_sets_out
+    sim_sets_all, sim_sets_dsig_n, sim_sets_avg_w, sim_sets_z_w = sim_sets_out
 
-    data_sets_labels_sim, data_sets_colors_sim, data_sets_fill_sim, data_sets_markers_sim = {}, None, {}, {}
+    amp_spread_markers = {0.002: {0.4: 'o', 0.8: 's'}, 0.006: {0.4: '^', 0.8: 'v'}, 0.008: {0.4: '^', 0.8: 'v'}, 0.01: {0.4: 'D', 0.8: 'x'}}
+    amp_spread_colors = {0.002: {0.4: 'black', 0.8: 'red'}, 0.006: {0.4: 'green', 0.8: 'orange'}, 0.008: {0.4: 'black', 0.8: 'red'}, 0.01: {0.4: 'purple', 0.8: 'black'}}
+    amp_spread_ls = {0.002: {0.4: '-', 0.8: '--'}, 0.006: {0.4: '-', 0.8: '--'}, 0.008: {0.4: '-', 0.8: '--'}, 0.01: {0.4: '-', 0.8: '--'}}
+    data_sets_labels_sim, data_sets_colors_sim, data_sets_fill_sim, data_sets_markers_sim = {}, {}, {}, {}
+    data_sets_ls_sim = {}
     for sim_set in sim_sets_all:
         label, fillstyle, marker = '', '', ''
+        amp, spread = get_name_amp_spread(sim_set)
         if '_clmul_' in sim_set:
-            label += 'Attractive '
+            label += 'Attractive ' + rf'$A=+{amp:.3f}$ $σ={spread}$'
             fillstyle = 'none'
         elif '_aclmul_' in sim_set:
-            label += 'Repulsive '
+            label += 'Repulsive ' + rf'$A=-{amp:.3f}$ $σ={spread}$'
             fillstyle = 'full'
-        amp, spread = get_name_amp_spread(sim_set)
-        label += f'A={amp} σ={spread}'
         data_sets_labels_sim.update({sim_set: label})
         data_sets_fill_sim.update({sim_set: fillstyle})
+        if amp in amp_spread_markers and spread in amp_spread_markers[amp]:
+            marker = amp_spread_markers[amp][spread]
+        else:
+            marker = 'o'
+        if amp in amp_spread_colors and spread in amp_spread_colors[amp]:
+            color = amp_spread_colors[amp][spread]
+        else:
+            color = 'black'
+        if amp in amp_spread_ls and spread in amp_spread_ls[amp]:
+            ls = amp_spread_ls[amp][spread]
+        else:
+            ls = '-'
+        data_sets_markers_sim.update({sim_set: marker})
+        data_sets_colors_sim.update({sim_set: color})
+        data_sets_ls_sim.update({sim_set: ls})
 
+    fig, ax = plt.subplots(figsize=(8, 4), dpi=144)
     dvar_vs_protons(df_sim_dsig, div_plt, cent_plt, ['sim'], ['raw'], sim_sets_dsig_n, plot=True, avg=True,
                     data_sets_labels=data_sets_labels_sim, ylabel=r'$\Delta\sigma^2$', data_sets_bands=sim_sets_dsig_n,
-                    title=f'Gaussian Correlation Model: {div_plt}° Partitions, 72 Samples per Event')
+                    title=f'Gaussian Correlation Model - {div_plt}° Partitions, 72 Samples per Event', ax_in=ax,
+                    ylim=(-0.0019, 0.0012), kin_info_loc=(0.6, 0.94))
+    fig.subplots_adjust(left=0.115, right=0.995, top=0.94, bottom=0.11)
 
+    plt.rcParams["figure.figsize"] = (9, 4.5)
+    # plt.rcParams['figure.subplot.left'], plt.rcParams['figure.subplot.right'] = 0.125, 0.995
+    # plt.rcParams['figure.subplot.bottom'], plt.rcParams['figure.subplot.top'] = 0.1, 0.94
+    subplot_adjust = {'left': 0.105, 'right': 0.995, 'top': 0.95, 'bottom': 0.1}
     plot_dvar_avgs_divs(df_sim_dsig_avgs, sim_sets_avg_w, data_sets_colors=data_sets_colors_sim, fit=True,
-                        data_sets_labels=data_sets_labels_sim, plot_energy_panels=False,
-                        ylab=r'$\langle\Delta\sigma^2\rangle$', data_sets_fills=data_sets_fill_sim,
-                        title=f'Gaussian Correlation Model: 72 Samples per Event')
+                        data_sets_labels=data_sets_labels_sim, plot_energy_panels=False, ylim=(-0.00045, 0.00045),
+                        data_sets_markers=data_sets_markers_sim, data_sets_ls=data_sets_ls_sim, xlim=(-15, 560),
+                        ylab=r'$\langle\Delta\sigma^2\rangle$', data_sets_fills=data_sets_fill_sim, alpha=0.8,
+                        exclude_divs=exclude_divs,
+                        fig_splt_adj=subplot_adjust, title=f'Gaussian Correlation Model - 72 Samples per Event')
 
-    proton_fits_div = df_sim_dsig_avgs[df_sim_dsig_avgs['divs'] == div_plt]
-    plot_dsig_fits_vs_amp(proton_fits_div, sim_sets, data_sets_colors_sim, data_sets_labels_sim,
-                          title=f'Gaussian Correlation Model: {div_plt}° Partitions, 72 Samples per Event')
-    # # plt.show()
-    # # print(df_fits)
-    sigma_fits = plot_slope_div_fits_simpars(df_sim_width_fits)
+    plot_b_vs_amp(df_sim_width_fits, alpha=0.8, ylim=(-0.00046, 0.00053))
+
+    amp_shifts = {0.002: -0.01, 0.006: 0.0, 0.01: +0.01}
+    amp_colors = {0.002: 'red', 0.006: 'black', 0.01: 'blue'}
+    amp_markers = {0.002: 's', 0.006: 'o', 0.01: '^'}
+    plot_z_vs_spread(df_sim_width_fits, amps=list(amp_colors.keys()), amps_colors=amp_colors, amps_markers=amp_markers,
+                     amps_x_shifts=amp_shifts, alpha=0.7)
 
     plt.show()
 
