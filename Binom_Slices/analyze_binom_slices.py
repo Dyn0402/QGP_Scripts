@@ -2865,6 +2865,62 @@ def plot_b_vs_amp(df_fits, spreads=None, alpha=1, ylim=None):
     fig_base_amp.subplots_adjust(left=0.115, top=0.99, bottom=0.11, right=0.995)
 
 
+def plot_b_vs_amp_sig_dep(df_fits, spreads=None, alpha=1, ylim=None):
+    fig_base_spread, ax_base_spread = plt.subplots(figsize=(8, 4), dpi=144)
+    ax_base_spread.set_xlabel(r'Simulation Spread ($\sigma$)')
+    ax_base_spread.set_ylabel(r'$b$')
+    ax_base_spread.axhline(0, color='black')
+    fig_base_spread.canvas.manager.set_window_title('Quad Fit Baseline vs Spread Amplitude Sets')
+
+    amps = pd.unique(df_fits['amp'])
+    cl_type_data = {'_clmul_': {'name': 'Attractive', 'line': '--', 'fill': 'none'},
+                    '_aclmul_': {'name': 'Repulsive', 'line': ':', 'fill': 'full'}}
+    colors = iter(plt.cm.rainbow(np.linspace(0, 1, len(amps))))
+
+    def b_spread_fit(x, a, b, c):
+        return a + b * x + c * x**2
+
+    fits = {'_clmul_': {'a_1': [], 'a_2': [], 'a_3': []}, '_aclmul_': {'a_1': [], 'a_2': [], 'a_3': []}}
+    for amp in amps:
+        color = next(colors)
+        df_amp = df_fits[df_fits['amp'] == amp]
+        for cl_type, cl_data in cl_type_data.items():
+            df_set = df_amp[df_amp['data_set'].str.contains(cl_type)]
+            if df_set.size == 0 or any(np.isnan(df_set['baseline'])) or any(np.isinf(df_set['baseline'])) or \
+                    any(np.isnan(df_set['base_err'])) or any(np.isinf(df_set['base_err'])):
+                continue
+            if cl_type == '_aclmul_':
+                lab = rf'$A={round(amp, 3)}$'
+            else:
+                lab = None
+            ax_base_spread.errorbar(df_set['spread'], df_set['baseline'], yerr=df_set['base_err'], ls='none',
+                                 marker='o', label=lab, color=color, fillstyle=cl_data['fill'], alpha=alpha)
+            popt, pcov = cf(b_spread_fit, df_set['spread'], df_set['baseline'], sigma=df_set['base_err'],
+                            absolute_sigma=True)
+            x_fit_plot = np.linspace(0, 1.3, 1000)
+            ax_base_spread.plot(x_fit_plot, b_spread_fit(x_fit_plot, *popt), color=color, alpha=0.4, ls='--')
+            fits[cl_type]['a_1'].append(popt[0])
+            fits[cl_type]['a_2'].append(popt[1])
+            fits[cl_type]['a_3'].append(popt[2])
+    ax_base_spread.text(0, -0.0004, r'$b = a_1 + a_2 * \sigma + a_3 * \sigma^2$')
+    if ylim is not None:
+        ax_base_spread.set_ylim(ylim)
+    ax_base_spread.legend()
+    fig_base_spread.tight_layout()
+    fig_base_spread.subplots_adjust(left=0.115, top=0.99, bottom=0.11, right=0.995)
+
+    fig_fits, axs_fits = plt.subplots(nrows=3, figsize=(8, 6), dpi=144, sharex='all')
+    for par, ax in zip(['a_1', 'a_2', 'a_3'], axs_fits):
+        ax.set_ylabel(rf'${par}$')
+        ax.axhline(0, color='gray')
+        for cl_type, cl_data in cl_type_data.items():
+            ax.plot(amps, fits[cl_type][par], marker='o', alpha=0.8, fillstyle=cl_data['fill'], label=cl_data['name'])
+    axs_fits[0].text(0.005, -4.7e-5, r'$b = a_1 + a_2 * \sigma + a_3 * \sigma^2$')
+    axs_fits[0].legend()
+    axs_fits[-1].set_xlabel(r'$\left| A \right|$')
+    fig_fits.tight_layout()
+
+
 def plot_sigma_fits_interp(sigma_fits):
     fig_spread_zero, ax_spread_zero = plt.subplots()
     ax_spread_zero.set_xlabel('Mean Zero')

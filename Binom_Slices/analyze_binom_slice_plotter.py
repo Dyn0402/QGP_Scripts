@@ -603,6 +603,7 @@ def plot_method_paper_figs():
                     plot=True, avg=False, alpha=1.0, y_ranges=[-0.00124, 0.0009], ylabel=r'$\Delta\sigma^2$',
                     kin_info_loc=(0.6, 0.94))
     ax1.set_ylabel(r'$\sigma^2$')
+    ax1.set_title(f'AMPT 39 GeV, 0-5% Centrality, 120° Partitions, 72 Samples/Event', pad=-20)
     fig.tight_layout()
     fig.subplots_adjust(hspace=0.0, left=0.115, right=0.995, top=0.94, bottom=0.11)
 
@@ -753,6 +754,8 @@ def plot_method_paper_figs():
     amp_markers = {0.002: 's', 0.006: 'o', 0.01: '^'}
     plot_z_vs_spread(df_sim_width_fits, amps=list(amp_colors.keys()), amps_colors=amp_colors, amps_markers=amp_markers,
                      amps_x_shifts=amp_shifts, alpha=0.7)
+
+    plot_b_vs_amp_sig_dep(df_sim_width_fits, alpha=0.8)
 
     plt.show()
 
