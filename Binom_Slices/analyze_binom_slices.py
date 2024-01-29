@@ -2829,6 +2829,13 @@ def plot_b_vs_amp(df_fits, spreads=None, alpha=1, ylim=None):
     ax_base_amp.axvline(0, color='black')
     fig_base_amp.canvas.manager.set_window_title('Quad Fit Baseline vs Amplitude')
 
+    fig_base_div_spread_amp, ax_base_div_spread_amp = plt.subplots(figsize=(8, 4), dpi=144)
+    ax_base_div_spread_amp.set_xlabel(r'Simulation Amplitude Magnitude ($\left| A \right|$)')
+    ax_base_div_spread_amp.set_ylabel(r'$b/\sigma$')
+    ax_base_div_spread_amp.axhline(0, color='black')
+    ax_base_div_spread_amp.axvline(0, color='black')
+    fig_base_div_spread_amp.canvas.manager.set_window_title('Quad Fit Baseline/Spread vs Amplitude')
+
     if spreads is None:
         spreads = pd.unique(df_fits['spread'])
     cl_type_data = {'_clmul_': {'name': 'Attractive', 'line': '--', 'fill': 'none'},
@@ -2848,21 +2855,30 @@ def plot_b_vs_amp(df_fits, spreads=None, alpha=1, ylim=None):
                 lab = None
             ax_base_amp.errorbar(df_set['amp'], df_set['baseline'], yerr=df_set['base_err'], ls='none',
                                  marker='o', label=lab, color=color, fillstyle=cl_data['fill'], alpha=alpha)
+            ax_base_div_spread_amp.errorbar(df_set['amp'], df_set['baseline'] / df_set['spread'], ls='none',
+                                            yerr=df_set['base_err'], marker='o', label=lab, color=color,
+                                            fillstyle=cl_data['fill'], alpha=alpha)
             # popt, pcov = cf(line_yint0, df_set['amp'], df_set['baseline'], sigma=df_set['base_err'],
             #                 absolute_sigma=True)
             # perr = np.sqrt(np.diag(pcov))
+            x_vals = np.array([0, max(df_set['amp'])])
             popt, pcov = cf(line, df_set['amp'], df_set['baseline'], sigma=df_set['base_err'],
                             absolute_sigma=True)
-            x_vals = np.array([0, max(df_set['amp'])])
             ax_base_amp.plot(x_vals, line(x_vals, *popt), ls=cl_data['line'], color=color)
+            popt, pcov = cf(line, df_set['amp'], df_set['baseline'] / df_set['spread'], sigma=df_set['base_err'],
+                            absolute_sigma=True)
+            ax_base_div_spread_amp.plot(x_vals, line(x_vals, *popt), ls=cl_data['line'], color=color)
             # ax_base_amp.plot(x_vals, line_yint0(x_vals, *popt), ls=cl_data['line'], color=color)
             # ax_base_amp.fill_between(x_vals, line_yint0(x_vals, popt[0] - perr[0]),
             #                          line_yint0(x_vals, popt[0] + perr[0]), color=color, alpha=0.3)
     if ylim is not None:
         ax_base_amp.set_ylim(ylim)
     ax_base_amp.legend()
+    ax_base_div_spread_amp.legend()
     fig_base_amp.tight_layout()
+    fig_base_div_spread_amp.tight_layout()
     fig_base_amp.subplots_adjust(left=0.115, top=0.99, bottom=0.11, right=0.995)
+    fig_base_div_spread_amp.subplots_adjust(left=0.115, top=0.99, bottom=0.11, right=0.995)
 
 
 def plot_b_vs_amp_sig_dep(df_fits, spreads=None, alpha=1, ylim=None):
@@ -2871,6 +2887,12 @@ def plot_b_vs_amp_sig_dep(df_fits, spreads=None, alpha=1, ylim=None):
     ax_base_spread.set_ylabel(r'$b$')
     ax_base_spread.axhline(0, color='black')
     fig_base_spread.canvas.manager.set_window_title('Quad Fit Baseline vs Spread Amplitude Sets')
+
+    fig_base_div_spread, ax_base_div_spread = plt.subplots(figsize=(8, 4), dpi=144)
+    ax_base_div_spread.set_xlabel(r'Simulation Spread ($\sigma$)')
+    ax_base_div_spread.set_ylabel(r'$b/\sigma$')
+    ax_base_div_spread.axhline(0, color='black')
+    fig_base_div_spread.canvas.manager.set_window_title('Quad Fit Baseline/Spread vs Spread Amplitude Sets')
 
     amps = pd.unique(df_fits['amp'])
     cl_type_data = {'_clmul_': {'name': 'Attractive', 'line': '--', 'fill': 'none'},
@@ -2895,6 +2917,9 @@ def plot_b_vs_amp_sig_dep(df_fits, spreads=None, alpha=1, ylim=None):
                 lab = None
             ax_base_spread.errorbar(df_set['spread'], df_set['baseline'], yerr=df_set['base_err'], ls='none',
                                  marker='o', label=lab, color=color, fillstyle=cl_data['fill'], alpha=alpha)
+            ax_base_div_spread.errorbar(df_set['spread'], df_set['baseline'] / df_set['spread'],
+                                        yerr=df_set['base_err'], ls='none', marker='o', label=lab, color=color,
+                                        fillstyle=cl_data['fill'], alpha=alpha)
             popt, pcov = cf(b_spread_fit, df_set['spread'], df_set['baseline'], sigma=df_set['base_err'],
                             absolute_sigma=True)
             x_fit_plot = np.linspace(0, 1.3, 1000)
@@ -2906,8 +2931,11 @@ def plot_b_vs_amp_sig_dep(df_fits, spreads=None, alpha=1, ylim=None):
     if ylim is not None:
         ax_base_spread.set_ylim(ylim)
     ax_base_spread.legend()
+    ax_base_div_spread.legend()
     fig_base_spread.tight_layout()
+    fig_base_div_spread.tight_layout()
     fig_base_spread.subplots_adjust(left=0.115, top=0.99, bottom=0.11, right=0.995)
+    fig_base_div_spread.subplots_adjust(left=0.115, top=0.99, bottom=0.11, right=0.995)
 
     fig_fits, axs_fits = plt.subplots(nrows=3, figsize=(8, 6), dpi=144, sharex='all')
     for par, ax in zip(['a_1', 'a_2', 'a_3'], axs_fits):
