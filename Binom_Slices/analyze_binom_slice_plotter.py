@@ -757,7 +757,7 @@ def plot_method_paper_figs():
 
     plot_b_vs_amp_sig_dep(df_sim_width_fits, alpha=0.8)
 
-    plot_slope_div_fits_simpars(df_sim_width_fits)
+    # plot_slope_div_fits_simpars(df_sim_width_fits)
 
     plt.show()
 

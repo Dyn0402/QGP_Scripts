@@ -2792,11 +2792,15 @@ def plot_z_vs_spread(df_fits, amps=None, spreads=None, amps_colors=None, amps_ma
 
     print(f'Amps: {amps}\nSpreads: {spreads}')
 
+    fit_zs, fit_z_errs, fit_spreads = [], [], []
     colors_amps = iter(plt.cm.rainbow(np.linspace(0, 1, len(amps))))
     for amp in amps:
         df_amp = df_fits[df_fits['amp'] == amp]
         df_cl_amp = df_amp[df_amp['data_set'].str.contains('_clmul_')]
         df_acl_amp = df_amp[df_amp['data_set'].str.contains('_aclmul_')]
+        fit_zs.extend(df_cl_amp['zero_mag'])
+        fit_z_errs.extend(df_cl_amp['zero_mag_err'])
+        fit_spreads.extend(df_cl_amp['spread'])
         if amps_colors is None or amp not in amps_colors:
             color = next(colors_amps)
         else:
@@ -2815,6 +2819,14 @@ def plot_z_vs_spread(df_fits, amps=None, spreads=None, amps_colors=None, amps_ma
         ax_zeros_spread.errorbar(df_acl_amp['spread'] + x_shift, df_acl_amp['zero_mag'],
                                  yerr=df_acl_amp['zero_mag_err'], ls='none', alpha=alpha,
                                  marker=marker, label=rf'$A=-{amp}$', color=color, fillstyle='full')
+
+    popt, pcov = cf(inv_x_const, fit_spreads, fit_zs, sigma=fit_z_errs, absolute_sigma=True)
+    perr = np.sqrt(np.diag(pcov))
+    spread_range = max(fit_spreads) - min(fit_spreads)
+    x_vals = np.linspace(min(fit_spreads) - spread_range * 0.05, max(fit_spreads) + spread_range * 0.05, 1000)
+    ax_zeros_spread.plot(x_vals, inv_x_const(x_vals, *popt), ls='--', color='salmon',
+                         label=rf'${round(popt[0])}/x+{round(popt[1])}$')
+    print(popt)
 
     ax_zeros_spread.legend()
     fig_zeros_spread.tight_layout()
