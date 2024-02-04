@@ -38,7 +38,8 @@ def from_dataframe():
     energy = 62
     cent = 8
     samples = 72  # For title only
-    data_set = 'AMPT_noprerot_rp'
+    # data_set = 'AMPT_noprerot_rp'
+    data_set = 'AMPT'
     if data_set == 'AMPT':
         df_name = 'binom_slice_stats_cents.csv'
         data_set_name = 'ampt_new_coal_resample_def'

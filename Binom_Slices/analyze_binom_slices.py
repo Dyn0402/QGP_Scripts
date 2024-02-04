@@ -344,7 +344,7 @@ def raw_to_mix_stat_err(df, div_plt, cent_plt, energy_plt, data_set_plt):
 
 
 def stat_binom_vs_protons(df, stat, div, cent, energy, data_types, data_set_plt, data_sets_labels=None, y_ranges=None,
-                          ax_in=None):
+                          ax_in=None, leg=True):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     data = []
@@ -404,7 +404,8 @@ def stat_binom_vs_protons(df, stat, div, cent, energy, data_types, data_set_plt,
 
         ax.errorbar(df['total_protons'], df['val'], df['err'], label=lab, marker=m, ls='', color=c, alpha=0.7)
 
-    ax.legend()
+    if leg:
+        ax.legend()
     if ax_in is None:
         fig.tight_layout()
 

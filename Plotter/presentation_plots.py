@@ -49,6 +49,31 @@ def main():
     print('donzo')
 
 
+def method_paper_plot():
+    divs = 120
+    cent = 8
+    energy = 39
+    data_name = 'AMPT'  # Just for title
+    samples = 1  # Just for title
+    set_group = 'default_single'
+    set_name = 'Ampt_rapid05_single_'
+    # samples = 72  # Just for title
+    # set_group = 'default_resample'
+    # set_name = 'Ampt_rapid05_resample_norotate_'
+    set_num = 0
+    data_set = '_Ampt_New_Coal'
+    base_path = 'F:/Research/Data'
+    set_path = f'{set_group}/{set_name}{set_num}/{energy}GeV/ratios_divisions_{divs}_centrality_{cent}_local.txt'
+    path = f'{base_path}{data_set}/{set_path}'
+    path_mix = f'{base_path}{data_set}_Mix/{set_path}'
+    raw = AzimuthBinData(path=path, div=divs)
+
+    # title_sufx = f'\n{energy}GeV, 0-5% Centrality, {divs}° Partitions, {samples} Sample per Event'
+    title_sufx = f'\n{energy}GeV, 0-5% Centrality, {divs}° Partitions, {samples} Sample per Event'
+
+    plot_azbin_distribution_example(raw.get_dist(), 6, divs, data_name, title_sufx=title_sufx)
+
+
 def plot_2d(file_data, max_particle, max_bin, divs, data_name, title_sufx):
     data = np.zeros((max_particle + 1, max_particle + 1))
     for total_particles, bins in file_data.items():
@@ -307,6 +332,35 @@ def plot_binomial(data, particles, divs, data_name, title_sufx=''):
 
     print(f'Binomial Difference Sum: {sum(y_diff)}')
     plt.show()
+
+
+def plot_azbin_distribution_example(data, particles, divs, data_name, title_sufx=''):
+    """
+    Plot example of azimuthal bin distribution. Use for method paper
+    :param data:
+    :param particles:
+    :param divs:
+    :param data_name:
+    :param title_sufx:
+    :return:
+    """
+    y = np.zeros(shape=particles + 1)
+    y[:len(data[particles])] = data[particles]
+    x = range(particles + 1)
+
+    fig0, ax0 = plt.subplots(figsize=(6.6, 3), dpi=144)
+    ax0.bar(x, y, width=0.9, align='center', zorder=0, label=f'{particles} Proton Events')
+    ax0.set_xticks(range(0, len(y), 2))
+    ax0.text(0.5, 0.9, f'{data_name} Protons in {divs}° Partition for {particles} Proton Events' + title_sufx,
+             fontsize=12, transform=ax0.transAxes, wrap=True, va='center', ha='center')
+    ax0.set_xlabel('Number of Protons in Azimuthal Partition')
+    ax0.set_ylabel('Partitions')
+    ax0.set_xlim([-0.5, particles + 0.5])
+    ax0.set_ylim([0, max(y) * 1.25])
+    ax0.legend(loc='center right')
+    fig0.tight_layout()
+    fig0.subplots_adjust(top=0.99, bottom=0.14, left=0.085, right=0.995)
+    fig0.canvas.manager.set_window_title('partition_hist_example')
 
 
 def plot_azbin_data_proj(data, x_lim, y_lim, divs, x_label='Number of Protons in Bin',

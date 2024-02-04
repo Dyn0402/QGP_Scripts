@@ -20,6 +20,8 @@ import tqdm
 import istarmap  # Needed for tqdm
 
 from analyze_binom_slices import *
+from presentation_plots import method_paper_plot
+from pdf_examples import cluster_voids_example_plots
 
 from integrate_pdf_var import base_gaus_pdf_wrap, get_partition_variance
 
@@ -593,19 +595,29 @@ def plot_method_paper_figs():
 
     df_dsigma = pd.read_csv(f'{base_path}{df_dsigma_model_name}')
 
+    method_paper_plot()  # From Plotter/presentation_plots
+    # cluster_voids_example_plots()  # From Anti_Clustering/pdf_examples. Take time to generate.
+
     fig, (ax1, ax2) = plt.subplots(2, 1, sharex='all', figsize=(8, 4), dpi=144)
     stat_binom_vs_protons(df, stat_plot, div_plt, cent_plt, 39, ['raw', 'mix'], 'ampt_new_coal_epbins1',
                           data_sets_labels=data_sets_labels, ax_in=ax1)
+    ax1.set_ylabel(r'$\sigma^2$')
+    # ax1.set_title(f'AMPT 39 GeV, 0-5% Centrality, 120° Partitions, 72 Samples/Event', pad=-20)
+    ax1.text(0.5, 0.9, 'AMPT 39 GeV, 0-5% Centrality, 120° Partitions, 72 Samples/Event', ha='center',
+             va='center', transform=ax1.transAxes, fontsize=12)
+    ax1.set_ylim(top=ax1.get_ylim()[1] * 1.1)
+    ax1.legend(loc='lower right')
 
     markers = {'ampt_new_coal_epbins1': {'raw': 'o', 'mix': 's', 'diff': '^'}}
     dvar_vs_protons(df_dsigma, div_plt, cent_plt, [39], ['raw', 'mix'], ['ampt_new_coal_epbins1'],
                     data_sets_colors=None, data_sets_labels=data_sets_labels, ax_in=ax2, title='', marker_map=markers,
                     plot=True, avg=False, alpha=1.0, y_ranges=[-0.00124, 0.0009], ylabel=r'$\Delta\sigma^2$',
-                    kin_info_loc=(0.6, 0.94))
-    ax1.set_ylabel(r'$\sigma^2$')
-    ax1.set_title(f'AMPT 39 GeV, 0-5% Centrality, 120° Partitions, 72 Samples/Event', pad=-20)
+                    kin_info_loc=(0.35, 0.35), leg=False)
+
     fig.tight_layout()
-    fig.subplots_adjust(hspace=0.0, left=0.115, right=0.995, top=0.94, bottom=0.11)
+    fig.subplots_adjust(hspace=0.0, left=0.115, right=0.995, top=0.995, bottom=0.11)
+    # fig.canvas.set_window_title('variance_dsig2_vs_tprotons_ampt_39gev')
+    fig.canvas.manager.set_window_title('variance_dsig2_vs_tprotons_ampt_39gev')
 
     df_dsigma_v2sub = pd.read_csv(f'{base_path}{df_dsigma_v2sub_model_name}')
 
@@ -732,20 +744,22 @@ def plot_method_paper_figs():
     fig, ax = plt.subplots(figsize=(8, 4), dpi=144)
     dvar_vs_protons(df_sim_dsig, div_plt, cent_plt, ['sim'], ['raw'], sim_sets_dsig_n, plot=True, avg=True,
                     data_sets_labels=data_sets_labels_sim, ylabel=r'$\Delta\sigma^2$', data_sets_bands=sim_sets_dsig_n,
-                    title=f'Gaussian Correlation Model - {div_plt}° Partitions, 72 Samples per Event', ax_in=ax,
-                    ylim=(-0.0019, 0.0012), kin_info_loc=(0.6, 0.94))
-    fig.subplots_adjust(left=0.115, right=0.995, top=0.94, bottom=0.11)
+                    title=None, ax_in=ax, ylim=(-0.0019, 0.0012), kin_info_loc=(0.75, 0.3))
+    title = f'Gaussian Correlation Model - {div_plt}° Partitions, 72 Samples per Event'
+    ax.text(0.5, 0.98, title, ha='center', va='top', transform=ax.transAxes, fontsize=12)
+    ax.set_ylim(top=ax.get_ylim()[1] * 1.1)
+    fig.subplots_adjust(left=0.115, right=0.995, top=0.995, bottom=0.11)
+    fig.canvas.manager.set_window_title('dsigma_vs_Total_Protons_simGeV_120_example')
 
     plt.rcParams["figure.figsize"] = (9, 4.5)
     # plt.rcParams['figure.subplot.left'], plt.rcParams['figure.subplot.right'] = 0.125, 0.995
     # plt.rcParams['figure.subplot.bottom'], plt.rcParams['figure.subplot.top'] = 0.1, 0.94
-    subplot_adjust = {'left': 0.105, 'right': 0.995, 'top': 0.95, 'bottom': 0.1}
+    subplot_adjust = {'left': 0.105, 'right': 0.995, 'top': 0.995, 'bottom': 0.1}
     plot_dvar_avgs_divs(df_sim_dsig_avgs, sim_sets_avg_w, data_sets_colors=data_sets_colors_sim, fit=True,
                         data_sets_labels=data_sets_labels_sim, plot_energy_panels=False, ylim=(-0.00045, 0.00045),
                         data_sets_markers=data_sets_markers_sim, data_sets_ls=data_sets_ls_sim, xlim=(-15, 560),
                         ylab=r'$\langle\Delta\sigma^2\rangle$', data_sets_fills=data_sets_fill_sim, alpha=0.8,
-                        exclude_divs=exclude_divs,
-                        fig_splt_adj=subplot_adjust, title=f'Gaussian Correlation Model - 72 Samples per Event')
+                        exclude_divs=exclude_divs, fig_splt_adj=subplot_adjust, title='')
 
     plot_b_vs_amp(df_sim_width_fits, alpha=0.8, ylim=(-0.00046, 0.00053))
 
@@ -755,7 +769,7 @@ def plot_method_paper_figs():
     plot_z_vs_spread(df_sim_width_fits, amps=list(amp_colors.keys()), amps_colors=amp_colors, amps_markers=amp_markers,
                      amps_x_shifts=amp_shifts, alpha=0.7)
 
-    plot_b_vs_amp_sig_dep(df_sim_width_fits, alpha=0.8)
+    # plot_b_vs_amp_sig_dep(df_sim_width_fits, alpha=0.8)
 
     # plot_slope_div_fits_simpars(df_sim_width_fits)
 
