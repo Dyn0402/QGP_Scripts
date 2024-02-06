@@ -69,7 +69,8 @@ def method_paper_plot():
     raw = AzimuthBinData(path=path, div=divs)
 
     # title_sufx = f'\n{energy}GeV, 0-5% Centrality, {divs}° Partitions, {samples} Sample per Event'
-    title_sufx = f'\n{energy}GeV, 0-5% Centrality, {divs}° Partitions, {samples} Sample per Event'
+    # title_sufx = f'\n{energy}GeV, 0-5% Centrality, {divs}° Partitions, {samples} Sample per Event'
+    title_sufx = f'\n{energy}GeV, 0-5% Centrality'
 
     plot_azbin_distribution_example(raw.get_dist(), 6, divs, data_name, title_sufx=title_sufx)
 
@@ -353,13 +354,13 @@ def plot_azbin_distribution_example(data, particles, divs, data_name, title_sufx
     ax0.set_xticks(range(0, len(y), 2))
     ax0.text(0.5, 0.9, f'{data_name} Protons in {divs}° Partition for {particles} Proton Events' + title_sufx,
              fontsize=12, transform=ax0.transAxes, wrap=True, va='center', ha='center')
-    ax0.set_xlabel('Number of Protons in Azimuthal Partition')
-    ax0.set_ylabel('Partitions')
+    ax0.set_xlabel('Number of Protons in Azimuthal Partition', fontsize=12)
+    ax0.set_ylabel('Partitions', fontsize=12)
     ax0.set_xlim([-0.5, particles + 0.5])
     ax0.set_ylim([0, max(y) * 1.25])
     ax0.legend(loc='center right')
     fig0.tight_layout()
-    fig0.subplots_adjust(top=0.99, bottom=0.14, left=0.085, right=0.995)
+    fig0.subplots_adjust(top=0.99, bottom=0.145, left=0.09, right=0.995)
     fig0.canvas.manager.set_window_title('partition_hist_example')
 
 

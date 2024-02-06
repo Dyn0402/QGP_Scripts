@@ -38,15 +38,22 @@ def main():
     # hist = plot_resamples3(angles, bin_width, samples, plot='event')
     # animate_resamples2(angles, bin_width, samples, gif_path, fps)
     # animate_resamples4(angles, bin_width, samples, gif_path, fps)
-    plot_event(angles, 0, bin_width, bin_width, 3)
+    # plot_event(angles, 0, bin_width, bin_width, 3)
+    plot_method_paper_event()
     # plot_event_nobin(angles)
     # animate_nsamples_resamples2(angles, bin_width, samples_list, gif_path, fps=fps)
     # animate_nsamples_resamples4(angles, bin_width, samples_list, gif_path, fps=fps)
     # print(hist)
     # plt.hist(hist, bins=np.arange(-0.5, len(angles) + 0.5, 1))
-    # plt.show()
+    plt.show()
 
     print('donzo')
+
+
+def plot_method_paper_event():
+    angles = np.deg2rad([20, 50, 55, 145, 195, 340])
+    bin_width = np.deg2rad(120)  # 2.09
+    plot_event(angles, 0, bin_width, bin_width, 3)
 
 
 def test_single_alg4():
@@ -599,7 +606,7 @@ def plot_event(angles, bin_low, bin_high, bin_width, counts):
     fig = plt.figure(figsize=(4.5, 4.5), dpi=144)
     ax = plt.subplot(111, projection='polar')
     # ax.vlines(angles, 0, 1, ls='--', color='red', label='Tracks')
-    ax.plot([], [], color='red', ls='--', label='Tracks')  # Just for legend
+    ax.plot([], [], color='red', ls='--', label='Protons')  # Just for legend
     for angle in angles:
         arrow = FancyArrowPatch(posA=(angle, 0), posB=(angle, 1), arrowstyle='-|>', color='red', ls='--',
                                 mutation_scale=20, shrinkA=0, shrinkB=0)
@@ -612,12 +619,12 @@ def plot_event(angles, bin_low, bin_high, bin_width, counts):
     ax.set_ylim((0, 1))
     leg_angle = np.deg2rad(290)
     ax.legend(loc="upper left", bbox_to_anchor=(.5 + np.cos(leg_angle) / 2, .5 + np.sin(leg_angle) / 2))
-    ax.text(-0.05, -0.05, f'Tracks in \npartition: {counts}', horizontalalignment='left', transform=ax.transAxes,
+    ax.text(-0.05, -0.05, f'Protons in \npartition: {counts}', horizontalalignment='left', transform=ax.transAxes,
             size='large')
-    ax.text(-0.05, 0.97, f'Tracks in \nevent: {len(angles)}',
+    ax.text(-0.05, 0.97, f'Protons in \nevent: {len(angles)}',
             horizontalalignment='left', transform=ax.transAxes, size='large')
     fig.tight_layout()
-    plt.show()
+    # plt.show()
 
 
 def plot_event_nobin(angles):

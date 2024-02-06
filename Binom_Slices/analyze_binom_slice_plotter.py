@@ -22,6 +22,7 @@ import istarmap  # Needed for tqdm
 from analyze_binom_slices import *
 from presentation_plots import method_paper_plot
 from pdf_examples import cluster_voids_example_plots
+from sub_event_resample_algorithm import plot_method_paper_event
 
 from integrate_pdf_var import base_gaus_pdf_wrap, get_partition_variance
 
@@ -595,13 +596,15 @@ def plot_method_paper_figs():
 
     df_dsigma = pd.read_csv(f'{base_path}{df_dsigma_model_name}')
 
+    plot_method_paper_event()
+
+    # plt.rcParams.update({'font.size': 12})
     method_paper_plot()  # From Plotter/presentation_plots
     # cluster_voids_example_plots()  # From Anti_Clustering/pdf_examples. Take time to generate.
 
     fig, (ax1, ax2) = plt.subplots(2, 1, sharex='all', figsize=(8, 4), dpi=144)
     stat_binom_vs_protons(df, stat_plot, div_plt, cent_plt, 39, ['raw', 'mix'], 'ampt_new_coal_epbins1',
                           data_sets_labels=data_sets_labels, ax_in=ax1)
-    ax1.set_ylabel(r'$\sigma^2$')
     # ax1.set_title(f'AMPT 39 GeV, 0-5% Centrality, 120° Partitions, 72 Samples/Event', pad=-20)
     ax1.text(0.5, 0.9, 'AMPT 39 GeV, 0-5% Centrality, 120° Partitions, 72 Samples/Event', ha='center',
              va='center', transform=ax1.transAxes, fontsize=12)
