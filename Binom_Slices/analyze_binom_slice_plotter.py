@@ -606,9 +606,11 @@ def plot_method_paper_figs():
     stat_binom_vs_protons(df, stat_plot, div_plt, cent_plt, 39, ['raw', 'mix'], 'ampt_new_coal_epbins1',
                           data_sets_labels=data_sets_labels, ax_in=ax1)
     # ax1.set_title(f'AMPT 39 GeV, 0-5% Centrality, 120° Partitions, 72 Samples/Event', pad=-20)
-    ax1.text(0.5, 0.9, 'AMPT 39 GeV, 0-5% Centrality, 120° Partitions, 72 Samples/Event', ha='center',
-             va='center', transform=ax1.transAxes, fontsize=12)
+    ax1.text(0.5, 0.9, 'AMPT 39 GeV, 0-5% Centrality, 120° Partitions', ha='center',
+             va='center', transform=ax1.transAxes, fontsize=16)
     ax1.set_ylim(top=ax1.get_ylim()[1] * 1.1)
+    ax1.set_ylabel(r'$\sigma^2$', fontsize=15)
+    ax1.text(0.005, 0.9, '(a)', ha='left', va='center', transform=ax1.transAxes, fontsize=12)
     ax1.legend(loc='lower right')
 
     markers = {'ampt_new_coal_epbins1': {'raw': 'o', 'mix': 's', 'diff': '^'}}
@@ -616,10 +618,10 @@ def plot_method_paper_figs():
                     data_sets_colors=None, data_sets_labels=data_sets_labels, ax_in=ax2, title='', marker_map=markers,
                     plot=True, avg=False, alpha=1.0, y_ranges=[-0.00124, 0.0009], ylabel=r'$\Delta\sigma^2$',
                     kin_info_loc=(0.35, 0.35), leg=False)
-
-    fig.tight_layout()
-    fig.subplots_adjust(hspace=0.0, left=0.115, right=0.995, top=0.995, bottom=0.11)
-    # fig.canvas.set_window_title('variance_dsig2_vs_tprotons_ampt_39gev')
+    ax2.set_xlabel('Total Protons in Event', fontsize=15)
+    ax2.set_ylabel(r'$\Delta\sigma^2$', fontsize=15)
+    ax2.text(0.005, 0.9, '(b)', ha='left', va='center', transform=ax2.transAxes, fontsize=12)
+    fig.subplots_adjust(hspace=0.0, left=0.126, right=0.995, top=0.995, bottom=0.115)
     fig.canvas.manager.set_window_title('variance_dsig2_vs_tprotons_ampt_39gev')
 
     df_dsigma_v2sub = pd.read_csv(f'{base_path}{df_dsigma_v2sub_model_name}')
@@ -627,16 +629,16 @@ def plot_method_paper_figs():
     dsig_avgs_v2sub = pd.read_csv(f'{base_path}{df_def_avgs_v2sub_out_model_name}')
 
     dsig_avgs_v2sub['data_type'] = data_type_plt
-    subplot_adjust = {'wspace': 0.0, 'hspace': 0.0, 'left': 0.07, 'right': 0.995, 'top': 0.995, 'bottom': 0.09}
+    subplot_adjust = {'wspace': 0.0, 'hspace': 0.0, 'left': 0.075, 'right': 0.995, 'top': 0.995, 'bottom': 0.09}
     dvar_vs_protons_energies(df_dsigma_v2sub, [120], cent_plt, [7, 11, 19, 27, 39, 62], [data_type_plt], data_sets_plt,
                              plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors, no_hydro_label=1,
                              data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.00053], avgs_df=dsig_avgs_v2sub,
-                             ylabel=r'$\Delta\sigma^2$', kin_loc=(0.65, 0.43), legend_panel=3,
+                             ylabel=r'$\Delta\sigma^2$', kin_loc=(0.65, 0.41), legend_panel=3,
                              marker_map=data_sets_markers, data_sets_bands=data_sets_bands, legend_order=legend_order,
                              title=f'', alpha=0.8, fig_splt_adjust=subplot_adjust)
 
     dsig_avgs_v2_sub_cent8 = dsig_avgs_v2sub[dsig_avgs_v2sub['cent'] == 8]
-    subplot_adjust = {'wspace': 0.0, 'hspace': 0.0, 'left': 0.07, 'right': 0.995, 'top': 0.995, 'bottom': 0.09}
+    subplot_adjust = {'wspace': 0.0, 'hspace': 0.0, 'left': 0.075, 'right': 0.995, 'top': 0.995, 'bottom': 0.095}
     plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,
                         data_sets_labels=data_sets_labels, plot_energy_panels=True, legend_order=legend_order,
                         ylab=r'$\langle\Delta\sigma^2\rangle$', data_sets_bands=data_sets_bands,
@@ -645,7 +647,7 @@ def plot_method_paper_figs():
                         data_sets_markers=data_sets_markers, fig_splt_adj=subplot_adjust)
 
     plt.rcParams["figure.figsize"] = (7, 3.5)
-    subplot_adjust = {'left': 0.135, 'right': 0.995, 'top': 0.995, 'bottom': 0.125}
+    subplot_adjust = {'left': 0.142, 'right': 0.995, 'top': 0.995, 'bottom': 0.140}
     dsig_avgs_v2_sub_cent8_div120 = dsig_avgs_v2sub[(dsig_avgs_v2sub['cent'] == 8) & (dsig_avgs_v2sub['divs'] == 120)]
     plot_protons_avgs_vs_energy(dsig_avgs_v2_sub_cent8_div120, data_sets_plt, data_sets_colors=data_sets_colors,
                                 data_sets_labels=data_sets_labels, alpha=0.6, kin_info_loc=(0.02, 0.45),
@@ -658,7 +660,7 @@ def plot_method_paper_figs():
     data_sets_energies_markers = {'ampt_new_coal_epbins1': {7: 'o', 11: 's', 19: '^', 27: 'p', 39: 'D', 62: '*'}}
     vs_cent_sets = list(data_sets_energies_colors.keys())
 
-    splt_adjust = {'left': 0.135, 'right': 0.995, 'top': 0.995, 'bottom': 0.095}
+    splt_adjust = {'left': 0.142, 'right': 0.995, 'top': 0.995, 'bottom': 0.11}
     plot_protons_avgs_vs_cent(dsig_avgs_v2_sub_div120, vs_cent_sets, data_sets_colors=data_sets_colors, fit=False,
                               data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,
                               title=f'', alpha=0.8, errbar_alpha=0.3, xerr=False, xlim=(-10, 699), figsize=(7, 4.5),
@@ -748,16 +750,18 @@ def plot_method_paper_figs():
     dvar_vs_protons(df_sim_dsig, div_plt, cent_plt, ['sim'], ['raw'], sim_sets_dsig_n, plot=True, avg=True,
                     data_sets_labels=data_sets_labels_sim, ylabel=r'$\Delta\sigma^2$', data_sets_bands=sim_sets_dsig_n,
                     title=None, ax_in=ax, ylim=(-0.0019, 0.0012), kin_info_loc=(0.75, 0.3))
-    title = f'Gaussian Correlation Model - {div_plt}° Partitions, 72 Samples per Event'
-    ax.text(0.5, 0.98, title, ha='center', va='top', transform=ax.transAxes, fontsize=12)
+    title = f'Gaussian Correlation Model - {div_plt}° Partitions'
+    ax.text(0.5, 0.98, title, ha='center', va='top', transform=ax.transAxes, fontsize=16)
     ax.set_ylim(top=ax.get_ylim()[1] * 1.1)
-    fig.subplots_adjust(left=0.115, right=0.995, top=0.995, bottom=0.11)
+    ax.set_xlabel('Total Protons in Event', fontsize=14)
+    ax.set_ylabel(r'$\Delta\sigma^2$', fontsize=14)
+    fig.subplots_adjust(left=0.125, right=0.995, top=0.995, bottom=0.115)
     fig.canvas.manager.set_window_title('dsigma_vs_Total_Protons_simGeV_120_example')
 
     plt.rcParams["figure.figsize"] = (9, 4.5)
     # plt.rcParams['figure.subplot.left'], plt.rcParams['figure.subplot.right'] = 0.125, 0.995
     # plt.rcParams['figure.subplot.bottom'], plt.rcParams['figure.subplot.top'] = 0.1, 0.94
-    subplot_adjust = {'left': 0.105, 'right': 0.995, 'top': 0.995, 'bottom': 0.1}
+    subplot_adjust = {'left': 0.111, 'right': 0.995, 'top': 0.995, 'bottom': 0.105}
     plot_dvar_avgs_divs(df_sim_dsig_avgs, sim_sets_avg_w, data_sets_colors=data_sets_colors_sim, fit=True,
                         data_sets_labels=data_sets_labels_sim, plot_energy_panels=False, ylim=(-0.00045, 0.00045),
                         data_sets_markers=data_sets_markers_sim, data_sets_ls=data_sets_ls_sim, xlim=(-15, 560),

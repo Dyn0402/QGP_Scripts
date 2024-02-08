@@ -108,12 +108,12 @@ def cluster_voids_example_plots():
     tracks = 25
     events = 100
     samples = 72
-    threads = 11
+    threads = 15
     seed = 61
 
-    plt.rcParams['font.size'] = plt.rcParams['font.size'] * 1.4
+    # plt.rcParams['font.size'] = plt.rcParams['font.size'] * 1.4
 
-    fig, [ax_minus, ax_plus] = plt.subplots(1, 2, figsize=(13.33, 5), dpi=144)
+    fig, [ax_plus, ax_minus] = plt.subplots(1, 2, figsize=(6.66, 2.5), dpi=144)
 
     sd = 1.0
     cl_amp = -0.5
@@ -138,28 +138,33 @@ def cluster_voids_example_plots():
     prop = dict(arrowstyle="-|>,head_width=0.4,head_length=0.8", shrinkA=0, shrinkB=0, color='black', linewidth=2)
 
     ax_minus.annotate("", xy=(3.9, 228), xytext=(2.15, 595), arrowprops=prop)
-    ax_minus.text(2.15, 595 + 40, 'No voids', ha='center', size='large')
+    ax_minus.text(2.15, 595 + 40, 'No voids', ha='center')  # , size='large')
     ax_minus.annotate("", xy=(13.87, 182), xytext=(15.75, 595), arrowprops=prop)
-    ax_minus.text(15.75, 595 + 40, 'No clusters', ha='center', size='large')
+    ax_minus.text(15.75, 595 + 40, 'No clusters', ha='center')  # , size='large')
+    ax_minus.text(0.07, 0.98, '(b)', ha='center', va='top', size='large', transform=ax_minus.transAxes)
     # ax_minus.text(20.5, 1850, 'A = -0.5\nσ =  1.0', size='large', va='top')
     # ax_minus.text(19.75, 1590, 'A = -0.5\nσ =  1.0', size='large', va='top')
     ax_minus.text(0.5, 0.98, minus_title, ha='center', va='top', transform=ax_minus.transAxes, size='large')
     ax_minus.set_ylim(0, 1.08 * ax_minus.get_ylim()[1])
-    ax_minus.legend(loc='lower right')
+    ax_minus.set_xlabel('Protons in Partition', fontsize=12)
+    ax_minus.legend(loc='center right')
 
-    ax_plus.annotate("", xy=(2.5, 665), xytext=(2.5, 950), arrowprops=prop)
-    ax_plus.text(2.5, 950 + 20, 'Excess voids', ha='center', size='large')
-    ax_plus.annotate("", xy=(19.5, 230), xytext=(22, 410), arrowprops=prop)
-    ax_plus.text(22, 410 + 20, 'Excess clusters', ha='center', size='large')
+    ax_plus.annotate("", xy=(2.5, 665), xytext=(2.7, 900), arrowprops=prop)
+    ax_plus.text(2.7, 900 + 20, 'Excess\nvoids', ha='center')  # , size='large')
+    ax_plus.annotate("", xy=(19.5, 230), xytext=(21, 430), arrowprops=prop)
+    ax_plus.text(21, 430 + 20, 'Excess clusters', ha='center')  # , size='large')
+    ax_plus.text(0.07, 0.98, '(a)', ha='center', va='top', size='large', transform=ax_plus.transAxes)
     # ax_plus.text(20.5, 1000, 'A = +0.5\nσ =  1.0', size='large', va='top')
     # ax_plus.text(19.75, 875, 'A = +0.5\nσ =  1.0', size='large', va='top')
     ax_plus.text(0.5, 0.98, plus_title, ha='center', va='top', transform=ax_plus.transAxes, size='large')
     ax_plus.set_ylim(0, 1.08 * ax_plus.get_ylim()[1])
+    ax_plus.set_xlabel('Protons in Partition', fontsize=12)
+    ax_plus.set_ylabel('Number of Partitions', fontsize=12)
 
     fig.tight_layout()
-    fig.subplots_adjust(top=0.995, bottom=0.105, left=0.065, right=0.995, wspace=0.175)
+    fig.subplots_adjust(top=0.995, bottom=0.175, left=0.105, right=0.995, wspace=0.175)
     fig.canvas.manager.set_window_title('positive_negative_correlation_example_dists')
-    plt.rcParams['font.size'] = plt.rcParams['font.size'] / 1.4
+    # plt.rcParams['font.size'] = plt.rcParams['font.size'] / 1.4
 
 
 def run_dynamic_plus_minus():
@@ -296,13 +301,13 @@ def plot_sim(hist, bin_width, title='Protons in Bin Distribution', ax_sim=None, 
     ax_sim.bar(bin_centers, hist, width=1, align='center', label='Simulation')
     ax_sim.plot(bin_centers, binom.pmf(bin_centers, len(hist), bin_width / (2 * np.pi)) * np.sum(hist), color='red',
                 label='Binomial')
-    ax_sim.set_xlabel('Protons in Partition')
-    ax_sim.set_ylabel('Number of Partitions')
     if title is not None:
         ax_sim.set_title(title)
     if legend:
         ax_sim.legend()
     if not ax_passed:
+        ax_sim.set_xlabel('Protons in Partition')
+        ax_sim.set_ylabel('Number of Partitions')
         fig_sim.tight_layout()
         fig_sim.canvas.manager.set_window_title(title.replace('\n', '_'))
 

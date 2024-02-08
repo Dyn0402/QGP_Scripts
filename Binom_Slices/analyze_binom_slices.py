@@ -379,8 +379,7 @@ def stat_binom_vs_protons(df, stat, div, cent, energy, data_types, data_set_plt,
         name = data_sets_labels[data_set_plt] + ' '
     else:
         name = data_set_plt + '\n'
-    ax.set_title(f'{name}{energy} GeV, {cent_map[cent]} Centrality, {div}° Partitions, 72 Samples/Event')
-    ax.set_xlabel('Total Protons in Event')
+
     ax.set_ylabel(f'{stat.title()}')
     if y_ranges:
         ax.set_ylim(y_ranges[stat])
@@ -407,6 +406,8 @@ def stat_binom_vs_protons(df, stat, div, cent, energy, data_types, data_set_plt,
     if leg:
         ax.legend()
     if ax_in is None:
+        ax.set_title(f'{name}{energy} GeV, {cent_map[cent]} Centrality, {div}° Partitions, 72 Samples/Event')
+        ax.set_xlabel('Total Protons in Event')
         fig.tight_layout()
 
 
@@ -1421,12 +1422,12 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
         else:
             fig.suptitle(title)
         for ax in ax_energies[-3:]:
-            ax.set_xlabel(r'Total Protons in Event ($N$)')
+            ax.set_xlabel(r'Total Protons in Event ($N$)', fontsize='x-large')
         for i, ax in enumerate(ax_energies):
             ax.axhline(0, ls='-', color='gray', zorder=0)
             if i in [0, 3]:
                 if ylabel is not None:
-                    ax.set_ylabel(ylabel)
+                    ax.set_ylabel(ylabel, fontsize='x-large')
                 elif len(data_types) == 1:
                     if data_types[0] == 'raw':
                         ax.set_ylabel(rf'Single Event $\Delta \sigma^2$')
@@ -1502,7 +1503,7 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
                         sigs = (df['val'] - weight_avg) / df['err']  # Should probably add weight_avg_err in quad_func
                         fig_hist, ax_hist = plt.subplots()
                         ax_hist.set_title(f'{lab}')
-                        ax_hist.set_xlabel('Standard Deviations from Average')
+                        ax_hist.set_xlabel('Standard Deviations from Average', fontsize='large')
                         sns.histplot(sigs, stat='density', kde=True)
                         x_norm = np.linspace(min(sigs), max(sigs), 1000)
                         ax_hist.plot(x_norm, norm(0, 1).pdf(x_norm), color='red', label='Standard Normal')
@@ -1522,11 +1523,12 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
         eta_line = r'|y| < 0.5'
         pt_line = r'0.4 < $p_T$ < 2.0 GeV'
         pt_line = f'{pt_line}\n0-5% Centrality\n120° Partitions'
-        samples_line = '72 Samples/Event'
+        samples_line = None  # '72 Samples/Event'
         if kin_loc is None:
             kin_loc = (0.5, 0.65)
-        ax_energies[4].text(*kin_loc, f'Au+Au\n{eta_line}\n{pt_line}\n{samples_line}', ha='left', va='top',
-                            transform=ax_energies[4].transAxes)
+        kin_text = f'Au+Au\n{eta_line}\n{pt_line}'
+        kin_text = kin_text + f'\n{samples_line}' if samples_line is not None else kin_text
+        ax_energies[4].text(*kin_loc, kin_text, ha='left', va='top', transform=ax_energies[4].transAxes)
         if star_prelim_loc is not None:
             ax_energies[star_prelim_loc[0]].text(*star_prelim_loc[1:], 'STAR Preliminary', fontsize='large', ha='left',
                                                  va='top', transform=ax_energies[star_prelim_loc[0]].transAxes)
@@ -2077,8 +2079,8 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                 ax.set_xlim(xlim)
             if title != '' and title is not None:
                 ax.set_title(title)
-            ax.set_ylabel(ylab)
-            ax.set_xlabel(xlab)
+            ax.set_ylabel(ylab, fontsize='x-large')
+            ax.set_xlabel(xlab, fontsize='x-large')
             if legend_order is not None:
                 handles, labels = ax.get_legend_handles_labels()
                 handles_dict = dict(zip(labels, handles))
@@ -2097,8 +2099,8 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                     energy_ax.set_title(f'{energy} GeV')
                 else:
                     energy_ax.set_title(title)
-                energy_ax.set_xlabel(xlab)
-                energy_ax.set_ylabel(ylab)
+                energy_ax.set_xlabel(xlab, fontsize='x-large')
+                energy_ax.set_ylabel(ylab, fontsize='x-large')
                 energy_ax.axhline(0, color='black', zorder=0)
                 if legend_order is not None:
                     handles, labels = energy_ax.get_legend_handles_labels()
@@ -2129,9 +2131,9 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                 ax_panels[energy].text(0.97, 0.05, f'{energy_map[energy]} GeV', size='x-large', ha='right', va='bottom',
                                        transform=ax_panels[energy].transAxes)
                 if energy_i >= 3:
-                    ax_panels[energy].set_xlabel(xlab)
+                    ax_panels[energy].set_xlabel(xlab, fontsize='x-large')
                 if energy_i in [0, 3]:
-                    ax_panels[energy].set_ylabel(ylab)
+                    ax_panels[energy].set_ylabel(ylab, fontsize='x-large')
                 if energy_i not in [0, 3]:
                     ax_panels[energy].set_yticks([])
                 if energy_i == leg_panel:
@@ -2150,9 +2152,11 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                     eta_line = r'|y| < 0.5'
                     pt_line = r'0.4 < $p_T$ < 2.0 GeV'
                     pt_line = f'{pt_line}\n0-5% Centrality'
-                    samples_line = '72 Samples/Event'
-                    ax_panels[energy].text(*kin_loc, f'Au+Au\n{eta_line}\n{pt_line}\n{samples_line}', ha='left',
-                                           va='bottom', transform=ax_panels[energy].transAxes)
+                    samples_line = None  # '72 Samples/Event'
+                    kin_text = f'Au+Au\n{eta_line}\n{pt_line}'
+                    kin_text = f'{kin_text}\n{samples_line}' if samples_line is not None else kin_text
+                    ax_panels[energy].text(*kin_loc, kin_text, ha='left', va='bottom', 
+                                           transform=ax_panels[energy].transAxes)
                 if star_prelim_loc is not None and energy_i == star_prelim_loc[0]:
                     ax_panels[energy].text(*star_prelim_loc[1:], 'STAR Preliminary', fontsize='large', ha='center',
                                            va='top', transform=ax_panels[energy].transAxes)
@@ -2782,8 +2786,8 @@ def plot_slope_div_fits_simpars(df_fits):
 def plot_z_vs_spread(df_fits, amps=None, spreads=None, amps_colors=None, amps_markers=None, amps_x_shifts=None,
                      alpha=1):
     fig_zeros_spread, ax_zeros_spread = plt.subplots(figsize=(8, 4), dpi=144)
-    ax_zeros_spread.set_xlabel(r'Simulation Range ($\sigma$)')
-    ax_zeros_spread.set_ylabel(r'$z$')
+    ax_zeros_spread.set_xlabel(r'Simulation Range ($\sigma$)', fontsize=14)
+    ax_zeros_spread.set_ylabel(r'$z$', fontsize=14)
     fig_zeros_spread.canvas.manager.set_window_title('Quad Fit Zeros vs Spread')
 
     if amps is None:
@@ -2831,20 +2835,20 @@ def plot_z_vs_spread(df_fits, amps=None, spreads=None, amps_colors=None, amps_ma
 
     ax_zeros_spread.legend()
     fig_zeros_spread.tight_layout()
-    fig_zeros_spread.subplots_adjust(left=0.07, top=0.99, bottom=0.11, right=0.995)
+    fig_zeros_spread.subplots_adjust(left=0.075, top=0.99, bottom=0.12, right=0.995)
 
 
 def plot_b_vs_amp(df_fits, spreads=None, alpha=1, ylim=None):
     fig_base_amp, ax_base_amp = plt.subplots(figsize=(8, 4), dpi=144)
-    ax_base_amp.set_xlabel(r'Simulation Amplitude Magnitude ($\left| A \right|$)')
-    ax_base_amp.set_ylabel(r'$b$')
+    ax_base_amp.set_xlabel(r'Simulation Amplitude Magnitude ($\left| A \right|$)', fontsize=14)
+    ax_base_amp.set_ylabel(r'$b$', fontsize=14)
     ax_base_amp.axhline(0, color='black')
     ax_base_amp.axvline(0, color='black')
     fig_base_amp.canvas.manager.set_window_title('Quad Fit Baseline vs Amplitude')
 
     fig_base_div_spread_amp, ax_base_div_spread_amp = plt.subplots(figsize=(8, 4), dpi=144)
-    ax_base_div_spread_amp.set_xlabel(r'Simulation Amplitude Magnitude ($\left| A \right|$)')
-    ax_base_div_spread_amp.set_ylabel(r'$b/\sigma$')
+    ax_base_div_spread_amp.set_xlabel(r'Simulation Amplitude Magnitude ($\left| A \right|$)', fontsize=14)
+    ax_base_div_spread_amp.set_ylabel(r'$b/\sigma$', fontsize=14)
     ax_base_div_spread_amp.axhline(0, color='black')
     ax_base_div_spread_amp.axvline(0, color='black')
     fig_base_div_spread_amp.canvas.manager.set_window_title('Quad Fit Baseline/Spread vs Amplitude')
@@ -2890,7 +2894,7 @@ def plot_b_vs_amp(df_fits, spreads=None, alpha=1, ylim=None):
     ax_base_div_spread_amp.legend()
     fig_base_amp.tight_layout()
     fig_base_div_spread_amp.tight_layout()
-    fig_base_amp.subplots_adjust(left=0.115, top=0.99, bottom=0.11, right=0.995)
+    fig_base_amp.subplots_adjust(left=0.121, top=0.99, bottom=0.125, right=0.995)
     fig_base_div_spread_amp.subplots_adjust(left=0.115, top=0.99, bottom=0.11, right=0.995)
 
 
@@ -3149,8 +3153,8 @@ def plot_protons_avgs_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
                 if 'sys' in df:
                     ax_avg.errorbar(df_set['energy'], df_set['avg'], yerr=df_set['sys'], ls='', marker='', elinewidth=4,
                                     color=data_sets_colors[data_set], alpha=0.3)
-    ax_avg.set_ylabel(r'$\langle\Delta\sigma^2\rangle$')
-    ax_avg.set_xlabel('Energy (GeV)')
+    ax_avg.set_ylabel(r'$\langle\Delta\sigma^2\rangle$', fontsize='x-large')
+    ax_avg.set_xlabel('Energy (GeV)', fontsize='x-large')
     ax_avg.set_axisbelow(True)
     # ax_avg.grid()
     if title:
@@ -3159,9 +3163,10 @@ def plot_protons_avgs_vs_energy(df, data_sets_plt, data_sets_colors=None, data_s
         eta_line = r'|y| < 0.5'
         pt_line = r'0.4 < $p_T$ < 2.0 GeV'
         pt_line = f'{pt_line}\n0-5% Centrality\n120° Partitions'
-        samples_line = '72 Samples/Event'
-        ax_avg.text(*kin_info_loc, f'Au+Au\n{eta_line}\n{pt_line}\n{samples_line}', ha='left', va='bottom',
-                    transform=ax_avg.transAxes,
+        samples_line = None  # '72 Samples/Event'
+        kin_text = f'Au+Au\n{eta_line}\n{pt_line}'
+        kin_text = f'{kin_text}\n{samples_line}' if samples_line is not None else kin_text
+        ax_avg.text(*kin_info_loc, kin_text, ha='left', va='bottom', transform=ax_avg.transAxes,
                     bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9))
     if star_prelim_loc is not None:
         ax_avg.text(*star_prelim_loc, 'STAR Preliminary', fontsize='large', ha='left', transform=ax_avg.transAxes,
@@ -3367,13 +3372,13 @@ def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
                                    color=color_fit, alpha=0.4)
                     print(f'{lab} Fit: {[Measure(var, err) for var, err in zip(odr_out.beta, odr_out.sd_beta)]}')
 
-    ax_avg.set_ylabel(r'$\langle\Delta\sigma^2\rangle$')
+    ax_avg.set_ylabel(r'$\langle\Delta\sigma^2\rangle$', fontsize='x-large')
     if ref_type is None:
-        ax_avg.set_xlabel('Centrality')
+        ax_avg.set_xlabel('Centrality', fontsize='x-large')
     elif ref_type == 'npart':
-        ax_avg.set_xlabel('Number of Participant Nucleons')
+        ax_avg.set_xlabel('Number of Participant Nucleons', fontsize='x-large')
     else:
-        ax_avg.set_xlabel('Reference Multiplicity')
+        ax_avg.set_xlabel('Reference Multiplicity', fontsize='x-large')
     # ax_avg.grid()
     if title:
         ax_avg.set_title(title)
@@ -3381,9 +3386,10 @@ def plot_protons_avgs_vs_cent(df, data_sets_plt, data_sets_colors=None, data_set
         eta_line = r'|y| < 0.5'
         pt_line = r'0.4 < $p_T$ < 2.0 GeV'
         pt_line = f'{pt_line}\n120° Partitions'
-        samples_line = '72 Samples/Event'
-        ax_avg.text(*kin_info_loc, f'Au+Au\n{eta_line}\n{pt_line}\n{samples_line}', ha='left', va='bottom',
-                    transform=ax_avg.transAxes,
+        samples_line = None  # '72 Samples/Event'
+        kin_text = f'Au+Au\n{eta_line}\n{pt_line}'
+        kin_text = f'{kin_text}\n{samples_line}' if samples_line is not None else kin_text
+        ax_avg.text(*kin_info_loc, kin_text, ha='left', va='bottom', transform=ax_avg.transAxes,
                     bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2', alpha=0.9))
     if star_prelim_loc is not None:
         ax_avg.text(*star_prelim_loc, 'STAR Preliminary', fontsize='large', ha='left', transform=ax_avg.transAxes,
@@ -4545,16 +4551,16 @@ def plot_div_fits_vs_cent_single_set(df, data_sets_plt, data_sets_colors=None, d
     except TypeError:
         pass
 
-    ax_base.set_ylabel(r'$b$')
-    ax_zeros.set_ylabel(r'$z$')
+    ax_base.set_ylabel(r'$b$', fontsize='x-large')
+    ax_zeros.set_ylabel(r'$z$', fontsize='x-large')
     ax_base.legend()
     ax_zeros.legend()
     if ref_type is None:
-        ax_base.set_xlabel('Centrality')
-        ax_zeros.set_xlabel('Centrality')
+        ax_base.set_xlabel('Centrality', fontsize='x-large')
+        ax_zeros.set_xlabel('Centrality', fontsize='x-large')
     else:
-        ax_base.set_xlabel('Reference Multiplicity')
-        ax_zeros.set_xlabel('Reference Multiplicity')
+        ax_base.set_xlabel('Reference Multiplicity', fontsize='x-large')
+        ax_zeros.set_xlabel('Reference Multiplicity', fontsize='x-large')
     if title:
         ax_base.set_title(title)
         ax_zeros.set_title(title)
@@ -4562,8 +4568,8 @@ def plot_div_fits_vs_cent_single_set(df, data_sets_plt, data_sets_colors=None, d
     fig_base.tight_layout()
     fig_zeros.tight_layout()
 
-    fig_base.subplots_adjust(top=0.985, right=0.995, bottom=0.095, left=0.13)
-    fig_zeros.subplots_adjust(top=0.995, right=0.995, bottom=0.095, left=0.08)
+    fig_base.subplots_adjust(top=0.985, right=0.995, bottom=0.110, left=0.14)
+    fig_zeros.subplots_adjust(top=0.995, right=0.995, bottom=0.110, left=0.085)
 
 
 def plot_div_fits_vs_cent_62res(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None,
