@@ -23,6 +23,7 @@ from analyze_binom_slices import *
 from presentation_plots import method_paper_plot
 from pdf_examples import cluster_voids_example_plots
 from sub_event_resample_algorithm import plot_method_paper_event
+from momentum_conservation_model import plot_full_test_from_file
 
 from integrate_pdf_var import base_gaus_pdf_wrap, get_partition_variance
 
@@ -635,7 +636,7 @@ def plot_method_paper_figs():
                              data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.00053], avgs_df=dsig_avgs_v2sub,
                              ylabel=r'$\Delta\sigma^2$', kin_loc=(0.65, 0.41), legend_panel=3,
                              marker_map=data_sets_markers, data_sets_bands=data_sets_bands, legend_order=legend_order,
-                             title=f'', alpha=0.8, fig_splt_adjust=subplot_adjust)
+                             title=f'', alpha=0.8, fig_splt_adjust=subplot_adjust, plot_letters=True)
 
     dsig_avgs_v2_sub_cent8 = dsig_avgs_v2sub[dsig_avgs_v2sub['cent'] == 8]
     subplot_adjust = {'wspace': 0.0, 'hspace': 0.0, 'left': 0.075, 'right': 0.995, 'top': 0.995, 'bottom': 0.095}
@@ -644,7 +645,7 @@ def plot_method_paper_figs():
                         ylab=r'$\langle\Delta\sigma^2\rangle$', data_sets_bands=data_sets_bands,
                         plot_indiv=False, ylim=(-0.00054, 0.00009), leg_panel=5, no_hydro_label=True,
                         xlim=(-10, 370), title=f'', leg_frameon=True, exclude_divs=exclude_divs, alpha=0.8,
-                        data_sets_markers=data_sets_markers, fig_splt_adj=subplot_adjust)
+                        data_sets_markers=data_sets_markers, fig_splt_adj=subplot_adjust, panel_letters=True)
 
     plt.rcParams["figure.figsize"] = (7, 3.5)
     subplot_adjust = {'left': 0.142, 'right': 0.995, 'top': 0.995, 'bottom': 0.140}
@@ -749,13 +750,25 @@ def plot_method_paper_figs():
     fig, ax = plt.subplots(figsize=(8, 4), dpi=144)
     dvar_vs_protons(df_sim_dsig, div_plt, cent_plt, ['sim'], ['raw'], sim_sets_dsig_n, plot=True, avg=True,
                     data_sets_labels=data_sets_labels_sim, ylabel=r'$\Delta\sigma^2$', data_sets_bands=sim_sets_dsig_n,
-                    title=None, ax_in=ax, ylim=(-0.0019, 0.0012), kin_info_loc=(0.75, 0.3))
+                    title=None, ax_in=ax, ylim=(-0.00099, 0.00124), kin_info_loc=(0.4, 0.17), leg=False)
     title = f'Gaussian Correlation Model - {div_plt}° Partitions'
     ax.text(0.5, 0.98, title, ha='center', va='top', transform=ax.transAxes, fontsize=16)
-    ax.set_ylim(top=ax.get_ylim()[1] * 1.1)
     ax.set_xlabel('Total Protons in Event', fontsize=14)
     ax.set_ylabel(r'$\Delta\sigma^2$', fontsize=14)
-    fig.subplots_adjust(left=0.125, right=0.995, top=0.995, bottom=0.115)
+    ax.axhline(0, color='black', zorder=1)
+
+    handles, labels = ax.get_legend_handles_labels()
+    attractive_handles = [handle for handle, label in zip(handles, labels) if 'Attractive' in label]
+    repulsive_handles = [handle for handle, label in zip(handles, labels) if 'Repulsive' in label]
+    attractive_label = ax.legend(attractive_handles,
+                                 [label.replace('Attractive ', '') for label in labels if 'Attractive' in label],
+                                 loc='upper right', title='Attractive', bbox_to_anchor=(0.99, 0.935), title_fontsize=11)
+    repulsive_label = ax.legend(repulsive_handles,
+                                [label.replace('Repulsive ', '') for label in labels if 'Repulsive' in label],
+                                loc='upper right', title='Repulsive', bbox_to_anchor=(0.99, 0.27), title_fontsize=11)
+    ax.add_artist(attractive_label)
+
+    fig.subplots_adjust(left=0.135, right=0.995, top=0.995, bottom=0.115)
     fig.canvas.manager.set_window_title('dsigma_vs_Total_Protons_simGeV_120_example')
 
     plt.rcParams["figure.figsize"] = (9, 4.5)
@@ -764,9 +777,21 @@ def plot_method_paper_figs():
     subplot_adjust = {'left': 0.111, 'right': 0.995, 'top': 0.995, 'bottom': 0.105}
     plot_dvar_avgs_divs(df_sim_dsig_avgs, sim_sets_avg_w, data_sets_colors=data_sets_colors_sim, fit=True,
                         data_sets_labels=data_sets_labels_sim, plot_energy_panels=False, ylim=(-0.00045, 0.00045),
-                        data_sets_markers=data_sets_markers_sim, data_sets_ls=data_sets_ls_sim, xlim=(-15, 560),
+                        data_sets_markers=data_sets_markers_sim, data_sets_ls=data_sets_ls_sim, xlim=(-15, 485),
                         ylab=r'$\langle\Delta\sigma^2\rangle$', data_sets_fills=data_sets_fill_sim, alpha=0.8,
-                        exclude_divs=exclude_divs, fig_splt_adj=subplot_adjust, title='')
+                        exclude_divs=exclude_divs, fig_splt_adj=subplot_adjust, title='', leg=False)
+
+    ax = plt.gca()
+    handles, labels = ax.get_legend_handles_labels()
+    attractive_handles = [handle for handle, label in zip(handles, labels) if 'Attractive' in label]
+    repulsive_handles = [handle for handle, label in zip(handles, labels) if 'Repulsive' in label]
+    attractive_label = ax.legend(attractive_handles,
+                                 [label.replace('Attractive ', '') for label in labels if 'Attractive' in label],
+                                 loc='center right', title='Attractive', bbox_to_anchor=(1.0, 0.75), title_fontsize=12)
+    repulsive_label = ax.legend(repulsive_handles,
+                                [label.replace('Repulsive ', '') for label in labels if 'Repulsive' in label],
+                                loc='center right', title='Repulsive', bbox_to_anchor=(1.0, 0.25), title_fontsize=12)
+    ax.add_artist(attractive_label)
 
     plot_b_vs_amp(df_sim_width_fits, alpha=0.8, ylim=(-0.00046, 0.00053))
 
@@ -779,6 +804,10 @@ def plot_method_paper_figs():
     # plot_b_vs_amp_sig_dep(df_sim_width_fits, alpha=0.8)
 
     # plot_slope_div_fits_simpars(df_sim_width_fits)
+    plot_full_test_from_file()  # Momentum_Conservation_Sim.momentum_conservation_model.py
+    # Get current figure and set window title
+    fig = plt.gcf()
+    fig.canvas.manager.set_window_title('dsig2_vs_total_particles_fit')
 
     plt.show()
 

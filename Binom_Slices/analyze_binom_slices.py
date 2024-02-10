@@ -1380,7 +1380,8 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
                              avg=False, plot_avg=False, hist=False, data_sets_colors=None, data_sets_labels=None,
                              star_prelim_loc=None, marker_map=None, alpha=1.0, errbar_alpha=0.2, avgs_df=None,
                              ylabel=None, kin_loc=None, no_hydro_label=False, data_sets_bands=None,
-                             legend_order=None, title=None, ylim=None, legend_panel=-1, fig_splt_adjust=None):
+                             legend_order=None, title=None, ylim=None, legend_panel=-1, fig_splt_adjust=None,
+                             plot_letters=False):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     energy_map = {7: '7.7', 11: '11.5', 19: '19.6', 27: '27', 39: '39', 62: '62.4'}
@@ -1448,11 +1449,14 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
         ax_energies = [None] * len(energies)
 
     avgs = []
-    for data, ax, energy in zip(energy_data, ax_energies[:len(energies)], energies):
+    for energy_i, (data, ax, energy) in enumerate(zip(energy_data, ax_energies[:len(energies)], energies)):
         if plot or plot_avg:
             color = iter(plt.cm.rainbow(np.linspace(0, 1, len(data))))
             ax.text(0.95, 0.97, f'{energy_map[energy]} GeV', size='x-large', ha='right', va='top',
                     transform=ax.transAxes)
+            if plot_letters:
+                ax.text(0.4, 0.97, f'({chr(97 + energy_i)})', size='x-large', ha='center', va='top',
+                        transform=ax.transAxes)
         for i, (df, lab, data_set, data_type, div, amp, spread) in enumerate(data):
             zo = len(data) - i + 4
             if plot or plot_avg:
@@ -1916,7 +1920,7 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                         plot=True, errbar_alpha=0.2, plot_indiv=True, plot_energies_fig=False, ylim=None, xlim=None,
                         leg_panel=0, kin_loc=(0.02, 0.02), star_prelim_loc=None, no_hydro_label=False, xlab=None,
                         data_sets_bands=None, legend_order=None, leg_frameon=False, data_sets_markers=None,
-                        data_sets_fills=None, data_sets_ls=None, fig_splt_adj=None):
+                        data_sets_fills=None, data_sets_ls=None, fig_splt_adj=None, panel_letters=False, leg=True):
     energy_map = {7: '7.7', 11: '11.5', 19: '19.6', 27: '27', 39: '39', 62: '62.4'}
     if xlab is None:
         xlab = r'Azimuthal Partition Width ($w$°)'
@@ -2081,13 +2085,14 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                 ax.set_title(title)
             ax.set_ylabel(ylab, fontsize='x-large')
             ax.set_xlabel(xlab, fontsize='x-large')
-            if legend_order is not None:
-                handles, labels = ax.get_legend_handles_labels()
-                handles_dict = dict(zip(labels, handles))
-                ordered_handles = [handles_dict[label] for label in legend_order]
-                ax.legend(handles=ordered_handles, labels=legend_order)
-            else:
-                ax.legend()
+            if leg:
+                if legend_order is not None:
+                    handles, labels = ax.get_legend_handles_labels()
+                    handles_dict = dict(zip(labels, handles))
+                    ordered_handles = [handles_dict[label] for label in legend_order]
+                    ax.legend(handles=ordered_handles, labels=legend_order)
+                else:
+                    ax.legend()
 
         if plot_indiv:
             for energy_i, (energy, (energy_fig, energy_ax)) in enumerate(energy_fig_axs.items()):
@@ -2102,13 +2107,14 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                 energy_ax.set_xlabel(xlab, fontsize='x-large')
                 energy_ax.set_ylabel(ylab, fontsize='x-large')
                 energy_ax.axhline(0, color='black', zorder=0)
-                if legend_order is not None:
-                    handles, labels = energy_ax.get_legend_handles_labels()
-                    handles_dict = dict(zip(labels, handles))
-                    ordered_handles = [handles_dict[label] for label in legend_order]
-                    energy_ax.legend(handles=ordered_handles, labels=legend_order)
-                else:
-                    energy_ax.legend()
+                if leg:
+                    if legend_order is not None:
+                        handles, labels = energy_ax.get_legend_handles_labels()
+                        handles_dict = dict(zip(labels, handles))
+                        ordered_handles = [handles_dict[label] for label in legend_order]
+                        energy_ax.legend(handles=ordered_handles, labels=legend_order)
+                    else:
+                        energy_ax.legend()
                 energy_fig.tight_layout()
                 if fig_splt_adj is not None:
                     energy_fig.subplots_adjust(**fig_splt_adj)
@@ -2130,6 +2136,9 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                 #                        transform=ax_panels[energy].transAxes)
                 ax_panels[energy].text(0.97, 0.05, f'{energy_map[energy]} GeV', size='x-large', ha='right', va='bottom',
                                        transform=ax_panels[energy].transAxes)
+                if panel_letters:
+                    ax_panels[energy].text(0.01, 0.5, f'({chr(97 + energy_i)})', size='x-large', ha='left', va='center',
+                                           transform=ax_panels[energy].transAxes)
                 if energy_i >= 3:
                     ax_panels[energy].set_xlabel(xlab, fontsize='x-large')
                 if energy_i in [0, 3]:
@@ -2138,15 +2147,16 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                     ax_panels[energy].set_yticks([])
                 if energy_i == leg_panel:
                     # ax_panels[energy].legend(loc='lower left', bbox_to_anchor=(0.5, 0.85), framealpha=1.0)
-                    if legend_order is not None:
-                        handles, labels = ax_panels[energy].get_legend_handles_labels()
-                        handles_dict = dict(zip(labels, handles))
-                        ordered_handles = [handles_dict[label] for label in legend_order]
-                        leg = ax_panels[energy].legend(handles=ordered_handles, labels=legend_order, loc='lower left',
-                                                       frameon=leg_frameon)
-                    else:
-                        leg = ax_panels[energy].legend(loc='lower left', frameon=leg_frameon)
-                    leg.zorder = 0
+                    if leg:
+                        if legend_order is not None:
+                            handles, labels = ax_panels[energy].get_legend_handles_labels()
+                            handles_dict = dict(zip(labels, handles))
+                            ordered_handles = [handles_dict[label] for label in legend_order]
+                            leg = ax_panels[energy].legend(handles=ordered_handles, labels=legend_order, loc='lower left',
+                                                           frameon=leg_frameon)
+                        else:
+                            leg = ax_panels[energy].legend(loc='lower left', frameon=leg_frameon)
+                        leg.zorder = 0
 
                 if kin_loc is not None and energy_i == 1:
                     eta_line = r'|y| < 0.5'
