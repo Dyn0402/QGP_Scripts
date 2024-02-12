@@ -567,6 +567,7 @@ def plot_method_paper_figs():
     df_def_avgs_v2sub_out_model_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_raw_model.csv'
     # df_partitions_fits_model_name = 'Bes_with_Sys/partition_width_fits_model.csv'
     df_partitions_fits_model_name = 'Bes_with_Sys/partition_width_fits_raw_model.csv'
+    df_partitions_fits_model_nov2sub_name = 'Bes_with_Sys/partition_width_fits_nov2sub_model.csv'
 
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
@@ -677,8 +678,21 @@ def plot_method_paper_figs():
     #                       data_sets_markers=data_sets_energies_markers)
 
     plot_div_fits_vs_cent_single_set(df_fits, data_sets_cent, data_sets_labels=data_sets_labels, title=None, ls='-',
-                                     data_sets_colors=data_sets_energies_colors, cent_ref=cent_ref_df,
+                                     data_sets_colors=data_sets_energies_colors, cent_ref=cent_ref_df, show_xerr=False,
                                      data_sets_markers=data_sets_energies_markers, ref_type=ref_type)
+
+    df_fits_nov2sub = pd.read_csv(f'{base_path}{df_partitions_fits_model_nov2sub_name}')
+    plot_div_fits_vs_cent_single_set(df_fits_nov2sub, data_sets_cent, data_sets_labels=data_sets_labels, title=None,
+                                     data_sets_colors=data_sets_energies_colors, cent_ref=cent_ref_df, show_xerr=False,
+                                     data_sets_markers=data_sets_energies_markers, ref_type=ref_type, ls='-')
+
+    df_fits_amptv2rp = df_fits[df_fits['data_set'] == 'ampt_new_coal_epbins1_v2rp']
+    df_fits_amptv2rp['data_set'] = 'ampt_new_coal_epbins1'
+    plot_div_fits_vs_cent_single_set(df_fits_amptv2rp, data_sets_cent, data_sets_labels=data_sets_labels, title=None,
+                                     data_sets_colors=data_sets_energies_colors, cent_ref=cent_ref_df, show_xerr=False,
+                                     data_sets_markers=data_sets_energies_markers, ref_type=ref_type, ls='-')
+
+    plt.show()
 
     # Gaussian correlation model simulations
     sim_base_path = f'{base_path}Binomial_Slice_Moments/'
@@ -715,9 +729,12 @@ def plot_method_paper_figs():
         sim_sets_out.append(sim_sets)
     sim_sets_all, sim_sets_dsig_n, sim_sets_avg_w, sim_sets_z_w = sim_sets_out
 
-    amp_spread_markers = {0.002: {0.4: 'o', 0.8: 's'}, 0.006: {0.4: '^', 0.8: 'v'}, 0.008: {0.4: '^', 0.8: 'v'}, 0.01: {0.4: 'D', 0.8: 'x'}}
-    amp_spread_colors = {0.002: {0.4: 'black', 0.8: 'red'}, 0.006: {0.4: 'green', 0.8: 'orange'}, 0.008: {0.4: 'black', 0.8: 'red'}, 0.01: {0.4: 'purple', 0.8: 'black'}}
-    amp_spread_ls = {0.002: {0.4: '-', 0.8: '--'}, 0.006: {0.4: '-', 0.8: '--'}, 0.008: {0.4: '-', 0.8: '--'}, 0.01: {0.4: '-', 0.8: '--'}}
+    amp_spread_markers = {0.002: {0.4: 'o', 0.8: 's'}, 0.006: {0.4: '^', 0.8: 'v'}, 0.008: {0.4: '^', 0.8: 'v'},
+                          0.01: {0.4: 'D', 0.8: 'x'}}
+    amp_spread_colors = {0.002: {0.4: 'black', 0.8: 'red'}, 0.006: {0.4: 'green', 0.8: 'orange'},
+                         0.008: {0.4: 'black', 0.8: 'red'}, 0.01: {0.4: 'purple', 0.8: 'black'}}
+    amp_spread_ls = {0.002: {0.4: '-', 0.8: '--'}, 0.006: {0.4: '-', 0.8: '--'}, 0.008: {0.4: '-', 0.8: '--'},
+                     0.01: {0.4: '-', 0.8: '--'}}
     data_sets_labels_sim, data_sets_colors_sim, data_sets_fill_sim, data_sets_markers_sim = {}, {}, {}, {}
     data_sets_ls_sim = {}
     for sim_set in sim_sets_all:
@@ -1255,7 +1272,7 @@ def make_models_csv():
                          'CFEVb342_rapid05_resample_norotate_epbins1_0/'
     df_name = 'Binomial_Slice_Moments/binom_slice_stats_var_epbins1.csv'
 
-    threads = 10
+    threads = 15
     df_def_out_name = 'Bes_with_Sys/binom_slice_vars_model.csv'
     # df_def_out_name = None
     df_def_dsigma_out_name = 'Bes_with_Sys/binom_slice_vars_model_dsigma.csv'
@@ -1266,6 +1283,7 @@ def make_models_csv():
     df_def_avgs_v2sub_raw_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_raw_model.csv'
     df_partitions_fits_name = 'Bes_with_Sys/partition_width_fits_model.csv'
     df_partitions_fits_raw_name = 'Bes_with_Sys/partition_width_fits_raw_model.csv'
+    df_partitions_fits_nov2sub_name = 'Bes_with_Sys/partition_width_fits_nov2sub_model.csv'
 
     stat_plot = 'k2'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
     divs_all = [60, 72, 89, 90, 120, 180, 240, 270, 288, 300]
@@ -1282,11 +1300,13 @@ def make_models_csv():
     print(all_sets)
 
     v2_ampt_vals = {2: read_flow_values(v2_ampt_in_dir)}
+    v2_rp_ampt_vals = {2: read_flow_values(v2_ampt_in_dir, 'v2_rp')}
     v2_cf_vals = {2: read_flow_values(v2_cf_in_dir)}
     v2_cfev_vals = {2: read_flow_values(v2_cfev_in_dir)}
     v2_cfevb342_vals = {2: read_flow_values(v2_cfevb342_in_dir)}
     v2_sys_vals = {'ampt_new_coal_epbins1': v2_ampt_vals, 'cf_resample_epbins1': v2_cf_vals,
-                   'cfev_resample_epbins1': v2_cfev_vals, 'cfevb342_resample_epbins1': v2_cfevb342_vals}
+                   'cfev_resample_epbins1': v2_cfev_vals, 'cfevb342_resample_epbins1': v2_cfevb342_vals,
+                   'ampt_new_coal_epbins1_v2rp': v2_rp_ampt_vals}
 
     df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
     df = df[df['stat'] == stat_plot]
@@ -1301,6 +1321,13 @@ def make_models_csv():
     df_raw, df_mix, df_diff = calc_dsigma(df, ['raw', 'mix', 'diff'])
     print('Calc dsigma')
     df_dsigma_types = pd.concat([df_raw, df_mix, df_diff])
+
+    # Add v2rp dataset which is just copy of ampt_new_coal_epbins1
+    df_ampt_v2rp = df_dsigma_types[df_dsigma_types['name'] == 'ampt_new_coal_epbins1'].copy()
+    df_ampt_v2rp['name'] = 'ampt_new_coal_epbins1_v2rp'
+    all_sets = np.append(all_sets, 'ampt_new_coal_epbins1_v2rp')
+    df_dsigma_types = pd.concat([df_dsigma_types, df_ampt_v2rp], ignore_index=True)
+
     print('Calc diff nlo error')
     df_dsigma_types = add_diff_nlo_err(df_dsigma_types, group_cols=['energy', 'cent', 'name', 'total_protons'],
                                        exclude_divs=[356, 89])
@@ -1345,7 +1372,7 @@ def make_models_csv():
                                                           data_set, v2_sys_vals[data_set], new_only=True)
             dsig_avgs_diff_v2sub.append(dsig_avgs_div_diff_set)
             dsig_avgs_div_raw_set = subtract_dsigma_flow(dsig_avgs_div_raw, data_set,
-                                                          data_set, v2_sys_vals[data_set], new_only=True)
+                                                         data_set, v2_sys_vals[data_set], new_only=True)
             dsig_avgs_raw_v2sub.append(dsig_avgs_div_raw_set)
 
     dsig_avg_all = pd.concat(dsig_avgs_all, ignore_index=True)
@@ -1363,7 +1390,13 @@ def make_models_csv():
     df_fits_raw = plot_dvar_avgs_divs(dsig_avgs_raw_v2sub, all_sets, fit=True, plot=True)
     df_fits_raw.to_csv(f'{base_path}{df_partitions_fits_raw_name}', index=False)
 
-    return
+    dsig_avgs_raw = dsig_avg_all[dsig_avg_all['data_type'] == 'raw']
+    dsig_avgs_raw = dsig_avgs_raw.drop('data_type', axis=1)
+
+    df_fits_nov2sub = plot_dvar_avgs_divs(dsig_avgs_raw, all_sets, fit=True, plot=True)
+    df_fits_nov2sub.to_csv(f'{base_path}{df_partitions_fits_nov2sub_name}', index=False)
+
+    plt.show()
 
 
 def plot_star_var_rand_sys():

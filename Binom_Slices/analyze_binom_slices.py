@@ -4476,7 +4476,7 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
 
 def plot_div_fits_vs_cent_single_set(df, data_sets_plt, data_sets_colors=None, data_sets_labels=None, title=None,
                                      cent_ref=None, ref_type=None, ls='none', data_sets_energies_cmaps=None,
-                                     data_sets_markers=None):
+                                     data_sets_markers=None, show_xerr=True):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
 
@@ -4528,8 +4528,11 @@ def plot_div_fits_vs_cent_single_set(df, data_sets_plt, data_sets_colors=None, d
                 cent_energy = cent_ref[(cent_ref['data_set'] == data_set) & (cent_ref['energy'] == energy)]
                 x = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_val'].iloc[0] for cent in
                      df_energy['cent']]
-                x_err = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_sd'].iloc[0] for cent in
-                         df_energy['cent']]
+                if show_xerr:
+                    x_err = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_sd'].iloc[0] for cent in
+                             df_energy['cent']]
+                else:
+                    x_err = None
             lab = f'{energy} GeV'
             if colors is None and color is None:
                 ax_base.errorbar(x, df_energy['baseline'], xerr=x_err, yerr=df_energy['base_err'],
