@@ -692,6 +692,12 @@ def plot_method_paper_figs():
                                      data_sets_colors=data_sets_energies_colors, cent_ref=cent_ref_df, show_xerr=False,
                                      data_sets_markers=data_sets_energies_markers, ref_type=ref_type, ls='-')
 
+    df_fits_amptv2cum = df_fits[df_fits['data_set'] == 'ampt_new_coal_epbins1_v2cum']
+    df_fits_amptv2cum['data_set'] = 'ampt_new_coal_epbins1'
+    plot_div_fits_vs_cent_single_set(df_fits_amptv2cum, data_sets_cent, data_sets_labels=data_sets_labels, title=None,
+                                     data_sets_colors=data_sets_energies_colors, cent_ref=cent_ref_df, show_xerr=False,
+                                     data_sets_markers=data_sets_energies_markers, ref_type=ref_type, ls='-')
+
     plt.show()
 
     # Gaussian correlation model simulations
@@ -1301,12 +1307,14 @@ def make_models_csv():
 
     v2_ampt_vals = {2: read_flow_values(v2_ampt_in_dir)}
     v2_rp_ampt_vals = {2: read_flow_values(v2_ampt_in_dir, 'v2_rp')}
+    v2_cum_ampt_vals = {1: read_flow_values(v2_ampt_in_dir, 'v1_cum_new'),
+                        2: read_flow_values(v2_ampt_in_dir, 'v2_cum_new')}
     v2_cf_vals = {2: read_flow_values(v2_cf_in_dir)}
     v2_cfev_vals = {2: read_flow_values(v2_cfev_in_dir)}
     v2_cfevb342_vals = {2: read_flow_values(v2_cfevb342_in_dir)}
     v2_sys_vals = {'ampt_new_coal_epbins1': v2_ampt_vals, 'cf_resample_epbins1': v2_cf_vals,
                    'cfev_resample_epbins1': v2_cfev_vals, 'cfevb342_resample_epbins1': v2_cfevb342_vals,
-                   'ampt_new_coal_epbins1_v2rp': v2_rp_ampt_vals}
+                   'ampt_new_coal_epbins1_v2rp': v2_rp_ampt_vals, 'ampt_new_coal_epbins1_v2cum': v2_cum_ampt_vals}
 
     df['energy'] = df.apply(lambda row: 'sim' if 'sim_' in row['name'] else row['energy'], axis=1)
     df = df[df['stat'] == stat_plot]
@@ -1325,8 +1333,10 @@ def make_models_csv():
     # Add v2rp dataset which is just copy of ampt_new_coal_epbins1
     df_ampt_v2rp = df_dsigma_types[df_dsigma_types['name'] == 'ampt_new_coal_epbins1'].copy()
     df_ampt_v2rp['name'] = 'ampt_new_coal_epbins1_v2rp'
-    all_sets = np.append(all_sets, 'ampt_new_coal_epbins1_v2rp')
-    df_dsigma_types = pd.concat([df_dsigma_types, df_ampt_v2rp], ignore_index=True)
+    df_ampt_v2cum = df_dsigma_types[df_dsigma_types['name'] == 'ampt_new_coal_epbins1'].copy()
+    df_ampt_v2cum['name'] = 'ampt_new_coal_epbins1_v2cum'
+    all_sets = np.append(all_sets, ['ampt_new_coal_epbins1_v2rp', 'ampt_new_coal_epbins1_v2cum'])
+    df_dsigma_types = pd.concat([df_dsigma_types, df_ampt_v2rp, df_ampt_v2cum], ignore_index=True)
 
     print('Calc diff nlo error')
     df_dsigma_types = add_diff_nlo_err(df_dsigma_types, group_cols=['energy', 'cent', 'name', 'total_protons'],

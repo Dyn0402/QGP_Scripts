@@ -27,7 +27,7 @@ from Measure import Measure
 
 
 def main():
-    # calculate_v2()
+    calculate_v2()
     calculate_v2_cfmodel()
     print('donzo')
 
@@ -39,7 +39,9 @@ def calculate_v2():
     out_dir = f'{base_path}Data_Ampt_New_Coal/default_resample_epbins1/' \
               f'Ampt_rapid05_resample_norotate_epbins1_0/'
     # out_dir = None
+    out_sufx = '_new'
     plot_out_dir = 'F:/Research/Results/AMPT_New_Coal_QA_Plots/Flow/'
+    print_results = False
     # plot_out_dir = None
     energies = [7, 11, 19, 27, 39, 62]
     max_rapid = 0.5
@@ -54,12 +56,13 @@ def calculate_v2():
     # cents = [8]
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '60-70%', 1: '70-80%',
                 0: '80-90%', -1: '90-100%'}
-    calc_quantities = {'v2_ep_sum': 0, 'v2_ep_sum2': 0, 'n_v2': 0, 'ep_res_sum': 0, 'ep_res_sum2': 0, 'n_psi': 0}
-    rp_harmonics = [2, 3, 4, 5, 6]
+    calc_quantities = {'v2_ep_sum': 0, 'v2_ep_sum2': 0, 'n_v2': 0, 'ep_res_sum': 0, 'ep_res_sum2': 0, 'n_psi': 0,
+                       'vn_cum_events': 0}
+    rp_harmonics = [1, 2, 3, 4, 5, 6]
     for n in rp_harmonics:
-        calc_quantities.update({f'v{n}_rp_sum': 0, f'v{n}_rp_sum2': 0})
+        calc_quantities.update({f'v{n}_rp_sum': 0, f'v{n}_rp_sum2': 0, f'v{n}_cum_sum': 0, f'v{n}_cum_sum2': 0})
     read_branches = ['pid', 'px', 'py', 'pz', 'refmult3']
-    threads = 12
+    threads = 15
 
     for energy in energies:
         print(f'Starting {energy}GeV')
@@ -81,31 +84,41 @@ def calculate_v2():
 
         for pid in pids:
             v2_avgs, v2_sds, v2_avg_err, cent_labels = [], [], [], []
-            vn_rp_avgs, vn_rp_sds, vn_rp_avg_err = {}, {}, {}
+            vn_rp_avgs, vn_rp_sds, vn_rp_avg_err, vn_cum_avgs, vn_cum_sds, vn_cum_avg_err = {}, {}, {}, {}, {}, {}
             for n in rp_harmonics:
                 vn_rp_avgs.update({n: []})
                 vn_rp_sds.update({n: []})
                 vn_rp_avg_err.update({n: []})
+                vn_cum_avgs.update({n: []})
+                vn_cum_sds.update({n: []})
+                vn_cum_avg_err.update({n: []})
             reses, res_err = [], []
             for cent in cents:
                 data = v2_data[pid][cent]
-                if data['n_v2'] <= 0:
-                    continue
-                res = np.sqrt(data['ep_res_sum'] / data['n_psi'])
-                reses.append(res)
-                res_sum_err = np.sqrt(data['ep_res_sum2'] / data['n_psi'] - res ** 4) / \
-                              np.sqrt(data['n_psi'])
-                res_err.append(res_sum_err / (2 * res))  # Error propagation for sqrt
-                # Assume no error for now, figure out how to deal properly later
-                v2_avgs.append(data['v2_ep_sum'] / data['n_v2'] / res)
-                v2_sds.append(np.sqrt(data['v2_ep_sum2'] / data['n_v2'] - v2_avgs[-1] ** 2) / res)
-                v2_avg_err.append(v2_sds[-1] / np.sqrt(data['n_v2']))
-                for n in rp_harmonics:
-                    vn_rp_avgs[n].append(data[f'v{n}_rp_sum'] / data['n_v2'])
-                    vn_rp_sds[n].append(
-                        np.sqrt(data[f'v{n}_rp_sum2'] / data['n_v2'] - vn_rp_avgs[n][-1] ** 2))
-                    vn_rp_avg_err[n].append(vn_rp_sds[n][-1] / np.sqrt(data['n_v2']))
-                cent_labels.append(cent_map[cent])
+                if data['n_v2'] > 0 and data['n_psi'] > 0 and data['vn_cum_events'] > 0:
+                    res = np.sqrt(data['ep_res_sum'] / data['n_psi'])
+                    reses.append(res)
+                    res_sum_err = np.sqrt(data['ep_res_sum2'] / data['n_psi'] - res ** 4) / \
+                                  np.sqrt(data['n_psi'])
+                    res_err.append(res_sum_err / (2 * res))  # Error propagation for sqrt
+                    # Assume no error for now, figure out how to deal properly later
+                    v2_avgs.append(data['v2_ep_sum'] / data['n_v2'] / res)
+                    v2_sds.append(np.sqrt(data['v2_ep_sum2'] / data['n_v2'] - v2_avgs[-1] ** 2) / res)
+                    v2_avg_err.append(v2_sds[-1] / np.sqrt(data['n_v2']))
+                    for n in rp_harmonics:
+                        vn_rp_avgs[n].append(data[f'v{n}_rp_sum'] / data['n_v2'])
+                        vn_rp_sds[n].append(
+                            np.sqrt(data[f'v{n}_rp_sum2'] / data['n_v2'] - vn_rp_avgs[n][-1] ** 2))
+                        vn_rp_avg_err[n].append(vn_rp_sds[n][-1] / np.sqrt(data['n_v2']))
+
+                        vn_cum = data[f'v{n}_cum_sum'] / data['vn_cum_events']
+                        vn_cum_sd = np.sqrt(data[f'v{n}_cum_sum2'] / data['vn_cum_events'] - vn_cum ** 2)
+                        vn_cum_err = vn_cum_sd / np.sqrt(data['vn_cum_events'])
+                        vn_cum = np.sign(vn_cum) * np.sqrt(np.abs(Measure(vn_cum, vn_cum_err)))
+                        vn_cum_avgs[n].append(vn_cum.val)
+                        vn_cum_sds[n].append(np.sqrt(vn_cum_sd))
+                        vn_cum_avg_err[n].append(vn_cum.err)
+                    cent_labels.append(cent_map[cent])
 
             if plot_out_dir:
                 fig, ax = plt.subplots(dpi=144)
@@ -115,6 +128,8 @@ def calculate_v2():
                             label='Event Plane')
                 ax.errorbar(cent_labels, vn_rp_avgs[2], yerr=vn_rp_avg_err[2], ls='none', color='red', marker='o',
                             label='Reaction Plane')
+                ax.errorbar(cent_labels, vn_cum_avgs[2], yerr=vn_cum_avg_err[2], ls='none', color='green', marker='o',
+                            label='Two Particle Correlation')
 
                 ax.set_ylabel('v2')
                 ax.set_xlabel('Centrality')
@@ -123,9 +138,9 @@ def calculate_v2():
                 ax.set_title(f'AMPT {energy} GeV PID {pid} Elliptic Flow')
                 fig.tight_layout()
 
-                fig.savefig(f'{plot_out_dir}Ampt_{energy}GeV_pid_{pid}_v2.png')
+                fig.savefig(f'{plot_out_dir}Ampt_{energy}GeV_pid_{pid}_v2{out_sufx}.png')
                 ax.set_ylim(bottom=-0.01, top=0.1)
-                fig.savefig(f'{plot_out_dir}Ampt_{energy}GeV_pid_{pid}_v2_zoom.png')
+                fig.savefig(f'{plot_out_dir}Ampt_{energy}GeV_pid_{pid}_v2_zoom{out_sufx}.png')
 
                 for n in rp_harmonics:
                     if n == 2:
@@ -135,6 +150,8 @@ def calculate_v2():
                     ax.axhline(0, color='black', ls='--')
                     ax.errorbar(cent_labels, vn_rp_avgs[n], yerr=vn_rp_avg_err[n], ls='none', color='red', marker='o',
                                 label='Reaction Plane')
+                    ax.errorbar(cent_labels, vn_cum_avgs[n], yerr=vn_cum_avg_err[n], ls='none', color='green',
+                                marker='o', label='Two Particle Correlation')
 
                     ax.set_ylabel(f'v{n}')
                     ax.set_xlabel('Centrality')
@@ -143,14 +160,19 @@ def calculate_v2():
                     ax.set_title(f'AMPT {energy} GeV PID {pid} v{n} Flow')
                     fig.tight_layout()
 
-                    fig.savefig(f'{plot_out_dir}Ampt_{energy}GeV_pid_{pid}_v{n}.png')
+                    fig.savefig(f'{plot_out_dir}Ampt_{energy}GeV_pid_{pid}_v{n}{out_sufx}.png')
 
             if out_dir and pid == proton_pid:
-                out_path = f'{out_dir}{energy}GeV/v2.txt'
+                out_path = f'{out_dir}{energy}GeV/v2{out_sufx}.txt'
                 write_vn(out_path, cents, v2_avgs, v2_avg_err, reses, res_err, n=2)
                 for n in rp_harmonics:
-                    out_path_rp = f'{out_dir}{energy}GeV/v{n}_rp.txt'
+                    out_path_rp = f'{out_dir}{energy}GeV/v{n}_rp{out_sufx}.txt'
                     write_v2(out_path_rp, cents, vn_rp_avgs[n], vn_rp_avg_err[n], reses, res_err)
+                    out_path_cum = f'{out_dir}{energy}GeV/v{n}_cum{out_sufx}.txt'
+                    write_v2(out_path_cum, cents, vn_cum_avgs[n], vn_cum_avg_err[n], reses, res_err)
+            if print_results:
+                print(f'pid {pid}:\n{cents}\nv2s: {[Measure(val, err) for val, err in zip(v2_avgs, v2_avg_err)]}'
+                      f'\nresolutions: {[Measure(val, err) for val, err in zip(reses, res_err)]}')
 
 
 def calculate_v2_cfmodel():
@@ -158,8 +180,9 @@ def calculate_v2_cfmodel():
     cf_type = '_EVb342'  # '', '_EV', '_EVb342'
     data_path = f'{base_path}Cooper_Frye{cf_type}_Trees/All_Particles/'
     cf_type = cf_type.strip('_')
-    out_dir = f'{base_path}Data_CF{cf_type}/default_resample_epbins1/CF{cf_type}_rapid05_resample_norotate_epbins1_0/'
-    # out_dir = None
+    # out_dir = f'{base_path}Data_CF{cf_type}/default_resample_epbins1/CF{cf_type}_rapid05_resample_norotate_epbins1_0/'
+    out_dir = None
+    out_sufx = '_new'
     # plot_out_dir = f'F:/Research/Results/Cooper_Frye{cf_type}_QA/'
     plot_out_dir = None  # Not really ready for plotting, using AMPT code to plot against centrality
     batch_size = '30000 kB'
@@ -177,12 +200,13 @@ def calculate_v2_cfmodel():
     cents = [8]
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '60-70%', 1: '70-80%',
                 0: '80-90%', -1: '90-100%'}
-    calc_quantities = {'v2_ep_sum': 0, 'v2_ep_sum2': 0, 'n_v2': 0, 'ep_res_sum': 0, 'ep_res_sum2': 0, 'n_psi': 0}
-    rp_harmonics = [2, 3, 4, 5, 6]
+    calc_quantities = {'v2_ep_sum': 0, 'v2_ep_sum2': 0, 'n_v2': 0, 'ep_res_sum': 0, 'ep_res_sum2': 0, 'n_psi': 0,
+                       'vn_cum_events': 0}
+    rp_harmonics = [1, 2, 3, 4, 5, 6]
     for n in rp_harmonics:
-        calc_quantities.update({f'v{n}_rp_sum': 0, f'v{n}_rp_sum2': 0})
+        calc_quantities.update({f'v{n}_rp_sum': 0, f'v{n}_rp_sum2': 0, f'v{n}_cum_sum': 0, f'v{n}_cum_sum2': 0})
     read_branches = ['pid', 'px', 'py', 'pz', 'refmult3']
-    threads = 16
+    threads = 15
 
     for energy in energies:
         print(f'\nStarting {energy}GeV')
@@ -219,31 +243,38 @@ def calculate_v2_cfmodel():
 
         for pid in pids:
             v2_avgs, v2_sds, v2_avg_err, cent_labels = [], [], [], []
-            vn_rp_avgs, vn_rp_sds, vn_rp_avg_err = {}, {}, {}
+            vn_rp_avgs, vn_rp_sds, vn_rp_avg_err, vn_cum_avgs, vn_cum_sds, vn_cum_avg_err = {}, {}, {}, {}, {}, {}
             for n in rp_harmonics:
                 vn_rp_avgs.update({n: []})
                 vn_rp_sds.update({n: []})
                 vn_rp_avg_err.update({n: []})
+                vn_cum_avgs.update({n: []})
+                vn_cum_sds.update({n: []})
+                vn_cum_avg_err.update({n: []})
             reses, res_err = [], []
             for cent in cents:
                 data = v2_data[pid][cent]
-                if data['n_v2'] <= 0:
-                    continue
-                res = np.sqrt(data['ep_res_sum'] / data['n_psi'])
-                reses.append(res)
-                res_sum_err = np.sqrt(data['ep_res_sum2'] / data['n_psi'] - res ** 4) / \
-                              np.sqrt(data['n_psi'])
-                res_err.append(res_sum_err / (2 * res))  # Error propagation for sqrt
-                # Assume no error for now, figure out how to deal properly later
-                v2_avgs.append(data['v2_ep_sum'] / data['n_v2'] / res)
-                v2_sds.append(np.sqrt(data['v2_ep_sum2'] / data['n_v2'] - v2_avgs[-1] ** 2) / res)
-                v2_avg_err.append(v2_sds[-1] / np.sqrt(data['n_v2']))
-                for n in rp_harmonics:
-                    vn_rp_avgs[n].append(data[f'v{n}_rp_sum'] / data['n_v2'])
-                    vn_rp_sds[n].append(
-                        np.sqrt(data[f'v{n}_rp_sum2'] / data['n_v2'] - vn_rp_avgs[n][-1] ** 2))
-                    vn_rp_avg_err[n].append(vn_rp_sds[n][-1] / np.sqrt(data['n_v2']))
-                cent_labels.append(cent_map[cent])
+                if data['n_v2'] > 0 and data['n_psi'] > 0 and data['vn_cum_events'] > 0:
+                    res = np.sqrt(data['ep_res_sum'] / data['n_psi'])
+                    reses.append(res)
+                    res_sum_err = np.sqrt(data['ep_res_sum2'] / data['n_psi'] - res ** 4) / np.sqrt(data['n_psi'])
+                    res_err.append(res_sum_err / (2 * res))  # Error propagation for sqrt
+                    # Assume no error for now, figure out how to deal properly later
+                    v2_avgs.append(data['v2_ep_sum'] / data['n_v2'] / res)
+                    v2_sds.append(np.sqrt(data['v2_ep_sum2'] / data['n_v2'] - v2_avgs[-1] ** 2) / res)
+                    v2_avg_err.append(v2_sds[-1] / np.sqrt(data['n_v2']))
+                    for n in rp_harmonics:
+                        vn_rp_avgs[n].append(data[f'v{n}_rp_sum'] / data['n_v2'])
+                        vn_rp_sds[n].append(
+                            np.sqrt(data[f'v{n}_rp_sum2'] / data['n_v2'] - vn_rp_avgs[n][-1] ** 2))
+                        vn_rp_avg_err[n].append(vn_rp_sds[n][-1] / np.sqrt(data['n_v2']))
+
+                        vn_cum_avgs[n].append(data[f'v{n}_cum_sum'] / data['vn_cum_events'])
+                        vn_cum_sds[n].append(
+                            np.sqrt(data[f'v{n}_cum_sum2'] / data['vn_cum_events'] - vn_cum_avgs[n][-1] ** 2))
+                        vn_cum_avg_err[n].append(vn_cum_sds[n][-1] / np.sqrt(data['vn_cum_events']))
+
+                    cent_labels.append(cent_map[cent])
 
             if plot_out_dir:
                 fig, ax = plt.subplots(dpi=144)
@@ -253,6 +284,8 @@ def calculate_v2_cfmodel():
                             label='Event Plane')
                 ax.errorbar(cent_labels, vn_rp_avgs[2], yerr=vn_rp_avg_err[2], ls='none', color='red', marker='o',
                             label='Reaction Plane')
+                ax.errorbar(cent_labels, vn_cum_avgs[2], yerr=vn_cum_avg_err[2], ls='none', color='green', marker='o',
+                            label='Two Particle Correlation')
 
                 ax.set_ylabel('v2')
                 ax.set_xlabel('Centrality')
@@ -261,9 +294,9 @@ def calculate_v2_cfmodel():
                 ax.set_title(f'AMPT {energy} GeV PID {pid} Elliptic Flow')
                 fig.tight_layout()
 
-                fig.savefig(f'{plot_out_dir}Ampt_{energy}GeV_pid_{pid}_v2.png')
+                fig.savefig(f'{plot_out_dir}Ampt_{energy}GeV_pid_{pid}_v2{out_sufx}.png')
                 ax.set_ylim(bottom=-0.01, top=0.1)
-                fig.savefig(f'{plot_out_dir}Ampt_{energy}GeV_pid_{pid}_v2_zoom.png')
+                fig.savefig(f'{plot_out_dir}Ampt_{energy}GeV_pid_{pid}_v2_zoom{out_sufx}.png')
 
                 for n in rp_harmonics:
                     if n == 2:
@@ -273,6 +306,8 @@ def calculate_v2_cfmodel():
                     ax.axhline(0, color='black', ls='--')
                     ax.errorbar(cent_labels, vn_rp_avgs[n], yerr=vn_rp_avg_err[n], ls='none', color='red', marker='o',
                                 label='Reaction Plane')
+                    ax.errorbar(cent_labels, vn_cum_avgs[n], yerr=vn_cum_avg_err[n], ls='none', color='green',
+                                marker='o', label='Two Particle Correlation')
 
                     ax.set_ylabel(f'v{n}')
                     ax.set_xlabel('Centrality')
@@ -281,14 +316,16 @@ def calculate_v2_cfmodel():
                     ax.set_title(f'AMPT {energy} GeV PID {pid} v{n} Flow')
                     fig.tight_layout()
 
-                    fig.savefig(f'{plot_out_dir}Ampt_{energy}GeV_pid_{pid}_v{n}.png')
+                    fig.savefig(f'{plot_out_dir}Ampt_{energy}GeV_pid_{pid}_v{n}{out_sufx}.png')
 
             if out_dir and pid == proton_pid:
-                out_path = f'{out_dir}{energy}GeV/v2.txt'
+                out_path = f'{out_dir}{energy}GeV/v2{out_sufx}.txt'
                 write_vn(out_path, cents, v2_avgs, v2_avg_err, reses, res_err, n=2)
                 for n in rp_harmonics:
-                    out_path_rp = f'{out_dir}{energy}GeV/v{n}_rp.txt'
+                    out_path_rp = f'{out_dir}{energy}GeV/v{n}_rp{out_sufx}.txt'
                     write_v2(out_path_rp, cents, vn_rp_avgs[n], vn_rp_avg_err[n], reses, res_err)
+                    out_path_cum = f'{out_dir}{energy}GeV/v{n}_cum{out_sufx}.txt'
+                    write_v2(out_path_cum, cents, vn_cum_avgs[n], vn_cum_avg_err[n], reses, res_err)
             if print_results:
                 print(f'pid {pid}:\n{cents}\nv2s: {[Measure(val, err) for val, err in zip(v2_avgs, v2_avg_err)]}'
                       f'\nresolutions: {[Measure(val, err) for val, err in zip(reses, res_err)]}')
@@ -353,6 +390,28 @@ def read_file(file_path, read_branches, cents, pids, ref3_edges, max_rapid, min_
                     v2_data[pid][cent][f'v{n}_rp_sum'] = ak.sum(vn_rp)
                     v2_data[pid][cent][f'v{n}_rp_sum2'] = ak.sum(vn_rp ** 2)
 
+                proton_combos = ak.combinations(protons.phi, 2)
+                combo_a, combo_b = ak.unzip(proton_combos)
+                combos_dphi = combo_a - combo_b
+                # for event_i in range(2):
+                #     print(f'event {event_i}')
+                #     print(f'proton_phis: {len(protons.phi[event_i])} {protons.phi[event_i]}')
+                #     print(f'proton_combos: {len(proton_combos[event_i])} {proton_combos[event_i]}')
+                #     print(f'combos_dphi: {len(combos_dphi[event_i])} {combos_dphi[event_i]}')
+                # v2_data[pid][cent]['vn_cum_pairs'] = ak.count(combos_dphi)
+                for n in rp_harmonics:
+                    vn_cum = np.cos(n * combos_dphi)
+                    # v2_data[pid][cent][f'v{n}_cum_sum'] = ak.sum(vn_cum)
+                    # v2_data[pid][cent][f'v{n}_cum_sum2'] = ak.sum(vn_cum ** 2)
+                    vn_cum_avg = ak.mean(vn_cum, axis=1)
+                    v2_data[pid][cent][f'v{n}_cum_sum'] = ak.sum(vn_cum_avg)
+                    v2_data[pid][cent][f'v{n}_cum_sum2'] = ak.sum(vn_cum_avg ** 2)
+                    # for event_i in range(2):
+                    #     print(f'event {event_i}')
+                    #     print(f'v{n}_cum: {len(vn_cum[event_i])} {vn_cum[event_i]}')
+                    #     print(f'v{n}_cum_avg: {vn_cum_avg[event_i]}')
+                v2_data[pid][cent]['vn_cum_events'] = ak.count(vn_cum_avg)
+
     return v2_data
 
 
@@ -411,6 +470,29 @@ def read_batch(batch, cents, pids, ref3_edges, max_rapid, min_pt, max_pt, max_p,
                 vn_rp = np.cos(n * protons.phi)  # AMPT reaction plane always at 0
                 v2_data[pid][cent][f'v{n}_rp_sum'] = ak.sum(vn_rp)
                 v2_data[pid][cent][f'v{n}_rp_sum2'] = ak.sum(vn_rp ** 2)
+
+            proton_combos = ak.combinations(protons.phi, 2)
+            combo_a, combo_b = ak.unzip(proton_combos)
+            combos_dphi = combo_a - combo_b
+            # for event_i in range(2):
+            #     print(f'event {event_i}')
+            #     print(f'proton_phis: {len(protons.phi[event_i])} {protons.phi[event_i]}')
+            #     print(f'proton_combos: {len(proton_combos[event_i])} {proton_combos[event_i]}')
+            #     print(f'combos_dphi: {len(combos_dphi[event_i])} {combos_dphi[event_i]}')
+            # v2_data[pid][cent]['vn_cum_pairs'] = ak.count(combos_dphi)
+            for n in rp_harmonics:
+                vn_cum = np.cos(n * combos_dphi)
+                # vn_cum_avg = ak.mean(vn_cum, axis=1)
+                # v2_data[pid][cent][f'v{n}_cum_sum'] = ak.sum(vn_cum)
+                # v2_data[pid][cent][f'v{n}_cum_sum2'] = ak.sum(vn_cum ** 2)
+                vn_cum_avg = ak.mean(vn_cum, axis=1)
+                v2_data[pid][cent][f'v{n}_cum_sum'] = ak.sum(vn_cum_avg)
+                v2_data[pid][cent][f'v{n}_cum_sum2'] = ak.sum(vn_cum_avg ** 2)
+                # for event_i in range(2):
+                #     print(f'event {event_i}')
+                #     print(f'v{n}_cum: {len(vn_cum[event_i])} {vn_cum[event_i]}')
+                #     print(f'v{n}_cum_avg: {vn_cum_avg[event_i]}')
+            v2_data[pid][cent]['vn_cum_events'] = ak.count(vn_cum_avg)
 
     return v2_data
 

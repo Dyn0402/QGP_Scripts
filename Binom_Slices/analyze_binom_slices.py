@@ -176,7 +176,7 @@ def v6_divs(w, v6):
 
 
 def vn_divs(w, v, n=2):
-    return 2 * v ** 2 * np.sin(n * w / 2) ** 2 / (n ** 2 * np.pi ** 2)
+    return np.sign(v) * 2 * v ** 2 * np.sin(n * w / 2) ** 2 / (n ** 2 * np.pi ** 2)
 
 
 def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False, fit=False,
