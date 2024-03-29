@@ -28,6 +28,7 @@ from Analysis_POCs.poc_functions import bin_experiment, bin_experiment_no_bs
 from PConsSim import PConsSim, rotate_vector
 from DistStats import DistStats
 from Measure import Measure
+from analyze_binom_slices import vn_divs
 
 
 def main():
@@ -36,7 +37,7 @@ def main():
     # check_convergence_vs_alpha()
     # test_alpha_adaptive()
     # momentum_test()
-    # full_test()
+    full_test()
     # rotation_test()
     plot_full_test_from_file()
     # plot_from_files()
@@ -49,18 +50,22 @@ def full_test():
     # out_path = '/home/dylan/mom_cons_model/'
     ss = np.random.SeedSequence(42)
 
-    n_tracks = [30, 40, 50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200, 240, 280, 320, 390, 500, 640, 800]
+    # n_tracks = [30, 40, 50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200, 240, 280, 320, 390, 500, 640, 800]
+    n_tracks = [30]
     n_tracks.reverse()
-    n_protons_fracs = [0.4, 0.6]
+    # n_protons_fracs = [0.4, 0.6]
+    n_protons_fracs = [0.4]
     n_events = 250000
-    convergence_momenta = [0.001, 1]
-    energies = [2, 4]  # Currently just the range of momenta
+    # convergence_momenta = [0.001, 1]
+    convergence_momenta = [0.001]
+    # energies = [2, 4]  # Currently just the range of momenta
+    energies = [2]  # Currently just the range of momenta
     y_max, pt_max, p_max = 0.5, 2, 2
 
     bin_widths = np.deg2rad([60, 72, 90, 180, 288])
     resamples = 72
 
-    threads = 24
+    threads = 15
 
     variations = len(n_protons_fracs) * len(energies) * len(convergence_momenta)
 
@@ -94,7 +99,7 @@ def full_test():
                     n_rndms = len(n_protons_list) * len(bin_widths)
                     rngs = iter([np.random.default_rng(s) for s in ss.spawn(n_rndms)])
                     for bin_width in bin_widths:
-                        dsig_2_list, dsig_2_err_list = [], []
+                        dsig_2_list, dsig_2_err_list, v1_list, v2_list, v3_list = [], [], [], [], []
                         for n_proton in n_protons_list:
                             p = bin_width / (2 * np.pi)
                             binom_var = n_proton * p * (1 - p)
@@ -104,19 +109,30 @@ def full_test():
                             delta_sig_2 = (stats.get_k_stat(2) - binom_var) / (n_proton * (n_proton - 1))
                             dsig_2_list.append(delta_sig_2.val)
                             dsig_2_err_list.append(delta_sig_2.err * np.sqrt(resamples))
+                            track_combos = ak.combinations(ak.Array(experiment_tracks[n_proton]), 2)
+                            combo_a, combo_b = ak.unzip(track_combos)
+                            combos_dphi = combo_a - combo_b
+                            v1_list.append(ak.mean(np.cos(combos_dphi)))
+                            v2_list.append(ak.mean(np.cos(2 * combos_dphi)))
+                            v3_list.append(ak.mean(np.cos(3 * combos_dphi)))
 
                         with open(f'{var_dir}bin_width{int(np.rad2deg(bin_width) + 0.1)}.txt', 'a') as file:
                             file.write(f'Total Particles {n_track}\n')
                             file.write(', '.join([str(x) for x in n_protons_list]) + '\n')
                             file.write(', '.join([str(x) for x in dsig_2_list]) + '\n')
                             file.write(', '.join([str(x) for x in dsig_2_err_list]) + '\n')
+                            file.write(', '.join([str(x) for x in v1_list]) + '\n')
+                            file.write(', '.join([str(x) for x in v2_list]) + '\n')
+                            file.write(', '.join([str(x) for x in v3_list]) + '\n')
                             file.write('\n')
 
 
 def plot_full_test_from_file():
     # path = 'N:/UCLA_Microsoft/OneDrive - personalmicrosoftsoftware.ucla.edu/Research/UCLA/Results/momentum_conservation_model/mom_cons_new_pc.txt'
-    path = 'C:/Users/Dylan/OneDrive - UCLA IT Services/Research/UCLA/Results/momentum_conservation_model/mom_cons_new_pc.txt'
-    total_tracks, total_protons, dsigs, dsig_errs = [], [], [], []
+    # path = 'C:/Users/Dylan/OneDrive - UCLA IT Services/Research/UCLA/Results/momentum_conservation_model/mom_cons_new_pc.txt'
+    path = 'C:/Users/Dylan/Desktop/test/pfrac40_convp100_energy2_nevent2.5k/bin_width60.txt'
+    total_tracks, total_protons, dsigs, dsig_errs, v1s, v2s, v3s = [], [], [], [], [], [], []
+    bin_width = 60
     with open(path, 'r') as file:
         lines = file.readlines()
     rolling = False
@@ -129,6 +145,15 @@ def plot_full_test_from_file():
             rolling += 1
         elif rolling == 3:
             dsig_errs.append([float(x) for x in line.strip('\n[]').split(', ')])
+            rolling += 1
+        elif rolling == 4:
+            v1s.append([float(x) for x in line.strip('\n[]').split(', ')])
+            rolling += 1
+        elif rolling == 5:
+            v2s.append([float(x) for x in line.strip('\n[]').split(', ')])
+            rolling += 1
+        elif rolling == 6:
+            v3s.append([float(x) for x in line.strip('\n[]').split(', ')])
             rolling = 0
         if 'Total Particles ' in line:
             total_tracks.append(int(line.strip().replace('Total Particles ', '')))
@@ -136,11 +161,36 @@ def plot_full_test_from_file():
 
     dsig_avgs, dsig_avg_errs = [], []
     for tracks, protons, dsigs_i, dsig_errs_i in zip(total_tracks, total_protons, dsigs, dsig_errs):
+        if len(dsigs_i) != len(dsig_errs_i):
+            print('Error')
+            print(tracks, protons, dsigs_i, dsig_errs_i)
         wavg, wavg_err = plot_vs_total_protons(protons, dsigs_i, dsig_errs_i, tracks, plot=False)
         dsig_avgs.append(wavg)
         dsig_avg_errs.append(wavg_err)
     plot_vs_total_particles(total_tracks, dsig_avgs, dsig_avg_errs)
-    plot_fits(total_tracks, dsig_avgs, dsig_avg_errs)
+    # plot_fits(total_tracks, dsig_avgs, dsig_avg_errs)
+    fig = plt.gcf()
+    fig.canvas.manager.set_window_title('dsig2_vs_total_particles_fit')
+    ax = fig.gca()
+    ax.grid(False)
+    fig.subplots_adjust(left=0.165, right=0.995, top=0.995, bottom=0.12)
+
+    dsig_avgs, dsig_avg_errs = [], []
+    for tracks, protons, dsigs_i, dsig_errs_i, v1s_i, v2s_i, v3s_i \
+            in zip(total_tracks, total_protons, dsigs, dsig_errs, v1s, v2s, v3s):
+        wavg, wavg_err = plot_vs_total_protons(protons, dsigs_i, dsig_errs_i, tracks, plot=False)
+        fig2, ax2 = plt.subplots()
+        print(protons, v1s_i, dsigs_i)
+        ax2.scatter(protons, v1s_i, label='v1')
+        ax2.scatter(protons, v2s_i, label='v2')
+        ax2.scatter(protons, v3s_i, label='v3')
+        ax2.legend()
+        ax2.grid()
+        wavg -= vn_divs(bin_width, np.mean(v1s_i), 1)
+        dsig_avgs.append(wavg)
+        dsig_avg_errs.append(wavg_err)
+    plot_vs_total_particles(total_tracks, dsig_avgs, dsig_avg_errs)
+    # plot_fits(total_tracks, dsig_avgs, dsig_avg_errs)
     fig = plt.gcf()
     fig.canvas.manager.set_window_title('dsig2_vs_total_particles_fit')
     ax = fig.gca()
@@ -464,6 +514,9 @@ def sim_event(n_track, rng, energy, n_protons, y_max, pt_max, p_max, convergence
 
 def plot_vs_total_protons(n_protons, dsig2, dsig2_err, n_track='-', plot=True):
     dsig_2_list, dsig_2_err_list = np.array(dsig2), np.array(dsig2_err)
+    if len(dsig_2_list) != len(dsig_2_err_list):
+        print('Error')
+        print(n_protons, dsig_2_list, dsig_2_err_list)
     weight_avg = np.average(dsig_2_list, weights=1 / dsig_2_err_list ** 2)
     weight_avg_err = np.sqrt(1 / np.sum(1 / dsig_2_err_list ** 2))
     if plot:
