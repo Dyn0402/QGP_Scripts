@@ -37,7 +37,7 @@ def main():
     # check_convergence_vs_alpha()
     # test_alpha_adaptive()
     # momentum_test()
-    full_test()
+    # full_test()
     # rotation_test()
     plot_full_test_from_file()
     # plot_from_files()
@@ -50,19 +50,19 @@ def full_test():
     # out_path = '/home/dylan/mom_cons_model/'
     ss = np.random.SeedSequence(42)
 
-    # n_tracks = [30, 40, 50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200, 240, 280, 320, 390, 500, 640, 800]
-    n_tracks = [30]
+    n_tracks = [30, 40, 50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200, 240, 280, 320, 390, 500, 640, 800]
+    # n_tracks = [30, 40, 50]
     n_tracks.reverse()
     # n_protons_fracs = [0.4, 0.6]
     n_protons_fracs = [0.4]
-    n_events = 250000
+    n_events = 100000
     # convergence_momenta = [0.001, 1]
     convergence_momenta = [0.001]
     # energies = [2, 4]  # Currently just the range of momenta
     energies = [2]  # Currently just the range of momenta
     y_max, pt_max, p_max = 0.5, 2, 2
 
-    bin_widths = np.deg2rad([60, 72, 90, 180, 288])
+    bin_widths = np.deg2rad([60, 72, 90, 120, 180, 288])
     resamples = 72
 
     threads = 15
@@ -130,9 +130,11 @@ def full_test():
 def plot_full_test_from_file():
     # path = 'N:/UCLA_Microsoft/OneDrive - personalmicrosoftsoftware.ucla.edu/Research/UCLA/Results/momentum_conservation_model/mom_cons_new_pc.txt'
     # path = 'C:/Users/Dylan/OneDrive - UCLA IT Services/Research/UCLA/Results/momentum_conservation_model/mom_cons_new_pc.txt'
-    path = 'C:/Users/Dylan/Desktop/test/pfrac40_convp100_energy2_nevent2.5k/bin_width60.txt'
+    bin_width = 120
+    # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp1_energy2_nevent250.0k/bin_width{bin_width}.txt'
+    path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp1_energy2_nevent100.0k/bin_width{bin_width}.txt'
+    bin_width_rad = np.deg2rad(bin_width)
     total_tracks, total_protons, dsigs, dsig_errs, v1s, v2s, v3s = [], [], [], [], [], [], []
-    bin_width = 60
     with open(path, 'r') as file:
         lines = file.readlines()
     rolling = False
@@ -175,27 +177,56 @@ def plot_full_test_from_file():
     ax.grid(False)
     fig.subplots_adjust(left=0.165, right=0.995, top=0.995, bottom=0.12)
 
-    dsig_avgs, dsig_avg_errs = [], []
+    dsig_avgs, dsig_avg_errs, dsig_v1, dsig_v1_v2, dsig_v1_v2_v3 = [], [], [], [], []
     for tracks, protons, dsigs_i, dsig_errs_i, v1s_i, v2s_i, v3s_i \
             in zip(total_tracks, total_protons, dsigs, dsig_errs, v1s, v2s, v3s):
         wavg, wavg_err = plot_vs_total_protons(protons, dsigs_i, dsig_errs_i, tracks, plot=False)
-        fig2, ax2 = plt.subplots()
-        print(protons, v1s_i, dsigs_i)
-        ax2.scatter(protons, v1s_i, label='v1')
-        ax2.scatter(protons, v2s_i, label='v2')
-        ax2.scatter(protons, v3s_i, label='v3')
-        ax2.legend()
-        ax2.grid()
-        wavg -= vn_divs(bin_width, np.mean(v1s_i), 1)
         dsig_avgs.append(wavg)
         dsig_avg_errs.append(wavg_err)
-    plot_vs_total_particles(total_tracks, dsig_avgs, dsig_avg_errs)
+        fig2, ax2 = plt.subplots()
+        ax2.grid()
+        ax2.axhline(0, color='black')
+        ax2.set_title(f'{tracks} Total Particles')
+        ax2.scatter(protons, v1s_i, label=r'$v_1^2$', zorder=10, color='blue')
+        ax2.axhline(np.mean(v1s_i), color='blue', ls='--')
+        ax2.scatter(protons, v2s_i, label=r'$v_2^2$', zorder=10, color='orange')
+        ax2.axhline(np.mean(v2s_i), color='orange', ls='--')
+        ax2.scatter(protons, v3s_i, label=r'$v_3^2$', zorder=10, color='green')
+        ax2.axhline(np.mean(v3s_i), color='green', ls='--')
+        ax2.set_xlabel('Total Protons')
+        ax2.set_ylabel(r'$v_n^2$')
+        ax2.legend()
+        fig2.tight_layout()
+        mean_v1 = np.mean(v1s_i)
+        sign_mean_v1 = np.sign(mean_v1)
+        mean_v1 = np.sqrt(abs(mean_v1))
+        wavg -= vn_divs(bin_width_rad, sign_mean_v1 * mean_v1, 1)
+        dsig_v1.append(wavg)
+        mean_v2 = np.mean(v2s_i)
+        sign_mean_v2 = np.sign(mean_v2)
+        mean_v2 = np.sqrt(abs(mean_v2))
+        wavg -= vn_divs(bin_width_rad, sign_mean_v2 * mean_v2, 2)
+        dsig_v1_v2.append(wavg)
+        mean_v3 = np.mean(v3s_i)
+        sign_mean_v3 = np.sign(mean_v3)
+        mean_v3 = np.sqrt(abs(mean_v3))
+        wavg -= vn_divs(bin_width_rad, sign_mean_v3 * mean_v3, 3)
+        dsig_v1_v2_v3.append(wavg)
+
+    plot_vs_total_particles(total_tracks, dsig_avgs, dsig_avg_errs, label='No Flow Subtraction', color='black')
     # plot_fits(total_tracks, dsig_avgs, dsig_avg_errs)
     fig = plt.gcf()
+    plot_vs_total_particles(total_tracks, dsig_v1, dsig_avg_errs, label=f'$v_1$ Subtraction', color='blue', fig=fig)
+    plot_vs_total_particles(total_tracks, dsig_v1_v2, dsig_avg_errs, label=f'$v_1$, $v_2$ Subtraction', color='orange',
+                            fig=fig)
+    plot_vs_total_particles(total_tracks, dsig_v1_v2_v3, dsig_avg_errs, label=f'$v_1$, $v_2$, $v_3$ Subtraction',
+                            color='green', fig=fig)
     fig.canvas.manager.set_window_title('dsig2_vs_total_particles_fit')
     ax = fig.gca()
+    ax.set_title(f'{bin_width} Bin Width')
+    ax.legend()
     ax.grid(False)
-    fig.subplots_adjust(left=0.165, right=0.995, top=0.995, bottom=0.12)
+    fig.subplots_adjust(left=0.165, right=0.995, top=0.94, bottom=0.12)
 
 
 def plot_from_files():
@@ -534,14 +565,24 @@ def plot_vs_total_protons(n_protons, dsig2, dsig2_err, n_track='-', plot=True):
     return weight_avg, weight_avg_err
 
 
-def plot_vs_total_particles(n_tracks, dsig_avgs, dsig_avg_errs, fig=None):
+def plot_vs_total_particles(n_tracks, dsig_avgs, dsig_avg_errs, fig=None, label=None, color=None):
     if fig is None:
         plt.figure(figsize=(6, 4), dpi=144)
         plt.grid()
         plt.axhline(0, color='black')
         plt.xlabel(r'Total Particles in Event ($M$)', fontsize=14)
         plt.ylabel(r'$\langle\Delta\sigma^2\rangle$', fontsize=14)
-    plt.errorbar(n_tracks, dsig_avgs, yerr=dsig_avg_errs, ls='none', marker='o', alpha=0.8)
+    if label is not None:
+        if color is not None:
+            plt.errorbar(n_tracks, dsig_avgs, yerr=dsig_avg_errs, ls='none', marker='o', alpha=0.8, label=label,
+                         color=color)
+        else:
+            plt.errorbar(n_tracks, dsig_avgs, yerr=dsig_avg_errs, ls='none', marker='o', alpha=0.8, label=label)
+    else:
+        if color is not None:
+            plt.errorbar(n_tracks, dsig_avgs, yerr=dsig_avg_errs, ls='none', marker='o', alpha=0.8, color=color)
+        else:
+            plt.errorbar(n_tracks, dsig_avgs, yerr=dsig_avg_errs, ls='none', marker='o', alpha=0.8)
     plt.tight_layout()
 
 
