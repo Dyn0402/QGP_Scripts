@@ -132,7 +132,8 @@ def plot_full_test_from_file():
     # path = 'C:/Users/Dylan/OneDrive - UCLA IT Services/Research/UCLA/Results/momentum_conservation_model/mom_cons_new_pc.txt'
     bin_width = 120
     # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp1_energy2_nevent250.0k/bin_width{bin_width}.txt'
-    path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp1_energy2_nevent100.0k/bin_width{bin_width}.txt'
+    # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp1_energy2_nevent100.0k/bin_width{bin_width}.txt'
+    path = f'/local/home/dn277127/Documents/pfrac40_convp1_energy2_nevent100.0k/bin_width{bin_width}.txt'
     bin_width_rad = np.deg2rad(bin_width)
     total_tracks, total_protons, dsigs, dsig_errs, v1s, v2s, v3s = [], [], [], [], [], [], []
     with open(path, 'r') as file:
@@ -211,6 +212,43 @@ def plot_full_test_from_file():
         sign_mean_v3 = np.sign(mean_v3)
         mean_v3 = np.sqrt(abs(mean_v3))
         wavg -= vn_divs(bin_width_rad, sign_mean_v3 * mean_v3, 3)
+        dsig_v1_v2_v3.append(wavg)
+
+    plot_vs_total_particles(total_tracks, dsig_avgs, dsig_avg_errs, label='No Flow Subtraction', color='black')
+    # plot_fits(total_tracks, dsig_avgs, dsig_avg_errs)
+    fig = plt.gcf()
+    plot_vs_total_particles(total_tracks, dsig_v1, dsig_avg_errs, label=f'$v_1$ Subtraction', color='blue', fig=fig)
+    plot_vs_total_particles(total_tracks, dsig_v1_v2, dsig_avg_errs, label=f'$v_1$, $v_2$ Subtraction', color='orange',
+                            fig=fig)
+    plot_vs_total_particles(total_tracks, dsig_v1_v2_v3, dsig_avg_errs, label=f'$v_1$, $v_2$, $v_3$ Subtraction',
+                            color='green', fig=fig)
+    fig.canvas.manager.set_window_title('dsig2_vs_total_particles_fit')
+    ax = fig.gca()
+    ax.set_title(f'{bin_width} Bin Width')
+    ax.legend()
+    ax.grid(False)
+    fig.subplots_adjust(left=0.165, right=0.995, top=0.94, bottom=0.12)
+
+    dsig_avgs, dsig_avg_errs, dsig_v1, dsig_v1_v2, dsig_v1_v2_v3 = [], [], [], [], []
+    for tracks, protons, dsigs_i, dsig_errs_i, v1s_i, v2s_i, v3s_i \
+            in zip(total_tracks, total_protons, dsigs, dsig_errs, v1s, v2s, v3s):
+        wavg, wavg_err = plot_vs_total_protons(protons, dsigs_i, dsig_errs_i, tracks, plot=False)
+        dsig_avgs.append(wavg)
+        dsig_avg_errs.append(wavg_err)
+        sign_v1s_i = np.sign(v1s_i)
+        root_v1s_i = np.sqrt(np.abs(v1s_i))
+        dsigs_i -= vn_divs(bin_width_rad, sign_v1s_i * root_v1s_i, 1)
+        wavg, wavg_err = plot_vs_total_protons(protons, dsigs_i, dsig_errs_i, tracks, plot=False)
+        dsig_v1.append(wavg)
+        sign_v2s_i = np.sign(v2s_i)
+        root_v2s_i = np.sqrt(np.abs(v2s_i))
+        dsigs_i -= vn_divs(bin_width_rad, sign_v2s_i * root_v2s_i, 2)
+        wavg, wavg_err = plot_vs_total_protons(protons, dsigs_i, dsig_errs_i, tracks, plot=False)
+        dsig_v1_v2.append(wavg)
+        sign_v3s_i = np.sign(v3s_i)
+        root_v3s_i = np.sqrt(np.abs(v3s_i))
+        dsigs_i -= vn_divs(bin_width_rad, sign_v3s_i * root_v3s_i, 3)
+        wavg, wavg_err = plot_vs_total_protons(protons, dsigs_i, dsig_errs_i, tracks, plot=False)
         dsig_v1_v2_v3.append(wavg)
 
     plot_vs_total_particles(total_tracks, dsig_avgs, dsig_avg_errs, label='No Flow Subtraction', color='black')
