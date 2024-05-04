@@ -74,7 +74,7 @@ def full_test():
         for convergence_momentum in convergence_momenta:
             for energy in energies:
                 var_dir = (f'{out_path}pfrac{int(n_protons_frac * 100 + 0.1)}_'
-                           f'convp{int(convergence_momentum * 1000 + 0.1)}_energy{energy}_nevent{n_events/1000}k/')
+                           f'convp{int(convergence_momentum * 1000 + 0.1)}_energy{energy}_nevent{int(n_events/1000)}k/')
                 if os.path.exists(var_dir):
                     os.rmdir(var_dir)
                 os.mkdir(var_dir)
@@ -133,7 +133,18 @@ def plot_full_test_from_file():
     bin_width = 120
     # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp1_energy2_nevent250.0k/bin_width{bin_width}.txt'
     # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp1_energy2_nevent100.0k/bin_width{bin_width}.txt'
-    path = f'/local/home/dn277127/Documents/pfrac40_convp1_energy2_nevent100.0k/bin_width{bin_width}.txt'
+    # path = f'/local/home/dn277127/Documents/pfrac40_convp1_energy2_nevent100.0k/bin_width{bin_width}.txt'
+    # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp0_energy2_pclust90_nevent1.0k/bin_width{bin_width}.txt'
+    # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp1_energy2_pclust90_nevent1.0k/bin_width{bin_width}.txt'
+    # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp0_energy2_pclust10_nevent100k/bin_width{bin_width}.txt'
+    # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp1_energy2_pclust10_nevent100k/bin_width{bin_width}.txt'
+    # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp1_energy2_pclust1_nevent1k/bin_width{bin_width}.txt'
+    # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp1_energy2_pclust1_nevent10k/bin_width{bin_width}.txt'
+    path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp1_energy2_pclust4_nevent10k/bin_width{bin_width}.txt'
+    # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp0_energy2_pclust4_nevent10k/bin_width{bin_width}.txt'
+    # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp0_energy2_pclust6_nevent10k/bin_width{bin_width}.txt'
+    # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp0_energy2_pclust8_nevent10k/bin_width{bin_width}.txt'
+    # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp0_energy2_pclust10_nevent10k/bin_width{bin_width}.txt'
     bin_width_rad = np.deg2rad(bin_width)
     total_tracks, total_protons, dsigs, dsig_errs, v1s, v2s, v3s = [], [], [], [], [], [], []
     with open(path, 'r') as file:
@@ -222,9 +233,9 @@ def plot_full_test_from_file():
                             fig=fig)
     plot_vs_total_particles(total_tracks, dsig_v1_v2_v3, dsig_avg_errs, label=f'$v_1$, $v_2$, $v_3$ Subtraction',
                             color='green', fig=fig)
-    fig.canvas.manager.set_window_title('dsig2_vs_total_particles_fit')
+    fig.canvas.manager.set_window_title('dsig2_vs_total_particles_fit_avg_vn_sub')
     ax = fig.gca()
-    ax.set_title(f'{bin_width} Bin Width')
+    ax.set_title(f'{bin_width}° Bin Width N Avgeraged Flow Subtraction')
     ax.legend()
     ax.grid(False)
     fig.subplots_adjust(left=0.165, right=0.995, top=0.94, bottom=0.12)
@@ -259,9 +270,9 @@ def plot_full_test_from_file():
                             fig=fig)
     plot_vs_total_particles(total_tracks, dsig_v1_v2_v3, dsig_avg_errs, label=f'$v_1$, $v_2$, $v_3$ Subtraction',
                             color='green', fig=fig)
-    fig.canvas.manager.set_window_title('dsig2_vs_total_particles_fit')
+    fig.canvas.manager.set_window_title('dsig2_vs_total_particles_fit_n_dep_vn_sub')
     ax = fig.gca()
-    ax.set_title(f'{bin_width} Bin Width')
+    ax.set_title(f'{bin_width}° Bin Width N Dependent Flow Subtraction')
     ax.legend()
     ax.grid(False)
     fig.subplots_adjust(left=0.165, right=0.995, top=0.94, bottom=0.12)
@@ -624,7 +635,7 @@ def plot_vs_total_particles(n_tracks, dsig_avgs, dsig_avg_errs, fig=None, label=
     plt.tight_layout()
 
 
-def plot_vectors(vectors):
+def plot_vectors(vectors, title=None):
     # Create a 3D figure and add axes
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
@@ -648,6 +659,10 @@ def plot_vectors(vectors):
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
+
+    if title is not None:
+        ax.set_title(title)
+    fig.tight_layout()
 
 
 def plot_momenta(momenta, net_momentum_vec):
