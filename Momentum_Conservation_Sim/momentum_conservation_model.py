@@ -39,7 +39,8 @@ def main():
     # momentum_test()
     # full_test()
     # rotation_test()
-    plot_full_test_from_file()
+    # plot_full_test_from_file()
+    plot_avg_dsig_vs_cluster_prob()
     # plot_from_files()
     plt.show()
     print('donzo')
@@ -74,7 +75,7 @@ def full_test():
         for convergence_momentum in convergence_momenta:
             for energy in energies:
                 var_dir = (f'{out_path}pfrac{int(n_protons_frac * 100 + 0.1)}_'
-                           f'convp{int(convergence_momentum * 1000 + 0.1)}_energy{energy}_nevent{n_events/1000}k/')
+                           f'convp{int(convergence_momentum * 1000 + 0.1)}_energy{energy}_nevent{int(n_events/1000)}k/')
                 if os.path.exists(var_dir):
                     os.rmdir(var_dir)
                 os.mkdir(var_dir)
@@ -130,10 +131,21 @@ def full_test():
 def plot_full_test_from_file():
     # path = 'N:/UCLA_Microsoft/OneDrive - personalmicrosoftsoftware.ucla.edu/Research/UCLA/Results/momentum_conservation_model/mom_cons_new_pc.txt'
     # path = 'C:/Users/Dylan/OneDrive - UCLA IT Services/Research/UCLA/Results/momentum_conservation_model/mom_cons_new_pc.txt'
-    bin_width = 120
+    bin_width = 60
     # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp1_energy2_nevent250.0k/bin_width{bin_width}.txt'
-    # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp1_energy2_nevent100.0k/bin_width{bin_width}.txt'
-    path = f'/local/home/dn277127/Documents/pfrac40_convp1_energy2_nevent100.0k/bin_width{bin_width}.txt'
+    path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp1_energy2_nevent100.0k/bin_width{bin_width}.txt'
+    # path = f'/local/home/dn277127/Documents/pfrac40_convp1_energy2_nevent100.0k/bin_width{bin_width}.txt'
+    # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp0_energy2_pclust90_nevent1.0k/bin_width{bin_width}.txt'
+    # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp1_energy2_pclust90_nevent1.0k/bin_width{bin_width}.txt'
+    # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp0_energy2_pclust10_nevent100k/bin_width{bin_width}.txt'
+    # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp1_energy2_pclust10_nevent100k/bin_width{bin_width}.txt'
+    # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp1_energy2_pclust1_nevent1k/bin_width{bin_width}.txt'
+    # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp1_energy2_pclust1_nevent10k/bin_width{bin_width}.txt'
+    # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp1_energy2_pclust4_nevent10k/bin_width{bin_width}.txt'
+    # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp0_energy2_pclust4_nevent10k/bin_width{bin_width}.txt'
+    # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp0_energy2_pclust6_nevent10k/bin_width{bin_width}.txt'
+    # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp0_energy2_pclust8_nevent10k/bin_width{bin_width}.txt'
+    # path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp0_energy2_pclust10_nevent10k/bin_width{bin_width}.txt'
     bin_width_rad = np.deg2rad(bin_width)
     total_tracks, total_protons, dsigs, dsig_errs, v1s, v2s, v3s = [], [], [], [], [], [], []
     with open(path, 'r') as file:
@@ -222,9 +234,9 @@ def plot_full_test_from_file():
                             fig=fig)
     plot_vs_total_particles(total_tracks, dsig_v1_v2_v3, dsig_avg_errs, label=f'$v_1$, $v_2$, $v_3$ Subtraction',
                             color='green', fig=fig)
-    fig.canvas.manager.set_window_title('dsig2_vs_total_particles_fit')
+    fig.canvas.manager.set_window_title('dsig2_vs_total_particles_fit_avg_vn_sub')
     ax = fig.gca()
-    ax.set_title(f'{bin_width} Bin Width')
+    ax.set_title(f'{bin_width}° Bin Width N Avgeraged Flow Subtraction')
     ax.legend()
     ax.grid(False)
     fig.subplots_adjust(left=0.165, right=0.995, top=0.94, bottom=0.12)
@@ -259,12 +271,86 @@ def plot_full_test_from_file():
                             fig=fig)
     plot_vs_total_particles(total_tracks, dsig_v1_v2_v3, dsig_avg_errs, label=f'$v_1$, $v_2$, $v_3$ Subtraction',
                             color='green', fig=fig)
-    fig.canvas.manager.set_window_title('dsig2_vs_total_particles_fit')
+    fig.canvas.manager.set_window_title('dsig2_vs_total_particles_fit_n_dep_vn_sub')
     ax = fig.gca()
-    ax.set_title(f'{bin_width} Bin Width')
+    ax.set_title(f'{bin_width}° Bin Width N Dependent Flow Subtraction')
     ax.legend()
     ax.grid(False)
     fig.subplots_adjust(left=0.165, right=0.995, top=0.94, bottom=0.12)
+
+
+def plot_avg_dsig_vs_cluster_prob():
+    bin_width = 180
+    bin_width_rad = np.deg2rad(bin_width)
+    pclusts = [4, 6, 8, 10]
+    avg_dsigs, avg_dsigs_v1, avg_dsigs_v1_v2, avg_dsigs_v1_v2_v3 = [], [], [], []
+    for pclust in pclusts:
+        path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp0_energy2_pclust{pclust}_nevent10k/bin_width{bin_width}.txt'
+        total_tracks, total_protons, dsigs, dsig_errs, v1s, v2s, v3s = read_file(path)
+        flow_sub_res = flow_subtract(total_tracks, total_protons, dsigs, dsig_errs, v1s, v2s, v3s, bin_width_rad)
+        dsig_avgs, dsig_avg_errs, dsig_v1, dsig_v1_v2, dsig_v1_v2_v3 = flow_sub_res
+        avg_dsigs.append(np.mean(np.array([Measure(x, y) for x, y in zip(dsig_avgs, dsig_avg_errs)])))
+        avg_dsigs_v1.append(np.mean(np.array([Measure(x, y) for x, y in zip(dsig_v1, dsig_avg_errs)])))
+        avg_dsigs_v1_v2.append(np.mean(np.array([Measure(x, y) for x, y in zip(dsig_v1_v2, dsig_avg_errs)])))
+        avg_dsigs_v1_v2_v3.append(np.mean(np.array([Measure(x, y) for x, y in zip(dsig_v1_v2_v3, dsig_avg_errs)])))
+
+    bkg_path = f'C:/Users/Dylan/Desktop/test/pfrac40_convp1_energy2_nevent100.0k/bin_width{bin_width}.txt'
+    bkg_total_tracks, bkg_total_protons, bkg_dsigs, bkg_dsig_errs, bkg_v1s, bkg_v2s, bkg_v3s = read_file(bkg_path)
+    bkg_flow_sub_res = flow_subtract(bkg_total_tracks, bkg_total_protons, bkg_dsigs, bkg_dsig_errs, bkg_v1s, bkg_v2s,
+                                     bkg_v3s, bin_width_rad)
+    bkg_dsig_avgs, bkg_dsig_avg_errs, bkg_dsig_v1, bkg_dsig_v1_v2, bkg_dsig_v1_v2_v3 = bkg_flow_sub_res
+    bkg_avg_dsig = np.mean(np.array([Measure(x, y) for x, y in zip(bkg_dsig_avgs, bkg_dsig_avg_errs)]))
+    bkg_avg_dsig_v1 = np.mean(np.array([Measure(x, y) for x, y in zip(bkg_dsig_v1, bkg_dsig_avg_errs)]))
+    bkg_avg_dsig_v1_v2 = np.mean(np.array([Measure(x, y) for x, y in zip(bkg_dsig_v1_v2, bkg_dsig_avg_errs)]))
+    bkg_avg_dsig_v1_v2_v3= np.mean(np.array([Measure(x, y) for x, y in zip(bkg_dsig_v1_v2_v3, bkg_dsig_avg_errs)]))
+
+    fig, ax = plt.subplots()
+    ax.grid()
+    ax.set_title(f'{bin_width}° Bin Width')
+    ax.set_xlabel('Cluster Probability')
+    ax.set_ylabel(r'$\Delta\sigma^2$')
+    ax.axhline(0, color='black', zorder=0)
+    # ax.axhline(bkg_avg_dsig.val, color='black', ls='--', label='Momentum Conservation')
+    ax.axhline(bkg_avg_dsig_v1.val, color='blue', ls='--', label='Momentum Conservation')
+    ax.axhline(bkg_avg_dsig_v1_v2.val, color='orange', ls='--')
+    ax.axhline(bkg_avg_dsig_v1_v2_v3.val, color='green', ls='--')
+    ax.errorbar(np.array(pclusts) / 100, [x.val for x in avg_dsigs], [x.err for x in avg_dsigs],
+                label='No Flow Subtraction', color='black', ls='none', marker='o')
+    ax.errorbar(np.array(pclusts) / 100, [x.val for x in avg_dsigs_v1], [x.err for x in avg_dsigs_v1],
+                label=r'$v_1$ Subtraction', color='blue', ls='none', marker='o')
+    ax.errorbar(np.array(pclusts) / 100, [x.val for x in avg_dsigs_v1_v2], [x.err for x in avg_dsigs_v1_v2],
+                label=r'$v_1$, $v_2$ Subtraction', color='orange', ls='none', marker='o')
+    ax.errorbar(np.array(pclusts) / 100, [x.val for x in avg_dsigs_v1_v2_v3], [x.err for x in avg_dsigs_v1_v2_v3],
+                label=r'$v_1$, $v_2$, $v_3$ Subtraction', color='green', ls='none', marker='o')
+    ax.legend()
+    # Format x axis as percentage
+    ax.set_xticklabels([f'{int(x * 100)}%' for x in ax.get_xticks()])
+    fig.tight_layout()
+
+
+def flow_subtract(total_tracks, total_protons, dsigs, dsig_errs, v1s, v2s, v3s, bin_width_rad):
+    dsig_avgs, dsig_avg_errs, dsig_v1, dsig_v1_v2, dsig_v1_v2_v3 = [], [], [], [], []
+    for tracks, protons, dsigs_i, dsig_errs_i, v1s_i, v2s_i, v3s_i \
+            in zip(total_tracks, total_protons, dsigs, dsig_errs, v1s, v2s, v3s):
+        wavg, wavg_err = plot_vs_total_protons(protons, dsigs_i, dsig_errs_i, tracks, plot=False)
+        dsig_avgs.append(wavg)
+        dsig_avg_errs.append(wavg_err)
+        sign_v1s_i = np.sign(v1s_i)
+        root_v1s_i = np.sqrt(np.abs(v1s_i))
+        dsigs_i -= vn_divs(bin_width_rad, sign_v1s_i * root_v1s_i, 1)
+        wavg, wavg_err = plot_vs_total_protons(protons, dsigs_i, dsig_errs_i, tracks, plot=False)
+        dsig_v1.append(wavg)
+        sign_v2s_i = np.sign(v2s_i)
+        root_v2s_i = np.sqrt(np.abs(v2s_i))
+        dsigs_i -= vn_divs(bin_width_rad, sign_v2s_i * root_v2s_i, 2)
+        wavg, wavg_err = plot_vs_total_protons(protons, dsigs_i, dsig_errs_i, tracks, plot=False)
+        dsig_v1_v2.append(wavg)
+        sign_v3s_i = np.sign(v3s_i)
+        root_v3s_i = np.sqrt(np.abs(v3s_i))
+        dsigs_i -= vn_divs(bin_width_rad, sign_v3s_i * root_v3s_i, 3)
+        wavg, wavg_err = plot_vs_total_protons(protons, dsigs_i, dsig_errs_i, tracks, plot=False)
+        dsig_v1_v2_v3.append(wavg)
+    return dsig_avgs, dsig_avg_errs, dsig_v1, dsig_v1_v2, dsig_v1_v2_v3
 
 
 def plot_from_files():
@@ -624,7 +710,7 @@ def plot_vs_total_particles(n_tracks, dsig_avgs, dsig_avg_errs, fig=None, label=
     plt.tight_layout()
 
 
-def plot_vectors(vectors):
+def plot_vectors(vectors, title=None):
     # Create a 3D figure and add axes
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
@@ -648,6 +734,10 @@ def plot_vectors(vectors):
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
+
+    if title is not None:
+        ax.set_title(title)
+    fig.tight_layout()
 
 
 def plot_momenta(momenta, net_momentum_vec):
@@ -681,6 +771,37 @@ def remove_inf_nan_indices(*lists):
         cleaned_lists.append(cleaned_list)
 
     return cleaned_lists
+
+
+def read_file(file_path):
+    total_tracks, total_protons, dsigs, dsig_errs, v1s, v2s, v3s = [], [], [], [], [], [], []
+    with open(file_path, 'r') as file:
+        lines = file.readlines()
+    rolling = False
+    for line in lines:
+        if rolling == 1:
+            total_protons.append([int(x) for x in line.strip('\n[]').split(', ')])
+            rolling += 1
+        elif rolling == 2:
+            dsigs.append([float(x) for x in line.strip('\n[]').split(', ')])
+            rolling += 1
+        elif rolling == 3:
+            dsig_errs.append([float(x) for x in line.strip('\n[]').split(', ')])
+            rolling += 1
+        elif rolling == 4:
+            v1s.append([float(x) for x in line.strip('\n[]').split(', ')])
+            rolling += 1
+        elif rolling == 5:
+            v2s.append([float(x) for x in line.strip('\n[]').split(', ')])
+            rolling += 1
+        elif rolling == 6:
+            v3s.append([float(x) for x in line.strip('\n[]').split(', ')])
+            rolling = 0
+        if 'Total Particles ' in line:
+            total_tracks.append(int(line.strip().replace('Total Particles ', '')))
+            rolling = 1
+
+    return total_tracks, total_protons, dsigs, dsig_errs, v1s, v2s, v3s
 
 
 def sqrt_n_fit(n, a, b):
