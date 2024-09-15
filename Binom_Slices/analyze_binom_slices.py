@@ -2796,7 +2796,7 @@ def plot_slope_div_fits_simpars(df_fits):
 def plot_z_vs_spread(df_fits, amps=None, spreads=None, amps_colors=None, amps_markers=None, amps_x_shifts=None,
                      alpha=1):
     fig_zeros_spread, ax_zeros_spread = plt.subplots(figsize=(8, 4), dpi=144)
-    ax_zeros_spread.set_xlabel(r'Simulation Range ($\sigma$)', fontsize=14)
+    ax_zeros_spread.set_xlabel(r'Simulation Range ($\Sigma$)', fontsize=14)
     ax_zeros_spread.set_ylabel(r'$z$', fontsize=14)
     fig_zeros_spread.canvas.manager.set_window_title('Quad Fit Zeros vs Spread')
 
@@ -2858,7 +2858,7 @@ def plot_b_vs_amp(df_fits, spreads=None, alpha=1, ylim=None):
 
     fig_base_div_spread_amp, ax_base_div_spread_amp = plt.subplots(figsize=(8, 4), dpi=144)
     ax_base_div_spread_amp.set_xlabel(r'Simulation Amplitude Magnitude ($\left| A \right|$)', fontsize=14)
-    ax_base_div_spread_amp.set_ylabel(r'$b/\sigma$', fontsize=14)
+    ax_base_div_spread_amp.set_ylabel(r'$b/\Sigma$', fontsize=14)
     ax_base_div_spread_amp.axhline(0, color='black')
     ax_base_div_spread_amp.axvline(0, color='black')
     fig_base_div_spread_amp.canvas.manager.set_window_title('Quad Fit Baseline/Spread vs Amplitude')
@@ -2877,7 +2877,7 @@ def plot_b_vs_amp(df_fits, spreads=None, alpha=1, ylim=None):
                     any(np.isnan(df_set['base_err'])) or any(np.isinf(df_set['base_err'])):
                 continue
             if cl_type == '_aclmul_':
-                lab = f'σ={round(spread, 2)}'
+                lab = f'Σ={round(spread, 2)}'
             else:
                 lab = None
             ax_base_amp.errorbar(df_set['amp'], df_set['baseline'], yerr=df_set['base_err'], ls='none',

@@ -747,10 +747,10 @@ def plot_method_paper_figs():
         label, fillstyle, marker = '', '', ''
         amp, spread = get_name_amp_spread(sim_set)
         if '_clmul_' in sim_set:
-            label += 'Attractive ' + rf'$A=+{amp:.3f}$ $σ={spread}$'
+            label += 'Attractive ' + rf'$A=+{amp:.3f}$ $Σ={spread}$'
             fillstyle = 'none'
         elif '_aclmul_' in sim_set:
-            label += 'Repulsive ' + rf'$A=-{amp:.3f}$ $σ={spread}$'
+            label += 'Repulsive ' + rf'$A=-{amp:.3f}$ $Σ={spread}$'
             fillstyle = 'full'
         data_sets_labels_sim.update({sim_set: label})
         data_sets_fill_sim.update({sim_set: fillstyle})
