@@ -29,9 +29,9 @@ from integrate_pdf_var import base_gaus_pdf_wrap, get_partition_variance
 
 
 def main():
-    # plot_paper_figs()
+    plot_paper_figs()
     # plot_qm_figs()
-    plot_method_paper_figs()
+    # plot_method_paper_figs()
 
     # plot_star_model_var()  # This doesn't do bkg subtraction error correction
     # plot_vs_cent_var()
@@ -238,8 +238,8 @@ def plot_paper_figs():
         # plt.rcParams['axes.titlesize'] = 16  # Adjust the value as needed
         # plt.rcParams['legend.fontsize'] = 14  # Adjust the value as needed
         plt.rcParams['font.size'] = plt.rcParams['font.size'] * 1.2
-    else:
-        plt.rcParams['font.size'] = plt.rcParams['font.size'] * 1.1
+    # else:
+    #     plt.rcParams['font.size'] = plt.rcParams['font.size'] * 1.1
 
     base_path = 'F:/Research/Results/Azimuth_Analysis/'
     # base_path = 'C:/Users/Dyn04/OneDrive - personalmicrosoftsoftware.ucla.edu/OneDrive - UCLA IT Services/Research/UCLA/Results/Azimuth_Analysis/'
@@ -256,6 +256,8 @@ def plot_paper_figs():
     df_def_avgs_v2sub_out_model_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_model.csv'
     df_partitions_fits_name = 'Bes_with_Sys/partition_width_fits_bes.csv'
     df_partitions_fits_model_name = 'Bes_with_Sys/partition_width_fits_model.csv'
+
+    save_dir = 'C:/Users/Dylan/OneDrive - UCLA IT Services/Research/UCLA/Presentations/STAR_Paper/Autogen_Figures/'
 
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
@@ -320,9 +322,9 @@ def plot_paper_figs():
 
     df_dsigma_v2sub_diffs = df_dsigma_v2sub[df_dsigma_v2sub['data_type'] == 'diff'].assign(data_type='v2_sub')
     df_dsigma_with_v2sub = pd.concat([df_dsigma, df_dsigma_v2sub_diffs])
-    # dvar_vs_protons(df_dsigma_with_v2sub, div_plt, cent_plt, [39], ['raw', 'mix', 'diff', 'v2_sub'], ['bes_def'],
-    #                 plot=True, avg=False, alpha=1.0, y_ranges=[-0.00124, 0.0009],
-    #                 marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^', 'v2_sub': '*'}})
+    dvar_vs_protons(df_dsigma_with_v2sub, div_plt, cent_plt, [39], ['raw', 'mix', 'diff', 'v2_sub'], ['bes_def'],
+                    plot=True, avg=False, alpha=1.0, y_ranges=[-0.00124, 0.0009],
+                    marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^', 'v2_sub': '*'}})
 
     dvar_vs_protons(df_dsigma_with_v2sub, 90, 4, [62], ['raw', 'diff', 'v2_sub'], ['bes_def'],
                     plot=True, avg=False, alpha=1.0, ylabel=r'$\Delta\sigma^2$',
@@ -332,7 +334,7 @@ def plot_paper_figs():
                     marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^', 'v2_sub': '*'}},
                     # y_ranges=[-0.00124, 0.0009])  # v2 sub demo
                     y_ranges=[-0.0039, 0.0009], kin_info_loc=(0.26, 0.94))  # v2 sub demo
-    plt.show()
+    # plt.show()
 
     dsig_avgs_all = pd.read_csv(f'{base_path}{df_def_avgs_out_name}')
     dsig_avgs_all_model = pd.read_csv(f'{base_path}{df_def_avgs_out_model_name}')
@@ -463,13 +465,13 @@ def plot_paper_figs():
                                  errbar_alpha=0.3, xlim=(-20, 720), alpha=0.8,
                                  kin_info_loc=(0.45, 0.1), star_prelim_loc=(0.4, 0.5), marker_map=data_sets_markers,
                                  data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
-    plot_dsig_avg_vs_cent_2panel2(dsig_avgs_v2_sub_div120, data_sets_cent, data_sets_colors=data_sets_colors, fit=False,
-                                  cent_ref=cent_ref_df, ref_type=ref_type, legend_order=legend_order,  # <---
-                                  # title=f'{div_plt}° Partitions, {samples} Samples per Event',
-                                  title='',
-                                  errbar_alpha=0.3, xlim=(-20, 720), alpha=0.8,
-                                  kin_info_loc=(0.45, 0.1), star_prelim_loc=(0.4, 0.5), marker_map=data_sets_markers,
-                                  data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
+    # plot_dsig_avg_vs_cent_2panel2(dsig_avgs_v2_sub_div120, data_sets_cent, data_sets_colors=data_sets_colors, fit=False,
+    #                               cent_ref=cent_ref_df, ref_type=ref_type, legend_order=legend_order,  # <---
+    #                               # title=f'{div_plt}° Partitions, {samples} Samples per Event',
+    #                               title='',
+    #                               errbar_alpha=0.3, xlim=(-20, 720), alpha=0.8,
+    #                               kin_info_loc=(0.45, 0.1), star_prelim_loc=(0.4, 0.5), marker_map=data_sets_markers,
+    #                               data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
     plot_dsig_avg_vs_cent_2panel62ref(dsig_avgs_v2_sub_div120, data_sets_cent, data_sets_colors=data_sets_colors,
                                       fit=False, cent_ref=cent_ref_df, ref_type=ref_type, legend_order=None,
                                       title='', errbar_alpha=0.3, xlim=(-20, 720), alpha=0.8, kin_info_loc=(0.2, 0.75),
@@ -485,12 +487,12 @@ def plot_paper_figs():
     df_fits_model = pd.read_csv(f'{base_path}{df_partitions_fits_model_name}')
     df_fits = pd.concat([df_fits, df_fits_model])
 
-    data_sets_energies_cmaps = dict(zip(data_sets_cent, ['winter', 'copper']))
-    data_sets_markers2 = dict(zip(data_sets_cent, ['s', 'o']))
-    plot_div_fits_vs_cent(df_fits, data_sets_cent,  # data_sets_energies_cmaps=data_sets_energies_cmaps,
-                          data_sets_labels=data_sets_labels, title=None, fit=False, cent_ref=cent_ref_df,
-                          ref_type=ref_type, data_sets_colors=data_sets_energies_colors,
-                          data_sets_markers=data_sets_markers2)
+    # data_sets_energies_cmaps = dict(zip(data_sets_cent, ['winter', 'copper']))
+    # data_sets_markers2 = dict(zip(data_sets_cent, ['s', 'o']))
+    # plot_div_fits_vs_cent(df_fits, data_sets_cent,  # data_sets_energies_cmaps=data_sets_energies_cmaps,
+    #                       data_sets_labels=data_sets_labels, title=None, fit=False, cent_ref=cent_ref_df,
+    #                       ref_type=ref_type, data_sets_colors=data_sets_energies_colors,
+    #                       data_sets_markers=data_sets_markers2)
 
     plot_div_fits_vs_cent_2panel(df_fits, data_sets_cent, data_sets_colors=data_sets_colors, fit=False,
                                  cent_ref=cent_ref_df, ref_type=ref_type,  # <---
@@ -507,42 +509,49 @@ def plot_paper_figs():
 
     # Plot avg dsig2 vs refmult for mixed events. Wierd stuff at most peripheral bin or two
 
-    dvar_vs_protons(df_dsigma_with_v2sub, div_plt, 0, [7], ['raw', 'mix', 'diff', 'v2_sub'], ['bes_def'],
-                    plot=True, avg=True, alpha=1.0, ylabel=r'$\Delta\sigma^2$',
-                    data_sets_labels={'bes_def': {'raw': 'Uncorrected', 'diff': 'Mixed Corrected', 'mix': 'Mixed',
-                                                  'v2_sub': 'Mixed and Flow Corrected'}},
-                    data_sets_colors={'bes_def': {'raw': 'blue', 'diff': 'red', 'v2_sub': 'black', 'mix': 'purple'}},
-                    marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^', 'v2_sub': '*'}},
-                    # y_ranges=[-0.00124, 0.0009])  # v2 sub demo
-                    y_ranges=[-0.017, 0.007], kin_info_loc=(0.26, 0.94))  # v2 sub demo
+    # dvar_vs_protons(df_dsigma_with_v2sub, div_plt, 0, [7], ['raw', 'mix', 'diff', 'v2_sub'], ['bes_def'],
+    #                 plot=True, avg=True, alpha=1.0, ylabel=r'$\Delta\sigma^2$',
+    #                 data_sets_labels={'bes_def': {'raw': 'Uncorrected', 'diff': 'Mixed Corrected', 'mix': 'Mixed',
+    #                                               'v2_sub': 'Mixed and Flow Corrected'}},
+    #                 data_sets_colors={'bes_def': {'raw': 'blue', 'diff': 'red', 'v2_sub': 'black', 'mix': 'purple'}},
+    #                 marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^', 'v2_sub': '*'}},
+    #                 # y_ranges=[-0.00124, 0.0009])  # v2 sub demo
+    #                 y_ranges=[-0.017, 0.007], kin_info_loc=(0.26, 0.94))  # v2 sub demo
+    #
+    # dvar_vs_protons(df_dsigma_with_v2sub, div_plt, 2, [7], ['raw', 'mix', 'diff', 'v2_sub'], ['bes_def'],
+    #                 plot=True, avg=True, alpha=1.0, ylabel=r'$\Delta\sigma^2$',
+    #                 data_sets_labels={'bes_def': {'raw': 'Uncorrected', 'diff': 'Mixed Corrected', 'mix': 'Mixed',
+    #                                               'v2_sub': 'Mixed and Flow Corrected'}},
+    #                 data_sets_colors={'bes_def': {'raw': 'blue', 'diff': 'red', 'v2_sub': 'black', 'mix': 'purple'}},
+    #                 marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^', 'v2_sub': '*'}},
+    #                 # y_ranges=[-0.00124, 0.0009])  # v2 sub demo
+    #                 y_ranges=[-0.017, 0.007], kin_info_loc=(0.26, 0.94))  # v2 sub demo
+    #
+    # df_mix = []
+    # for cent in range(0, 9):
+    #     df_mix_cent = dvar_vs_protons(df_dsigma, div_plt, cent, [7, 11, 19, 27, 39, 62],
+    #                                   ['mix'], data_sets_plt, plot=False, avg=True)
+    #     print(df_mix_cent)
+    #     df_mix.append(df_mix_cent)
+    # print(df_mix)
+    # df_mix = pd.concat(df_mix)
+    # print(df_mix)
+    # print(df_mix.columns)
+    # df_mix = df_mix[(df_mix['divs'] == 120) & (df_mix['data_type'] == 'mix')]
+    # plot_dsig_avg_vs_cent_2panel(df_mix, data_sets_cent, data_sets_colors=data_sets_colors, fit=False,
+    #                              cent_ref=cent_ref_df, ref_type=ref_type, legend_order=legend_order,  # <---
+    #                              # title=f'{div_plt}° Partitions, {samples} Samples per Event',
+    #                              title='',
+    #                              errbar_alpha=0.3, xlim=(-20, 720), alpha=0.8,
+    #                              kin_info_loc=(0.45, 0.1), star_prelim_loc=(0.4, 0.5), marker_map=data_sets_markers,
+    #                              data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
 
-    dvar_vs_protons(df_dsigma_with_v2sub, div_plt, 2, [7], ['raw', 'mix', 'diff', 'v2_sub'], ['bes_def'],
-                    plot=True, avg=True, alpha=1.0, ylabel=r'$\Delta\sigma^2$',
-                    data_sets_labels={'bes_def': {'raw': 'Uncorrected', 'diff': 'Mixed Corrected', 'mix': 'Mixed',
-                                                  'v2_sub': 'Mixed and Flow Corrected'}},
-                    data_sets_colors={'bes_def': {'raw': 'blue', 'diff': 'red', 'v2_sub': 'black', 'mix': 'purple'}},
-                    marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^', 'v2_sub': '*'}},
-                    # y_ranges=[-0.00124, 0.0009])  # v2 sub demo
-                    y_ranges=[-0.017, 0.007], kin_info_loc=(0.26, 0.94))  # v2 sub demo
-
-    df_mix = []
-    for cent in range(0, 9):
-        df_mix_cent = dvar_vs_protons(df_dsigma, div_plt, cent, [7, 11, 19, 27, 39, 62],
-                                      ['mix'], data_sets_plt, plot=False, avg=True)
-        print(df_mix_cent)
-        df_mix.append(df_mix_cent)
-    print(df_mix)
-    df_mix = pd.concat(df_mix)
-    print(df_mix)
-    print(df_mix.columns)
-    df_mix = df_mix[(df_mix['divs'] == 120) & (df_mix['data_type'] == 'mix')]
-    plot_dsig_avg_vs_cent_2panel(df_mix, data_sets_cent, data_sets_colors=data_sets_colors, fit=False,
-                                 cent_ref=cent_ref_df, ref_type=ref_type, legend_order=legend_order,  # <---
-                                 # title=f'{div_plt}° Partitions, {samples} Samples per Event',
-                                 title='',
-                                 errbar_alpha=0.3, xlim=(-20, 720), alpha=0.8,
-                                 kin_info_loc=(0.45, 0.1), star_prelim_loc=(0.4, 0.5), marker_map=data_sets_markers,
-                                 data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
+    # Save all open figures
+    for i in plt.get_fignums():
+        plt.figure(i)
+        window_title = plt.gcf().canvas.manager.get_window_title().replace(' ', '_')
+        plt.savefig(f'{save_dir}{window_title}_{i}.png')
+        plt.savefig(f'{save_dir}{window_title}_{i}.pdf')
 
     plt.show()
 

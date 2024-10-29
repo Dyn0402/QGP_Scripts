@@ -4232,6 +4232,8 @@ def plot_div_fits_vs_cent(df, data_sets_plt, data_sets_colors=None, data_sets_la
             #     marker = data_sets_markers[data_set]
             if data_sets_markers is None:
                 marker = 'o'
+            elif data_set in data_sets_markers and isinstance(data_sets_markers[data_set], str):
+                marker = data_sets_markers[data_set]
             elif data_set in data_sets_markers and 'diff' in data_sets_markers[data_set]:
                 marker = data_sets_markers[data_set]['diff']
             elif data_set in data_sets_markers and energy in data_sets_markers[data_set]:
