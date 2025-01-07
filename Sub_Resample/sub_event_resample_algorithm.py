@@ -39,7 +39,8 @@ def main():
     # animate_resamples2(angles, bin_width, samples, gif_path, fps)
     # animate_resamples4(angles, bin_width, samples, gif_path, fps)
     # plot_event(angles, 0, bin_width, bin_width, 3)
-    plot_method_paper_event()
+    # plot_method_paper_event()
+    plot_star_paper_event()
     # plot_event_nobin(angles)
     # animate_nsamples_resamples2(angles, bin_width, samples_list, gif_path, fps=fps)
     # animate_nsamples_resamples4(angles, bin_width, samples_list, gif_path, fps=fps)
@@ -51,6 +52,12 @@ def main():
 
 
 def plot_method_paper_event():
+    angles = np.deg2rad([20, 50, 55, 145, 195, 340])
+    bin_width = np.deg2rad(120)  # 2.09
+    plot_event(angles, 0, bin_width, bin_width, 3)
+
+
+def plot_star_paper_event():
     angles = np.deg2rad([20, 50, 55, 145, 195, 340])
     bin_width = np.deg2rad(120)  # 2.09
     plot_event(angles, 0, bin_width, bin_width, 3)
