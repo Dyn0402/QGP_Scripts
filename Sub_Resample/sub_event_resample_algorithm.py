@@ -12,6 +12,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
 from matplotlib.patches import FancyArrowPatch, Circle
+import matplotlib.image as mpimg
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+from matplotlib.lines import Line2D
 import math
 
 from DistStats import DistStats
@@ -71,8 +74,8 @@ def plot_realistic_event():
     bin_width = np.deg2rad(120)  # Partition width
 
     # Proton and particle circle radii
-    proton_circle_radius = 0.15
-    non_proton_circle_radius = 0.1
+    proton_circle_radius = 0.2
+    non_proton_circle_radius = 0.18
 
     # Create the figure
     fig = plt.figure(figsize=(6, 6), dpi=144)
@@ -81,39 +84,52 @@ def plot_realistic_event():
     # Background for QGP
     ax.set_facecolor('black')  # Black background
     qgp_background_circle = Circle((0.5, 0.5), 0.45, transform=ax.transAxes, color='white', alpha=1.0, zorder=0)
-    qgp_circle = Circle((0.5, 0.5), 0.45, transform=ax.transAxes, color='orange', alpha=0.5, zorder=1)
+    qgp_circle = Circle((0.5, 0.5), 0.45, transform=ax.transAxes, color='blue', alpha=0.05, zorder=1)
     ax.add_artist(qgp_background_circle)
     ax.add_artist(qgp_circle)
 
     # Add protons as circles with arrows
     for angle in angles:
         # Proton circle
-        ax.plot(angle, proton_circle_radius, 'o', color='red', alpha=0.7, markersize=6, label='Proton' if angle == angles[0] else "")
+        ax.plot(angle, proton_circle_radius, 'o', color='red', alpha=0.6, markersize=6,
+                label='Proton' if angle == angles[0] else "", zorder=5)
         # Proton arrow
         arrow = FancyArrowPatch(
             posA=(angle, proton_circle_radius), posB=(angle, 1),
-            arrowstyle='-|>', color='red', mutation_scale=20, lw=1.5
+            arrowstyle='-|>', color='red', mutation_scale=20, lw=1.5, zorder=5
         )
         ax.add_artist(arrow)
 
     # Add other particles as circles with arrows
     for angle in non_proton_angles:
         # Non-proton circle
-        ax.plot(angle, non_proton_circle_radius, 'o', color='blue', alpha=0.5, markersize=3, label='Other Particle' if angle == non_proton_angles[0] else "")
+        ax.plot(angle, non_proton_circle_radius, 'o', color='blue', alpha=0.4, markersize=3,
+                label='Other Particle' if angle == non_proton_angles[0] else "", zorder=2)
         # Non-proton arrow
         arrow = FancyArrowPatch(
             posA=(angle, non_proton_circle_radius), posB=(angle, 0.7),
-            arrowstyle='-|>', color='blue', alpha=0.3, mutation_scale=15, lw=1
+            arrowstyle='-|>', color='blue', alpha=0.3, mutation_scale=15, lw=1, zorder=2
         )
         ax.add_artist(arrow)
 
     # Collision point at the center
-    ax.plot(0, 0, 'yo', markersize=15, label='Collision Point')
+    # ax.plot(0, 0, marker='o', color='yellow', markersize=23, label='Hot Medium', zorder=4)
+
+    # Insert the image at the collision point
+    image = mpimg.imread('qgp_medium.png')
+    image_box = OffsetImage(image, zoom=0.2)  # Adjust zoom for size
+    image_ab = AnnotationBbox(image_box, (0, 0), frameon=False, box_alignment=(0.5, 0.5), zorder=1)
+    ax.add_artist(image_ab)
+
+    # Create a custom legend entry for the "Hot Medium"
+    image_handle = OffsetImage(image, zoom=0.08)  # Adjust zoom for legend size
+    image_handle_box = AnnotationBbox(image_handle, (0, 0), frameon=False, box_alignment=(0.5, 0.5))
 
     # Partition shading
     bin_low = 0
     bin_high = bin_width
-    ax.fill_between(np.linspace(bin_low, bin_high, 1000), 0, 1, alpha=0.5, color='gray', label='120° Partition')
+    ax.fill_between(np.linspace(bin_low, bin_high, 1000), 0, 1, alpha=0.5, color='gray',
+                    label='120° Partition', zorder=3)
 
     # Styling and axis settings
     ax.grid(False)
@@ -121,35 +137,27 @@ def plot_realistic_event():
     ax.set_ylim((0, 1))  # Set radial limits
     ax.set_theta_zero_location("E")  # 0° at the right
 
-    # First legend: Collision point and 120° partition
-    handles1, labels1 = ax.get_legend_handles_labels()  # Retrieve all handles and labels
-    collision_handles = [h for h, l in zip(handles1, labels1) if 'Partition' in l]
-    ax.legend(handles=collision_handles, loc="upper right", bbox_to_anchor=(0.99, 0.01),
-              bbox_transform=ax.transAxes, fontsize='small', frameon=False)
+    # Get all handles and labels
+    handles, labels = ax.get_legend_handles_labels()
 
-    # Second legend: Protons and other tracks
-    track_handles = [h for h, l in zip(handles1, labels1) if 'Protons' in l or 'Tracks' in l]
-    ax.legend(handles=track_handles, loc="upper left", bbox_to_anchor=(0.01, 0.99),
-              bbox_transform=ax.transAxes, fontsize='small', frameon=False)
+    # Separate handles for tracks and medium/partition
+    track_handles = [h for h, l in zip(handles, labels) if 'Proton' in l or 'Particle' in l]
+    collision_handles = [h for h, l in zip(handles, labels) if 'Partition' in l or 'Medium' in l]
 
-    # Ensure both legends are displayed
-    plt.gca().add_artist(ax.get_legend())
+    # Create the first legend (track)
+    legend1 = plt.figlegend(handles=track_handles, loc='upper right',
+                            bbox_to_anchor=(0.97, 0.12), fontsize=12, frameon=False)
 
-    # ax.legend(
-    #     loc="upper right",
-    #     bbox_to_anchor=(1.0, 1.1),
-    #     bbox_transform=ax.transAxes,  # Align to axes coordinates
-    #     fontsize='small',
-    #     frameon=False,
-    #     handlelength=1.5,
-    #     handletextpad=0.5,
-    #     borderaxespad=0,
-    #     alignment="right"  # Optional: Use a consistent alignment reference
-    # )
-    ax.text(-0.05, 1.05, f'Protons in\nevent: {len(angles)}', transform=ax.transAxes, color='black', fontsize=12,
+    # Create the second legend (medium/partition)
+    legend2 = plt.figlegend(handles=collision_handles, loc='upper right',
+                            bbox_to_anchor=(0.97, 0.99), fontsize=12, frameon=False)
+
+    ax.text(-0.05, 1.03, f'Protons in\nevent: {len(angles)}', transform=ax.transAxes, color='black', fontsize=14,
             ha='left', va='top')
-    ax.text(-0.05, 0.05, f'Protons in\npartition: 3', transform=ax.transAxes, color='black', fontsize=12, ha='left',
+    ax.text(-0.05, 0.05, f'Protons in\npartition: 3', transform=ax.transAxes, color='black', fontsize=14, ha='left',
             va='top')
+
+    fig.tight_layout()
 
 
 def test_single_alg4():
