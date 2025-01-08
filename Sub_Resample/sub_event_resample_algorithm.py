@@ -11,7 +11,7 @@ Created as QGP_Scripts/sub_event_resample_algorithm.py
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
-from matplotlib.patches import FancyArrowPatch
+from matplotlib.patches import FancyArrowPatch, Circle
 import math
 
 from DistStats import DistStats
@@ -40,7 +40,8 @@ def main():
     # animate_resamples4(angles, bin_width, samples, gif_path, fps)
     # plot_event(angles, 0, bin_width, bin_width, 3)
     # plot_method_paper_event()
-    plot_star_paper_event()
+    # plot_star_paper_event()
+    plot_realistic_event()
     # plot_event_nobin(angles)
     # animate_nsamples_resamples2(angles, bin_width, samples_list, gif_path, fps=fps)
     # animate_nsamples_resamples4(angles, bin_width, samples_list, gif_path, fps=fps)
@@ -61,6 +62,94 @@ def plot_star_paper_event():
     angles = np.deg2rad([20, 50, 55, 145, 195, 340])
     bin_width = np.deg2rad(120)  # 2.09
     plot_event(angles, 0, bin_width, bin_width, 3)
+
+
+def plot_realistic_event():
+    # Angles for protons and other particles
+    angles = np.deg2rad([20, 50, 55, 145, 195, 340])  # Proton directions
+    non_proton_angles = np.deg2rad([80, 110, 160, 250, 290, 310])  # Other particles
+    bin_width = np.deg2rad(120)  # Partition width
+
+    # Proton and particle circle radii
+    proton_circle_radius = 0.15
+    non_proton_circle_radius = 0.1
+
+    # Create the figure
+    fig = plt.figure(figsize=(6, 6), dpi=144)
+    ax = plt.subplot(111, projection='polar')
+
+    # Background for QGP
+    ax.set_facecolor('black')  # Black background
+    qgp_background_circle = Circle((0.5, 0.5), 0.45, transform=ax.transAxes, color='white', alpha=1.0, zorder=0)
+    qgp_circle = Circle((0.5, 0.5), 0.45, transform=ax.transAxes, color='orange', alpha=0.5, zorder=1)
+    ax.add_artist(qgp_background_circle)
+    ax.add_artist(qgp_circle)
+
+    # Add protons as circles with arrows
+    for angle in angles:
+        # Proton circle
+        ax.plot(angle, proton_circle_radius, 'o', color='red', alpha=0.7, markersize=6, label='Proton' if angle == angles[0] else "")
+        # Proton arrow
+        arrow = FancyArrowPatch(
+            posA=(angle, proton_circle_radius), posB=(angle, 1),
+            arrowstyle='-|>', color='red', mutation_scale=20, lw=1.5
+        )
+        ax.add_artist(arrow)
+
+    # Add other particles as circles with arrows
+    for angle in non_proton_angles:
+        # Non-proton circle
+        ax.plot(angle, non_proton_circle_radius, 'o', color='blue', alpha=0.5, markersize=3, label='Other Particle' if angle == non_proton_angles[0] else "")
+        # Non-proton arrow
+        arrow = FancyArrowPatch(
+            posA=(angle, non_proton_circle_radius), posB=(angle, 0.7),
+            arrowstyle='-|>', color='blue', alpha=0.3, mutation_scale=15, lw=1
+        )
+        ax.add_artist(arrow)
+
+    # Collision point at the center
+    ax.plot(0, 0, 'yo', markersize=15, label='Collision Point')
+
+    # Partition shading
+    bin_low = 0
+    bin_high = bin_width
+    ax.fill_between(np.linspace(bin_low, bin_high, 1000), 0, 1, alpha=0.5, color='gray', label='120° Partition')
+
+    # Styling and axis settings
+    ax.grid(False)
+    ax.set_yticklabels([])  # Remove radial labels
+    ax.set_ylim((0, 1))  # Set radial limits
+    ax.set_theta_zero_location("E")  # 0° at the right
+
+    # First legend: Collision point and 120° partition
+    handles1, labels1 = ax.get_legend_handles_labels()  # Retrieve all handles and labels
+    collision_handles = [h for h, l in zip(handles1, labels1) if 'Partition' in l]
+    ax.legend(handles=collision_handles, loc="upper right", bbox_to_anchor=(0.99, 0.01),
+              bbox_transform=ax.transAxes, fontsize='small', frameon=False)
+
+    # Second legend: Protons and other tracks
+    track_handles = [h for h, l in zip(handles1, labels1) if 'Protons' in l or 'Tracks' in l]
+    ax.legend(handles=track_handles, loc="upper left", bbox_to_anchor=(0.01, 0.99),
+              bbox_transform=ax.transAxes, fontsize='small', frameon=False)
+
+    # Ensure both legends are displayed
+    plt.gca().add_artist(ax.get_legend())
+
+    # ax.legend(
+    #     loc="upper right",
+    #     bbox_to_anchor=(1.0, 1.1),
+    #     bbox_transform=ax.transAxes,  # Align to axes coordinates
+    #     fontsize='small',
+    #     frameon=False,
+    #     handlelength=1.5,
+    #     handletextpad=0.5,
+    #     borderaxespad=0,
+    #     alignment="right"  # Optional: Use a consistent alignment reference
+    # )
+    ax.text(-0.05, 1.05, f'Protons in\nevent: {len(angles)}', transform=ax.transAxes, color='black', fontsize=12,
+            ha='left', va='top')
+    ax.text(-0.05, 0.05, f'Protons in\npartition: 3', transform=ax.transAxes, color='black', fontsize=12, ha='left',
+            va='top')
 
 
 def test_single_alg4():
