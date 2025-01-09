@@ -43,8 +43,7 @@ def main():
     # animate_resamples4(angles, bin_width, samples, gif_path, fps)
     # plot_event(angles, 0, bin_width, bin_width, 3)
     # plot_method_paper_event()
-    # plot_star_paper_event()
-    plot_realistic_event()
+    plot_star_paper_event()
     # plot_event_nobin(angles)
     # animate_nsamples_resamples2(angles, bin_width, samples_list, gif_path, fps=fps)
     # animate_nsamples_resamples4(angles, bin_width, samples_list, gif_path, fps=fps)
@@ -62,12 +61,6 @@ def plot_method_paper_event():
 
 
 def plot_star_paper_event():
-    angles = np.deg2rad([20, 50, 55, 145, 195, 340])
-    bin_width = np.deg2rad(120)  # 2.09
-    plot_event(angles, 0, bin_width, bin_width, 3)
-
-
-def plot_realistic_event():
     # Angles for protons and other particles
     angles = np.deg2rad([20, 50, 55, 145, 195, 340])  # Proton directions
     non_proton_angles = np.deg2rad([80, 110, 160, 250, 290, 310])  # Other particles
@@ -136,6 +129,7 @@ def plot_realistic_event():
     ax.set_yticklabels([])  # Remove radial labels
     ax.set_ylim((0, 1))  # Set radial limits
     ax.set_theta_zero_location("E")  # 0° at the right
+    ax.set_xticks(np.deg2rad(np.arange(0, 360, 30)))  # Set ticks at 30-degree increments
 
     # Get all handles and labels
     handles, labels = ax.get_legend_handles_labels()
