@@ -976,6 +976,7 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
                     ax_in=None, ylim=None):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
+    print_data = True
     data = []
     for data_type in data_types:
         for data_set in data_sets_plt:
@@ -1075,9 +1076,16 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
                 marker = marker_map[data_set][data_type] if marker_map is not None else 'o'
                 ax.errorbar(df_plt['total_protons'], df_plt['val'], df_plt['err'], label=lab,
                             marker=marker, ls='', color=c, alpha=alpha, zorder=zo)
+                if print_data:
+                    print(f'\n{data_set} {data_type} {energy}GeV {div}°')
+                    print(f'[{", ".join([str(x) for x in df_plt["total_protons"].values])}]')
+                    print(f'[{", ".join([str(x) for x in df_plt["val"].values])}]')
+                    print(f'[{", ".join([str(x) for x in df_plt["err"].values])}]')
                 if 'sys' in df:
                     ax.errorbar(df['total_protons'], df['val'], df['sys'], marker='', ls='', elinewidth=4,
                                 color=c, alpha=errbar_alpha, zorder=zo)
+                    if print_data:
+                        print(f'[{", ".join([str(x) for x in df["sys"].values])}]')
 
         if avg and len(df) > 1:
             weight_avg = np.average(df['val'], weights=1 / df['err'] ** 2)
