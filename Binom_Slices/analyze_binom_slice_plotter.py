@@ -29,7 +29,7 @@ from integrate_pdf_var import base_gaus_pdf_wrap, get_partition_variance
 
 
 def main():
-    plot_paper_figs()
+    # plot_paper_figs()
     # plot_qm_figs()
     # plot_method_paper_figs()
 
@@ -69,6 +69,8 @@ def main():
     # plot_anticl_flow_closure_test_simple()
     # plot_efficiency_closure_tests()
     # plot_closure_tests()
+
+    plot_raw_mix_sys_comp()
     print('donzo')
 
 
@@ -4500,6 +4502,103 @@ def plot_closure_tests():
         flow_anti_clust_cor['avg_err'] = flow_anti_clust_cor['avg_meas'].apply(lambda x: x.err)
         plot_closures(anti_clust, flow_anti_clust, flow_anti_clust_cor, alpha=0.7, df_bkg=flow_anti_clust_v2,
                       title=rf'Anti-Clustering (A={amp_val}, $\sigma$={sigma_val}) Flow (v2={v2_val:.2f}) Correction')
+
+    plt.show()
+
+
+def plot_raw_mix_sys_comp():
+    plt.rcParams["figure.figsize"] = (6.66, 5)
+    plt.rcParams["figure.dpi"] = 144
+
+    presentation_mode = False
+    if presentation_mode:
+        # plt.rcParams['axes.labelsize'] = 14  # Adjust the value as needed
+        # plt.rcParams['axes.titlesize'] = 16  # Adjust the value as needed
+        # plt.rcParams['legend.fontsize'] = 14  # Adjust the value as needed
+        plt.rcParams['font.size'] = plt.rcParams['font.size'] * 1.2
+    # else:
+    #     plt.rcParams['font.size'] = plt.rcParams['font.size'] * 1.1
+
+    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    # base_path = 'C:/Users/Dyn04/OneDrive - personalmicrosoftsoftware.ucla.edu/OneDrive - UCLA IT Services/Research/UCLA/Results/Azimuth_Analysis/'
+    # base_path = 'C:/Users/Dyn04/Research/'
+    df_name = 'Binomial_Slice_Moments/binom_slice_vars_bes_sys.csv'
+    df_model_name = 'Bes_with_Sys/binom_slice_vars_model.csv'
+    df_dsigma_name = 'Bes_with_Sys/binom_slice_vars_bes_dsigma.csv'
+    df_dsigma_model_name = 'Bes_with_Sys/binom_slice_vars_model_dsigma.csv'
+    df_dsigma_v2sub_name = 'Bes_with_Sys/binom_slice_vars_bes_dsigma_v2sub.csv'
+    df_dsigma_v2sub_model_name = 'Bes_with_Sys/binom_slice_vars_model_dsigma_v2sub.csv'
+    df_def_avgs_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_bes.csv'
+    df_def_avgs_out_model_name = 'Bes_with_Sys/dsig_tprotons_avgs_model.csv'
+    df_def_avgs_v2sub_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_bes.csv'
+    df_def_avgs_v2sub_out_model_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_model.csv'
+    df_partitions_fits_name = 'Bes_with_Sys/partition_width_fits_bes.csv'
+    df_partitions_fits_model_name = 'Bes_with_Sys/partition_width_fits_model.csv'
+
+    save_dir = 'C:/Users/Dylan/OneDrive - UCLA IT Services/Research/UCLA/Presentations/STAR_Paper/Autogen_Figures/'
+
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
+                0: '70-80%', -1: '80-90%'}
+
+    stat_plot = 'k2'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
+    div_plt = 120
+    exclude_divs = [89, 356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
+    cent_plt = 8
+    energies_fit = [7, 11, 19, 27, 39, 62]
+    samples = 72  # For title purposes only
+
+    data_sets_plt = ['bes_def', 'ampt_new_coal_epbins1', 'cf_resample_epbins1', 'cfev_resample_epbins1']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple']))
+    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST', 'MUSIC+FIST EV $1fm^3$']))
+    data_sets_markers = dict(zip(data_sets_plt, [dict(zip(['raw', 'mix', 'diff'], [x, x, x]))
+                                                 for x in ['o', 's', '^', '*']]))
+    data_sets_bands = ['ampt_new_coal_epbins1', 'cf_resample_epbins1', 'cfev_resample_epbins1']
+    legend_order = ['STAR', 'MUSIC+FIST', 'MUSIC+FIST EV $1fm^3$', 'AMPT']
+
+    cent_ref_name = 'mean_cent_ref.csv'
+    cent_ref_df = pd.read_csv(f'{base_path}{cent_ref_name}')
+    ref_type = 'refn'  # 'refn'
+    cent_ref_df = cent_ref_df.replace('bes_resample_def', 'bes_def')
+    cent_ref_df = cent_ref_df.replace('ampt_new_coal_resample_def', 'ampt_new_coal_epbins1')
+
+    df_path = base_path + df_name
+    df = pd.read_csv(df_path)
+    df = df.dropna()
+    df['name'] = df['name'].str.replace('bes_sys_', '')
+    all_sets = pd.unique(df['name'])
+    print(all_sets)
+
+    vz_sets = [x for x in all_sets if 'efficiency' in x]
+
+    df = df[df['stat'] == stat_plot]
+
+    # Calculate dsigma with k2 values and get systematics
+    df = df[df['stat'] == 'k2']
+    df = df.drop('stat', axis=1)
+
+    # Get only datasets to plot in this short script to make nlo calculation faster
+    df = df[df['energy'] == 39]
+    df = df[df['cent'] == cent_plt]
+    df = df[df['divs'] == div_plt]
+
+    print('Calc dsigma')
+    df_raw, df_mix, df_diff = calc_dsigma(df, ['raw', 'mix', 'diff'])
+    df_dsigma_types = pd.concat([df_raw, df_mix, df_diff])
+    print('Calc diff nlo error')
+    df_dsigma_types = add_diff_nlo_err(df_dsigma_types, group_cols=['energy', 'cent', 'name', 'total_protons'],
+                                       exclude_divs=[356, 89])
+
+    dvar_vs_protons(df_dsigma_types, div_plt, cent_plt, [39], ['raw', 'mix', 'diff'], ['bes_def'],
+                    plot=True, avg=False, alpha=1.0, y_ranges=[-0.00085, 0.00055],
+                    data_sets_labels={'bes_def': {'raw': 'Single Event', 'mix': 'Mixed Event',
+                                                  'diff': 'Single Event - Mixed Event'}},
+                    marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^'}})  # Mix subtraction demo
+
+    dvar_vs_protons(df_dsigma_types, div_plt, cent_plt, [39], ['diff'], ['bes_def'] + vz_sets,
+                    plot=True, avg=False, alpha=1.0, y_ranges=[-0.00119, 0.00069], xlim=[4.5, 24.5])
+
+    dvar_vs_protons(df_dsigma_types, div_plt, cent_plt, [39], ['raw'], ['bes_def'] + vz_sets,
+                    plot=True, avg=False, alpha=1.0, y_ranges=[-0.00119, 0.00069], xlim=[4.5, 24.5])
 
     plt.show()
 

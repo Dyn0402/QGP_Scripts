@@ -1078,14 +1078,14 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
                             marker=marker, ls='', color=c, alpha=alpha, zorder=zo)
                 if print_data:
                     print(f'\n{data_set} {data_type} {energy}GeV {div}°')
-                    print(f'[{", ".join([str(x) for x in df_plt["total_protons"].values])}]')
-                    print(f'[{", ".join([str(x) for x in df_plt["val"].values])}]')
-                    print(f'[{", ".join([str(x) for x in df_plt["err"].values])}]')
+                    print(f'\'n\': [{", ".join([str(x) for x in df_plt["total_protons"].values])}],')
+                    print(f'\'val\': [{", ".join([str(x) for x in df_plt["val"].values])}],')
+                    print(f'\'err\': [{", ".join([str(x) for x in df_plt["err"].values])}],')
                 if 'sys' in df:
                     ax.errorbar(df['total_protons'], df['val'], df['sys'], marker='', ls='', elinewidth=4,
                                 color=c, alpha=errbar_alpha, zorder=zo)
                     if print_data:
-                        print(f'[{", ".join([str(x) for x in df["sys"].values])}]')
+                        print(f'\'sys\': [{", ".join([str(x) for x in df["sys"].values])}]')
 
         if avg and len(df) > 1:
             weight_avg = np.average(df['val'], weights=1 / df['err'] ** 2)
