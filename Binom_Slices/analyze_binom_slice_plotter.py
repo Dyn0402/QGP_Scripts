@@ -29,7 +29,7 @@ from integrate_pdf_var import base_gaus_pdf_wrap, get_partition_variance
 
 
 def main():
-    # plot_paper_figs()
+    plot_paper_figs()
     # plot_qm_figs()
     # plot_method_paper_figs()
 
@@ -70,7 +70,7 @@ def main():
     # plot_efficiency_closure_tests()
     # plot_closure_tests()
 
-    plot_raw_mix_sys_comp()
+    # plot_raw_mix_sys_comp()
     print('donzo')
 
 
@@ -299,6 +299,11 @@ def plot_paper_figs():
                     data_sets_labels={'bes_def': {'raw': 'Single Event', 'mix': 'Mixed Event',
                                                   'diff': 'Single Event - Mixed Event'}},
                     marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^'}})  # Mix subtraction demo
+    dvar_vs_protons(df_dsigma, div_plt, 4, [39], ['raw', 'mix', 'diff'], ['bes_def'],
+                    plot=True, avg=False, alpha=1.0, y_ranges=[-0.00085, 0.00055],
+                    data_sets_labels={'bes_def': {'raw': 'Single Event', 'mix': 'Mixed Event',
+                                                  'diff': 'Single Event - Mixed Event'}},
+                    marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^'}})  # Mix subtraction demo
 
     dvar_vs_protons(df_dsigma, div_plt, cent_plt, [62], ['raw', 'mix', 'diff'], ['bes_def'],
                     plot=True, avg=False, alpha=1.0, y_ranges=[-0.00085, 0.00055],
@@ -336,7 +341,16 @@ def plot_paper_figs():
                     marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^', 'v2_sub': '*'}},
                     # y_ranges=[-0.00124, 0.0009])  # v2 sub demo
                     y_ranges=[-0.0039, 0.0009], kin_info_loc=(0.26, 0.94))  # v2 sub demo
-    # plt.show()
+    dvar_vs_protons(df_dsigma_with_v2sub, div_plt, 4, [39], ['raw', 'diff', 'v2_sub'], ['bes_def'],
+                    plot=True, avg=False, alpha=1.0, ylabel=r'$\Delta\sigma^2$',
+                    data_sets_labels={'bes_def': {'raw': 'Uncorrected', 'diff': 'Mixed Corrected',
+                                                  'v2_sub': 'Mixed and Flow Corrected'}},
+                    data_sets_colors={'bes_def': {'raw': 'blue', 'diff': 'red', 'v2_sub': 'black'}},
+                    marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^', 'v2_sub': '*'}},
+                    # y_ranges=[-0.00124, 0.0009])  # v2 sub demo
+                    y_ranges=[-0.0039, 0.0009], kin_info_loc=(0.26, 0.94))  # v2 sub demo
+
+    plt.show()
 
     dsig_avgs_all = pd.read_csv(f'{base_path}{df_def_avgs_out_name}')
     dsig_avgs_all_model = pd.read_csv(f'{base_path}{df_def_avgs_out_model_name}')
