@@ -29,7 +29,7 @@ from integrate_pdf_var import base_gaus_pdf_wrap, get_partition_variance
 
 
 def main():
-    plot_paper_figs()
+    # plot_paper_figs()
     # plot_qm_figs()
     # plot_method_paper_figs()
 
@@ -39,7 +39,7 @@ def main():
     # get_sim_mapping_var()
     # plot_all_zero_base()
 
-    # plot_star_var_sys()
+    plot_star_var_sys()
     # make_models_csv()
     # plot_star_var_rand_sys()
 
@@ -1123,35 +1123,67 @@ def plot_star_var_sys():
     # energies_fit = [7, 11]
     samples = 72  # For title purposes only
 
+    # sys_info_dict = {  # Old systematics (in my opinion, better) used in thesis. For all gaussian.
+    #     'vz': {'name': 'vz range', 'title': 'vz', 'decimal': None, 'default': None,
+    #            'sys_vars': ['low7', 'high-7', 'low-5_vzhigh5'], 'val_unit': ' cm',
+    #            'sys_var_order': ['low7', 'low-5_vzhigh5', 'high-7']},
+    #     'Efficiency': {'name': 'efficiency', 'title': 'efficiency', 'decimal': 2, 'default': 0,
+    #                    'sys_vars': [95.0, 90.0], 'val_unit': '%', 'sys_var_order': [95.0, 90.0, 85.0, 80.0]},
+    #     'dca': {'name': 'dca', 'title': 'dca', 'decimal': 1, 'default': 1, 'sys_vars': [0.8, 1.2], 'val_unit': ' cm',
+    #             'sys_var_order': [0.5, 0.8, 1.2, 1.5]},
+    #     'nsprx': {'name': r'n$\sigma$ proton', 'title': r'n$\sigma$ proton', 'decimal': 1, 'default': 1,
+    #               'sys_vars': [0.9, 1.1], 'val_unit': '', 'sys_var_order': [0.75, 0.9, 1.1, 1.25]},
+    #     'm2r': {'name': r'$m^2$ range', 'title': 'm2 range', 'decimal': 0, 'default': 0.6, 'sys_vars': [0.4, 0.8],
+    #             'val_unit': ' GeV', 'sys_var_order': [0.2, 0.4, 0.8, 1.0]},
+    #     'nhfit': {'name': 'nHits fit', 'title': 'nhits fit', 'decimal': 2, 'default': 20, 'sys_vars': [15, 25],
+    #               'val_unit': '', 'sys_var_order': [15, 25]},
+    #     'sysrefshift': {'name': 'refmult3 shift', 'title': 'ref3 shift', 'decimal': None, 'default': 0,
+    #                     'sys_vars': ['-1', '1'], 'val_unit': '', 'sys_var_order': ['-1', '1']},
+    #     'dcxyqa': {'name': 'dcaxy qa', 'title': 'dcaxy qa', 'decimal': None, 'default': None,
+    #                'sys_vars': ['tight', 'loose'], 'val_unit': '',
+    #                'sys_var_order': ['2tight', 'tight', 'loose', '2loose']},
+    #     'pileupqa': {'name': 'pile-up qa', 'title': 'pile-up qa', 'decimal': None, 'default': None,
+    #                  'sys_vars': ['tight', 'loose'], 'val_unit': '',
+    #                  'sys_var_order': ['2tight', 'tight', 'loose', '2loose']},
+    #     'mix_rand_': {'name': 'mix rand', 'title': 'mix rand', 'decimal': 1, 'default': 0, 'sys_vars': None,
+    #                   'val_unit': '', 'sys_var_order': None},
+    #     'all_rand_': {'name': 'all rand', 'title': 'all rand', 'decimal': 1, 'default': 0, 'sys_vars': None,
+    #                   'val_unit': '', 'sys_var_order': None},
+    # }
+
     sys_info_dict = {
         'vz': {'name': 'vz range', 'title': 'vz', 'decimal': None, 'default': None,
-               'sys_vars': ['low7', 'high-7', 'low-5_vzhigh5'], 'val_unit': ' cm',
-               'sys_var_order': ['low7', 'low-5_vzhigh5', 'high-7']},
+               'sys_vars': ['low7', 'high-7'], 'val_unit': ' cm',
+               'sys_var_order': ['low7', 'low-5_vzhigh5', 'high-7'], 'prior': 'flat_two_side'},
         'Efficiency': {'name': 'efficiency', 'title': 'efficiency', 'decimal': 2, 'default': 0,
-                       'sys_vars': [95.0, 90.0], 'val_unit': '%', 'sys_var_order': [95.0, 90.0, 85.0, 80.0]},
-        'dca': {'name': 'dca', 'title': 'dca', 'decimal': 1, 'default': 1, 'sys_vars': [0.8, 1.2], 'val_unit': ' cm',
-                'sys_var_order': [0.5, 0.8, 1.2, 1.5]},
+                       'sys_vars': [90.0], 'val_unit': '%', 'sys_var_order': [95.0, 90.0, 85.0, 80.0],
+                       'prior': 'flat_one_side'},
+        'dca': {'name': 'dca', 'title': 'dca', 'decimal': 1, 'default': 1, 'sys_vars': [0.5], 'val_unit': ' cm',
+                'sys_var_order': [0.5, 0.8, 1.2, 1.5], 'prior': 'flat_one_side'},
         'nsprx': {'name': r'n$\sigma$ proton', 'title': r'n$\sigma$ proton', 'decimal': 1, 'default': 1,
-                  'sys_vars': [0.9, 1.1], 'val_unit': '', 'sys_var_order': [0.75, 0.9, 1.1, 1.25]},
-        'm2r': {'name': r'$m^2$ range', 'title': 'm2 range', 'decimal': 0, 'default': 0.6, 'sys_vars': [0.4, 0.8],
-                'val_unit': ' GeV', 'sys_var_order': [0.2, 0.4, 0.8, 1.0]},
-        'nhfit': {'name': 'nHits fit', 'title': 'nhits fit', 'decimal': 2, 'default': 20, 'sys_vars': [15, 25],
-                  'val_unit': '', 'sys_var_order': [15, 25]},
+                  'sys_vars': [0.75], 'val_unit': '', 'sys_var_order': [0.75, 0.9, 1.1, 1.25],
+                  'prior': 'flat_one_side'},
+        'm2r': {'name': r'$m^2$ range', 'title': 'm2 range', 'decimal': 0, 'default': 0.6, 'sys_vars': [0.4],
+                'val_unit': ' GeV', 'sys_var_order': [0.2, 0.4, 0.8, 1.0], 'prior': 'flat_one_side'},
+        'nhfit': {'name': 'nHits fit', 'title': 'nhits fit', 'decimal': 2, 'default': 20, 'sys_vars': [25],
+                  'val_unit': '', 'sys_var_order': [15, 25], 'prior': 'flat_one_side'},
         'sysrefshift': {'name': 'refmult3 shift', 'title': 'ref3 shift', 'decimal': None, 'default': 0,
-                        'sys_vars': ['-1', '1'], 'val_unit': '', 'sys_var_order': ['-1', '1']},
+                        'sys_vars': ['-1', '1'], 'val_unit': '', 'sys_var_order': ['-1', '1'],
+                        'prior': 'flat_two_side'},
         'dcxyqa': {'name': 'dcaxy qa', 'title': 'dcaxy qa', 'decimal': None, 'default': None,
-                   'sys_vars': ['tight', 'loose'], 'val_unit': '',
-                   'sys_var_order': ['2tight', 'tight', 'loose', '2loose']},
+                   'sys_vars': ['tight'], 'val_unit': '', 'sys_var_order': ['2tight', 'tight', 'loose', '2loose'],
+                   'prior': 'flat_one_side'},
         'pileupqa': {'name': 'pile-up qa', 'title': 'pile-up qa', 'decimal': None, 'default': None,
-                     'sys_vars': ['tight', 'loose'], 'val_unit': '',
-                     'sys_var_order': ['2tight', 'tight', 'loose', '2loose']},
+                     'sys_vars': ['tight'], 'val_unit': '', 'sys_var_order': ['2tight', 'tight', 'loose', '2loose'],
+                     'prior': 'flat_one_side'},
         'mix_rand_': {'name': 'mix rand', 'title': 'mix rand', 'decimal': 1, 'default': 0, 'sys_vars': None,
-                      'val_unit': '', 'sys_var_order': None},
+                      'val_unit': '', 'sys_var_order': None, 'prior': None},
         'all_rand_': {'name': 'all rand', 'title': 'all rand', 'decimal': 1, 'default': 0, 'sys_vars': None,
-                      'val_unit': '', 'sys_var_order': None},
+                      'val_unit': '', 'sys_var_order': None, 'prior': None},
     }
 
     sys_include_sets = sys_info_dict_to_var_names(sys_info_dict)
+    sys_priors = sys_info_dict_to_priors(sys_info_dict)
     sys_include_names = [y for x in sys_include_sets.values() for y in x]
 
     data_sets_plt = ['bes_def', 'dca08', 'nsprx09', 'm2r4', 'nhfit25']
@@ -1177,7 +1209,7 @@ def plot_star_var_sys():
 
     # Get k2 raw, mix, diff systematics
     if df_def_out_name is not None and calc_finals:
-        df_def_with_sys = get_sys(df, 'bes_def', sys_include_sets,
+        df_def_with_sys = get_sys(df, 'bes_def', sys_include_sets, sys_priors,
                                   group_cols=['divs', 'energy', 'cent', 'data_type', 'total_protons'])
         df_def_with_sys.to_csv(f'{base_path}{df_def_out_name}', index=False)
 
@@ -1192,7 +1224,7 @@ def plot_star_var_sys():
                                        exclude_divs=[356, 89])
 
     if df_def_dsigma_out_name is not None and calc_finals:
-        df_def_dsigma = get_sys(df_dsigma_types, 'bes_def', sys_include_sets,
+        df_def_dsigma = get_sys(df_dsigma_types, 'bes_def', sys_include_sets, sys_priors,
                                 group_cols=['divs', 'energy', 'cent', 'data_type', 'total_protons'])
         print(df_def_dsigma)
         df_def_dsigma.to_csv(f'{base_path}{df_def_dsigma_out_name}', index=False)
@@ -1207,7 +1239,7 @@ def plot_star_var_sys():
                                              new_only=True, val_col='val', err_col='err', meas_col='meas')
             df_def_dsigma_v2sub.append(set_v2sub)
         df_def_dsigma_v2sub = pd.concat(df_def_dsigma_v2sub)
-        df_def_dsigma_v2sub = get_sys(df_def_dsigma_v2sub, 'bes_def', sys_include_sets,
+        df_def_dsigma_v2sub = get_sys(df_def_dsigma_v2sub, 'bes_def', sys_include_sets, sys_priors,
                                       group_cols=['divs', 'energy', 'cent', 'data_type', 'total_protons'])
         df_def_dsigma_v2sub.to_csv(f'{base_path}{df_def_dsigma_v2sub_out_name}', index=False)
 
@@ -1233,8 +1265,8 @@ def plot_star_var_sys():
 
     if df_def_avgs_out_name is not None and calc_finals:
         dsig_avg_all = pd.concat(dsig_avgs_all, ignore_index=True)
-        dsig_avgs_def_sys = get_sys(dsig_avg_all, 'bes_def', sys_include_sets, val_col='avg', err_col='avg_err',
-                                    group_cols=['divs', 'energy', 'cent', 'data_type'])
+        dsig_avgs_def_sys = get_sys(dsig_avg_all, 'bes_def', sys_include_sets, sys_priors, val_col='avg',
+                                    err_col='avg_err', group_cols=['divs', 'energy', 'cent', 'data_type'])
         dsig_avgs_def_sys.to_csv(f'{base_path}{df_def_avgs_out_name}', index=False)
 
     dsig_avgs_diff_v2sub = pd.concat(dsig_avgs_diff_v2sub, ignore_index=True)
@@ -1252,8 +1284,8 @@ def plot_star_var_sys():
     #     # plt.show()
 
     if df_def_avgs_v2sub_out_name is not None and calc_finals:
-        dsig_avg_diff_v2sub_out = get_sys(dsig_avgs_diff_v2sub, 'bes_def', sys_include_sets, val_col='avg',
-                                          err_col='avg_err', group_cols=['divs', 'energy', 'cent'])
+        dsig_avg_diff_v2sub_out = get_sys(dsig_avgs_diff_v2sub, 'bes_def', sys_include_sets, sys_priors,
+                                          val_col='avg', err_col='avg_err', group_cols=['divs', 'energy', 'cent'])
         dsig_avg_diff_v2sub_out.to_csv(f'{base_path}{df_def_avgs_v2sub_out_name}', index=False)
 
     plot_sys(dsig_avgs_diff_v2sub, 'bes_def', non_rand_sets, sys_info_dict, val_col='avg', err_col='avg_err',
@@ -1268,10 +1300,12 @@ def plot_star_var_sys():
 
     df_fits = plot_dvar_avgs_divs(dsig_avgs_diff_v2sub, all_sets, fit=True, plot_energy_panels=False, plot=False)
     if df_partitions_fits_name is not None:
-        df_baselines = get_sys(df_fits, 'bes_def', sys_include_sets, val_col='baseline', err_col='base_err',
-                               name_col='data_set', sys_col='base_sys', group_cols=['energy', 'cent'])
-        df_zeros = get_sys(df_fits, 'bes_def', sys_include_sets, val_col='zero_mag', err_col='zero_mag_err',
-                           name_col='data_set', sys_col='zero_sys', group_cols=['energy', 'cent'])
+        df_baselines = get_sys(df_fits, 'bes_def', sys_include_sets,  sys_priors, val_col='baseline',
+                               err_col='base_err', name_col='data_set', sys_col='base_sys',
+                               group_cols=['energy', 'cent'])
+        df_zeros = get_sys(df_fits, 'bes_def', sys_include_sets, sys_priors, val_col='zero_mag',
+                           err_col='zero_mag_err', name_col='data_set', sys_col='zero_sys',
+                           group_cols=['energy', 'cent'])
         df_baselines = df_baselines.drop(columns=['zero_mag', 'zero_mag_err'])
         df_fits_out = pd.concat([df_baselines, df_zeros[['zero_mag', 'zero_mag_err', 'zero_sys']]], axis=1)
         df_fits_out.to_csv(f'{base_path}{df_partitions_fits_name}', index=False)

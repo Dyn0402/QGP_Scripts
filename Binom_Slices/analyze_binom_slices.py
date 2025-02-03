@@ -458,14 +458,20 @@ def calc_sys(def_val, def_err, sys_vals, sys_errs, return_vals='both'):
     return barlow, barlow_i
 
 
-def get_sys(df, df_def_name, df_sys_dict, group_cols=None, val_col='val', err_col='err', name_col='name',
-            sys_col='sys'):
+def get_sys(df, df_def_name, df_sys_dict, sys_prior_dict=None, group_cols=None,
+            val_col='val', err_col='err', name_col='name', sys_col='sys'):
     """
     Calculate systematic uncertainties on the default set in df.
     Only ready to take single variation per systematic variable.
     :param df: Dataframe
     :param df_def_name: Default set name
     :param df_sys_dict: Dictionary of systematic sets to be analyzed. {set_type: [set_names]}
+    :param sys_prior_dict: Dictionary of systematic prior distributions. If None, all gaus. {set_name: prior}
+            gaus: Gaussian prior. Variation(s) correspond to 1 sigma estimate. If 2 variations, take max.
+            flat_one_side: Uniform prior. Variation corresponds to edge of distribution, with default on other edge.
+                            Divide by 1/sqrt(12) to get 1 sigma estimate.
+            flat_two_side: Uniform prior. Variation(s) correspond to edge of distribution, with default in the center.
+                            Divide by 2/sqrt(12)=1/sqrt(3) to get 1 sigma estimate.
     :param group_cols: Name of columns by which to group values.
     For example, energies and centralities should be separate
     :param val_col: Name of column containing the values of interest
@@ -503,6 +509,12 @@ def get_sys(df, df_def_name, df_sys_dict, group_cols=None, val_col='val', err_co
                 sys_err = group_df_sys_type[err_col].values
 
                 barlow_i = calc_sys(def_val, def_err, sys_val, sys_err, 'indiv') ** 2
+                if sys_prior_dict is None or sys_type not in sys_prior_dict or sys_prior_dict[sys_type] == 'gaus':
+                    barlow_i = barlow_i  # Do nothing, treat as gaussian 1 sigma. Dumb if statement but hopefully clear.
+                elif sys_prior_dict[sys_type] == 'flat_one_side':
+                    barlow_i = barlow_i / 12  # 1 sigma estimate for a uniform distribution with default at one edge
+                elif sys_prior_dict[sys_type] == 'flat_two_side':
+                    barlow_i = barlow_i / 3  # 1 sigma estimate for a uniform distribution with default at center
                 barlow += np.max(barlow_i) if barlow_i.size > 0 else 0
             barlow = np.sqrt(barlow)
 
@@ -600,6 +612,19 @@ def sys_info_dict_to_var_names(sys_info_dict):
     # print(sys_vars_names)
     # print([y for x in sys_vars_names.values() for y in x])
     return sys_vars_names
+
+
+def sys_info_dict_to_priors(sys_info_dict):
+    """
+    Read priors out of sys_info_dict and return dictionary of priors.
+    :param sys_info_dict: Dictionary with full systematics info
+    :return: Dict matching sys type to prior. {sys_type: prior}
+    """
+    sys_priors = {}
+    for key in sys_info_dict:
+        if sys_info_dict[key]['sys_vars'] is not None and sys_info_dict[key]['prior'] is not None:
+            sys_priors.update({key: sys_info_dict[key]['prior']})
+    return sys_priors
 
 
 def split_sys_type_val(sys_name):
