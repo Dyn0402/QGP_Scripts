@@ -1091,10 +1091,10 @@ def plot_star_var_sys():
     sys_default_dir = 'rapid05_resample_norotate_seed_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_0/'
     df_name = 'Binomial_Slice_Moments/binom_slice_vars_bes_sys.csv'
 
-    # plot = True
-    plot = False
-    calc_finals = False
-    # calc_finals = True
+    plot = True
+    # plot = False
+    # calc_finals = False
+    calc_finals = True
     threads = 11
     sys_pdf_out_path = f'{base_path}systematic_plots.pdf'
     indiv_pdf_out_path = f'F:/Research/Results/BES_QA_Plots/Systematics/'
@@ -1288,7 +1288,7 @@ def plot_star_var_sys():
                                           val_col='avg', err_col='avg_err', group_cols=['divs', 'energy', 'cent'])
         dsig_avg_diff_v2sub_out.to_csv(f'{base_path}{df_def_avgs_v2sub_out_name}', index=False)
 
-    plot_sys(dsig_avgs_diff_v2sub, 'bes_def', non_rand_sets, sys_info_dict, val_col='avg', err_col='avg_err',
+    plot_sys(dsig_avgs_diff_v2sub, 'bes_def', non_rand_sets, sys_info_dict, sys_priors, val_col='avg', err_col='avg_err',
              group_cols=['divs', 'energy', 'cent'], y_label=r'$\langle \Delta \sigma^2 \rangle$',
              pdf_out_path=sys_pdf_out_path, indiv_pdf_path=indiv_pdf_out_path)
     df_120_4_up = dsig_avgs_diff_v2sub[(dsig_avgs_diff_v2sub['cent'] > 4) & (dsig_avgs_diff_v2sub['divs'] == 120)]
@@ -1315,7 +1315,7 @@ def plot_star_var_sys():
             plot_slope_div_fits(df_fits_out, data_sets_colors, data_sets_labels)
             plot_slope_div_fits_simpars(df_fits_out)
     df_fits = df_fits.rename(columns={'data_set': 'name'})
-    plot_sys(df_fits, 'bes_def', non_rand_sets, sys_info_dict, val_col='baseline', err_col='base_err',
+    plot_sys(df_fits, 'bes_def', non_rand_sets, sys_info_dict, sys_priors, val_col='baseline', err_col='base_err',
              group_cols=['cent', 'energy'], name_col='name', indiv_pdf_path=indiv_pdf_out_path,
              y_label=r'$\langle \Delta \sigma^2 \rangle$')
     df_fits_4_up = df_fits[df_fits['cent'] > 4]

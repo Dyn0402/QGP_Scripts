@@ -175,8 +175,8 @@ def v6_divs(w, v6):
     return v6 ** 2 * np.sin(3 * w) ** 2 / (18 * np.pi ** 2)
 
 
-def vn_divs(w, v, n=2):
-    return np.sign(v) * 2 * v ** 2 * np.sin(n * w / 2) ** 2 / (n ** 2 * np.pi ** 2)
+def vn_divs(w, v, n=2):  # Numpy doesn't like Measure for np.sign
+    return (v / np.abs(v)) * 2 * v ** 2 * np.sin(n * w / 2) ** 2 / (n ** 2 * np.pi ** 2)
 
 
 def stat_vs_protons(df, stat, div, cent, energies, data_types, data_sets_plt, y_ranges=None, plot=False, fit=False,
@@ -607,7 +607,8 @@ def sys_info_dict_to_var_names(sys_info_dict):
                     if key == 'Efficiency':
                         sys_var_val = 100 - sys_var_val
                     str_val = sys_var_val / 10 ** sys_info_dict[key]['decimal']
-                    str_val = str(round(str_val, sys_info_dict[key]['decimal'] + 1)).replace('0.', '')
+                    # str_val = str(round(str_val, sys_info_dict[key]['decimal'] + 1)).replace('0.', '')
+                    str_val = str(str_val).replace('0.', '')
                     sys_vars_names[key].append(f'{key}{str_val}')
     # print(sys_vars_names)
     # print([y for x in sys_vars_names.values() for y in x])
@@ -734,9 +735,9 @@ def plot_vs_sys(df, df_def_name, def_val, df_sys_set_names, sys_info_dict, group
         fig.subplots_adjust(hspace=0)
 
 
-def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, val_col='val', err_col='err',
-             name_col='name', plot_barlow_decomp=False, plot_bars=True, y_label=None, pdf_out_path=None,
-             indiv_pdf_path=None):
+def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, sys_prior_dict=None, group_cols=None,
+             val_col='val', err_col='err', name_col='name', plot_barlow_decomp=False, plot_bars=True, y_label=None,
+             pdf_out_path=None, indiv_pdf_path=None):
     if group_cols is None:
         group_cols = ['divs', 'energy', 'cent', 'data_type', 'total_protons']
 
@@ -800,9 +801,12 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
             sys_err = group_df_sys[err_col].values
 
             barlow_i = calc_sys(def_val, def_err, sys_val, sys_err, 'indiv')
-            # barlow_i = np.clip((def_val - sys_val) ** 2 - np.abs(def_err ** 2 - sys_err ** 2), a_min=0, a_max=None)
-            # barlow = np.sqrt(np.max(barlow_i) / 12.0)
-            # barlow = np.sqrt(np.sum(barlow_i / 12.0))
+            # Where prior is 'flat_one_side' or 'flat_two_side', divide by sqrt(12) or sqrt(3) respectively.
+            # Otherwise, assume gaussian and divide by 1
+            # Use sys_prior_dict with group_df_sys['sys_type'] to get series of priors
+            priors = group_df_sys['sys_type'].map(sys_prior_dict)
+            prior_divisors = priors.map(lambda x: np.sqrt(12) if x == 'flat_one_side' else np.sqrt(3) if x == 'flat_two_side' else 1)
+            barlow_i = barlow_i / prior_divisors
             group_df_sys['barlow'] = barlow_i
             group_df_sys['barlow_sum'] = barlow_i
 
@@ -879,7 +883,6 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, 
                 if pdf_out_path is not None:
                     pdf_pages.savefig(fig)
                 if indiv_pdf_path is not None:
-                    print('saving pdf')
                     fig_name = indiv_pdf_path + '_'.join([f'{col}{val}' for col, val in zip(group_cols, group_name)])
                     fig.savefig(fig_name + '.pdf', format='pdf')
                 plt.close(fig)
