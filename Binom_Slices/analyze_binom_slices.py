@@ -751,11 +751,16 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, sys_prior_dict=No
 
     df_filtered = df[df[name_col].isin(list(df_sys_set_names) + [df_def_name])]
     df_filtered[['sys_type', 'sys_val']] = df_filtered[name_col].apply(lambda x: pd.Series(split_sys_type_val(x)))
+    # df_filtered.loc[:, ['sys_type', 'sys_val']] = df_filtered[name_col].apply(lambda x: pd.Series(split_sys_type_val(x)))
+    # Commented out line above doesn't work, don't let warnings make you try it again
 
     default_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
     sys_types = [sys_type for sys_type in df_filtered['sys_type'].unique() if sys_type != df_def_name]
     color_dict = {sys_type: color for sys_type, color in zip(sys_types, default_colors)}
-    df_filtered.loc[:, 'color'] = df_filtered['sys_type'].map(color_dict)
+    for sys_type, color in zip(sys_types, default_colors):
+        print(sys_type, color)
+    df_filtered['color'] = df_filtered['sys_type'].map(color_dict)
+    print(df_filtered.loc[:, ['sys_type', 'color']].head(200))
 
     if pdf_out_path is not None:
         pdf_pages = PdfPages(pdf_out_path)
@@ -854,6 +859,11 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, sys_prior_dict=No
             for sys_type in group_df_sys['sys_type'].unique():
                 sys_type_df = group_df_sys[group_df_sys['sys_type'] == sys_type]
                 # sys_type_df = sys_type_df.sort_values('sys_val')
+                # print(f'Sys_type_df:')
+                # print(sys_type_df)
+                # print(f'Sys_type_df colors:')
+                # print(sys_type_df['color'])
+                # print(sys_type_df['color'].values)
                 sys_type_sum_df = sys_type_df[sys_type_df['include_sys']]
                 ax_errorbar.errorbar(sys_type_df['sys_val_str'], sys_type_df[val_col], sys_type_df[err_col],
                                      color=sys_type_df['color'].values[0], ls='none', marker='o', zorder=9,
@@ -894,8 +904,8 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, sys_prior_dict=No
         pdf_pages.close()
 
 
-def plot_sys_table(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=None, val_col='val', err_col='err',
-                   name_col='name', indiv_pdf_path=None):
+def plot_sys_table(df, df_def_name, df_sys_set_names, sys_info_dict, sys_prior_dict=None, group_cols=None,
+                   val_col='val', err_col='err', name_col='name', indiv_pdf_path=None):
     if group_cols is None:
         group_cols = ['divs', 'energy', 'cent', 'data_type', 'total_protons']
 
@@ -958,6 +968,13 @@ def plot_sys_table(df, df_def_name, df_sys_set_names, sys_info_dict, group_cols=
                     sys_err = df_sys[err_col].values
 
                     barlow_i = calc_sys(def_val, def_err, sys_val, sys_err, 'indiv')
+                    # Where prior is 'flat_one_side' or 'flat_two_side', divide by sqrt(12) or sqrt(3) respectively.
+                    # Otherwise, assume gaussian and divide by 1
+                    # Use sys_prior_dict with group_df_sys['sys_type'] to get series of priors
+                    priors = df_sys['sys_type'].map(sys_prior_dict)
+                    prior_divisors = priors.map(
+                        lambda x: np.sqrt(12) if x == 'flat_one_side' else np.sqrt(3) if x == 'flat_two_side' else 1)
+                    barlow_i = barlow_i / prior_divisors
                     df_sys['barlow'] = barlow_i
                     df_sys['barlow_sum'] = barlow_i
 
@@ -1001,10 +1018,9 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
                     hist=False, data_sets_colors=None, data_sets_labels=None, star_prelim_loc=None, alpha=0.6,
                     marker_map=None, errbar_alpha=0.2, legend_pos='lower center', ylabel=None, xlim=None,
                     kin_info_loc=(0.26, 0.91), title=None, data_sets_bands=None, legend_order=None, leg=True,
-                    ax_in=None, ylim=None):
+                    ax_in=None, ylim=None, print_data=False):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
-    print_data = True
     data = []
     for data_type in data_types:
         for data_set in data_sets_plt:

@@ -295,7 +295,7 @@ def plot_paper_figs():
     df_dsigma = pd.concat([df_dsigma, df_dsigma_model])
 
     dvar_vs_protons(df_dsigma, div_plt, cent_plt, [39], ['raw', 'mix', 'diff'], ['bes_def'],
-                    plot=True, avg=False, alpha=1.0, y_ranges=[-0.00085, 0.00055],
+                    plot=True, avg=False, alpha=1.0, y_ranges=[-0.00085, 0.00055], print_data=True,
                     data_sets_labels={'bes_def': {'raw': 'Single Event', 'mix': 'Mixed Event',
                                                   'diff': 'Single Event - Mixed Event'}},
                     marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^'}})  # Mix subtraction demo
@@ -342,7 +342,7 @@ def plot_paper_figs():
                     # y_ranges=[-0.00124, 0.0009])  # v2 sub demo
                     y_ranges=[-0.0039, 0.0009], kin_info_loc=(0.26, 0.94))  # v2 sub demo
     dvar_vs_protons(df_dsigma_with_v2sub, div_plt, 4, [39], ['raw', 'diff', 'v2_sub'], ['bes_def'],
-                    plot=True, avg=False, alpha=1.0, ylabel=r'$\Delta\sigma^2$',
+                    plot=True, avg=False, alpha=1.0, ylabel=r'$\Delta\sigma^2$', print_data=True,
                     data_sets_labels={'bes_def': {'raw': 'Uncorrected', 'diff': 'Mixed Corrected',
                                                   'v2_sub': 'Mixed and Flow Corrected'}},
                     data_sets_colors={'bes_def': {'raw': 'blue', 'diff': 'red', 'v2_sub': 'black'}},
@@ -1288,14 +1288,17 @@ def plot_star_var_sys():
                                           val_col='avg', err_col='avg_err', group_cols=['divs', 'energy', 'cent'])
         dsig_avg_diff_v2sub_out.to_csv(f'{base_path}{df_def_avgs_v2sub_out_name}', index=False)
 
-    plot_sys(dsig_avgs_diff_v2sub, 'bes_def', non_rand_sets, sys_info_dict, sys_priors, val_col='avg', err_col='avg_err',
-             group_cols=['divs', 'energy', 'cent'], y_label=r'$\langle \Delta \sigma^2 \rangle$',
+    # plot_sys(dsig_avgs_diff_v2sub, 'bes_def', non_rand_sets, sys_info_dict, sys_priors, val_col='avg', err_col='avg_err',
+    #          group_cols=['divs', 'energy', 'cent'], y_label=r'$\langle \Delta \sigma^2 \rangle$',
+    #          pdf_out_path=sys_pdf_out_path, indiv_pdf_path=indiv_pdf_out_path)
+    plot_sys(dsig_avgs_diff_v2sub, 'bes_def', non_rand_sets, sys_info_dict, sys_priors, val_col='avg',
+             err_col='avg_err', group_cols=['cent', 'energy', 'divs'], y_label=r'$\langle \Delta \sigma^2 \rangle$',
              pdf_out_path=sys_pdf_out_path, indiv_pdf_path=indiv_pdf_out_path)
     df_120_4_up = dsig_avgs_diff_v2sub[(dsig_avgs_diff_v2sub['cent'] > 4) & (dsig_avgs_diff_v2sub['divs'] == 120)]
-    plot_sys_table(df_120_4_up, 'bes_def', non_rand_sets, sys_info_dict, val_col='avg',
+    plot_sys_table(df_120_4_up, 'bes_def', non_rand_sets, sys_info_dict, sys_priors, val_col='avg',
                    err_col='avg_err', name_col='name', indiv_pdf_path=f'{indiv_pdf_out_path}sys_table_high_cent.pdf')
     df_120_4_down = dsig_avgs_diff_v2sub[(dsig_avgs_diff_v2sub['cent'] <= 4) & (dsig_avgs_diff_v2sub['divs'] == 120)]
-    plot_sys_table(df_120_4_down, 'bes_def', non_rand_sets, sys_info_dict, val_col='avg',
+    plot_sys_table(df_120_4_down, 'bes_def', non_rand_sets, sys_info_dict, sys_priors, val_col='avg',
                    err_col='avg_err', name_col='name', indiv_pdf_path=f'{indiv_pdf_out_path}sys_table_low_cent.pdf')
 
     df_fits = plot_dvar_avgs_divs(dsig_avgs_diff_v2sub, all_sets, fit=True, plot_energy_panels=False, plot=False)
@@ -1317,13 +1320,18 @@ def plot_star_var_sys():
     df_fits = df_fits.rename(columns={'data_set': 'name'})
     plot_sys(df_fits, 'bes_def', non_rand_sets, sys_info_dict, sys_priors, val_col='baseline', err_col='base_err',
              group_cols=['cent', 'energy'], name_col='name', indiv_pdf_path=indiv_pdf_out_path,
-             y_label=r'$\langle \Delta \sigma^2 \rangle$')
+             pdf_out_path=sys_pdf_out_path.replace('.pdf', '_baseline.pdf'), y_label='Baseline')
+    plot_sys(df_fits, 'bes_def', non_rand_sets, sys_info_dict, sys_priors, val_col='zero_mag',
+             err_col='zero_mag_err', group_cols=['cent', 'energy'], name_col='name',
+             pdf_out_path=sys_pdf_out_path.replace('.pdf', '_zeros.pdf'), y_label='Curvature')
     df_fits_4_up = df_fits[df_fits['cent'] > 4]
-    plot_sys_table(df_fits_4_up, 'bes_def', non_rand_sets, sys_info_dict, val_col='baseline',
-                   err_col='base_err', name_col='name', indiv_pdf_path=f'{indiv_pdf_out_path}sys_table_high_cent.pdf')
+    plot_sys_table(df_fits_4_up, 'bes_def', non_rand_sets, sys_info_dict, sys_priors, val_col='baseline',
+                   err_col='base_err', name_col='name',
+                   indiv_pdf_path=f'{indiv_pdf_out_path}baseline_sys_table_high_cent.pdf')
     df_fits_4_down = df_fits[df_fits['cent'] <= 4]
-    plot_sys_table(df_fits_4_down, 'bes_def', non_rand_sets, sys_info_dict, val_col='baseline',
-                   err_col='base_err', name_col='name', indiv_pdf_path=f'{indiv_pdf_out_path}sys_table_low_cent.pdf')
+    plot_sys_table(df_fits_4_down, 'bes_def', non_rand_sets, sys_info_dict, sys_priors, val_col='baseline',
+                   err_col='base_err', name_col='name',
+                   indiv_pdf_path=f'{indiv_pdf_out_path}baseline_sys_table_low_cent.pdf')
 
     plt.show()
 
