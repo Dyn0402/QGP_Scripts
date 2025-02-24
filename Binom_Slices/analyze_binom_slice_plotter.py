@@ -29,7 +29,7 @@ from integrate_pdf_var import base_gaus_pdf_wrap, get_partition_variance
 
 
 def main():
-    # plot_paper_figs()
+    plot_paper_figs()
     # plot_qm_figs()
     # plot_method_paper_figs()
 
@@ -39,7 +39,7 @@ def main():
     # get_sim_mapping_var()
     # plot_all_zero_base()
 
-    plot_star_var_sys()
+    # plot_star_var_sys()
     # make_models_csv()
     # plot_star_var_rand_sys()
 
@@ -350,7 +350,7 @@ def plot_paper_figs():
                     # y_ranges=[-0.00124, 0.0009])  # v2 sub demo
                     y_ranges=[-0.0039, 0.0009], kin_info_loc=(0.26, 0.94))  # v2 sub demo
 
-    plt.show()
+    # plt.show()
 
     dsig_avgs_all = pd.read_csv(f'{base_path}{df_def_avgs_out_name}')
     dsig_avgs_all_model = pd.read_csv(f'{base_path}{df_def_avgs_out_model_name}')
@@ -465,7 +465,9 @@ def plot_paper_figs():
                               data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,  # <---
                               title=f'{div_plt}° Partitions, {samples} Samples per Event', alpha=0.8, errbar_alpha=0.3,
                               kin_info_loc=(0.2, 0.1), star_prelim_loc=(0.3, 0.5), marker_map=data_sets_markers,
-                              data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
+                              data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands,
+                              print_data=True)
+    plt.show()
     plot_protons_avgs_vs_cent(dsig_avgs_v2_sub_div120, vs_cent_sets, data_sets_colors=data_sets_colors, fit=False,
                               data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type='npart',  # <---
                               title=f'{div_plt}° Partitions, {samples} Samples per Event', alpha=0.8, errbar_alpha=0.3,
