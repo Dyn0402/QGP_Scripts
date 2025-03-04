@@ -467,7 +467,6 @@ def plot_paper_figs():
                               kin_info_loc=(0.2, 0.1), star_prelim_loc=(0.3, 0.5), marker_map=data_sets_markers,
                               data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands,
                               print_data=True)
-    plt.show()
     plot_protons_avgs_vs_cent(dsig_avgs_v2_sub_div120, vs_cent_sets, data_sets_colors=data_sets_colors, fit=False,
                               data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type='npart',  # <---
                               title=f'{div_plt}° Partitions, {samples} Samples per Event', alpha=0.8, errbar_alpha=0.3,
@@ -515,12 +514,13 @@ def plot_paper_figs():
     plot_div_fits_vs_cent_2panel(df_fits, data_sets_cent, data_sets_colors=data_sets_colors, fit=False,
                                  cent_ref=cent_ref_df, ref_type=ref_type,  # <---
                                  # title=f'{div_plt}° Partitions, {samples} Samples per Event',
-                                 title='',
+                                 title='', print_data=True,
                                  errbar_alpha=0.3, xlim=(-20, 720), alpha=0.8,
                                  kin_info_loc=(0.45, 0.03), marker_map=data_sets_markers,
                                  data_sets_energies_colors=data_sets_energies_colors,
                                  # data_sets_bands=data_sets_bands
                                  )
+    plt.show()
 
     # plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels, data_sets=data_sets_plt)
     # plot_slope_div_fits_simpars(df_fits)

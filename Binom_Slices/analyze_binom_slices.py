@@ -4767,7 +4767,7 @@ def plot_div_fits_vs_cent_2panel(df, data_sets_plt, data_sets_colors=None, data_
                                  fit=False, cent_ref=None, ref_type=None, data_sets_energies_cmaps=None, ls='-',
                                  alpha=0.6, errbar_alpha=0.2, kin_info_loc=(0.18, 0.1), star_prelim_loc=None,
                                  data_sets_energies_colors=None, marker_map=None, data_sets_bands=None, xlim=None,
-                                 legend_order=None):
+                                 legend_order=None, print_data=False):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     energy_map = {7: '7.7', 11: '11.5', 19: '19.6', 27: '27', 39: '39', 62: '62.4'}
@@ -4850,6 +4850,14 @@ def plot_div_fits_vs_cent_2panel(df, data_sets_plt, data_sets_colors=None, data_
                         ax_avg.errorbar(x, df_energy[fit_par['val']], xerr=0, yerr=df_energy[fit_par['sys']], marker='',
                                         ls='',
                                         color=color, elinewidth=4, alpha=errbar_alpha)
+                if print_data:
+                    print(f'\n{data_set} {energy}GeV {fit_par_name}')
+                    print(f'\'x\': [{", ".join([str(xi) for xi in x])}]')
+                    print(f'\'val\': [{", ".join([str(xi) for xi in df_energy[fit_par["val"]]])}]')
+                    print(f'\'err\': [{", ".join([str(xi) for xi in df_energy[fit_par["err"]]])}]')
+                    if fit_par['sys'] in df_energy.columns:
+                        print(f'\'sys\': [{", ".join([str(xi) for xi in df_energy[fit_par["sys"]]])}]')
+
 
         for set_i, data_set in enumerate(data_sets_plt):
             ax_avg = ax_avgs[data_set]
