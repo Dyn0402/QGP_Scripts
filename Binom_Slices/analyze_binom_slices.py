@@ -1433,7 +1433,7 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
                              star_prelim_loc=None, marker_map=None, alpha=1.0, errbar_alpha=0.2, avgs_df=None,
                              ylabel=None, kin_loc=None, no_hydro_label=False, data_sets_bands=None,
                              legend_order=None, title=None, ylim=None, legend_panel=-1, fig_splt_adjust=None,
-                             plot_letters=False):
+                             plot_letters=False, print_data=False):
     cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
                 0: '70-80%', -1: '80-90%'}
     energy_map = {7: '7.7', 11: '11.5', 19: '19.6', 27: '27', 39: '39', 62: '62.4'}
@@ -1549,6 +1549,7 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
                 avgs.append({'name': data_set, 'energy': energy, 'divs': div, 'amp': amp, 'spread': spread,
                              'avg': weight_avg, 'avg_err': weight_avg_err, 'cent': cent,
                              'avg_meas': Measure(weight_avg, weight_avg_err)})
+
                 if plot_avg and avgs_df is None:
                     if plot:
                         ax.axhline(weight_avg, ls='--', color=c)
@@ -1565,6 +1566,15 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
                         ax_hist.plot(x_norm, norm(0, 1).pdf(x_norm), color='red', label='Standard Normal')
                         ax_hist.legend()
                         fig_hist.tight_layout()
+            if print_data:
+                print(f'\n{data_set} {data_type} {energy}GeV {div}°')
+                print(f'\'n\': [{", ".join([str(x) for x in df_plt["total_protons"].values])}],')
+                print(f'\'val\': [{", ".join([str(x) for x in df_plt["val"].values])}],')
+                print(f'\'err\': [{", ".join([str(x) for x in df_plt["err"].values])}],')
+                if 'sys' in df:
+                    print(f'\'sys\': [{", ".join([str(x) for x in df["sys"].values])}]')
+                if avgs_df is not None:
+                    print(f'\'avg\': {avg}, \'avg_err\': {avg_err}, \'avg_sys\': {avg_sys}')
 
     if plot or plot_avg:
         if len(data_sets_plt) * len(data_types) > 1:
@@ -1972,7 +1982,8 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                         plot=True, errbar_alpha=0.2, plot_indiv=True, plot_energies_fig=False, ylim=None, xlim=None,
                         leg_panel=0, kin_loc=(0.02, 0.02), star_prelim_loc=None, no_hydro_label=False, xlab=None,
                         data_sets_bands=None, legend_order=None, leg_frameon=False, data_sets_markers=None,
-                        data_sets_fills=None, data_sets_ls=None, fig_splt_adj=None, panel_letters=False, leg=True):
+                        data_sets_fills=None, data_sets_ls=None, fig_splt_adj=None, panel_letters=False, leg=True,
+                        print_data=False):
     energy_map = {7: '7.7', 11: '11.5', 19: '19.6', 27: '27', 39: '39', 62: '62.4'}
     if xlab is None:
         xlab = r'Azimuthal Partition Width ($w$°)'
@@ -2076,6 +2087,14 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                                 ax_panels[energy].errorbar(df_cent['divs'], df_cent['avg'], yerr=df_cent['sys'],
                                                            ls='', marker='', color=color, alpha=errbar_alpha,
                                                            elinewidth=4)
+                    if print_data:
+                        print(f'\n{data_set}, {energy}GeV, {cent} Centrality')
+                        print(f'\'w\': [{", ".join(map(str, df_cent["divs"]))}]')
+                        print(f'\'val\': [{", ".join(map(str, df_cent["avg"]))}]')
+                        print(f'\'err\': [{", ".join(map(str, df_cent["avg_err"]))}]')
+                        if 'sys' in df_cent.columns:
+                            print(f'\'sys\': [{", ".join(map(str, df_cent["sys"]))}]')
+
                 if fit and df_cent.size > 1:
                     try:
                         df_cent = df_cent[~df_cent.divs.isin(exclude_divs)]
@@ -2086,6 +2105,9 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                                          'curvature': popt[0], 'curve_baseline': popt[1], 'curve_err': perr[0],
                                          'curve_base_err': perr[1],
                                          'spread': df_cent['spread'].iloc[0], 'amp': df_cent['amp'].iloc[0]})
+                        if print_data:
+                            print(f'\'baseline\' = {popt[1]}, \'baseline_err\' = {perr[1]}')
+                            print(f'\'curvature\' = {popt[0]}, \'curvature_err\' = {perr[0]}')
                         if plot:
                             if data_sets_ls is not None and data_set in data_sets_ls:
                                 ls = data_sets_ls[data_set]

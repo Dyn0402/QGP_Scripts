@@ -390,7 +390,7 @@ def plot_paper_figs():
     dvar_vs_protons_energies(df_dsigma_v2sub, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], data_sets_plt,
                              plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors, no_hydro_label=1,
                              data_sets_labels=data_sets_labels, y_ranges=[-0.00124, 0.00033], avgs_df=dsig_avgs_v2sub,
-                             ylabel=r'$\Delta\sigma^2$',
+                             ylabel=r'$\Delta\sigma^2$', print_data=True,
                              # kin_loc=(0.65, 0.2), star_prelim_loc=(1, 0.54, 0.78),
                              kin_loc=(0.58, 0.43), star_prelim_loc=(1, 0.54, 0.37),
                              marker_map=data_sets_markers, data_sets_bands=data_sets_bands, legend_order=legend_order,
@@ -414,13 +414,14 @@ def plot_paper_figs():
     #                     exclude_divs=exclude_divs)
     plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,  # <---
                         data_sets_labels=data_sets_labels, plot_energy_panels=True, legend_order=legend_order,
-                        ylab=r'$\langle\Delta\sigma^2\rangle$', data_sets_bands=data_sets_bands,
+                        ylab=r'$\langle\Delta\sigma^2\rangle$', data_sets_bands=data_sets_bands, print_data=True,
                         plot_indiv=False, ylim=(-0.0009, 0.0001), leg_panel=5, no_hydro_label=True,
                         # star_prelim_loc=(1, 0.3, 0.7),
                         star_prelim_loc=(1, 0.5, 0.8),
                         # xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event',
                         xlim=(-10, 370), title=f'',
                         exclude_divs=exclude_divs)
+    plt.show()
 
     # plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, ['bes_def'], data_sets_colors=data_sets_colors, fit=False,
     #                     data_sets_labels=data_sets_labels, plot_energy_panels=True,
