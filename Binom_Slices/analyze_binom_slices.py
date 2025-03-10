@@ -1568,9 +1568,9 @@ def dvar_vs_protons_energies(df, divs, cent, energies, data_types, data_sets_plt
                         fig_hist.tight_layout()
             if print_data:
                 print(f'\n{data_set} {data_type} {energy}GeV {div}°')
-                print(f'\'n\': [{", ".join([str(x) for x in df_plt["total_protons"].values])}],')
-                print(f'\'val\': [{", ".join([str(x) for x in df_plt["val"].values])}],')
-                print(f'\'err\': [{", ".join([str(x) for x in df_plt["err"].values])}],')
+                print(f'\'n\': [{", ".join([str(x) for x in df["total_protons"].values])}],')
+                print(f'\'val\': [{", ".join([str(x) for x in df["val"].values])}],')
+                print(f'\'err\': [{", ".join([str(x) for x in df["err"].values])}],')
                 if 'sys' in df:
                     print(f'\'sys\': [{", ".join([str(x) for x in df["sys"].values])}]')
                 if avgs_df is not None:
