@@ -7,10 +7,14 @@ Created as QGP_Scripts/analyze_binom_slice_plotter
 
 @author: Dylan Neff, Dyn04
 """
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pickle
+
+from scipy.optimize import basinhopping
+import warnings
 
 import itertools
 import inspect
@@ -29,7 +33,7 @@ from integrate_pdf_var import base_gaus_pdf_wrap, get_partition_variance
 
 
 def main():
-    plot_paper_figs()
+    # plot_paper_figs()
     # plot_qm_figs()
     # plot_method_paper_figs()
 
@@ -46,6 +50,7 @@ def main():
     # plot_vs_cent_var_fits()
     # plot_vs_cent_var_fit_tests()
     # plot_vs_cent_var_fit_tests2()
+    plot_vs_cent_var_fit_tests3()
 
     # plot_sims()
     # get_sim_mapping()
@@ -2960,6 +2965,190 @@ def plot_vs_cent_var_fit_tests2():
         ax3.legend()
         fig3.canvas.manager.set_window_title(f'Parameter {par_letter} vs Energy')
         fig3.tight_layout()
+
+    plt.show()
+
+
+def plot_vs_cent_var_fit_tests3():
+    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    df_def_avgs_v2sub_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_bes.csv'
+    df_def_avgs_v2sub_out_model_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_model.csv'
+
+    dsig_avgs_v2sub = pd.read_csv(f'{base_path}{df_def_avgs_v2sub_out_name}')
+    dsig_avgs_v2sub_model = pd.read_csv(f'{base_path}{df_def_avgs_v2sub_out_model_name}')
+    dsig_avgs_v2sub = pd.concat([dsig_avgs_v2sub, dsig_avgs_v2sub_model])
+
+    cent_ref_name = 'mean_cent_ref.csv'
+    cent_ref_df = pd.read_csv(f'{base_path}{cent_ref_name}')
+    ref_type = 'refn'  # 'refn'
+    cent_ref_df = cent_ref_df.replace('bes_resample_def', 'bes_def')
+    cent_ref_df = cent_ref_df.replace('ampt_new_coal_resample_def', 'ampt_new_coal_epbins1')
+
+    # dsig_avgs_v2sub['data_type'] = 'diff'
+    df = dsig_avgs_v2sub[dsig_avgs_v2sub['divs'] == 120]
+    data_sets = ['bes_def', 'ampt_new_coal_epbins1']
+
+    plt.rcParams.update({'font.size': 16})
+
+    def n_fit(n, a, b):
+        return a / n + b
+
+    def n_pow_fit(n, a, b, c):
+        return a * (1 + b / np.power(n, c))
+
+    def n_pow_fit2(n, a, b, c):
+        return a + b / np.power(n, c)
+
+    def n_fit_lin(n, a, b, c):
+        return a / (n + c * np.sqrt(n)) + b
+
+    def n_fit_lin2(n, a, b, c, d):
+        return a / np.array(n) + c / np.power(n, d) + b
+
+    def n_n2_fit(n, a, b, c):
+        return a / n + c / np.power(n, 2) + b
+
+    fit_func = n_pow_fit
+    fit_eq = r'$\langle \Delta \sigma^2 \rangle = a \left( 1 + \frac{b}{M^c} \right)$'
+    # fit_eq = r'$\langle \Delta \sigma^2 \rangle = a + \frac{b}{M^c}$'
+    p0 = (0.0002, -100, 0.5)
+    min_x_fit = 0
+    # cents_fit = 3
+    cents_fit = None
+    fit_resid = False
+    n_pars = len(inspect.signature(fit_func).parameters) - 1
+
+    energies = [7, 11, 19, 27, 39, 62]
+    energy_fit_pars = {i: {'bes': {'vals': [], 'errs': []}, 'ampt': {'vals': [], 'errs': []}} for i in range(n_pars)}
+    for energy in energies:
+        df_energy = df[df['energy'] == energy]
+        fig, ax = plt.subplots()
+        ax.grid()
+        ax.axhline(0, color='gray')
+        ax.set_title(f'{energy} GeV')
+        ax.set_xlabel('Refmult')
+        ax.set_ylabel(r'$\langle \Delta \sigma^2 \rangle$')
+
+        for data_set in data_sets:
+            print(f'Starting {data_set} {energy} GeV')
+            df_set = df_energy[df_energy['name'] == data_set]
+            cent_energy = cent_ref_df[(cent_ref_df['data_set'] == data_set) & (cent_ref_df['energy'] == energy)]
+            x = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_val'].iloc[0] for cent in
+                 df_set['cent']]
+            x_err = [cent_energy[cent_energy['cent'] == cent][f'mean_{ref_type}_sd'].iloc[0] for cent in
+                     df_set['cent']]
+
+            ax.errorbar(x, df_set['avg'], yerr=df_set['avg_err'], xerr=x_err, ls='none', marker='o',
+                        label=data_set)
+
+            filtered_lists = [(xi, y, ye) for xi, y, ye in zip(x, df_set['avg'], df_set['avg_err'])
+                              if xi > min_x_fit]
+            x_fit, y_fit, yerr_fit = zip(*sorted(filtered_lists))
+            if cents_fit is not None:
+                x_fit, y_fit, yerr_fit = x_fit[-cents_fit:], y_fit[-cents_fit:], yerr_fit[-cents_fit:]
+
+            def objective(params):
+                y_fit_obj = fit_func(x_fit, *params)
+                return np.sum(np.square((y_fit_obj - y_fit) / yerr_fit))
+
+            try:
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", category=RuntimeWarning)
+                    popt, pcov = cf(fit_func, x_fit, y_fit, sigma=yerr_fit, absolute_sigma=True, p0=p0)
+                    result = basinhopping(objective, p0, niter=100, T=1.0, stepsize=0.5)
+                    p0_basin = result.x
+                    print(f'CF popt: {popt}')
+                    print(f'BH popt: {p0_basin}')
+                    popt_new, pcov_new = cf(fit_func, x_fit, y_fit, sigma=yerr_fit, absolute_sigma=True, p0=p0_basin)
+                    popt = popt_new
+                    pcov = pcov_new
+            except RuntimeError:
+                popt, pcov = p0, np.diag(np.ones(len(p0)))
+            perr = np.sqrt(np.diag(pcov))
+            xs = np.linspace(min(x), max(x), 1000)
+            ax.plot(xs, fit_func(xs, *popt), color='red')
+            if 'ampt' in data_set:
+                ampt_popt = popt
+                x_ampt = x
+                for i in range(n_pars):
+                    energy_fit_pars[i]['ampt']['vals'].append(popt[i])
+                    energy_fit_pars[i]['ampt']['errs'].append(perr[i])
+            if 'bes_def' in data_set:
+                bes_popt = popt
+                x_bes = x
+                for i in range(n_pars):
+                    energy_fit_pars[i]['bes']['vals'].append(popt[i])
+                    energy_fit_pars[i]['bes']['errs'].append(perr[i])
+        ax.legend()
+        fig.canvas.manager.set_window_title(f'{energy} GeV Fits')
+        fig.tight_layout()
+
+        fig2, ax2 = plt.subplots()
+        ax2.grid()
+        ax2.axhline(0, color='gray')
+        ax2.set_title(f'{energy} GeV AMPT Subtracted')
+        ax2.set_xlabel('Refmult')
+        ax2.set_ylabel(r'$\langle \Delta \sigma^2 \rangle$')
+
+        df_bes = df_energy[df_energy['name'] == 'bes_def']
+        bes_sub_ampt = df_bes['avg'] - fit_func(x_bes, *ampt_popt)
+        ax2.errorbar(x_bes, bes_sub_ampt, yerr=df_bes['avg_err'], ls='none', marker='o', label='bes - ampt')
+
+        df_ampt = df_energy[df_energy['name'] == 'ampt_new_coal_epbins1']
+        ampt_sub_ampt = df_ampt['avg'] - fit_func(x_ampt, *ampt_popt)
+        ax2.errorbar(x_ampt, ampt_sub_ampt, yerr=df_ampt['avg_err'], ls='none', marker='o', label='ampt - ampt')
+        if fit_resid:
+            popt_ampt_resid, pcov_ampt_resid = cf(n_pow_fit, x_ampt, ampt_sub_ampt, sigma=df_ampt['avg_err'],
+                                                  absolute_sigma=True)
+            xs = np.linspace(min(x_ampt), max(x_ampt), 1000)
+            print(f'AMPT {energy} GeV: {popt_ampt_resid}')
+            ax2.plot(xs, n_pow_fit(xs, *popt_ampt_resid))
+
+        bes_sub_bes = df_bes['avg'] - fit_func(x_bes, *bes_popt)
+        ax2.errorbar(x_bes, bes_sub_bes, yerr=df_bes['avg_err'], ls='none', marker='o', label='bes - bes')
+        if fit_resid:
+            popt_bes_resid, pcov_bes_resid = cf(n_pow_fit, x_bes, bes_sub_bes, sigma=df_bes['avg_err'],
+                                                absolute_sigma=True)
+            xs = np.linspace(min(x_bes), max(x_bes), 1000)
+            print(f'BES {energy} GeV: {popt_bes_resid}')
+            ax2.plot(xs, n_pow_fit(xs, *popt_bes_resid))
+
+        ax2.legend()
+        fig2.canvas.manager.set_window_title(f'{energy} GeV Residuals')
+        fig2.tight_layout()
+
+    fig_fit_pars, ax_fit_pars = plt.subplots(nrows=len(popt), figsize=(10, 8), sharex='all')
+    for par_i, par_letter in enumerate(['a', 'b', 'c', 'd', 'e'][:len(popt)]):
+        fit_pars = energy_fit_pars[par_i]
+        fig3, ax3 = plt.subplots()
+        ax3.grid()
+        ax3.axhline(0, color='gray')
+        ax3.errorbar(energies, fit_pars['bes']['vals'], yerr=fit_pars['bes']['errs'],
+                     marker='o', ls='none', label='bes')
+        ax3.errorbar(energies, fit_pars['ampt']['vals'], yerr=fit_pars['ampt']['errs'],
+                     marker='o', ls='none', label='ampt')
+        ax3.set_xlabel('Energy')
+        ax3.set_ylabel(par_letter)
+        ax3.legend()
+        fig3.canvas.manager.set_window_title(f'Parameter {par_letter} vs Energy')
+        fig3.tight_layout()
+
+        ax_fit_pars[par_i].axhline(0, color='gray')
+        ax_fit_pars[par_i].errorbar(energies, fit_pars['bes']['vals'], yerr=fit_pars['bes']['errs'],
+                                    marker='o', ls='none', label='bes', markersize=10, alpha=0.7)
+        ax_fit_pars[par_i].errorbar(energies, fit_pars['ampt']['vals'], yerr=fit_pars['ampt']['errs'],
+                                    marker='o', ls='none', label='ampt', markersize=10, alpha=0.7)
+        ax_fit_pars[par_i].set_ylabel(par_letter)
+        if par_i == 0:
+            ax_fit_pars[par_i].legend()
+        if par_i == len(popt) - 1:
+            ax_fit_pars[par_i].set_xlabel('Energy')
+            ax_fit_pars[par_i].annotate(fit_eq, (0.1, 0.2), xycoords='axes fraction', ha='left', va='bottom',
+                                        fontsize=30)
+        else:
+            ax_fit_pars[par_i].tick_params(bottom=False, top=False)
+
+    fig_fit_pars.subplots_adjust(top=0.99, bottom=0.075, left=0.115, right=0.99, hspace=0.05, wspace=0.05)
 
     plt.show()
 
