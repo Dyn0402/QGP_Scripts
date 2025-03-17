@@ -43,14 +43,14 @@ def main():
     # get_sim_mapping_var()
     # plot_all_zero_base()
 
-    # plot_star_var_sys()
+    plot_star_var_sys()
     # make_models_csv()
     # plot_star_var_rand_sys()
 
     # plot_vs_cent_var_fits()
     # plot_vs_cent_var_fit_tests()
     # plot_vs_cent_var_fit_tests2()
-    plot_vs_cent_var_fit_tests3()
+    # plot_vs_cent_var_fit_tests3()
 
     # plot_sims()
     # get_sim_mapping()
@@ -426,7 +426,7 @@ def plot_paper_figs():
                         # xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event',
                         xlim=(-10, 370), title=f'',
                         exclude_divs=exclude_divs)
-    plt.show()
+    # plt.show()
 
     # plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, ['bes_def'], data_sets_colors=data_sets_colors, fit=False,
     #                     data_sets_labels=data_sets_labels, plot_energy_panels=True,
@@ -501,6 +501,15 @@ def plot_paper_figs():
                                       star_prelim_loc=None, marker_map=data_sets_markers,
                                       data_sets_energies_colors=data_sets_energies_colors,
                                       data_sets_bands=data_sets_bands)
+
+    cent_fits = plot_dsig_avg_vs_cent_fit(dsig_avgs_v2_sub_div120, data_sets_cent, data_sets_colors=data_sets_colors,
+                                          fit=True, cent_ref=cent_ref_df, ref_type=ref_type, legend_order=None,
+                                          title='', errbar_alpha=0.3, xlim=(-20, 720), alpha=0.8, kin_info_loc=(0.2, 0.75),
+                                          star_prelim_loc=None, marker_map=data_sets_markers,
+                                          data_sets_energies_colors=data_sets_energies_colors,
+                                          data_sets_bands=None)
+    print(cent_fits)
+    plt.show()
 
     dsig_avgs_62ref = dsig_avgs_v2_sub_div120.rename(columns={'name': 'data_set'})
     plot_div_fits_vs_cent_62res(dsig_avgs_62ref, data_sets_cent, data_sets_colors, data_sets_labels, ref_type=ref_type,
@@ -1101,8 +1110,8 @@ def plot_star_var_sys():
 
     plot = True
     # plot = False
-    # calc_finals = False
-    calc_finals = True
+    calc_finals = False
+    # calc_finals = True
     threads = 11
     sys_pdf_out_path = f'{base_path}systematic_plots.pdf'
     indiv_pdf_out_path = f'F:/Research/Results/BES_QA_Plots/Systematics/'
@@ -1130,6 +1139,12 @@ def plot_star_var_sys():
     energies_fit = [7, 11, 19, 27, 39, 62]
     # energies_fit = [7, 11]
     samples = 72  # For title purposes only
+
+    cent_ref_name = 'mean_cent_ref.csv'
+    cent_ref_df = pd.read_csv(f'{base_path}{cent_ref_name}')
+    ref_type = 'refn'  # 'refn'
+    cent_ref_df = cent_ref_df.replace('bes_resample_def', 'bes_def')
+    cent_ref_df = cent_ref_df.replace('ampt_new_coal_resample_def', 'ampt_new_coal_epbins1')
 
     # sys_info_dict = {  # Old systematics (in my opinion, better) used in thesis. For all gaussian.
     #     'vz': {'name': 'vz range', 'title': 'vz', 'decimal': None, 'default': None,
@@ -1204,6 +1219,19 @@ def plot_star_var_sys():
     all_sets = pd.unique(df['name'])
     print(all_sets)
     print(sys_include_names)
+
+    # For all sets where 'ampt' is not in the name, make a copy of all 'bes_def' rows in cent_ref_df for this data_set
+    cent_ref_extra_sets = []
+    for data_set_name in all_sets:
+        print(data_set_name)
+        if 'ampt' not in data_set_name and data_set_name != 'bes_def':
+            cent_ref_extra_sets.append(cent_ref_df[cent_ref_df['data_set'] == 'bes_def'].assign(data_set=data_set_name))
+    cent_ref_extra_sets = pd.concat(cent_ref_extra_sets)
+    cent_ref_df = pd.concat([cent_ref_df, cent_ref_extra_sets])
+    print(cent_ref_df)
+    print(pd.unique(cent_ref_df['data_set']))
+    for data_set_name in all_sets:
+        print(cent_ref_df[cent_ref_df['data_set'] == data_set_name])
 
     rand_sets = [set_name for set_name in all_sets if '_rand' in set_name]
     non_rand_sets = [set_name for set_name in all_sets if '_rand' not in set_name]
@@ -1295,6 +1323,26 @@ def plot_star_var_sys():
         dsig_avg_diff_v2sub_out = get_sys(dsig_avgs_diff_v2sub, 'bes_def', sys_include_sets, sys_priors,
                                           val_col='avg', err_col='avg_err', group_cols=['divs', 'energy', 'cent'])
         dsig_avg_diff_v2sub_out.to_csv(f'{base_path}{df_def_avgs_v2sub_out_name}', index=False)
+
+    dsig_avgs_v2_sub_div120 = dsig_avgs_diff_v2sub[dsig_avgs_diff_v2sub['divs'] == 120]
+    cent_fits_120_refmult = plot_dsig_avg_vs_cent_fit(dsig_avgs_v2_sub_div120, all_sets, fit=True, cent_ref=cent_ref_df,
+                                                        ref_type=ref_type, plot=False)
+    cent_fits_120_npart = plot_dsig_avg_vs_cent_fit(dsig_avgs_v2_sub_div120, all_sets, fit=True, cent_ref=cent_ref_df,
+                                                      ref_type='npart', plot=False)
+    param_names = ['a', 'b', 'c']
+    for ref_type_i, ref_type_df in zip(['refmult', 'npart'], [cent_fits_120_refmult, cent_fits_120_npart]):
+        for param_name in param_names:
+            cent_fits_120_ref_type = ref_type_df.copy()
+            for other_param_name in param_names:
+                if other_param_name == param_name:
+                    continue
+                cent_fits_120_ref_type.drop(columns=[other_param_name, f'{other_param_name}_err'], inplace=True)
+            cent_fits_ref_param_out = get_sys(cent_fits_120_ref_type, 'bes_def', sys_include_sets, sys_priors,
+                                          val_col=param_name, err_col=f'{param_name}_err', group_cols=['energy'],
+                                          name_col='data_set')
+            cent_fits_ref_param_out.to_csv(f'{base_path}/Bes_with_Sys/centrality_fits/{ref_type_i}_fits_120_{param_name}.csv',
+                                           index=False)
+    input('Enter to continue...')
 
     # plot_sys(dsig_avgs_diff_v2sub, 'bes_def', non_rand_sets, sys_info_dict, sys_priors, val_col='avg', err_col='avg_err',
     #          group_cols=['divs', 'energy', 'cent'], y_label=r'$\langle \Delta \sigma^2 \rangle$',
