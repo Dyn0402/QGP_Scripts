@@ -43,7 +43,7 @@ def main():
     # get_sim_mapping_var()
     # plot_all_zero_base()
 
-    plot_star_var_sys()
+    # plot_star_var_sys()
     # make_models_csv()
     # plot_star_var_rand_sys()
 
@@ -74,6 +74,7 @@ def main():
     # plot_anticl_flow_closure_test_simple()
     # plot_efficiency_closure_tests()
     # plot_closure_tests()
+    plot_star_analysis_note_figs()
 
     # plot_raw_mix_sys_comp()
     print('donzo')
@@ -509,7 +510,7 @@ def plot_paper_figs():
                                           data_sets_energies_colors=data_sets_energies_colors,
                                           data_sets_bands=None)
     print(cent_fits)
-    plt.show()
+    # plt.show()
 
     dsig_avgs_62ref = dsig_avgs_v2_sub_div120.rename(columns={'name': 'data_set'})
     plot_div_fits_vs_cent_62res(dsig_avgs_62ref, data_sets_cent, data_sets_colors, data_sets_labels, ref_type=ref_type,
@@ -534,6 +535,13 @@ def plot_paper_figs():
                                  kin_info_loc=(0.45, 0.03), marker_map=data_sets_markers,
                                  data_sets_energies_colors=data_sets_energies_colors,
                                  # data_sets_bands=data_sets_bands
+                                 )
+    plot_baseline_vs_cent_fit(df_fits, data_sets_cent, data_sets_colors=data_sets_colors, fit=False,
+                                 cent_ref=cent_ref_df, ref_type=ref_type,  # <---
+                                 title='', ls='',
+                                 errbar_alpha=0.3, xlim=(-20, 720), alpha=0.8,
+                                 kin_info_loc=(0.45, 0.03), marker_map=data_sets_markers,
+                                 data_sets_energies_colors=data_sets_energies_colors,
                                  )
     plt.show()
 
@@ -1228,10 +1236,6 @@ def plot_star_var_sys():
             cent_ref_extra_sets.append(cent_ref_df[cent_ref_df['data_set'] == 'bes_def'].assign(data_set=data_set_name))
     cent_ref_extra_sets = pd.concat(cent_ref_extra_sets)
     cent_ref_df = pd.concat([cent_ref_df, cent_ref_extra_sets])
-    print(cent_ref_df)
-    print(pd.unique(cent_ref_df['data_set']))
-    for data_set_name in all_sets:
-        print(cent_ref_df[cent_ref_df['data_set'] == data_set_name])
 
     rand_sets = [set_name for set_name in all_sets if '_rand' in set_name]
     non_rand_sets = [set_name for set_name in all_sets if '_rand' not in set_name]
@@ -1342,7 +1346,6 @@ def plot_star_var_sys():
                                           name_col='data_set')
             cent_fits_ref_param_out.to_csv(f'{base_path}/Bes_with_Sys/centrality_fits/{ref_type_i}_fits_120_{param_name}.csv',
                                            index=False)
-    input('Enter to continue...')
 
     # plot_sys(dsig_avgs_diff_v2sub, 'bes_def', non_rand_sets, sys_info_dict, sys_priors, val_col='avg', err_col='avg_err',
     #          group_cols=['divs', 'energy', 'cent'], y_label=r'$\langle \Delta \sigma^2 \rangle$',
@@ -1373,6 +1376,24 @@ def plot_star_var_sys():
         if plot:
             plot_slope_div_fits(df_fits_out, data_sets_colors, data_sets_labels)
             plot_slope_div_fits_simpars(df_fits_out)
+
+    dsig_baseline_fits_refmult = plot_baseline_vs_cent_fit(df_fits, all_sets, plot=False, cent_ref=cent_ref_df,
+                                                           ref_type=ref_type)
+    dsig_baseline_fits_npart = plot_baseline_vs_cent_fit(df_fits, all_sets, plot=False, cent_ref=cent_ref_df,
+                                                           ref_type='npart')
+    param_names = ['a', 'b', 'c']
+    for ref_type_i, ref_type_df in zip(['refmult', 'npart'], [dsig_baseline_fits_refmult, dsig_baseline_fits_npart]):
+        for param_name in param_names:
+            baseline_cent_fits_ref_type = ref_type_df.copy()
+            for other_param_name in param_names:
+                if other_param_name == param_name:
+                    continue
+                baseline_cent_fits_ref_type.drop(columns=[other_param_name, f'{other_param_name}_err'], inplace=True)
+            baseline_cent_fits_ref_param_out = get_sys(baseline_cent_fits_ref_type, 'bes_def', sys_include_sets,
+                                                       sys_priors, val_col=param_name, err_col=f'{param_name}_err',
+                                                       group_cols=['energy'], name_col='data_set')
+            baseline_cent_fits_ref_param_out.to_csv(f'{base_path}/Bes_with_Sys/baseline_cent_fits/{ref_type_i}_baseline_fits_{param_name}.csv',)
+
     df_fits = df_fits.rename(columns={'data_set': 'name'})
     plot_sys(df_fits, 'bes_def', non_rand_sets, sys_info_dict, sys_priors, val_col='baseline', err_col='base_err',
              group_cols=['cent', 'energy'], name_col='name', indiv_pdf_path=indiv_pdf_out_path,
@@ -1664,6 +1685,411 @@ def plot_star_var_rand_sys():
     # plot_slope_div_fits_simpars(df_fits)
     #
     # plt.show()
+
+
+def plot_star_analysis_note_figs():
+    plt.rcParams["figure.figsize"] = (6.66, 5)
+    plt.rcParams["figure.dpi"] = 144
+
+    presentation_mode = False
+    if presentation_mode:
+        # plt.rcParams['axes.labelsize'] = 14  # Adjust the value as needed
+        # plt.rcParams['axes.titlesize'] = 16  # Adjust the value as needed
+        # plt.rcParams['legend.fontsize'] = 14  # Adjust the value as needed
+        plt.rcParams['font.size'] = plt.rcParams['font.size'] * 1.2
+    # else:
+    #     plt.rcParams['font.size'] = plt.rcParams['font.size'] * 1.1
+
+    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    # base_path = 'C:/Users/Dyn04/OneDrive - personalmicrosoftsoftware.ucla.edu/OneDrive - UCLA IT Services/Research/UCLA/Results/Azimuth_Analysis/'
+    # base_path = 'C:/Users/Dyn04/Research/'
+    df_name = 'Bes_with_Sys/binom_slice_vars_bes.csv'
+    df_model_name = 'Bes_with_Sys/binom_slice_vars_model.csv'
+    df_dsigma_name = 'Bes_with_Sys/binom_slice_vars_bes_dsigma.csv'
+    df_dsigma_model_name = 'Bes_with_Sys/binom_slice_vars_model_dsigma.csv'
+    df_dsigma_v2sub_name = 'Bes_with_Sys/binom_slice_vars_bes_dsigma_v2sub.csv'
+    df_dsigma_v2sub_model_name = 'Bes_with_Sys/binom_slice_vars_model_dsigma_v2sub.csv'
+    df_def_avgs_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_bes.csv'
+    df_def_avgs_out_model_name = 'Bes_with_Sys/dsig_tprotons_avgs_model.csv'
+    df_def_avgs_v2sub_out_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_bes.csv'
+    df_def_avgs_v2sub_out_model_name = 'Bes_with_Sys/dsig_tprotons_avgs_v2sub_model.csv'
+    df_partitions_fits_name = 'Bes_with_Sys/partition_width_fits_bes.csv'
+    df_partitions_fits_model_name = 'Bes_with_Sys/partition_width_fits_model.csv'
+
+    save_dir = 'C:/Users/Dylan/OneDrive - UCLA IT Services/Research/UCLA/Presentations/STAR_Paper/Autogen_Figures/Analysis_Note/'
+
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
+                0: '70-80%', -1: '80-90%'}
+
+    stat_plot = 'k2'  # 'standard deviation', 'skewness', 'non-excess kurtosis'
+    div_plt = 120
+    exclude_divs = [89, 356]  # [60, 72, 89, 90, 180, 240, 270, 288, 300, 356]
+    cent_plt = 8
+    energies_fit = [7, 11, 19, 27, 39, 62]
+    samples = 72  # For title purposes only
+
+    data_sets_plt = ['bes_def', 'ampt_new_coal_epbins1', 'cf_resample_epbins1', 'cfev_resample_epbins1']
+    data_sets_colors = dict(zip(data_sets_plt, ['black', 'red', 'blue', 'purple']))
+    data_sets_labels = dict(zip(data_sets_plt, ['STAR', 'AMPT', 'MUSIC+FIST', 'MUSIC+FIST EV $1fm^3$']))
+    data_sets_markers = dict(zip(data_sets_plt, [dict(zip(['raw', 'mix', 'diff'], [x, x, x]))
+                                                 for x in ['o', 's', '^', '*']]))
+    data_sets_bands = ['ampt_new_coal_epbins1', 'cf_resample_epbins1', 'cfev_resample_epbins1']
+    legend_order = ['STAR', 'MUSIC+FIST', 'MUSIC+FIST EV $1fm^3$', 'AMPT']
+
+    cent_ref_name = 'mean_cent_ref.csv'
+    cent_ref_df = pd.read_csv(f'{base_path}{cent_ref_name}')
+    ref_type = 'refn'  # 'refn'
+    cent_ref_df = cent_ref_df.replace('bes_resample_def', 'bes_def')
+    cent_ref_df = cent_ref_df.replace('ampt_new_coal_resample_def', 'ampt_new_coal_epbins1')
+
+    df = pd.read_csv(f'{base_path}{df_name}')
+    df_model = pd.read_csv(f'{base_path}{df_model_name}')
+    df = pd.concat([df, df_model])
+    df = df[df['stat'] == stat_plot]
+
+    df_dsigma = pd.read_csv(f'{base_path}{df_dsigma_name}')
+    df_dsigma_model = pd.read_csv(f'{base_path}{df_dsigma_model_name}')
+    df_dsigma = pd.concat([df_dsigma, df_dsigma_model])
+
+    # dvar_vs_protons(df_dsigma, div_plt, cent_plt, [39], ['raw', 'mix', 'diff'], ['bes_def'],
+    #                 plot=True, avg=False, alpha=1.0, y_ranges=[-0.00085, 0.00055], print_data=True,
+    #                 data_sets_labels={'bes_def': {'raw': 'Single Event', 'mix': 'Mixed Event',
+    #                                               'diff': 'Single Event - Mixed Event'}},
+    #                 marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^'}})  # Mix subtraction demo
+    # dvar_vs_protons(df_dsigma, div_plt, 4, [39], ['raw', 'mix', 'diff'], ['bes_def'],
+    #                 plot=True, avg=False, alpha=1.0, y_ranges=[-0.00085, 0.00055],
+    #                 data_sets_labels={'bes_def': {'raw': 'Single Event', 'mix': 'Mixed Event',
+    #                                               'diff': 'Single Event - Mixed Event'}},
+    #                 marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^'}})  # Mix subtraction demo
+    #
+    # dvar_vs_protons(df_dsigma, div_plt, cent_plt, [62], ['raw', 'mix', 'diff'], ['bes_def'],
+    #                 plot=True, avg=False, alpha=1.0, y_ranges=[-0.00085, 0.00055],
+    #                 data_sets_labels={'bes_def': {'raw': 'Single Event', 'mix': 'Mixed Event',
+    #                                               'diff': 'Single Event - Mixed Event'}},
+    #                 marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^'}})  # Mix subtraction demo
+
+    # dvar_vs_protons(df_dsigma, div_plt, cent_plt, [39], ['diff'], data_sets_plt, data_sets_colors=data_sets_colors,
+    #                 plot=True, avg=False, alpha=1.0, y_ranges=[-0.00124, 0.0009], ylabel=r'$\Delta\sigma^2$',
+    #                 data_sets_labels=data_sets_labels, marker_map=data_sets_markers, legend_pos='lower right',
+    #                 data_sets_bands=data_sets_bands)
+
+    df_dsigma_v2sub = pd.read_csv(f'{base_path}{df_dsigma_v2sub_name}')
+    df_dsigma_v2sub_model = pd.read_csv(f'{base_path}{df_dsigma_v2sub_model_name}')
+    # df_dsigma_v2sub_model = df_dsigma_v2sub_model[df_dsigma_v2sub_model['err'] < 0.0001]
+    df_dsigma_v2sub = pd.concat([df_dsigma_v2sub, df_dsigma_v2sub_model])
+
+    # dvar_vs_protons(df_dsigma_v2sub, div_plt, cent_plt, [39], ['diff'], data_sets_plt, ylabel=r'$\Delta\sigma^2$',
+    #                 data_sets_colors=data_sets_colors, plot=True, avg=False, alpha=1.0, y_ranges=[-0.00124, 0.0009],
+    #                 data_sets_labels=data_sets_labels, marker_map=data_sets_markers, legend_pos='lower right',
+    #                 kin_info_loc=(0.22, 0.13), star_prelim_loc=(0.65, 0.96), data_sets_bands=data_sets_bands,
+    #                 legend_order=legend_order)  # 39 GeV mix and v2 subtract dsig2
+
+    df_dsigma_v2sub_diffs = df_dsigma_v2sub[df_dsigma_v2sub['data_type'] == 'diff'].assign(data_type='v2_sub')
+    df_dsigma_with_v2sub = pd.concat([df_dsigma, df_dsigma_v2sub_diffs])
+    # dvar_vs_protons(df_dsigma_with_v2sub, div_plt, cent_plt, [39], ['raw', 'mix', 'diff', 'v2_sub'], ['bes_def'],
+    #                 plot=True, avg=False, alpha=1.0, y_ranges=[-0.00124, 0.0009],
+    #                 marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^', 'v2_sub': '*'}})
+
+    # dvar_vs_protons(df_dsigma_with_v2sub, 90, 4, [62], ['raw', 'diff', 'v2_sub'], ['bes_def'],
+    #                 plot=True, avg=False, alpha=1.0, ylabel=r'$\Delta\sigma^2$',
+    #                 data_sets_labels={'bes_def': {'raw': 'Uncorrected', 'diff': 'Mixed Corrected',
+    #                                               'v2_sub': 'Mixed and Flow Corrected'}},
+    #                 data_sets_colors={'bes_def': {'raw': 'blue', 'diff': 'red', 'v2_sub': 'black'}},
+    #                 marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^', 'v2_sub': '*'}},
+    #                 # y_ranges=[-0.00124, 0.0009])  # v2 sub demo
+    #                 y_ranges=[-0.0039, 0.0009], kin_info_loc=(0.26, 0.94))  # v2 sub demo
+    # dvar_vs_protons(df_dsigma_with_v2sub, div_plt, 4, [39], ['raw', 'diff', 'v2_sub'], ['bes_def'],
+    #                 plot=True, avg=False, alpha=1.0, ylabel=r'$\Delta\sigma^2$', print_data=True,
+    #                 data_sets_labels={'bes_def': {'raw': 'Uncorrected', 'diff': 'Mixed Corrected',
+    #                                               'v2_sub': 'Mixed and Flow Corrected'}},
+    #                 data_sets_colors={'bes_def': {'raw': 'blue', 'diff': 'red', 'v2_sub': 'black'}},
+    #                 marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^', 'v2_sub': '*'}},
+    #                 # y_ranges=[-0.00124, 0.0009])  # v2 sub demo
+    #                 y_ranges=[-0.0039, 0.0009], kin_info_loc=(0.26, 0.94))  # v2 sub demo
+
+    dsig_avgs_all = pd.read_csv(f'{base_path}{df_def_avgs_out_name}')
+    dsig_avgs_all_model = pd.read_csv(f'{base_path}{df_def_avgs_out_model_name}')
+    dsig_avgs_all = pd.concat([dsig_avgs_all, dsig_avgs_all_model])
+
+    # dvar_vs_protons_energies(df_dsigma, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], ['bes_def'],
+    #                          plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
+    #                          data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.0005], avgs_df=dsig_avgs_all,
+    #                          ylabel=r'$\Delta\sigma^2$', kin_loc=(0.65, 0.2), legend_order=legend_order)
+
+    dsig_avgs_v2sub = pd.read_csv(f'{base_path}{df_def_avgs_v2sub_out_name}')
+    dsig_avgs_v2sub_model = pd.read_csv(f'{base_path}{df_def_avgs_v2sub_out_model_name}')
+    dsig_avgs_v2sub = pd.concat([dsig_avgs_v2sub, dsig_avgs_v2sub_model])
+
+    dsig_avgs_v2sub['data_type'] = 'diff'
+    print(df_dsigma_v2sub.columns)
+    # df_dsigma_v2sub = df_dsigma_v2sub[df_dsigma_v2sub['err'] < 0.0001]
+    # dvar_vs_protons_energies(df_dsigma_v2sub, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], ['bes_def'],
+    #                          plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
+    #                          data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.0005], avgs_df=dsig_avgs_v2sub,
+    #                          ylabel=r'$\Delta\sigma^2$',
+    #                          # kin_loc=(0.55, 0.6), star_prelim_loc=(1, 0.54, 0.53)
+    #                          kin_loc=(0.58, 0.45), star_prelim_loc=(1, 0.54, 0.4)
+    #                          )
+
+    # dvar_vs_protons_energies(df_dsigma_v2sub, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], data_sets_plt,
+    #                          plot=True, avg=False, plot_avg=False, data_sets_colors=data_sets_colors, no_hydro_label=1,
+    #                          data_sets_labels=data_sets_labels, y_ranges=[-0.00099, 0.0005], avgs_df=dsig_avgs_v2sub,
+    #                          ylabel=r'$\Delta\sigma^2$',
+    #                          # kin_loc=(0.65, 0.2), star_prelim_loc=(1, 0.54, 0.78),
+    #                          kin_loc=(0.58, 0.45), star_prelim_loc=(1, 0.54, 0.4),
+    #                          marker_map=data_sets_markers, data_sets_bands=data_sets_bands, legend_order=legend_order,
+    #                          # title=f'{cent_map[cent_plt]} Centrality, 120° Partitions'
+    #                          title=f''
+    #                          )  # <---
+
+    dvar_vs_protons_energies(df_dsigma_v2sub, [120], cent_plt, [7, 11, 19, 27, 39, 62], ['diff'], data_sets_plt,
+                             plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors, no_hydro_label=1,
+                             data_sets_labels=data_sets_labels, y_ranges=[-0.00124, 0.00033], avgs_df=dsig_avgs_v2sub,
+                             ylabel=r'$\Delta\sigma^2$', print_data=False,
+                             # kin_loc=(0.65, 0.2), star_prelim_loc=(1, 0.54, 0.78),
+                             kin_loc=(0.58, 0.43), star_prelim_loc=(1, 0.54, 0.37),
+                             marker_map=data_sets_markers, data_sets_bands=data_sets_bands, legend_order=legend_order,
+                             # title=f'{cent_map[cent_plt]} Centrality, 120° Partitions'
+                             title=f''
+                             )  # <---
+
+    # for cent_i in [8, 7, 6, 5, 4, 3, 2, 1, 0]:
+    #     df_cent_i = df_dsigma_with_v2sub[(df_dsigma_with_v2sub['cent'] == cent_i) & (df_dsigma_with_v2sub['divs'] == 120)]
+    #     min_val = np.percentile(df_cent_i['val'], 5)
+    #     dvar_vs_protons_energies(df_dsigma_v2sub, [120], cent_i, [7, 11, 19, 27, 39, 62], ['diff'], ['bes_def', 'ampt_new_coal_epbins1'],
+    #                              plot=True, avg=True, plot_avg=True, data_sets_colors=data_sets_colors,
+    #                              no_hydro_label=None,
+    #                              data_sets_labels=data_sets_labels, y_ranges=[min_val * 1.5, 0.00033],
+    #                              avgs_df=dsig_avgs_v2sub,
+    #                              ylabel=r'$\Delta\sigma^2$', print_data=False,
+    #                              # kin_loc=(0.65, 0.2), star_prelim_loc=(1, 0.54, 0.78),
+    #                              kin_loc=(0.58, 0.43), star_prelim_loc=None,
+    #                              marker_map=data_sets_markers, data_sets_bands=data_sets_bands,
+    #                              legend_order=None,
+    #                              # title=f'{cent_map[cent_plt]} Centrality, 120° Partitions'
+    #                              title=f''
+    #                              )  # <---
+        # plt.savefig(f'{save_dir}dsig_vs_nprotons_cent{cent_i}.png')
+        # plt.savefig(f'{save_dir}dsig_vs_nprotons_cent{cent_i}.pdf')
+
+    # plt.show()
+
+    # plot_protons_avgs_vs_energy(dsig_avg, ['bes_def'], data_sets_colors=data_sets_colors,
+    #                             data_sets_labels=data_sets_labels, title=f'{cent_map[cent_plt]} Centrality, {div_plt}° '
+    #                                                                      f'Partitions, {samples} Samples per Event')
+
+    dsig_avgs_v2_sub_cent8 = dsig_avgs_v2sub[dsig_avgs_v2sub['cent'] == 8]
+    # plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=False,  # <---
+    #                     data_sets_labels=data_sets_labels, plot_energy_panels=True, legend_order=legend_order,
+    #                     ylab=r'$\langle\Delta\sigma^2\rangle$', data_sets_bands=data_sets_bands,
+    #                     plot_indiv=False, ylim=(-0.00079, 0.0001), leg_panel=5, no_hydro_label=True,
+    #                     # star_prelim_loc=(1, 0.3, 0.7),
+    #                     star_prelim_loc=(1, 0.5, 0.8),
+    #                     # xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event',
+    #                     xlim=(-10, 370), title=f'',
+    #                     exclude_divs=exclude_divs)
+    plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, data_sets_plt, data_sets_colors=data_sets_colors, fit=True,  # <---
+                        data_sets_labels=data_sets_labels, plot_energy_panels=True, legend_order=legend_order,
+                        ylab=r'$\langle\Delta\sigma^2\rangle$', data_sets_bands=data_sets_bands, print_data=True,
+                        plot_indiv=False, ylim=(-0.0009, 0.0001), leg_panel=5, no_hydro_label=True,
+                        # star_prelim_loc=(1, 0.3, 0.7),
+                        star_prelim_loc=(1, 0.5, 0.8),
+                        # xlim=(-10, 370), title=f'0-5% Centrality, {samples} Samples per Event',
+                        xlim=(-10, 370), title=f'',
+                        exclude_divs=exclude_divs)
+    # plt.show()
+
+    # plot_dvar_avgs_divs(dsig_avgs_v2_sub_cent8, ['bes_def'], data_sets_colors=data_sets_colors, fit=False,
+    #                     data_sets_labels=data_sets_labels, plot_energy_panels=True,
+    #                     ylab=r'$\langle\Delta\sigma^2\rangle$',
+    #                     plot_indiv=False, ylim=(-0.00079, 0.00019), leg_panel=5,
+    #                     # star_prelim_loc=(1, 0.3, 0.7),
+    #                     star_prelim_loc=(1, 0.5, 0.8),
+    #                     xlim=(-10, 370), title='',
+    #                     # title=f'0-5% Centrality, {samples} Samples per Event',
+    #                     exclude_divs=exclude_divs)
+
+    dsig_avgs_v2_sub_cent8_div120 = dsig_avgs_v2sub[(dsig_avgs_v2sub['cent'] == 8) & (dsig_avgs_v2sub['divs'] == 120)]
+    plot_protons_avgs_vs_energy(dsig_avgs_v2_sub_cent8_div120, data_sets_plt, data_sets_colors=data_sets_colors,  # <---
+                                data_sets_labels=data_sets_labels, alpha=1, kin_info_loc=(0.02, 0.595),
+                                star_prelim_loc=(0.25, 0.32), marker_map=data_sets_markers, ylim=(-0.00066, 0.00002),
+                                data_sets_bands=data_sets_bands, legend_order=legend_order, leg_loc='lower right',
+                                # title=f'{cent_map[8]} Centrality, {div_plt}° Partitions, {samples} Samples per Event')
+                                title=f'{cent_map[8]} Centrality, {div_plt}° Partitions')
+    # plot_protons_avgs_vs_energy(dsig_avgs_v2_sub_cent8_div120, ['bes_def'], data_sets_colors=data_sets_colors,
+    #                             data_sets_labels=data_sets_labels, alpha=1, kin_info_loc=(0.123, 0.68),
+    #                             star_prelim_loc=(0.65, 0.9), leg_loc='lower right',
+    #                             title=f'{cent_map[8]} Centrality, {div_plt}° Partitions, {samples} Samples per Event')
+
+    # dsig_avgs_v2_sub_div120 = dsig_avgs_v2sub[dsig_avgs_v2sub['divs'] == 120]
+    dsig_avgs_v2_sub_div120 = dsig_avgs_v2sub[(dsig_avgs_v2sub['divs'] == 120) & (dsig_avgs_v2sub['cent'] > -1)]
+    dsig_avgs_all_div120 = dsig_avgs_all[(dsig_avgs_all['divs'] == 120) & (dsig_avgs_all['cent'] > -1) & (dsig_avgs_all['data_type'] == 'diff')]
+    data_sets_energies_colors = \
+        {'bes_def': {7: 'red', 11: 'blue', 19: 'green', 27: 'orange', 39: 'purple', 62: 'black'},
+         'ampt_new_coal_epbins1': {7: 'red', 11: 'blue', 19: 'green', 27: 'orange', 39: 'purple', 62: 'black'}}
+    vs_cent_sets = list(data_sets_energies_colors.keys())
+    # plot_protons_avgs_vs_cent(dsig_avgs_v2_sub_div120, ['bes_def'], data_sets_colors=data_sets_colors, fit=False,
+    #                           data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,  # <---
+    #                           title=f'{div_plt}° Partitions, {samples} Samples per Event', alpha=0.8, errbar_alpha=0.3,
+    #                           kin_info_loc=(0.2, 0.1), star_prelim_loc=(0.6, 0.5),
+    #                           data_sets_energies_colors=data_sets_energies_colors)
+    # plot_protons_avgs_vs_cent(dsig_avgs_v2_sub_div120, ['bes_def'], data_sets_colors=data_sets_colors, fit=False,
+    #                           data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type='npart',  # <---
+    #                           title=f'{div_plt}° Partitions, {samples} Samples per Event', alpha=0.8, errbar_alpha=0.3,
+    #                           kin_info_loc=(0.2, 0.1), star_prelim_loc=(0.6, 0.5),
+    #                           data_sets_energies_colors=data_sets_energies_colors)
+
+    plot_protons_avgs_vs_cent(dsig_avgs_v2_sub_div120, vs_cent_sets, data_sets_colors=data_sets_colors, fit=False,
+                              data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,  # <---
+                              title='Elliptic Flow Corrected', alpha=0.8, errbar_alpha=0.3, ylim=(-0.0051, 0.0005),
+                              kin_info_loc=(0.2, 0.1), star_prelim_loc=None, marker_map=data_sets_markers,
+                              data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands,
+                              fig_splt_adj={'top': 0.95, 'right': 0.995, 'bottom': 0.1, 'left': 0.14})
+    plt.savefig(f'{save_dir}dsig2_vs_refmult_v2_cor.png')
+    plt.savefig(f'{save_dir}dsig2_vs_refmult_v2_cor.pdf')
+    plot_protons_avgs_vs_cent(dsig_avgs_v2_sub_div120, vs_cent_sets, data_sets_colors=data_sets_colors, fit=False,
+                              data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type='npart',  # <---
+                              title='Elliptic Flow Corrected', alpha=0.8, errbar_alpha=0.3, ylim=(-0.0051, 0.0005),
+                              kin_info_loc=(0.2, 0.1), star_prelim_loc=None, marker_map=data_sets_markers,
+                              data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands,
+                              fig_splt_adj={'top': 0.95, 'right': 0.995, 'bottom': 0.1, 'left': 0.14})
+    plt.savefig(f'{save_dir}dsig2_vs_npart_v2_cor.png')
+    plt.savefig(f'{save_dir}dsig2_vs_npart_v2_cor.pdf')
+    plot_protons_avgs_vs_cent(dsig_avgs_all_div120, vs_cent_sets, data_sets_colors=data_sets_colors, fit=False,
+                              data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type=ref_type,  # <---
+                              title='No Elliptic Flow Correction', alpha=0.8, errbar_alpha=0.3, ylim=(-0.0051, 0.0005),
+                              kin_info_loc=(0.2, 0.1), star_prelim_loc=None, marker_map=data_sets_markers,
+                              data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands,
+                              fig_splt_adj={'top': 0.95, 'right': 0.995, 'bottom': 0.1, 'left': 0.14})
+    plt.savefig(f'{save_dir}dsig2_vs_refmult_v2_uncor.png')
+    plt.savefig(f'{save_dir}dsig2_vs_refmult_v2_uncor.pdf')
+    plot_protons_avgs_vs_cent(dsig_avgs_all_div120, vs_cent_sets, data_sets_colors=data_sets_colors, fit=False,
+                              data_sets_labels=data_sets_labels, cent_ref=cent_ref_df, ref_type='npart',  # <---
+                              title='No Elliptic Flow Correction', alpha=0.8, errbar_alpha=0.3, ylim=(-0.0051, 0.0005),
+                              kin_info_loc=(0.2, 0.1), star_prelim_loc=None, marker_map=data_sets_markers,
+                              data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands,
+                              fig_splt_adj={'top': 0.95, 'right': 0.995, 'bottom': 0.1, 'left': 0.14})
+    plt.savefig(f'{save_dir}dsig2_vs_npart_v2_uncor.png')
+    plt.savefig(f'{save_dir}dsig2_vs_npart_v2_uncor.pdf')
+
+    plt.show()
+
+    data_sets_cent = ['ampt_new_coal_epbins1', 'bes_def']
+    legend_order = ['7.7 GeV', '11.5 GeV', '19.6 GeV', '27 GeV', '39 GeV', '62.4 GeV', 'AMPT Fit']
+    plot_dsig_avg_vs_cent_2panel(dsig_avgs_v2_sub_div120, data_sets_cent, data_sets_colors=data_sets_colors, fit=False,
+                                 cent_ref=cent_ref_df, ref_type=ref_type, legend_order=legend_order,  # <---
+                                 # title=f'{div_plt}° Partitions, {samples} Samples per Event',
+                                 title='',
+                                 errbar_alpha=0.3, xlim=(-20, 720), alpha=0.8,
+                                 kin_info_loc=(0.45, 0.1), star_prelim_loc=(0.4, 0.5), marker_map=data_sets_markers,
+                                 data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
+    # plot_dsig_avg_vs_cent_2panel2(dsig_avgs_v2_sub_div120, data_sets_cent, data_sets_colors=data_sets_colors, fit=False,
+    #                               cent_ref=cent_ref_df, ref_type=ref_type, legend_order=legend_order,  # <---
+    #                               # title=f'{div_plt}° Partitions, {samples} Samples per Event',
+    #                               title='',
+    #                               errbar_alpha=0.3, xlim=(-20, 720), alpha=0.8,
+    #                               kin_info_loc=(0.45, 0.1), star_prelim_loc=(0.4, 0.5), marker_map=data_sets_markers,
+    #                               data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
+    plot_dsig_avg_vs_cent_2panel62ref(dsig_avgs_v2_sub_div120, data_sets_cent, data_sets_colors=data_sets_colors,
+                                      fit=False, cent_ref=cent_ref_df, ref_type=ref_type, legend_order=None,
+                                      title='', errbar_alpha=0.3, xlim=(-20, 720), alpha=0.8, kin_info_loc=(0.2, 0.75),
+                                      star_prelim_loc=None, marker_map=data_sets_markers,
+                                      data_sets_energies_colors=data_sets_energies_colors,
+                                      data_sets_bands=data_sets_bands)
+
+    cent_fits = plot_dsig_avg_vs_cent_fit(dsig_avgs_v2_sub_div120, data_sets_cent, data_sets_colors=data_sets_colors,
+                                          fit=True, cent_ref=cent_ref_df, ref_type=ref_type, legend_order=None,
+                                          title='', errbar_alpha=0.3, xlim=(-20, 720), alpha=0.8, kin_info_loc=(0.2, 0.75),
+                                          star_prelim_loc=None, marker_map=data_sets_markers,
+                                          data_sets_energies_colors=data_sets_energies_colors,
+                                          data_sets_bands=None)
+    print(cent_fits)
+    # plt.show()
+
+    dsig_avgs_62ref = dsig_avgs_v2_sub_div120.rename(columns={'name': 'data_set'})
+    plot_div_fits_vs_cent_62res(dsig_avgs_62ref, data_sets_cent, data_sets_colors, data_sets_labels, ref_type=ref_type,
+                                cent_ref=cent_ref_df, val_col='avg', err_col='avg_err')
+
+    df_fits = pd.read_csv(f'{base_path}{df_partitions_fits_name}')
+    df_fits_model = pd.read_csv(f'{base_path}{df_partitions_fits_model_name}')
+    df_fits = pd.concat([df_fits, df_fits_model])
+
+    # data_sets_energies_cmaps = dict(zip(data_sets_cent, ['winter', 'copper']))
+    # data_sets_markers2 = dict(zip(data_sets_cent, ['s', 'o']))
+    # plot_div_fits_vs_cent(df_fits, data_sets_cent,  # data_sets_energies_cmaps=data_sets_energies_cmaps,
+    #                       data_sets_labels=data_sets_labels, title=None, fit=False, cent_ref=cent_ref_df,
+    #                       ref_type=ref_type, data_sets_colors=data_sets_energies_colors,
+    #                       data_sets_markers=data_sets_markers2)
+
+    plot_div_fits_vs_cent_2panel(df_fits, data_sets_cent, data_sets_colors=data_sets_colors, fit=False,
+                                 cent_ref=cent_ref_df, ref_type=ref_type,  # <---
+                                 # title=f'{div_plt}° Partitions, {samples} Samples per Event',
+                                 title='', print_data=True,
+                                 errbar_alpha=0.3, xlim=(-20, 720), alpha=0.8,
+                                 kin_info_loc=(0.45, 0.03), marker_map=data_sets_markers,
+                                 data_sets_energies_colors=data_sets_energies_colors,
+                                 # data_sets_bands=data_sets_bands
+                                 )
+    plot_baseline_vs_cent_fit(df_fits, data_sets_cent, data_sets_colors=data_sets_colors, fit=False,
+                                 cent_ref=cent_ref_df, ref_type=ref_type,  # <---
+                                 title='', ls='',
+                                 errbar_alpha=0.3, xlim=(-20, 720), alpha=0.8,
+                                 kin_info_loc=(0.45, 0.03), marker_map=data_sets_markers,
+                                 data_sets_energies_colors=data_sets_energies_colors,
+                                 )
+    plt.show()
+
+    # plot_slope_div_fits(df_fits, data_sets_colors, data_sets_labels, data_sets=data_sets_plt)
+    # plot_slope_div_fits_simpars(df_fits)
+
+    # Plot avg dsig2 vs refmult for mixed events. Wierd stuff at most peripheral bin or two
+
+    # dvar_vs_protons(df_dsigma_with_v2sub, div_plt, 0, [7], ['raw', 'mix', 'diff', 'v2_sub'], ['bes_def'],
+    #                 plot=True, avg=True, alpha=1.0, ylabel=r'$\Delta\sigma^2$',
+    #                 data_sets_labels={'bes_def': {'raw': 'Uncorrected', 'diff': 'Mixed Corrected', 'mix': 'Mixed',
+    #                                               'v2_sub': 'Mixed and Flow Corrected'}},
+    #                 data_sets_colors={'bes_def': {'raw': 'blue', 'diff': 'red', 'v2_sub': 'black', 'mix': 'purple'}},
+    #                 marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^', 'v2_sub': '*'}},
+    #                 # y_ranges=[-0.00124, 0.0009])  # v2 sub demo
+    #                 y_ranges=[-0.017, 0.007], kin_info_loc=(0.26, 0.94))  # v2 sub demo
+    #
+    # dvar_vs_protons(df_dsigma_with_v2sub, div_plt, 2, [7], ['raw', 'mix', 'diff', 'v2_sub'], ['bes_def'],
+    #                 plot=True, avg=True, alpha=1.0, ylabel=r'$\Delta\sigma^2$',
+    #                 data_sets_labels={'bes_def': {'raw': 'Uncorrected', 'diff': 'Mixed Corrected', 'mix': 'Mixed',
+    #                                               'v2_sub': 'Mixed and Flow Corrected'}},
+    #                 data_sets_colors={'bes_def': {'raw': 'blue', 'diff': 'red', 'v2_sub': 'black', 'mix': 'purple'}},
+    #                 marker_map={'bes_def': {'raw': 'o', 'mix': 's', 'diff': '^', 'v2_sub': '*'}},
+    #                 # y_ranges=[-0.00124, 0.0009])  # v2 sub demo
+    #                 y_ranges=[-0.017, 0.007], kin_info_loc=(0.26, 0.94))  # v2 sub demo
+    #
+    # df_mix = []
+    # for cent in range(0, 9):
+    #     df_mix_cent = dvar_vs_protons(df_dsigma, div_plt, cent, [7, 11, 19, 27, 39, 62],
+    #                                   ['mix'], data_sets_plt, plot=False, avg=True)
+    #     print(df_mix_cent)
+    #     df_mix.append(df_mix_cent)
+    # print(df_mix)
+    # df_mix = pd.concat(df_mix)
+    # print(df_mix)
+    # print(df_mix.columns)
+    # df_mix = df_mix[(df_mix['divs'] == 120) & (df_mix['data_type'] == 'mix')]
+    # plot_dsig_avg_vs_cent_2panel(df_mix, data_sets_cent, data_sets_colors=data_sets_colors, fit=False,
+    #                              cent_ref=cent_ref_df, ref_type=ref_type, legend_order=legend_order,  # <---
+    #                              # title=f'{div_plt}° Partitions, {samples} Samples per Event',
+    #                              title='',
+    #                              errbar_alpha=0.3, xlim=(-20, 720), alpha=0.8,
+    #                              kin_info_loc=(0.45, 0.1), star_prelim_loc=(0.4, 0.5), marker_map=data_sets_markers,
+    #                              data_sets_energies_colors=data_sets_energies_colors, data_sets_bands=data_sets_bands)
+
+    # Save all open figures
+    # for i in plt.get_fignums():
+    #     plt.figure(i)
+    #     window_title = plt.gcf().canvas.manager.get_window_title().replace(' ', '_')
+    #     plt.savefig(f'{save_dir}{window_title}_{i}.png')
+    #     plt.savefig(f'{save_dir}{window_title}_{i}.pdf')
+
+    plt.show()
+
 
 
 def plot_sims():
