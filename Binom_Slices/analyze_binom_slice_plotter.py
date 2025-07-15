@@ -4087,8 +4087,7 @@ def plot_flow():
     print(protons_fits)
     print(pd.unique(protons_fits['amp']))
     print(pd.unique(protons_fits['spread']))
-    plot_protons_fits_divs_flow(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors,
-                                data_sets_labels=data_sets_labels)
+    plot_protons_fits_divs_flow(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors)
     # df_fits = plot_protons_fits_divs(protons_fits, all_sets_plt, data_sets_colors=data_sets_colors, fit=False,
     #                                  data_sets_labels=data_sets_labels)
     # if save_fits:
