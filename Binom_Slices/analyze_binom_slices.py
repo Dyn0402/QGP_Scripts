@@ -20,6 +20,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 import seaborn as sns
 import pandas as pd
 from scipy.optimize import curve_fit as cf
+from scipy.optimize import brentq
 from scipy import odr
 from scipy.optimize import minimize
 from scipy.optimize import basinhopping
@@ -6089,6 +6090,135 @@ def subtract_dsigma_flow(avg_df, data_set_name, new_name, vs, div=None, cent=Non
         return df_new
     else:
         return pd.concat([avg_df, df_new], ignore_index=True)
+
+
+def plot_lyons_sys(df, df_def_name, df_sys_dict, sys_prior_dict=None, group_cols=None,
+            val_col='val', err_col='err', name_col='name', sys_col='sys'):
+    """
+    Calculate systematic uncertainties on the default set in df.
+    Only ready to take single variation per systematic variable.
+    :param df: Dataframe
+    :param df_def_name: Default set name
+    :param df_sys_dict: Dictionary of systematic sets to be analyzed. {set_type: [set_names]}
+    :param sys_prior_dict: Dictionary of systematic prior distributions. If None, all gaus. {set_name: prior}
+            gaus: Gaussian prior. Variation(s) correspond to 1 sigma estimate. If 2 variations, take max.
+            flat_one_side: Uniform prior. Variation corresponds to edge of distribution, with default on other edge.
+                            Divide by 1/sqrt(12) to get 1 sigma estimate.
+            flat_two_side: Uniform prior. Variation(s) correspond to edge of distribution, with default in the center.
+                            Divide by 2/sqrt(12)=1/sqrt(3) to get 1 sigma estimate.
+    :param group_cols: Name of columns by which to group values.
+    For example, energies and centralities should be separate
+    :param val_col: Name of column containing the values of interest
+    :param err_col: Name of column containing the statistical uncertainties on the values of interest
+    :param name_col: Name of column for the name of the data sets
+    :param sys_col: Name of the column for the systematic to output
+    :return: Dataframe with default values, statistical uncertainties, and estimated systematic uncertainties
+    """
+    if group_cols is None:
+        group_cols = ['divs', 'energy', 'cent', 'data_type', 'total_protons']
+
+    sys_set_names = [y for x in df_sys_dict.values() for y in x]
+    df_filtered = df[df[name_col].isin(list(sys_set_names) + [df_def_name])]
+    df_set = df_filtered.groupby(group_cols)
+    df_def_sys = []
+
+    for group_name, group_df in df_set:
+        if df_def_name not in group_df[name_col].values:
+            continue  # No default value so no systematic
+
+        group_df_def = group_df[group_df[name_col] == df_def_name]
+        assert len(group_df_def) == 1
+        def_val, def_err = group_df_def[val_col].values[0], group_df_def[err_col].values[0]
+        barlow = 0
+
+        if len(group_df) <= 1:
+            pass  # No systematic values so sys = 0
+        else:
+            group_df_sys = group_df[group_df[name_col] != df_def_name]
+
+            barlow = 0
+            for sys_type, sys_names in df_sys_dict.items():
+                group_df_sys_type = group_df_sys[group_df_sys[name_col].isin(sys_names)]
+                if len(group_df_sys_type) == 0:
+                    continue  # No variations of this type
+                sys_val = group_df_sys_type[val_col].values
+                sys_err = group_df_sys_type[err_col].values
+
+                names = group_df_sys_type[name_col].values
+                diff_vals = def_val - sys_val
+                diff_errs = np.sqrt(np.abs(def_err**2 - sys_err**2))
+                print(f'Systematic type: {sys_type}')
+                print(f'Group df sys_type: {group_df_sys_type}')
+                print(f'diff_vals: {diff_vals}')
+                print(f'diff_errs: {diff_errs}')
+                s = solve_for_lyons_s(diff_vals, diff_errs)
+                diff_errs_s = np.sqrt(diff_errs ** 2 + s ** 2)
+                print(f'Extra systematic to cover: {s}')
+                fig, ax = plt.subplots()
+                ax.errorbar(names, diff_vals, diff_errs, ls='none', marker='o', elinewidth=4, label='Statistical Errors')
+                ax.errorbar(names, diff_vals, diff_errs_s, ls='none', marker='.', elinewidth=1, label='Stat + Sys Errors')
+                ax.axhline(0, color='black', zorder=0)
+                ax.set_title(f'Systematic Type: {sys_type}')
+                ax.set_ylabel(f'Default - {sys_type} Variation')
+                ax.set_xticks(range(len(names)))
+                ax.set_xticklabels(names, rotation=45, ha='right')
+                ax.legend()
+                plt.tight_layout()
+
+                # fig, ax = plt.subplots()
+                # ax.errorbar()
+
+                # barlow_i = calc_sys(def_val, def_err, sys_val, sys_err, 'indiv') ** 2
+                # if sys_prior_dict is None or sys_type not in sys_prior_dict or sys_prior_dict[sys_type] == 'gaus':
+                #     barlow_i = barlow_i  # Do nothing, treat as gaussian 1 sigma. Dumb if statement but hopefully clear.
+                # elif sys_prior_dict[sys_type] == 'flat_one_side':
+                #     barlow_i = barlow_i / 12  # 1 sigma estimate for a uniform distribution with default at one edge
+                # elif sys_prior_dict[sys_type] == 'flat_two_side':
+                #     barlow_i = barlow_i / 3  # 1 sigma estimate for a uniform distribution with default at center
+                # barlow += np.max(barlow_i) if barlow_i.size > 0 else 0
+            barlow = np.sqrt(barlow)
+
+        df_entry = group_df_def.reset_index().to_dict(orient='records')[0]
+        df_entry.update({sys_col: barlow})
+        del df_entry['index']
+        df_def_sys.append(df_entry)
+
+    return pd.DataFrame(df_def_sys)
+
+
+def solve_for_lyons_s(def_minus_sys, err, s_max_mult=100):
+    """
+    Solve for systematic uncertainty numerically using Lyons method.
+    :param def_minus_sys: Array of default value minus systematic variations
+    :param err: Array of uncertainties on this difference -- if subset |\sqrt{err_d^2 - err_s^2}|
+    :param s_max_mult: Multiplier for max of def_minus_sys to set upper bound of search interval
+    :return: s -- Extra systematic to cover
+    """
+    # Filter out entries in which err is nan or <= 0 or def_minus_sys is nan
+    mask = (~np.isnan(err)) & (err > 0) & (~np.isnan(def_minus_sys))
+    err = err[mask]
+    def_minus_sys = def_minus_sys[mask]
+
+    n = len(def_minus_sys)
+
+    if n == 0:  # No valid variations so no extra systematic needed
+        return 0.0
+
+    def lyons_func(s):
+        return np.sum(def_minus_sys**2 / (err**2 + s**2)) / n - 1
+
+    if lyons_func(0) <= 0:  # No extra systematic needed
+        return 0.0
+
+    # Search interval: s must be >= 0.
+    # f(s) is decreasing in s, so we can bracket between 0 and something large.
+    s_max = max(1.0, s_max_mult * np.max(def_minus_sys**2))  # heuristic upper bound
+
+    while lyons_func(s_max) > 0:
+        s_max *= 2
+
+    root = brentq(lyons_func, 0.0, s_max)
+    return root
 
 
 def flow_correction(div, vs, energy, cent):
