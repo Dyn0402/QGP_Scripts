@@ -464,7 +464,7 @@ def calc_sys(def_val, def_err, sys_vals, sys_errs, return_vals='both'):
 
 
 def get_sys(df, df_def_name, df_sys_dict, sys_prior_dict=None, group_cols=None,
-            val_col='val', err_col='err', name_col='name', sys_col='sys'):
+            val_col='val', err_col='err', name_col='name', sys_col='sys', sys_method='barlow'):
     """
     Calculate systematic uncertainties on the default set in df.
     Only ready to take single variation per systematic variable.
@@ -483,6 +483,7 @@ def get_sys(df, df_def_name, df_sys_dict, sys_prior_dict=None, group_cols=None,
     :param err_col: Name of column containing the statistical uncertainties on the values of interest
     :param name_col: Name of column for the name of the data sets
     :param sys_col: Name of the column for the systematic to output
+    :param sys_method: Either 'barlow' or 'lyons'. Method to use for systematic calculation.
     :return: Dataframe with default values, statistical uncertainties, and estimated systematic uncertainties
     """
     if group_cols is None:
@@ -500,31 +501,39 @@ def get_sys(df, df_def_name, df_sys_dict, sys_prior_dict=None, group_cols=None,
         group_df_def = group_df[group_df[name_col] == df_def_name]
         assert len(group_df_def) == 1
         def_val, def_err = group_df_def[val_col].values[0], group_df_def[err_col].values[0]
-        barlow = 0
+        total_sys = 0
 
         if len(group_df) <= 1:
             pass  # No systematic values so sys = 0
         else:
             group_df_sys = group_df[group_df[name_col] != df_def_name]
 
-            barlow = 0
+            total_sys = 0
             for sys_type, sys_names in df_sys_dict.items():
                 group_df_sys_type = group_df_sys[group_df_sys[name_col].isin(sys_names)]
                 sys_val = group_df_sys_type[val_col].values
                 sys_err = group_df_sys_type[err_col].values
 
-                barlow_i = calc_sys(def_val, def_err, sys_val, sys_err, 'indiv') ** 2
-                if sys_prior_dict is None or sys_type not in sys_prior_dict or sys_prior_dict[sys_type] == 'gaus':
-                    barlow_i = barlow_i  # Do nothing, treat as gaussian 1 sigma. Dumb if statement but hopefully clear.
-                elif sys_prior_dict[sys_type] == 'flat_one_side':
-                    barlow_i = barlow_i / 12  # 1 sigma estimate for a uniform distribution with default at one edge
-                elif sys_prior_dict[sys_type] == 'flat_two_side':
-                    barlow_i = barlow_i / 3  # 1 sigma estimate for a uniform distribution with default at center
-                barlow += np.max(barlow_i) if barlow_i.size > 0 else 0
-            barlow = np.sqrt(barlow)
+                if sys_method == 'barlow':
+                    barlow_i = calc_sys(def_val, def_err, sys_val, sys_err, 'indiv') ** 2
+                    if sys_prior_dict is None or sys_type not in sys_prior_dict or sys_prior_dict[sys_type] == 'gaus':
+                        barlow_i = barlow_i  # Do nothing, treat as gaussian 1 sigma. Dumb if statement but hopefully clear.
+                    elif sys_prior_dict[sys_type] == 'flat_one_side':
+                        barlow_i = barlow_i / 12  # 1 sigma estimate for a uniform distribution with default at one edge
+                    elif sys_prior_dict[sys_type] == 'flat_two_side':
+                        barlow_i = barlow_i / 3  # 1 sigma estimate for a uniform distribution with default at center
+                    total_sys += np.max(barlow_i) if barlow_i.size > 0 else 0
+                elif sys_method == 'lyons':
+                    diff_vals = def_val - sys_val
+                    diff_errs = np.sqrt(np.abs(def_err ** 2 - sys_err ** 2))
+                    lyons_s = solve_for_lyons_s(diff_vals, diff_errs)
+                    total_sys += lyons_s ** 2
+                else:
+                    raise ValueError(f'Unknown sys_method {sys_method}')
+            total_sys = np.sqrt(total_sys)
 
         df_entry = group_df_def.reset_index().to_dict(orient='records')[0]
-        df_entry.update({sys_col: barlow})
+        df_entry.update({sys_col: total_sys})
         del df_entry['index']
         df_def_sys.append(df_entry)
 

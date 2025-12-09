@@ -43,7 +43,7 @@ def main():
     # get_sim_mapping_var()
     # plot_all_zero_base()
 
-    # plot_star_var_sys()
+    plot_star_var_sys()  # Think this does all the systematic calculations
     # make_models_csv()
     # plot_star_var_rand_sys()
 
@@ -1122,6 +1122,7 @@ def plot_star_var_sys():
     calc_finals = False
     # calc_finals = True
     threads = 11
+    sys_method = 'lyons'  # Either 'barlow' or 'lyons'
     sys_pdf_out_path = f'{base_path}systematic_plots.pdf'
     indiv_pdf_out_path = f'F:/Research/Results/BES_QA_Plots/Systematics/'
     df_def_out_name = 'Bes_with_Sys/binom_slice_vars_bes.csv'
@@ -1250,7 +1251,7 @@ def plot_star_var_sys():
 
     # Get k2 raw, mix, diff systematics
     if df_def_out_name is not None and calc_finals:
-        df_def_with_sys = get_sys(df, 'bes_def', sys_include_sets, sys_priors,
+        df_def_with_sys = get_sys(df, 'bes_def', sys_include_sets, sys_priors, sys_method=sys_method,
                                   group_cols=['divs', 'energy', 'cent', 'data_type', 'total_protons'])
         df_def_with_sys.to_csv(f'{base_path}{df_def_out_name}', index=False)
 
@@ -1266,7 +1267,8 @@ def plot_star_var_sys():
 
     if df_def_dsigma_out_name is not None and calc_finals:
         df_def_dsigma = get_sys(df_dsigma_types, 'bes_def', sys_include_sets, sys_priors,
-                                group_cols=['divs', 'energy', 'cent', 'data_type', 'total_protons'])
+                                group_cols=['divs', 'energy', 'cent', 'data_type', 'total_protons'],
+                                sys_method=sys_method)
         print(df_def_dsigma)
         df_def_dsigma.to_csv(f'{base_path}{df_def_dsigma_out_name}', index=False)
 
@@ -1281,7 +1283,8 @@ def plot_star_var_sys():
             df_def_dsigma_v2sub.append(set_v2sub)
         df_def_dsigma_v2sub = pd.concat(df_def_dsigma_v2sub)
         df_def_dsigma_v2sub = get_sys(df_def_dsigma_v2sub, 'bes_def', sys_include_sets, sys_priors,
-                                      group_cols=['divs', 'energy', 'cent', 'data_type', 'total_protons'])
+                                      group_cols=['divs', 'energy', 'cent', 'data_type', 'total_protons'],
+                                      sys_method=sys_method)
         df_def_dsigma_v2sub.to_csv(f'{base_path}{df_def_dsigma_v2sub_out_name}', index=False)
 
     sets_run = all_sets if plot else sys_include_names + ['bes_def']
@@ -1307,7 +1310,8 @@ def plot_star_var_sys():
     if df_def_avgs_out_name is not None and calc_finals:
         dsig_avg_all = pd.concat(dsig_avgs_all, ignore_index=True)
         dsig_avgs_def_sys = get_sys(dsig_avg_all, 'bes_def', sys_include_sets, sys_priors, val_col='avg',
-                                    err_col='avg_err', group_cols=['divs', 'energy', 'cent', 'data_type'])
+                                    err_col='avg_err', group_cols=['divs', 'energy', 'cent', 'data_type'],
+                                    sys_method=sys_method)
         dsig_avgs_def_sys.to_csv(f'{base_path}{df_def_avgs_out_name}', index=False)
 
     dsig_avgs_diff_v2sub = pd.concat(dsig_avgs_diff_v2sub, ignore_index=True)
@@ -1326,7 +1330,8 @@ def plot_star_var_sys():
 
     if df_def_avgs_v2sub_out_name is not None and calc_finals:
         dsig_avg_diff_v2sub_out = get_sys(dsig_avgs_diff_v2sub, 'bes_def', sys_include_sets, sys_priors,
-                                          val_col='avg', err_col='avg_err', group_cols=['divs', 'energy', 'cent'])
+                                          val_col='avg', err_col='avg_err', group_cols=['divs', 'energy', 'cent'],
+                                          sys_method=sys_method)
         dsig_avg_diff_v2sub_out.to_csv(f'{base_path}{df_def_avgs_v2sub_out_name}', index=False)
 
     dsig_avgs_v2_sub_div120 = dsig_avgs_diff_v2sub[dsig_avgs_diff_v2sub['divs'] == 120]
@@ -1344,7 +1349,7 @@ def plot_star_var_sys():
                 cent_fits_120_ref_type.drop(columns=[other_param_name, f'{other_param_name}_err'], inplace=True)
             cent_fits_ref_param_out = get_sys(cent_fits_120_ref_type, 'bes_def', sys_include_sets, sys_priors,
                                           val_col=param_name, err_col=f'{param_name}_err', group_cols=['energy'],
-                                          name_col='data_set')
+                                          name_col='data_set', sys_method=sys_method)
             cent_fits_ref_param_out.to_csv(f'{base_path}/Bes_with_Sys/centrality_fits/{ref_type_i}_fits_120_{param_name}.csv',
                                            index=False)
 
@@ -1365,10 +1370,10 @@ def plot_star_var_sys():
     if df_partitions_fits_name is not None:
         df_baselines = get_sys(df_fits, 'bes_def', sys_include_sets,  sys_priors, val_col='baseline',
                                err_col='base_err', name_col='data_set', sys_col='base_sys',
-                               group_cols=['energy', 'cent'])
+                               group_cols=['energy', 'cent'], sys_method=sys_method)
         df_zeros = get_sys(df_fits, 'bes_def', sys_include_sets, sys_priors, val_col='zero_mag',
                            err_col='zero_mag_err', name_col='data_set', sys_col='zero_sys',
-                           group_cols=['energy', 'cent'])
+                           group_cols=['energy', 'cent'], sys_method=sys_method)
         df_baselines = df_baselines.drop(columns=['zero_mag', 'zero_mag_err'])
         df_fits_out = pd.concat([df_baselines, df_zeros[['zero_mag', 'zero_mag_err', 'zero_sys']]], axis=1)
         df_fits_out.to_csv(f'{base_path}{df_partitions_fits_name}', index=False)
@@ -1392,7 +1397,7 @@ def plot_star_var_sys():
                 baseline_cent_fits_ref_type.drop(columns=[other_param_name, f'{other_param_name}_err'], inplace=True)
             baseline_cent_fits_ref_param_out = get_sys(baseline_cent_fits_ref_type, 'bes_def', sys_include_sets,
                                                        sys_priors, val_col=param_name, err_col=f'{param_name}_err',
-                                                       group_cols=['energy'], name_col='data_set')
+                                                       group_cols=['energy'], name_col='data_set', sys_method=sys_method)
             baseline_cent_fits_ref_param_out.to_csv(f'{base_path}/Bes_with_Sys/baseline_cent_fits/{ref_type_i}_baseline_fits_{param_name}.csv',)
 
     df_fits = df_fits.rename(columns={'data_set': 'name'})
