@@ -74,8 +74,8 @@ def main():
     # plot_anticl_flow_closure_test_simple()
     # plot_efficiency_closure_tests()
     # plot_closure_tests()
-    plot_lyons_example()
-    plot_star_analysis_note_figs()
+    # plot_lyons_example()
+    # plot_star_analysis_note_figs()
 
     # plot_raw_mix_sys_comp()
     print('donzo')
@@ -1184,31 +1184,68 @@ def plot_star_var_sys():
     #                   'val_unit': '', 'sys_var_order': None},
     # }
 
+    # sys_info_dict = {
+    #     'vz': {'name': 'vz range', 'title': 'vz', 'decimal': None, 'default': None,
+    #            'sys_vars': ['low7', 'high-7'], 'val_unit': ' cm',
+    #            'sys_var_order': ['low7', 'low-5_vzhigh5', 'high-7'], 'prior': 'flat_two_side'},
+    #     'Efficiency': {'name': 'efficiency', 'title': 'efficiency', 'decimal': 2, 'default': 0,
+    #                    'sys_vars': [90.0], 'val_unit': '%', 'sys_var_order': [95.0, 90.0, 85.0, 80.0],
+    #                    'prior': 'flat_one_side'},
+    #     'dca': {'name': 'dca', 'title': 'dca', 'decimal': 1, 'default': 1, 'sys_vars': [0.5], 'val_unit': ' cm',
+    #             'sys_var_order': [0.5, 0.8, 1.2, 1.5], 'prior': 'flat_one_side'},
+    #     'nsprx': {'name': r'n$\sigma$ proton', 'title': r'n$\sigma$ proton', 'decimal': 1, 'default': 1,
+    #               'sys_vars': [0.75], 'val_unit': '', 'sys_var_order': [0.75, 0.9, 1.1, 1.25],
+    #               'prior': 'flat_one_side'},
+    #     'm2r': {'name': r'$m^2$ range', 'title': 'm2 range', 'decimal': 0, 'default': 0.6, 'sys_vars': [0.4],
+    #             'val_unit': ' GeV', 'sys_var_order': [0.2, 0.4, 0.8, 1.0], 'prior': 'flat_one_side'},
+    #     'nhfit': {'name': 'nHits fit', 'title': 'nhits fit', 'decimal': 2, 'default': 20, 'sys_vars': [25],
+    #               'val_unit': '', 'sys_var_order': [15, 25], 'prior': 'flat_one_side'},
+    #     'sysrefshift': {'name': 'refmult3 shift', 'title': 'ref3 shift', 'decimal': None, 'default': 0,
+    #                     'sys_vars': ['-1', '1'], 'val_unit': '', 'sys_var_order': ['-1', '1'],
+    #                     'prior': 'flat_two_side'},
+    #     'dcxyqa': {'name': 'dcaxy qa', 'title': 'dcaxy qa', 'decimal': None, 'default': None,
+    #                'sys_vars': ['tight'], 'val_unit': '', 'sys_var_order': ['2tight', 'tight', 'loose', '2loose'],
+    #                'prior': 'flat_one_side'},
+    #     'pileupqa': {'name': 'pile-up qa', 'title': 'pile-up qa', 'decimal': None, 'default': None,
+    #                  'sys_vars': ['tight'], 'val_unit': '', 'sys_var_order': ['2tight', 'tight', 'loose', '2loose'],
+    #                  'prior': 'flat_one_side'},
+    #     'nonflow': {'name': 'nonflow', 'title': 'nonflow', 'decimal': None, 'default': None,
+    #                  'sys_vars': ['nonflow'], 'val_unit': '', 'sys_var_order': ['nonflow'],
+    #                  'prior': 'flat_one_side'},
+    #     'mix_rand_': {'name': 'mix rand', 'title': 'mix rand', 'decimal': 1, 'default': 0, 'sys_vars': None,
+    #                   'val_unit': '', 'sys_var_order': None, 'prior': None},
+    #     'all_rand_': {'name': 'all rand', 'title': 'all rand', 'decimal': 1, 'default': 0, 'sys_vars': None,
+    #                   'val_unit': '', 'sys_var_order': None, 'prior': None},
+    # }
+
     sys_info_dict = {
         'vz': {'name': 'vz range', 'title': 'vz', 'decimal': None, 'default': None,
-               'sys_vars': ['low7', 'high-7'], 'val_unit': ' cm',
+               'sys_vars': ['low7', 'low-5_vzhigh5', 'high-7'], 'val_unit': ' cm',
                'sys_var_order': ['low7', 'low-5_vzhigh5', 'high-7'], 'prior': 'flat_two_side'},
         'Efficiency': {'name': 'efficiency', 'title': 'efficiency', 'decimal': 2, 'default': 0,
-                       'sys_vars': [90.0], 'val_unit': '%', 'sys_var_order': [95.0, 90.0, 85.0, 80.0],
+                       'sys_vars': [95.0, 90.0, 85.0, 80.0], 'val_unit': '%', 'sys_var_order': [95.0, 90.0, 85.0, 80.0],
                        'prior': 'flat_one_side'},
-        'dca': {'name': 'dca', 'title': 'dca', 'decimal': 1, 'default': 1, 'sys_vars': [0.5], 'val_unit': ' cm',
-                'sys_var_order': [0.5, 0.8, 1.2, 1.5], 'prior': 'flat_one_side'},
+        'dca': {'name': 'dca', 'title': 'dca', 'decimal': 1, 'default': 1, 'sys_vars': [0.5, 0.8, 1.2, 1.5],
+                'val_unit': ' cm', 'sys_var_order': [0.5, 0.8, 1.2, 1.5], 'prior': 'flat_one_side'},
         'nsprx': {'name': r'n$\sigma$ proton', 'title': r'n$\sigma$ proton', 'decimal': 1, 'default': 1,
-                  'sys_vars': [0.75], 'val_unit': '', 'sys_var_order': [0.75, 0.9, 1.1, 1.25],
+                  'sys_vars': [0.75, 0.9, 1.1, 1.25], 'val_unit': '', 'sys_var_order': [0.75, 0.9, 1.1, 1.25],
                   'prior': 'flat_one_side'},
-        'm2r': {'name': r'$m^2$ range', 'title': 'm2 range', 'decimal': 0, 'default': 0.6, 'sys_vars': [0.4],
+        'm2r': {'name': r'$m^2$ range', 'title': 'm2 range', 'decimal': 0, 'default': 0.6, 'sys_vars': [0.2, 0.4, 0.8, 1.0],
                 'val_unit': ' GeV', 'sys_var_order': [0.2, 0.4, 0.8, 1.0], 'prior': 'flat_one_side'},
-        'nhfit': {'name': 'nHits fit', 'title': 'nhits fit', 'decimal': 2, 'default': 20, 'sys_vars': [25],
+        'nhfit': {'name': 'nHits fit', 'title': 'nhits fit', 'decimal': 2, 'default': 20, 'sys_vars': [15, 25],
                   'val_unit': '', 'sys_var_order': [15, 25], 'prior': 'flat_one_side'},
         'sysrefshift': {'name': 'refmult3 shift', 'title': 'ref3 shift', 'decimal': None, 'default': 0,
                         'sys_vars': ['-1', '1'], 'val_unit': '', 'sys_var_order': ['-1', '1'],
                         'prior': 'flat_two_side'},
         'dcxyqa': {'name': 'dcaxy qa', 'title': 'dcaxy qa', 'decimal': None, 'default': None,
-                   'sys_vars': ['tight'], 'val_unit': '', 'sys_var_order': ['2tight', 'tight', 'loose', '2loose'],
+                   'sys_vars': ['2tight', 'tight', 'loose', '2loose'], 'val_unit': '', 'sys_var_order': ['2tight', 'tight', 'loose', '2loose'],
                    'prior': 'flat_one_side'},
         'pileupqa': {'name': 'pile-up qa', 'title': 'pile-up qa', 'decimal': None, 'default': None,
-                     'sys_vars': ['tight'], 'val_unit': '', 'sys_var_order': ['2tight', 'tight', 'loose', '2loose'],
+                     'sys_vars': ['2tight', 'tight', 'loose', '2loose'], 'val_unit': '', 'sys_var_order': ['2tight', 'tight', 'loose', '2loose'],
                      'prior': 'flat_one_side'},
+        'nonflow': {'name': 'nonflow', 'title': 'nonflow', 'decimal': None, 'default': None,
+                    'sys_vars': ['nonflow'], 'val_unit': '', 'sys_var_order': ['nonflow'],
+                    'prior': 'flat_one_side'},
         'mix_rand_': {'name': 'mix rand', 'title': 'mix rand', 'decimal': 1, 'default': 0, 'sys_vars': None,
                       'val_unit': '', 'sys_var_order': None, 'prior': None},
         'all_rand_': {'name': 'all rand', 'title': 'all rand', 'decimal': 1, 'default': 0, 'sys_vars': None,
@@ -1378,7 +1415,7 @@ def plot_star_var_sys():
         df_fits_out = pd.concat([df_baselines, df_zeros[['zero_mag', 'zero_mag_err', 'zero_sys']]], axis=1)
         df_fits_out.to_csv(f'{base_path}{df_partitions_fits_name}', index=False)
 
-        print(df_fits_out)
+        # print(df_fits_out)
         if plot:
             plot_slope_div_fits(df_fits_out, data_sets_colors, data_sets_labels)
             plot_slope_div_fits_simpars(df_fits_out)

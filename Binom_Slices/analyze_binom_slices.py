@@ -514,6 +514,9 @@ def get_sys(df, df_def_name, df_sys_dict, sys_prior_dict=None, group_cols=None,
                 sys_val = group_df_sys_type[val_col].values
                 sys_err = group_df_sys_type[err_col].values
 
+                if len(sys_val) == 1 and sys_method != 'barlow':
+                    print(f'Fall back to barlow for {sys_type} with single variation.')
+
                 if sys_method == 'barlow':
                     barlow_i = calc_sys(def_val, def_err, sys_val, sys_err, 'indiv') ** 2
                     if sys_prior_dict is None or sys_type not in sys_prior_dict or sys_prior_dict[sys_type] == 'gaus':
@@ -529,14 +532,7 @@ def get_sys(df, df_def_name, df_sys_dict, sys_prior_dict=None, group_cols=None,
                     diff_vals = def_val - sys_val
                     diff_errs = np.sqrt(np.abs(def_err ** 2 - sys_err ** 2))
                     lyons_s = solve_for_lyons_s(diff_vals, diff_errs)
-                    if sys_prior_dict is None or sys_type not in sys_prior_dict or sys_prior_dict[sys_type] == 'gaus':
-                        lyons_s = lyons_s  # Do nothing, treat as gaussian 1 sigma. Dumb if statement but hopefully clear.
-                    elif sys_prior_dict[sys_type] == 'flat_one_side':
-                        lyons_s = lyons_s / np.sqrt(12)  # 1 sigma estimate for a uniform distribution with default at one edge
-                    elif sys_prior_dict[sys_type] == 'flat_two_side':
-                        lyons_s = lyons_s / np.sqrt(3)  # 1 sigma estimate for a uniform distribution with default at center
-                    else:
-                        print(f'WARNING! Unknown prior {sys_prior_dict[sys_type]} for sys type {sys_type}. Treating as gaussian.')
+
                     total_sys += lyons_s ** 2
                 else:
                     raise ValueError(f'Unknown sys_method {sys_method}')
@@ -718,6 +714,8 @@ def get_set_dir(set_name, def_dir, base_dir):
             new_dir = def_dir.replace('_epbins1', f'_epbins1_{set_name}')
         elif any([x in set_name for x in ['sysrefshift', 'vzlow', 'vzhigh', 'pileupqa', 'dcxyqa']]):
             new_dir = def_dir.replace('_epbins1', f'_epbins1_{set_name}')
+        elif 'nonflow' in set_name:
+            new_dir = def_dir.replace('_calcv2', f'_calcv2_{set_name}')
         else:
             sys_type, sys_val = split_string(set_name)
             new_dir = '_'.join([set_name if sys_type in dir_key else dir_key for dir_key in def_dir.split('_')])

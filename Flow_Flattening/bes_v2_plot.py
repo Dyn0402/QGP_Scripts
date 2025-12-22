@@ -7,18 +7,21 @@ Created as QGP_Scripts/bes_v2_plot
 
 @author: Dylan Neff, Dylan
 """
+
 import os.path
+import shutil
 
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import pandas as pd
 
-from analyze_binom_slices import read_flow_values, solve_for_lyons_s
+from analyze_binom_slices import solve_for_lyons_s
 
 
 def main():
-    get_2012_v2_nonflow_fraction('F:/Research/bes1_v2_2012_paper.txt', plot=True)
+    df = get_2012_v2_nonflow_fraction('F:/Research/bes1_v2_2012_paper.txt', plot=True)
+    make_nonflow_sys_variation(df)
     plot_star_models()
     # plot_star_sys()  # No idea if this works with the new sys sets!
     # calc_star_sys()
@@ -648,9 +651,9 @@ def get_2012_v2_nonflow_fraction(v2_2012_file_path, plot=False):
         else:
             return float('nan'), 'None'
 
-    df[['total_sys', 'sys_source']] = df.apply(choose_sys, axis=1, result_type='expand')
+    df[['nonflow_frac', 'nonflow_source']] = df.apply(choose_sys, axis=1, result_type='expand')
 
-    print(df[['Energy_GeV', 'Centrality', 'total_sys', 'sys_source']].to_string())
+    print(df[['Energy_GeV', 'Centrality', 'nonflow_frac', 'nonflow_source']].to_string())
 
     if plot:
         # Plot these systematics with sys vs centrality. Each energy as different series.
@@ -674,8 +677,8 @@ def get_2012_v2_nonflow_fraction(v2_2012_file_path, plot=False):
         # Plot points: color = energy, marker = systematic shape
         for energy in energies:
             df_e = df[df['Energy_GeV'] == energy]
-            for sys_source, mk in markers.items():
-                df_es = df_e[df_e['sys_source'] == sys_source]
+            for nonflow_source, mk in markers.items():
+                df_es = df_e[df_e['nonflow_source'] == nonflow_source]
                 if df_es.empty:
                     continue
                 df_es = df_es.copy()
@@ -683,7 +686,7 @@ def get_2012_v2_nonflow_fraction(v2_2012_file_path, plot=False):
                 df_es['cent_bin'] = df_es['Centrality'].map(cent_bin_map)
                 df_es = df_es.sort_values('cent_bin', ascending=False)
                 x = [cent_order.index(c) for c in df_es['Centrality']]
-                ax.errorbar(x, df_es['total_sys'], ls='', marker=mk, color=energy_colors[energy], alpha=0.8)
+                ax.errorbar(x, df_es['nonflow_frac'], ls='', marker=mk, color=energy_colors[energy], alpha=0.8)
 
         # Set x ticks to global centrality order
         ax.set_xticks(np.arange(len(cent_order)))
@@ -703,6 +706,70 @@ def get_2012_v2_nonflow_fraction(v2_2012_file_path, plot=False):
         fig.tight_layout()
 
     return df
+
+
+def make_nonflow_sys_variation(df):
+    """
+    Make a variation dataset with the non-flow estimates from the 2012 paper.
+    Copy the default dataset. For each v2 measurement, subtract the non-flow estimate.
+    This should be able to be run as a systematic variation, similar to the others.
+    :param df:
+    :return:
+    """
+    base_path = 'F:/Research/'
+    data_dir = f'{base_path}Data'
+    mix_dir = f'{base_path}Data_Mix'
+    default_directory = 'default/rapid05_resample_norotate_seed_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_0/'
+    variation_directory = 'default_sys/rapid05_resample_norotate_seed_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_nonflow_0/'
+
+    for base_dir in [data_dir, mix_dir]:
+        var_dir_path = f'{base_dir}/{variation_directory}'
+        # If the variation directory exists in either data_dir or mix_dir, remove it
+        if os.path.exists(var_dir_path):
+            print(f'Removing existing variation directory: {var_dir_path}')
+            shutil.rmtree(var_dir_path)
+        # Copy default directory to variation directory
+        def_dir_path = f'{base_dir}/{default_directory}'
+        print(f'Copying default directory to variation directory: {def_dir_path} -> {var_dir_path}')
+        shutil.copytree(def_dir_path, var_dir_path)
+
+    # In the data_dir, for each directory (energy) folder, modify the v2.txt file to subtract the non-flow estimate
+    for energy in pd.unique(df['Energy_GeV']):
+        energy_str = str(int(energy))
+        v2_file_path = f'{data_dir}/{variation_directory}{energy_str}GeV/v2.txt'
+        if os.path.exists(v2_file_path):
+            with open(v2_file_path, 'r') as file:
+                lines = file.readlines()
+
+            with open(v2_file_path, 'w') as file:
+                # Write header
+                file.write(lines[0])
+                for line in lines[1:]:
+                    parts = line.strip().split('\t')
+                    cent_bin = int(parts[0])
+                    v2_parts = parts[1].split(' ')
+                    v2_val = float(v2_parts[0])
+                    v2_err = float(v2_parts[1]) if len(v2_parts) > 1 else np.nan
+                    res_parts = parts[2].split(' ')
+                    res_val = float(res_parts[0])
+                    res_err = float(res_parts[1]) if len(res_parts) > 1 else np.nan
+
+                    # Get non-flow estimate for this energy and cent_bin
+                    df_row = df[(df['Energy_GeV'] == energy) & (df['cent_bin'] == cent_bin)]
+                    if not df_row.empty:
+                        nonflow = df_row.iloc[0]['nonflow_frac'] * v2_val
+                    else:
+                        nonflow = 0.0
+
+                    # Subtract non-flow from v2 value
+                    new_v2_val = v2_val - nonflow
+                    # Ensure v2 does not go negative  # Don't think a negative v2 is necessary to guard against?
+                    # new_v2_val = max(new_v2_val, 0.0)
+
+                    file.write(f"{parts[0]}\t{new_v2_val:.7f} {v2_err:.7f}\t{res_val:.7f} {res_err:.7f}\n")
+        else:
+            print(f'{v2_file_path} does not exist!')
+
 
 
 def load_2012_v2_data(filename):

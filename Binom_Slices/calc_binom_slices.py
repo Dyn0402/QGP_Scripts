@@ -71,11 +71,11 @@ def init_pars():
         # 'csv_path': 'D:/Transfer/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim_new.csv',
         # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
         'csv_append': False,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
-        'only_new': False,  # If True check csv_path and only run missing datasets, else run all datasets
+        'only_new': True,  # If True check csv_path and only run missing datasets, else run all datasets
         'threads': 15,
         # 'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'stats': define_stats(['k2']),
-        'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
+        'check_only': True,  # Don't do any real work, just try to read each file to check for failed reads
         'min_events': 100,  # Min number of total events per total_proton. Skip total_proton if fewer
         'min_bs': 100,  # Min number of bootstrap sets of total_proton. Skip if fewer
         'out_bs': 0,  # Number of bootstrap divide values to get
@@ -159,85 +159,85 @@ def define_datasets(base_path):
         #  ['resample', 'anticlflow', 'spread05', 'amp05', 'res15', 'v207'], [], [], [0], [62], [8], all_divs],
 
 
-        ['flow_res15_v207', '_Sim_Flow',
-         ['flow', 'resample', 'res15', 'v207'], [], ['Eff', 'anticlflow'], [0], [62], [8], all_divs],
-        ['flow_res15_v205', '_Sim_Flow',
-         ['flow', 'resample', 'res15', 'v205'], [], ['Eff', 'anticlflow'], [0], [62], [8], all_divs],
-        ['flow_res15_v203', '_Sim_Flow',
-         ['flow', 'resample', 'res15', 'v203'], [], ['Eff', 'anticlflow'], [0], [62], [8], all_divs],
-        ['flow_eff_res15_v207', '_Sim_2source_Tests',
-         ['flow', 'Eff', 'resample', 'res15', 'v207'], [], ['anticlflow'], [0], [62], [8], all_divs],
-
-        ['simpleclust_s08_a3', '_Sim_2source_Tests', ['simpleclust', 'resample', 'spread08', 'amp3', 'v20'],
-         [], ['Eff', 'anticlflow'], [0], [62], [8], all_divs],
-        ['simpleclust_s08_a05', '_Sim_2source_Tests', ['simpleclust', 'resample', 'spread08', 'amp05', 'v20'],
-         [], ['Eff', 'anticlflow'], [0], [62], [8], all_divs],
-
-        ['simpleclust_s08_a3_eff', '_Sim_2source_Tests',
-         ['simpleclust', 'Eff', 'resample', 'spread08', 'amp3', 'v20'],
-         [], ['anticlflow'], [0], [62], [8], all_divs],
-        ['simpleclust_s08_a05_eff', '_Sim_2source_Tests',
-         ['simpleclust', 'Eff', 'resample', 'spread08', 'amp05', 'v20'],
-         [], ['anticlflow'], [0], [62], [8], all_divs],
-
-        ['simpleclust_s08_a3_flow_v21', '_Sim_2source_Tests', ['simpleclust', 'spread08', 'amp3', 'v21', 'resample'],
-         [], ['anticlflow', 'Eff'], [0], [62], [8], all_divs],
-        ['simpleclust_s08_a3_flow_v207', '_Sim_2source_Tests', ['simpleclust', 'spread08', 'amp3', 'v207', 'resample'],
-         [], ['anticlflow', 'Eff'], [0], [62], [8], all_divs],
-        ['simpleclust_s08_a3_flow_v205', '_Sim_2source_Tests', ['simpleclust', 'spread08', 'amp3', 'v205', 'resample'],
-         [], ['anticlflow', 'Eff'], [0], [62], [8], all_divs],
-        ['simpleclust_s08_a3_flow_v203', '_Sim_2source_Tests', ['simpleclust', 'spread08', 'amp3', 'v203', 'resample'],
-         [], ['anticlflow', 'Eff'], [0], [62], [8], all_divs],
-
-        ['simpleclust_s08_a05_flow_v21', '_Sim_2source_Tests',
-         ['simpleclust', 'spread08', 'amp05', 'v21', 'resample'],
-         [], ['anticlflow', 'Eff'], [0], [62], [8], all_divs],
-        ['simpleclust_s08_a05_flow_v207', '_Sim_2source_Tests',
-         ['simpleclust', 'spread08', 'amp05', 'v207', 'resample'],
-         [], ['anticlflow', 'Eff'], [0], [62], [8], all_divs],
-        ['simpleclust_s08_a05_flow_v205', '_Sim_2source_Tests',
-         ['simpleclust', 'spread08', 'amp05', 'v205', 'resample'],
-         [], ['anticlflow', 'Eff'], [0], [62], [8], all_divs],
-        ['simpleclust_s08_a05_flow_v203', '_Sim_2source_Tests',
-         ['simpleclust', 'spread08', 'amp05', 'v203', 'resample'],
-         [], ['anticlflow', 'Eff'], [0], [62], [8], all_divs],
-
-        ['simpleclust_s08_a3_flow_v207_eff', '_Sim_2source_Tests',
-         ['simpleclust', 'spread08', 'amp3', 'v207', 'resample', 'Eff'],
-         [], ['anticlflow'], [0], [62], [8], all_divs],
-        ['simpleclust_s08_a05_flow_v207_eff', '_Sim_2source_Tests',
-         ['simpleclust', 'spread08', 'amp05', 'v207', 'resample', 'Eff'],
-         [], ['anticlflow'], [0], [62], [8], all_divs],
-
-        ['anticlflow_eff_s1_a01', '_Sim_2source_Tests', ['resample', 'anticlflow', 'Eff', 'spread1', 'amp01', 'v20'],
-         [], [], [0], [62], [8], all_divs],
-        ['anticlflow_eff_s08_a01', '_Sim_2source_Tests', ['resample', 'anticlflow', 'Eff', 'spread08', 'amp01', 'v20'],
-         [], [], [0], [62], [8], all_divs],
-        ['anticlflow_eff_s05_a01', '_Sim_2source_Tests', ['resample', 'anticlflow', 'Eff', 'spread05', 'amp01', 'v20'],
-         [], [], [0], [62], [8], all_divs],
-        ['anticlflow_eff_s01_a01', '_Sim_2source_Tests', ['resample', 'anticlflow', 'Eff', 'spread01', 'amp01', 'v20'],
-         [], [], [0], [62], [8], all_divs],
-
-        ['anticlmulti_s1_a01', '_Sim_2source_Tests', ['resample', 'anticlmulti', 'spread1', 'amp01'],
-         [], ['Eff'], [0], [62], [8], all_divs],
-        ['anticlmulti_s08_a01', '_Sim_2source_Tests', ['resample', 'anticlmulti', 'spread08', 'amp01'],
-         [], ['Eff'], [0], [62], [8], all_divs],
-        ['anticlmulti_s05_a01', '_Sim_2source_Tests', ['resample', 'anticlmulti', 'spread05', 'amp01'],
-         [], ['Eff'], [0], [62], [8], all_divs],
-        ['anticlmulti_s01_a01', '_Sim_2source_Tests', ['resample', 'anticlmulti', 'spread01', 'amp01'],
-         [], ['Eff'], [0], [62], [8], all_divs],
-
-        ['anticlflow_s1_a01_v207', '_Sim_2source_Tests', ['resample', 'anticlflow', 'spread1', 'amp01'],
-         [], ['Eff'], [0], [62], [8], all_divs],
-        ['anticlflow_s08_a01_v207', '_Sim_2source_Tests', ['resample', 'anticlflow', 'spread08', 'amp01'],
-         [], ['Eff'], [0], [62], [8], all_divs],
-        ['anticlflow_s05_a01_v207', '_Sim_2source_Tests', ['resample', 'anticlflow', 'spread05', 'amp01'],
-         [], ['Eff'], [0], [62], [8], all_divs],
-        ['anticlflow_s01_a01_v207', '_Sim_2source_Tests', ['resample', 'anticlflow', 'spread01', 'amp01'],
-         [], ['Eff'], [0], [62], [8], all_divs],
-
-        ['anticlflow_eff_s1_a01_v207', '_Sim_2source_Tests', ['resample', 'anticlflow', 'spread1', 'amp01', 'Eff'],
-         [], [], [0], [62], [8], all_divs],
+        # ['flow_res15_v207', '_Sim_Flow',
+        #  ['flow', 'resample', 'res15', 'v207'], [], ['Eff', 'anticlflow'], [0], [62], [8], all_divs],
+        # ['flow_res15_v205', '_Sim_Flow',
+        #  ['flow', 'resample', 'res15', 'v205'], [], ['Eff', 'anticlflow'], [0], [62], [8], all_divs],
+        # ['flow_res15_v203', '_Sim_Flow',
+        #  ['flow', 'resample', 'res15', 'v203'], [], ['Eff', 'anticlflow'], [0], [62], [8], all_divs],
+        # ['flow_eff_res15_v207', '_Sim_2source_Tests',
+        #  ['flow', 'Eff', 'resample', 'res15', 'v207'], [], ['anticlflow'], [0], [62], [8], all_divs],
+        #
+        # ['simpleclust_s08_a3', '_Sim_2source_Tests', ['simpleclust', 'resample', 'spread08', 'amp3', 'v20'],
+        #  [], ['Eff', 'anticlflow'], [0], [62], [8], all_divs],
+        # ['simpleclust_s08_a05', '_Sim_2source_Tests', ['simpleclust', 'resample', 'spread08', 'amp05', 'v20'],
+        #  [], ['Eff', 'anticlflow'], [0], [62], [8], all_divs],
+        #
+        # ['simpleclust_s08_a3_eff', '_Sim_2source_Tests',
+        #  ['simpleclust', 'Eff', 'resample', 'spread08', 'amp3', 'v20'],
+        #  [], ['anticlflow'], [0], [62], [8], all_divs],
+        # ['simpleclust_s08_a05_eff', '_Sim_2source_Tests',
+        #  ['simpleclust', 'Eff', 'resample', 'spread08', 'amp05', 'v20'],
+        #  [], ['anticlflow'], [0], [62], [8], all_divs],
+        #
+        # ['simpleclust_s08_a3_flow_v21', '_Sim_2source_Tests', ['simpleclust', 'spread08', 'amp3', 'v21', 'resample'],
+        #  [], ['anticlflow', 'Eff'], [0], [62], [8], all_divs],
+        # ['simpleclust_s08_a3_flow_v207', '_Sim_2source_Tests', ['simpleclust', 'spread08', 'amp3', 'v207', 'resample'],
+        #  [], ['anticlflow', 'Eff'], [0], [62], [8], all_divs],
+        # ['simpleclust_s08_a3_flow_v205', '_Sim_2source_Tests', ['simpleclust', 'spread08', 'amp3', 'v205', 'resample'],
+        #  [], ['anticlflow', 'Eff'], [0], [62], [8], all_divs],
+        # ['simpleclust_s08_a3_flow_v203', '_Sim_2source_Tests', ['simpleclust', 'spread08', 'amp3', 'v203', 'resample'],
+        #  [], ['anticlflow', 'Eff'], [0], [62], [8], all_divs],
+        #
+        # ['simpleclust_s08_a05_flow_v21', '_Sim_2source_Tests',
+        #  ['simpleclust', 'spread08', 'amp05', 'v21', 'resample'],
+        #  [], ['anticlflow', 'Eff'], [0], [62], [8], all_divs],
+        # ['simpleclust_s08_a05_flow_v207', '_Sim_2source_Tests',
+        #  ['simpleclust', 'spread08', 'amp05', 'v207', 'resample'],
+        #  [], ['anticlflow', 'Eff'], [0], [62], [8], all_divs],
+        # ['simpleclust_s08_a05_flow_v205', '_Sim_2source_Tests',
+        #  ['simpleclust', 'spread08', 'amp05', 'v205', 'resample'],
+        #  [], ['anticlflow', 'Eff'], [0], [62], [8], all_divs],
+        # ['simpleclust_s08_a05_flow_v203', '_Sim_2source_Tests',
+        #  ['simpleclust', 'spread08', 'amp05', 'v203', 'resample'],
+        #  [], ['anticlflow', 'Eff'], [0], [62], [8], all_divs],
+        #
+        # ['simpleclust_s08_a3_flow_v207_eff', '_Sim_2source_Tests',
+        #  ['simpleclust', 'spread08', 'amp3', 'v207', 'resample', 'Eff'],
+        #  [], ['anticlflow'], [0], [62], [8], all_divs],
+        # ['simpleclust_s08_a05_flow_v207_eff', '_Sim_2source_Tests',
+        #  ['simpleclust', 'spread08', 'amp05', 'v207', 'resample', 'Eff'],
+        #  [], ['anticlflow'], [0], [62], [8], all_divs],
+        #
+        # ['anticlflow_eff_s1_a01', '_Sim_2source_Tests', ['resample', 'anticlflow', 'Eff', 'spread1', 'amp01', 'v20'],
+        #  [], [], [0], [62], [8], all_divs],
+        # ['anticlflow_eff_s08_a01', '_Sim_2source_Tests', ['resample', 'anticlflow', 'Eff', 'spread08', 'amp01', 'v20'],
+        #  [], [], [0], [62], [8], all_divs],
+        # ['anticlflow_eff_s05_a01', '_Sim_2source_Tests', ['resample', 'anticlflow', 'Eff', 'spread05', 'amp01', 'v20'],
+        #  [], [], [0], [62], [8], all_divs],
+        # ['anticlflow_eff_s01_a01', '_Sim_2source_Tests', ['resample', 'anticlflow', 'Eff', 'spread01', 'amp01', 'v20'],
+        #  [], [], [0], [62], [8], all_divs],
+        #
+        # ['anticlmulti_s1_a01', '_Sim_2source_Tests', ['resample', 'anticlmulti', 'spread1', 'amp01'],
+        #  [], ['Eff'], [0], [62], [8], all_divs],
+        # ['anticlmulti_s08_a01', '_Sim_2source_Tests', ['resample', 'anticlmulti', 'spread08', 'amp01'],
+        #  [], ['Eff'], [0], [62], [8], all_divs],
+        # ['anticlmulti_s05_a01', '_Sim_2source_Tests', ['resample', 'anticlmulti', 'spread05', 'amp01'],
+        #  [], ['Eff'], [0], [62], [8], all_divs],
+        # ['anticlmulti_s01_a01', '_Sim_2source_Tests', ['resample', 'anticlmulti', 'spread01', 'amp01'],
+        #  [], ['Eff'], [0], [62], [8], all_divs],
+        #
+        # ['anticlflow_s1_a01_v207', '_Sim_2source_Tests', ['resample', 'anticlflow', 'spread1', 'amp01'],
+        #  [], ['Eff'], [0], [62], [8], all_divs],
+        # ['anticlflow_s08_a01_v207', '_Sim_2source_Tests', ['resample', 'anticlflow', 'spread08', 'amp01'],
+        #  [], ['Eff'], [0], [62], [8], all_divs],
+        # ['anticlflow_s05_a01_v207', '_Sim_2source_Tests', ['resample', 'anticlflow', 'spread05', 'amp01'],
+        #  [], ['Eff'], [0], [62], [8], all_divs],
+        # ['anticlflow_s01_a01_v207', '_Sim_2source_Tests', ['resample', 'anticlflow', 'spread01', 'amp01'],
+        #  [], ['Eff'], [0], [62], [8], all_divs],
+        #
+        # ['anticlflow_eff_s1_a01_v207', '_Sim_2source_Tests', ['resample', 'anticlflow', 'spread1', 'amp01', 'Eff'],
+        #  [], [], [0], [62], [8], all_divs],
 
 
         # ['anticlflowindep_eff_s1_a01', '_Sim_2source_Tests',
@@ -276,15 +276,15 @@ def define_datasets(base_path):
     #                    all_divs])
 
     # BES1 Systematics
-    # var_defaults = {'dca': 1, 'nsprx': 1, 'm2r': 6, 'm2s': 0, 'nhfit': 20, 'Efficiency': None, 'dcxyqa': None,
-    #                 'pileupqa': None, 'sysrefshift': 0, 'vz': None}
-    # # exclude_keys = ['dca05', 'dca15', 'nsprx075', 'nsprx125', 'm2r2', 'm2r10']
-    # exclude_keys = []
-    # sub_sets = find_sys_sets(f'{base_path}Data/default_sys/', var_defaults, exclude_keys, True)
-    # print(f'sys_sets len {len(sub_sets)}')
-    # for sub_set, sub_set_dir_name in sub_sets.items():
-    #     entry_vals.append([f'bes_sys_{sub_set}', '', ['default', 'sys'], [], ['test', 'misruns', 'old'],
-    #                        [sub_set_dir_name], all_energies, all_cents, all_divs])
+    var_defaults = {'dca': 1, 'nsprx': 1, 'm2r': 6, 'm2s': 0, 'nhfit': 20, 'Efficiency': None, 'dcxyqa': None,
+                    'pileupqa': None, 'sysrefshift': 0, 'vz': None, 'nonflow': None}
+    # exclude_keys = ['dca05', 'dca15', 'nsprx075', 'nsprx125', 'm2r2', 'm2r10']
+    exclude_keys = []
+    sub_sets = find_sys_sets(f'{base_path}Data/default_sys/', var_defaults, exclude_keys, True)
+    print(f'sys_sets len {len(sub_sets)}')
+    for sub_set, sub_set_dir_name in sub_sets.items():
+        entry_vals.append([f'bes_sys_{sub_set}', '', ['default', 'sys'], [], ['test', 'misruns', 'old'],
+                           [sub_set_dir_name], all_energies, all_cents, all_divs])
     #
     # # Mix randomization
     # for i in range(5):
@@ -694,7 +694,7 @@ def read_subset(raw_path, mix_path, info_path, div, stats, other_columns, min_ev
 
 
 def check_subset(raw_path, mix_path, info_path, div, stats, other_columns, min_events, min_bs, out_bs,
-                 save_data_type, save_stat):
+                 save_data_type, save_stat, diff):
     """
     Just read files to see if all are able to be read. If not hopefully get print to screen with bad path
     :param raw_path:
