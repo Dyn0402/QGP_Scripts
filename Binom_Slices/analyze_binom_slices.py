@@ -522,11 +522,21 @@ def get_sys(df, df_def_name, df_sys_dict, sys_prior_dict=None, group_cols=None,
                         barlow_i = barlow_i / 12  # 1 sigma estimate for a uniform distribution with default at one edge
                     elif sys_prior_dict[sys_type] == 'flat_two_side':
                         barlow_i = barlow_i / 3  # 1 sigma estimate for a uniform distribution with default at center
+                    else:
+                        print(f'WARNING! Unknown prior {sys_prior_dict[sys_type]} for sys type {sys_type}. Treating as gaussian.')
                     total_sys += np.max(barlow_i) if barlow_i.size > 0 else 0
                 elif sys_method == 'lyons':
                     diff_vals = def_val - sys_val
                     diff_errs = np.sqrt(np.abs(def_err ** 2 - sys_err ** 2))
                     lyons_s = solve_for_lyons_s(diff_vals, diff_errs)
+                    if sys_prior_dict is None or sys_type not in sys_prior_dict or sys_prior_dict[sys_type] == 'gaus':
+                        lyons_s = lyons_s  # Do nothing, treat as gaussian 1 sigma. Dumb if statement but hopefully clear.
+                    elif sys_prior_dict[sys_type] == 'flat_one_side':
+                        lyons_s = lyons_s / np.sqrt(12)  # 1 sigma estimate for a uniform distribution with default at one edge
+                    elif sys_prior_dict[sys_type] == 'flat_two_side':
+                        lyons_s = lyons_s / np.sqrt(3)  # 1 sigma estimate for a uniform distribution with default at center
+                    else:
+                        print(f'WARNING! Unknown prior {sys_prior_dict[sys_type]} for sys type {sys_type}. Treating as gaussian.')
                     total_sys += lyons_s ** 2
                 else:
                     raise ValueError(f'Unknown sys_method {sys_method}')
