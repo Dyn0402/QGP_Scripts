@@ -18,6 +18,7 @@ from analyze_binom_slices import read_flow_values, solve_for_lyons_s
 
 
 def main():
+    get_2012_v2_nonflow_fraction('F:/Research/bes1_v2_2012_paper.txt', plot=True)
     plot_star_models()
     # plot_star_sys()  # No idea if this works with the new sys sets!
     # calc_star_sys()
@@ -592,6 +593,174 @@ def get_total_sys_err(df, data_set_vals, def_val, sys_val, sys_method='barlow'):
             sys_errors[cent_bin] = lyons_s
 
     return sys_errors
+
+
+def get_2012_v2_nonflow_fraction(v2_2012_file_path, plot=False):
+    """
+    Load 2012 v2s from text file and extract non-flow estimates.
+    :param v2_2012_file_path: Directory with energy folders.
+    :param plot: Whether to plot the systematics.
+    :return: DataFrame with systematics data
+    """
+    cent_map = {8: '0-5%', 7: '5-10%', 6: '10-20%', 5: '20-30%', 4: '30-40%', 3: '40-50%', 2: '50-60%', 1: '60-70%',
+                0: '70-80%', -1: '80-90%'}
+    df = load_2012_v2_data(v2_2012_file_path)
+
+    pd.set_option('display.max_rows', None)
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.width', None)
+    pd.set_option('display.max_colwidth', None)
+    print(df.to_string())
+
+    # Map centrality strings to cent_bin integers
+    cent_bin_map = {v: k for k, v in cent_map.items()}
+    df['cent_bin'] = df['Centrality'].map(cent_bin_map)
+    df = df.dropna(subset=['cent_bin'])
+    df['cent_bin'] = df['cent_bin'].astype(int)
+
+    # Copy 39 GeV to stand in for 62 GeV
+    df_62 = df[df['Energy_GeV'] == 39].copy()
+    df_62['Energy_GeV'] = 62
+    df = pd.concat([df, df_62], ignore_index=True)
+
+    # Mask invalid v2{4} values
+    df.loc[df["v2{4}"] >= 10, ["v2{4}", "v2{4}_Error"]] = float('nan')
+    df.loc[df["v2{FTPC}"] >= 10, ["v2{FTPC}", "v2{FTPC}_Error"]] = float('nan')
+
+    # Calculate 1-v2{4}/v2{Eta-subs} and 1-v2{FTPC}/v2{Eta-subs}
+    df['nonflow_v2_4_vs_eta_sub'] = 1 - df['v2{4}'] / df['v2{EtaSub}']
+    df['nonflow_v2_ftpc_vs_eta_sub'] = 1 - df['v2{FTPC}'] / df['v2{EtaSub}']
+    df['nonflow_v2_bbc_vs_eta_sub'] = 1 - df['v2{BBC}'] / df['v2{EtaSub}']
+
+    cols = ['Energy_GeV', 'Centrality', 'v2{EtaSub}', 'v2{EtaSub}_Error', 'v2{4}', 'v2{4}_Error', 'v2{FTPC}',
+            'v2{FTPC}_Error', 'v2{BBC}', 'v2{BBC}_Error', 'nonflow_v2_4_vs_eta_sub', 'nonflow_v2_ftpc_vs_eta_sub', 'nonflow_v2_bbc_vs_eta_sub']
+    print(df[cols].to_string())
+
+    # Make sys column for each row, choosing the systematics in order of preference, going to the next if the previous
+    # is NaN. Also make a column indicating which systematic was used.
+    def choose_sys(row):
+        if not pd.isna(row['nonflow_v2_4_vs_eta_sub']):
+            return row['nonflow_v2_4_vs_eta_sub'], 'v2{4} vs v2{EtaSub}'
+        elif not pd.isna(row['nonflow_v2_ftpc_vs_eta_sub']):
+            return row['nonflow_v2_ftpc_vs_eta_sub'], 'v2{FTPC} vs v2{EtaSub}'
+        elif not pd.isna(row['nonflow_v2_bbc_vs_eta_sub']):
+            return row['nonflow_v2_bbc_vs_eta_sub'], 'v2{BBC} vs v2{EtaSub}'
+        else:
+            return float('nan'), 'None'
+
+    df[['total_sys', 'sys_source']] = df.apply(choose_sys, axis=1, result_type='expand')
+
+    print(df[['Energy_GeV', 'Centrality', 'total_sys', 'sys_source']].to_string())
+
+    if plot:
+        # Plot these systematics with sys vs centrality. Each energy as different series.
+        # Have different marker shapes for each systematic source. Indicate in legend.
+        markers = {'v2{4} vs v2{EtaSub}': 'o', 'v2{FTPC} vs v2{EtaSub}': 's', 'v2{BBC} vs v2{EtaSub}': '^'}
+        fig, ax = plt.subplots(figsize=(7, 5), dpi=144)
+        ax.grid()
+        ax.axhline(0, color='black')
+        ax.set_title('2012 v2 Non-Flow Fraction Estimate')
+        ax.set_xlabel('Centrality')
+        ax.set_ylabel('Estimated Non-Flow Fraction (1 - v2{x} / v2{EtaSub})')
+
+        # Prepare energy color mapping
+        energies = sorted(pd.unique(df['Energy_GeV']))
+        colors = plt.rcParams['axes.prop_cycle'].by_key().get('color', ['C0', 'C1', 'C2', 'C3', 'C4', 'C5'])
+        energy_colors = {energy: colors[i % len(colors)] for i, energy in enumerate(energies)}
+
+        # Global centrality order (highest cent_bin to lowest) using cent_bin_map
+        cent_order = sorted(df['Centrality'].unique(), key=lambda c: cent_bin_map.get(c, -999), reverse=True)
+
+        # Plot points: color = energy, marker = systematic shape
+        for energy in energies:
+            df_e = df[df['Energy_GeV'] == energy]
+            for sys_source, mk in markers.items():
+                df_es = df_e[df_e['sys_source'] == sys_source]
+                if df_es.empty:
+                    continue
+                df_es = df_es.copy()
+                # sort by cent_bin descending and map to global x positions
+                df_es['cent_bin'] = df_es['Centrality'].map(cent_bin_map)
+                df_es = df_es.sort_values('cent_bin', ascending=False)
+                x = [cent_order.index(c) for c in df_es['Centrality']]
+                ax.errorbar(x, df_es['total_sys'], ls='', marker=mk, color=energy_colors[energy], alpha=0.8)
+
+        # Set x ticks to global centrality order
+        ax.set_xticks(np.arange(len(cent_order)))
+        ax.set_xticklabels(cent_order, rotation=30)
+
+        # Create two separate legends: one for energies (colors) and one for systematic shapes
+        energy_handles = [plt.Line2D([0], [0], color=energy_colors[e], marker='o', linestyle='', markersize=8) for e in energies]
+        energy_labels = [f'{e} GeV' for e in energies]
+        sys_handles = [plt.Line2D([0], [0], color='black', marker=markers[s], linestyle='', markersize=8) for s in markers.keys()]
+        sys_labels = list(markers.keys())
+
+        leg1 = ax.legend(energy_handles, energy_labels, loc='lower center')
+        leg2 = ax.legend(sys_handles, sys_labels, title='Non-Flow Estimate', loc='upper center')
+        ax.add_artist(leg1)
+
+        fig.canvas.manager.set_window_title('2012 v2 Non-Flow Fraction Estimate')
+        fig.tight_layout()
+
+    return df
+
+
+def load_2012_v2_data(filename):
+    rows = []
+    current_system = None
+    current_energy = None
+    columns = None
+
+    with open(filename, "r") as f:
+        for line in f:
+            line = line.strip()
+
+            # Skip empty lines
+            if not line:
+                continue
+
+            # Detect system / energy line (e.g. "Au+Au 39 GeV")
+            if "GeV" in line and "Au+Au" in line:
+                parts = line.split()
+                current_system = parts[0]
+                current_energy = float(parts[1])
+                continue
+
+            # Detect header line
+            if line.startswith("Centrality"):
+                columns = line.split()
+                # Rename any "Error" columns to prepend the previous column name, e.g. v2{4} -> v2{4}_Error
+                for i in range(len(columns)):
+                    if columns[i] == "Error" and i > 0:
+                        columns[i] = f"{columns[i-1]}_Error"
+                continue
+
+            # Data lines
+            if columns is not None:
+                values = line.split()
+                if len(values) != len(columns):
+                    # Skip malformed lines
+                    continue
+
+                row = dict(zip(columns, values))
+                row["System"] = current_system
+                row["Energy_GeV"] = current_energy
+                rows.append(row)
+
+    # Create DataFrame
+    df = pd.DataFrame(rows)
+
+    # Convert numeric columns
+    for col in df.columns:
+        if col not in ["Centrality", "System"]:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    # Reorder columns
+    front_cols = ["System", "Energy_GeV", "Centrality"]
+    other_cols = [c for c in df.columns if c not in front_cols]
+    df = df[front_cols + other_cols]
+
+    return df
 
 
 if __name__ == '__main__':
