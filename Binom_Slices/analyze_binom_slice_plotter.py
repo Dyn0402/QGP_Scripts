@@ -1108,12 +1108,13 @@ def plot_star_model_var():
 def plot_star_var_sys():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
-    base_path = 'F:/Research/Results/Azimuth_Analysis/'
+    base_dir = 'F:/ucla/Research/'
+    base_path = f'{base_dir}Results/Azimuth_Analysis/'
     # v2_star_in_dir = 'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/' \
     #                  'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/'
-    v2_star_in_dir = 'F:/Research/Data/default/' \
+    v2_star_in_dir = f'{base_dir}Data/default/' \
                      'rapid05_resample_norotate_seed_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_0/'
-    sys_dir = 'F:/Research/Data/default_sys/'
+    sys_dir = f'{base_dir}Data/default_sys/'
     sys_default_dir = 'rapid05_resample_norotate_seed_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_0/'
     df_name = 'Binomial_Slice_Moments/binom_slice_vars_bes_sys.csv'
 
@@ -1121,10 +1122,10 @@ def plot_star_var_sys():
     # plot = False
     calc_finals = False
     # calc_finals = True
-    threads = 11
+    threads = 6
     sys_method = 'lyons'  # Either 'barlow' or 'lyons'
     sys_pdf_out_path = f'{base_path}systematic_plots.pdf'
-    indiv_pdf_out_path = f'F:/Research/Results/BES_QA_Plots/Systematics/'
+    indiv_pdf_out_path = f'{base_dir}Results/BES_QA_Plots/Systematics/'
     df_def_out_name = 'Bes_with_Sys/binom_slice_vars_bes.csv'
     # df_def_out_name = None
     df_def_dsigma_out_name = 'Bes_with_Sys/binom_slice_vars_bes_dsigma.csv'
