@@ -25,7 +25,11 @@ class BootstrapAzBin:
     def read_bootstrap_data(self):
         with open(self.path, 'r') as file:
             data = {}
-            lines = file.readlines()
+            try:
+                lines = file.readlines()
+            except Exception as e:
+                print(f'Bootstrap read error {self.path}: {e}')
+                return
 
             for line in lines:
                 if 'bootstrap' in line:

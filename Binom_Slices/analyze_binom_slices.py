@@ -450,7 +450,7 @@ def calc_sys(def_val, def_err, sys_vals, sys_errs, return_vals='both'):
         barlow_i = np.sqrt(
             np.clip((def_val - sys_vals) ** 2 - np.abs(def_err ** 2 - sys_errs ** 2), a_min=0, a_max=None))
     except TypeError:
-        print(def_val, sys_vals, def_err, sys_errs)
+        print('calc_sys failed: ', def_val, sys_vals, def_err, sys_errs)
 
     if 'indiv' in return_vals.lower():
         return barlow_i
@@ -779,10 +779,10 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, sys_prior_dict=No
     default_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
     sys_types = [sys_type for sys_type in df_filtered['sys_type'].unique() if sys_type != df_def_name]
     color_dict = {sys_type: color for sys_type, color in zip(sys_types, default_colors)}
-    for sys_type, color in zip(sys_types, default_colors):
-        print(sys_type, color)
+    # for sys_type, color in zip(sys_types, default_colors):
+    #     print(sys_type, color)
     df_filtered['color'] = df_filtered['sys_type'].map(color_dict)
-    print(df_filtered.loc[:, ['sys_type', 'color']].head(200))
+    # print(df_filtered.loc[:, ['sys_type', 'color']].head(200))
 
     if pdf_out_path is not None:
         pdf_pages = PdfPages(pdf_out_path)

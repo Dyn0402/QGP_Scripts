@@ -1108,7 +1108,8 @@ def plot_star_model_var():
 def plot_star_var_sys():
     plt.rcParams["figure.figsize"] = (6.66, 5)
     plt.rcParams["figure.dpi"] = 144
-    base_dir = 'F:/ucla/Research/'
+    # base_dir = 'F:/ucla/Research/'
+    base_dir = 'F:/Research/'
     base_path = f'{base_dir}Results/Azimuth_Analysis/'
     # v2_star_in_dir = 'F:/Research/Data/default_resample_epbins1_calcv2_qaonly_test/' \
     #                  'rapid05_resample_norotate_dca1_nsprx1_m2r6_m2s0_nhfit20_epbins1_calcv2_qaonly_test_0/'
@@ -1122,8 +1123,8 @@ def plot_star_var_sys():
     # plot = False
     calc_finals = False
     # calc_finals = True
-    threads = 6
-    sys_method = 'lyons'  # Either 'barlow' or 'lyons'
+    threads = 15
+    sys_method = 'barlow'  # Either 'barlow' or 'lyons'
     sys_pdf_out_path = f'{base_path}systematic_plots.pdf'
     indiv_pdf_out_path = f'{base_dir}Results/BES_QA_Plots/Systematics/'
     df_def_out_name = 'Bes_with_Sys/binom_slice_vars_bes.csv'

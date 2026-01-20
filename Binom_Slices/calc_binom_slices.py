@@ -50,7 +50,7 @@ def init_pars():
         #             'binom_slice_stats_ampt_flow_closure.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/binom_slice_stats_cents.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_v2_ck2.csv',
-        # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_vars_bes_sys3.csv',
+        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_vars_bes_sys.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_vars_bes_rand_sys_test.csv',
         # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
@@ -63,19 +63,19 @@ def init_pars():
         #             'binom_slice_var_cent8_v2_anticl_closure.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_var_cent8_v2_anticlindep_closure.csv',
-        'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_vars_2source_tests.csv',
+        # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_vars_2source_tests.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/'
         #             'binom_slice_stats_ampt_diff_test.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_stats_sim.csv',
         # 'csv_path': 'F:/Research/Results/Azimuth_Analysis/Binomial_Slice_Moments/binom_slice_stats_sim_demos.csv',
         # 'csv_path': 'D:/Transfer/Research/Results/Azimuth_Analysis/binom_slice_stats_cent8_no_sim_new.csv',
         # 'csv_path': '/media/ucla/Research/Results/Azimuth_Analysis/binom_slice_stats_simpm_test.csv',
-        'csv_append': False,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
+        'csv_append': True,  # If True read dataframe from csv_path and append new datasets to it, else overwrite
         'only_new': True,  # If True check csv_path and only run missing datasets, else run all datasets
         'threads': 15,
         # 'stats': define_stats(['standard deviation', 'skewness', 'non-excess kurtosis']),
         'stats': define_stats(['k2']),
-        'check_only': True,  # Don't do any real work, just try to read each file to check for failed reads
+        'check_only': False,  # Don't do any real work, just try to read each file to check for failed reads
         'min_events': 100,  # Min number of total events per total_proton. Skip total_proton if fewer
         'min_bs': 100,  # Min number of bootstrap sets of total_proton. Skip if fewer
         'out_bs': 0,  # Number of bootstrap divide values to get
