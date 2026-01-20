@@ -517,7 +517,7 @@ def get_sys(df, df_def_name, df_sys_dict, sys_prior_dict=None, group_cols=None,
                 if len(sys_val) == 1 and sys_method != 'barlow':
                     print(f'Fall back to barlow for {sys_type} with single variation.')
 
-                if sys_method == 'barlow':
+                if sys_method == 'barlow' or len(sys_val) == 1:
                     barlow_i = calc_sys(def_val, def_err, sys_val, sys_err, 'indiv') ** 2
                     if sys_prior_dict is None or sys_type not in sys_prior_dict or sys_prior_dict[sys_type] == 'gaus':
                         barlow_i = barlow_i  # Do nothing, treat as gaussian 1 sigma. Dumb if statement but hopefully clear.
@@ -759,7 +759,7 @@ def plot_vs_sys(df, df_def_name, def_val, df_sys_set_names, sys_info_dict, group
 
 def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, sys_prior_dict=None, group_cols=None,
              val_col='val', err_col='err', name_col='name', plot_barlow_decomp=False, plot_bars=True, y_label=None,
-             pdf_out_path=None, indiv_pdf_path=None):
+             pdf_out_path=None, indiv_pdf_path=None, sys_method='barlow'):
     if group_cols is None:
         group_cols = ['divs', 'energy', 'cent', 'data_type', 'total_protons']
 
