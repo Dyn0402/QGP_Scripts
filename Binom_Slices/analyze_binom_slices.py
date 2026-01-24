@@ -555,8 +555,8 @@ def add_sys_info(df, sys_info_dict, name_col='name'):
     def get_sys_val(row):
         if row[name_col] == 'default':
             return None
-        if row['sys_type'] == 'm2r' and row['sys_val'] == '10':
-            return 1.0
+        if row['sys_type'] == 'm2r':
+            return round(int(row['sys_val']) / 10, 3)
         if row['sys_type'] == 'Efficiency':
             val = round(float(f'0.{row["sys_val"]}') * 10 ** sys_info_dict[row['sys_type']]['decimal'], 3)
             return int(100 - val)
@@ -601,6 +601,9 @@ def add_sys_info(df, sys_info_dict, name_col='name'):
                 val = r'$\sigma$ = 5'
             if val == '2tight':
                 val = r'$\sigma$ = 1.5'
+        elif row['sys_type'] == 'nonflow':
+            if val == '':
+                val = 'estimate'
 
         return f'{sys_info_dict[row["sys_type"]]["title"]} = {val}{sys_info_dict[row["sys_type"]]["val_unit"]}'
 
@@ -626,12 +629,9 @@ def sys_info_dict_to_var_names(sys_info_dict):
                 else:
                     if key == 'Efficiency':
                         sys_var_val = 100 - sys_var_val
-                    str_val = sys_var_val / 10 ** sys_info_dict[key]['decimal']
-                    # str_val = str(round(str_val, sys_info_dict[key]['decimal'] + 1)).replace('0.', '')
-                    str_val = str(str_val).replace('0.', '')
+                    str_val = round(sys_var_val / 10 ** sys_info_dict[key]['decimal'], 5)  # Max of 5 precision
+                    str_val = str(str_val).replace('0.', '').replace('.0', '')
                     sys_vars_names[key].append(f'{key}{str_val}')
-    # print(sys_vars_names)
-    # print([y for x in sys_vars_names.values() for y in x])
     return sys_vars_names
 
 
@@ -741,7 +741,7 @@ def plot_vs_sys(df, df_def_name, def_val, df_sys_set_names, sys_info_dict, group
             continue  # No default value so no systematic
         fig, axs = plt.subplots(nrows=len(data_types), sharex=True, dpi=144, figsize=(6.66, 5))
         axs[-1].set_xlabel(split_string(df_sys_set_names[0])[0])
-        print(group_cols, group_name)
+        # print(group_cols, group_name)
         fig.suptitle(', '.join([f'{col}={val}' for col, val in zip(group_cols, group_name)]))
         for index, data_type in enumerate(group_df['data_type'].unique()):
             axs[index].grid()
@@ -854,8 +854,31 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, sys_prior_dict=No
             # print(f'max_indices: {max_indices}')
             # print(group_df_sys.index.isin(max_indices))
             group_df_sys.loc[~group_df_sys.index.isin(max_indices), 'barlow_sum'] = 0
+            group_df_sys['bar_vals'] = group_df_sys['barlow_sum'].values
+            group_df_sys['bar_widths'] = 0.8
 
-            barlow = np.sqrt(np.sum(group_df_sys['barlow_sum'].values ** 2))
+            if sys_method == 'lyons':
+                df_sys_dict = sys_info_dict_to_var_names(sys_info_dict)
+                for sys_type, sys_names in df_sys_dict.items():
+                    group_df_sys_type = group_df_sys[group_df_sys[name_col].isin(sys_names)]
+                    sys_val = group_df_sys_type[val_col].values
+                    sys_err = group_df_sys_type[err_col].values
+
+                    if len(sys_val) == 1:
+                        print(f'Fall back to barlow for {sys_type} with single variation.')
+                        continue
+
+                    diff_vals = def_val - sys_val
+                    diff_errs = np.sqrt(np.abs(def_err ** 2 - sys_err ** 2))
+                    lyons_s = solve_for_lyons_s(diff_vals, diff_errs)
+                    group_df_sys.loc[group_df_sys['sys_type'] == sys_type, 'bar_vals'] = lyons_s
+                    group_df_sys.loc[group_df_sys['sys_type'] == sys_type, 'bar_widths'] = 1.0
+                    # Replace barlow_sum entries with single lyons_s for this sys_type
+                    group_df_sys.loc[group_df_sys['sys_type'] == sys_type, 'barlow_sum'] = 0  # Clear first
+                    idx = group_df_sys_type.index[0]
+                    group_df_sys.loc[idx, 'barlow_sum'] = lyons_s
+
+            total_sys = np.sqrt(np.sum(group_df_sys['barlow_sum'].values ** 2))  # Add each source in quadrature
 
             sys_types = group_df_sys['sys_type'].values
             if plot_barlow_decomp:
@@ -873,11 +896,12 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, sys_prior_dict=No
             # print(df_def_name, def_val, def_err)
             ax_errorbar.errorbar([def_title], [def_val], [def_err], color=def_color, ls='none', marker='o',
                                  label=def_title)
-            ax_errorbar.errorbar([def_title], [def_val], [barlow], color=def_color, linewidth=5, alpha=0.5,
+            ax_errorbar.errorbar([def_title], [def_val], [total_sys], color=def_color, linewidth=5, alpha=0.5,
                                  ls='none', marker=None)
 
             group_df_sys = sort_on_sys_info_dict(group_df_sys, sys_info_dict)
             group_df_sys = group_df_sys.sort_values(by=['sys_type_index', 'sys_val_index'])
+
             for sys_type in group_df_sys['sys_type'].unique():
                 sys_type_df = group_df_sys[group_df_sys['sys_type'] == sys_type]
                 # sys_type_df = sys_type_df.sort_values('sys_val')
@@ -896,8 +920,9 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, sys_prior_dict=No
                                     marker='o', s=1)
             if plot_bars:
                 bars = ax_bar.bar([def_title] + list(group_df_sys['sys_val_str']),
-                                  [barlow] + list(group_df_sys['barlow_sum'].values),
-                                  color=[def_color] + list(group_df_sys['color']))
+                                  [total_sys] + list(group_df_sys['bar_vals'].values),
+                                  color=[def_color] + list(group_df_sys['color']),
+                                  width=[0.8] + list(group_df_sys['bar_widths'].values))
                 ax_bar.plot([bars[0].get_x(), bars[0].get_x() + bars[0].get_width()], [def_err, def_err], color='red')
                 # ax_bar.set_xticklabels([])
             ax_errorbar.set_xlim(right=ax_errorbar.get_xlim()[-1] + ax_errorbar.get_xlim()[-1] * 0.15)
@@ -927,7 +952,7 @@ def plot_sys(df, df_def_name, df_sys_set_names, sys_info_dict, sys_prior_dict=No
 
 
 def plot_sys_table(df, df_def_name, df_sys_set_names, sys_info_dict, sys_prior_dict=None, group_cols=None,
-                   val_col='val', err_col='err', name_col='name', indiv_pdf_path=None):
+                   val_col='val', err_col='err', name_col='name', indiv_pdf_path=None, sys_method='barlow'):
     if group_cols is None:
         group_cols = ['divs', 'energy', 'cent', 'data_type', 'total_protons']
 
@@ -952,7 +977,7 @@ def plot_sys_table(df, df_def_name, df_sys_set_names, sys_info_dict, sys_prior_d
     sys_types = [sys_type for sys_type in pd.unique(df_filtered['sys_type']) if sys_type != df_def_name]
     sys_types = [sys_type for sys_type in sys_info_dict.keys() if sys_type in sys_types]  # Sort correctly
     sys_type_i_map = {sys_type: i for i, sys_type in enumerate([df_def_name] + sys_types)}
-    print(sys_type_i_map)
+    # print(sys_type_i_map)
     sys_names = [def_title] + [sys_info_dict[sys_type][name_col] for sys_type in sys_types]
 
     for div in divs:
@@ -1011,6 +1036,27 @@ def plot_sys_table(df, df_def_name, df_sys_set_names, sys_info_dict, sys_prior_d
                         if len(sys_barlows) > 0:
                             max_indices.append(df_sys.loc[sys_mask, 'barlow_sum'].idxmax())
                     df_sys.loc[~df_sys.index.isin(max_indices), 'barlow_sum'] = 0
+
+                    if sys_method == 'lyons':
+                        df_sys_dict = sys_info_dict_to_var_names(sys_info_dict)
+                        for sys_type, sys_names_i in df_sys_dict.items():
+                            group_df_sys_type = df_sys[df_sys[name_col].isin(sys_names_i)]
+                            sys_val_i = group_df_sys_type[val_col].values
+                            sys_err_i = group_df_sys_type[err_col].values
+
+                            if len(sys_val_i) == 1:
+                                print(f'Fall back to barlow for {sys_type} with single variation.')
+                                continue
+
+                            diff_vals = def_val - sys_val_i
+                            diff_errs = np.sqrt(np.abs(def_err ** 2 - sys_err_i ** 2))
+                            lyons_s = solve_for_lyons_s(diff_vals, diff_errs)
+                            df_sys.loc[df_sys['sys_type'] == sys_type, 'bar_vals'] = lyons_s
+                            df_sys.loc[df_sys['sys_type'] == sys_type, 'bar_widths'] = 1.0
+                            # Replace barlow_sum entries with single lyons_s for this sys_type
+                            df_sys.loc[df_sys['sys_type'] == sys_type, 'barlow_sum'] = 0  # Clear first
+                            idx = group_df_sys_type.index[0]
+                            df_sys.loc[idx, 'barlow_sum'] = lyons_s
 
                     barlow = np.sqrt(np.sum(df_sys['barlow_sum'].values ** 2))
 
@@ -1158,7 +1204,7 @@ def dvar_vs_protons(df, div, cent, energies, data_types, data_sets_plt, y_ranges
             weight_avg_err = np.sqrt(1 / np.sum(1 / df['err'] ** 2))
             # def const(x, a):
             #     return a
-            # 
+            #
             # popt, pcov = cf(const, df['total_protons'], df['val'], sigma=df['err'], absolute_sigma=True)
             # weight_avg, weight_avg_err = popt[0], np.sqrt(pcov[0][0])
             avgs.append({'name': data_set, 'energy': energy, 'divs': div, 'cent': cent,
@@ -2261,7 +2307,7 @@ def plot_dvar_avgs_divs(df, data_sets_plt, fit=False, data_sets_colors=None, dat
                     samples_line = None  # '72 Samples/Event'
                     kin_text = f'Au+Au\n{eta_line}\n{pt_line}'
                     kin_text = f'{kin_text}\n{samples_line}' if samples_line is not None else kin_text
-                    ax_panels[energy].text(*kin_loc, kin_text, ha='left', va='bottom', 
+                    ax_panels[energy].text(*kin_loc, kin_text, ha='left', va='bottom',
                                            transform=ax_panels[energy].transAxes)
                 if star_prelim_loc is not None and energy_i == star_prelim_loc[0]:
                     ax_panels[energy].text(*star_prelim_loc[1:], 'STAR Preliminary', fontsize='large', ha='center',
@@ -2398,7 +2444,7 @@ def plot_protons_fits_divs_flow(df, data_sets_plt, data_sets_colors=None):
             if 'v2' in element:
                 v2 = float('0.' + element.strip('v2'))
                 break
-        print(data_set, v2)
+        # print(data_set, v2)
         if 'anticlflow_' in data_set:
             # v2 = float('0.' + data_set.split('_')[-3][2:])
             lab = f'anticl + v2={v2:.2f}'
@@ -2448,7 +2494,7 @@ def plot_dsigma_fits_divs_flow(df, data_sets_plt, data_sets_colors=None, data_se
             if 'v2' in element:
                 v2 = float('0.' + element.strip('v2'))
                 break
-        print(data_set, v2)
+        # print(data_set, v2)
         if 'anticlflow_' in data_set:
             # v2 = float('0.' + data_set.split('_')[-3][2:])
             lab = f'anticl + v2={v2:.2f}'
